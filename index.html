@@ -1473,6 +1473,82 @@
   }
   .footer-line .divider { opacity: .4; }
 
+  /* --------- LESSON CARD --------- */
+  .lesson-card {
+    background: linear-gradient(180deg, #FFFBF0 0%, var(--card) 100%) !important;
+    border: 2px dashed rgba(255,192,67,.45) !important;
+    text-align: left !important;
+    padding: clamp(22px, 3vw, 32px) !important;
+  }
+  .lesson-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 5px 12px;
+    background: linear-gradient(135deg, #FFE28A, var(--sun));
+    color: #5B3E00;
+    border-radius: 999px;
+    font-family: var(--font-display);
+    font-size: 11.5px; font-weight: 800;
+    letter-spacing: .08em;
+    box-shadow: var(--glow-sun);
+  }
+  .lesson-title {
+    font-family: var(--font-display);
+    font-size: clamp(22px, 3vw, 28px);
+    font-weight: 800;
+    color: var(--ink);
+    letter-spacing: -0.02em;
+    margin-top: 14px;
+    margin-bottom: 6px;
+  }
+  .lesson-intro {
+    font-family: var(--font-body);
+    font-size: clamp(15px, 1.8vw, 17px);
+    font-weight: 600;
+    line-height: 1.55;
+    color: var(--ink);
+    margin: 10px 0 14px;
+  }
+  .lesson-example {
+    margin-top: 16px;
+    padding: 16px 18px;
+    background: var(--card);
+    border: 1px solid rgba(91,181,255,.22);
+    border-left: 4px solid var(--sky);
+    border-radius: var(--r-sm);
+    box-shadow: var(--shadow-sm);
+  }
+  .lesson-example-label {
+    font-family: var(--font-display);
+    font-size: 11.5px; font-weight: 800;
+    color: var(--sky);
+    letter-spacing: .08em;
+    margin-bottom: 6px;
+  }
+  .lesson-example-visual {
+    font-size: clamp(36px, 6vw, 56px);
+    line-height: 1;
+    margin: 4px 0 8px;
+    letter-spacing: 4px;
+  }
+  .lesson-example-text {
+    font-family: var(--font-display);
+    font-size: clamp(17px, 2vw, 20px);
+    font-weight: 700;
+    color: var(--ink);
+    line-height: 1.4;
+  }
+  .lesson-hint {
+    margin-top: 14px;
+    padding: 10px 14px;
+    background: rgba(78,205,196,.12);
+    border-radius: var(--r-sm);
+    font-family: var(--font-body);
+    font-weight: 600;
+    font-size: 14px;
+    color: #0F8F82;
+    display: flex; align-items: center; gap: 8px;
+  }
+
   /* --------- STORY MODE --------- */
   .story-card {
     background: linear-gradient(180deg, #F5FAFF 0%, var(--card) 100%) !important;
@@ -3798,6 +3874,161 @@ const BADGES = [
 /* IDs of story activities (used to award the Story Master badge) */
 const STORY_IDS = ['n-story-cat','n-story-dog','n-story-food','n-story-play','n-story-bigsmall'];
 
+/* =============================================================
+   LESSONS — a quick teaching screen before each activity.
+   Keyed by activity id. Fields: { title, intro, example, exampleVisual, hint }
+   ============================================================= */
+const LESSONS = {
+
+  /* ---------- NISHAN: reading & stories ---------- */
+  'n-story-cat':     { title: "Let's Read a Story!", intro: 'A story is made of sentences. Each sentence tells us something new. We read them one at a time, from top to bottom.', example: '"The cat sat on a mat." — that\'s one sentence!', exampleVisual: '🐱', hint: 'Read slowly and picture the story in your head.' },
+  'n-story-dog':     { title: 'Read and See!', intro: 'When you read, picture what\'s happening — it\'s like a movie in your head.', example: '"The dog runs to the ball."', exampleVisual: '🐶⚽', hint: 'After each page, think about what just happened.' },
+  'n-story-food':    { title: 'Reading About Favorites', intro: 'Some stories tell us what someone likes. Listen for the word "like"!', example: '"I like apples. I like milk."', exampleVisual: '🍎🥛', hint: 'Try to remember everything the person likes.' },
+  'n-story-play':    { title: 'Action Words!', intro: 'Some words tell us what we can DO. These are action words!', example: '"I can jump. I can clap."', exampleVisual: '🦘👏', hint: 'Try doing the actions yourself too!' },
+  'n-story-bigsmall':{ title: 'Big or Small?', intro: 'Things can be BIG or small. Compare to something you know.', example: '"The tree is big. The ant is small."', exampleVisual: '🌳🐜', hint: 'Picture them next to each other.' },
+  'n-r-letters':     { title: 'The Alphabet', intro: 'The alphabet has 26 letters in a special order: A, B, C, D, E, F, G…', example: 'After D comes E. Before H comes G.', exampleVisual: 'A B C D E', hint: 'If you forget, sing the alphabet song!' },
+  'n-r-sounds':      { title: 'First Sounds', intro: 'Every word starts with a sound. The first letter tells you what the first sound is.', example: '"Sun" starts with the "S" sound.', exampleVisual: '☀️ → S', hint: 'Say the word out loud and listen to the very first sound.' },
+  'n-r-match':       { title: 'BIG and small Letters', intro: 'Every letter has a BIG version (uppercase) and a small version (lowercase). They sound the same but look different.', example: 'A ↔ a, B ↔ b, M ↔ m', exampleVisual: 'A ↔ a', hint: 'BIG letters start names and sentences.' },
+  'n-r-sight':       { title: 'Tiny Words', intro: 'Some words show up all the time. Learn them by sight — "the", "and", "I", "can".', example: '"I can see a cat." — all sight words!', exampleVisual: 'I · can · see · a', hint: 'Memorise these little words to read faster.' },
+  'n-r-cvc':         { title: 'Three-Letter Words', intro: 'Many small words have 3 letters. Sound them out — one letter at a time.', example: 'C + A + T → CAT 🐱', exampleVisual: 'C-A-T', hint: 'Blend the sounds slowly, then speed up.' },
+  'n-r-short-sent':  { title: 'Reading & Thinking', intro: 'When you read a sentence, stop and think about what it means. That helps you answer questions!', example: '"Mia took an umbrella." → Probably raining!', hint: 'Look for clues — they tell you what\'s really happening.' },
+
+  /* ---------- NISHAN: writing ---------- */
+  'n-w-build':       { title: 'Middle Sounds', intro: 'Words have a beginning, middle, and end. The middle letter is often a vowel: A, E, I, O, U.', example: 'C _ T → middle is "A" → CAT 🐱', exampleVisual: 'C A T', hint: 'Say the word slowly and listen to the middle sound.' },
+  'n-w-trace':       { title: 'How Letters Are Built', intro: 'Letters are made of lines, curves, and circles. Look closely at each letter\'s shape!', example: '"O" is a full circle. "H" is two lines + a bridge.', exampleVisual: 'O · H', hint: 'Try drawing the letters with your finger in the air.' },
+  'n-w-first':       { title: 'First Letter Spotting', intro: 'Every word starts with one special letter. Say the word and listen for its first sound.', example: '🐻 Bear → starts with B.', exampleVisual: '🐻 → B', hint: 'Whisper the word — the very first sound = first letter.' },
+  'n-w-picword':     { title: 'Matching Words to Pictures', intro: 'When you see a picture, you can name it. That name is a word!', example: '🐱 = "cat" (3 letters).', exampleVisual: '🐱 = cat', hint: 'Look at the picture, then sound out the word.' },
+  'n-w-spell':       { title: 'Spelling Small Words', intro: 'To spell a word, think of each sound and pick the right letter.', example: '"Dog" = D (duh) + O (ah) + G (guh) → DOG', exampleVisual: 'D-O-G', hint: 'Watch out for wrong spellings that sound right!' },
+  'n-w-capital':     { title: 'Two Forms of Each Letter', intro: 'BIG letters and small letters say the same sound. Match them by remembering their shapes.', example: 'B ↔ b, H ↔ h', hint: 'Some match perfectly (C ↔ c). Some look different (G ↔ g)!' },
+  'n-w-rhyme':       { title: 'Words That Rhyme', intro: 'Rhyming words end with the same sound — like Cat, Hat, Bat.', example: 'Cat, Hat, Bat all rhyme.', exampleVisual: 'cat · hat · bat', hint: 'Listen to the END of the words.' },
+  'n-w-bigwords':    { title: '4-Letter Words', intro: 'Bigger words have more letters, but you can still sound them out one by one.', example: 'F + R + O + G → FROG 🐸', exampleVisual: 'F-R-O-G', hint: 'Line up the letters left to right.' },
+  'n-w-finish':      { title: 'Picking the Right Word', intro: 'When a word is missing, look at the whole sentence. Which word makes sense?', example: '"Fish swim in the ___." → water (not sky!)', hint: 'Try each choice in your head. Pick the one that makes sense.' },
+  'n-w-plural':      { title: 'More Than One', intro: 'One thing = singular. More than one = plural. Usually add "s" to show there\'s more!', example: '1 🐶 = dog. 2 🐶🐶 = dogs.', exampleVisual: '🐶 → dogs', hint: 'Just add an "s" to the end of most words.' },
+
+  /* ---------- NISHAN: logic ---------- */
+  'n-l-pattern':     { title: 'Pattern Power', intro: 'A pattern is something that repeats. Look at what already happened to figure out what comes next.', example: '🔴🔵🔴🔵 ? → next is 🔴 (red-blue-red-blue…)', exampleVisual: '🔴🔵🔴🔵?', hint: 'Say the pattern out loud: "red, blue, red, blue…"' },
+  'n-l-odd':         { title: 'Finding What\'s Different', intro: 'Three things are alike. One is NOT. Find the one that doesn\'t belong.', example: '🍎🍎🍎🐱 → the cat doesn\'t belong with apples!', hint: 'Ask: "What do most of these have in common?"' },
+  'n-l-match':       { title: 'Things That Go Together', intro: 'Some things just belong together, like a lock and a key. Match them up!', example: '🐝 goes with 🌸 — bees love flowers!', hint: 'Think about how they work together in real life.' },
+  'n-l-size':        { title: 'Small to Big', intro: 'Things can be tiny, small, big, or huge. Put them in order from smallest to biggest!', example: '🐜 → 🐁 → 🐈 → 🐘', hint: 'Picture them standing next to each other.' },
+  'n-l-goes':        { title: 'Perfect Partners', intro: 'Some things need a partner to work. Scissors cut. Crayons color.', example: '🔑 needs 🔒. 🧦 needs 👟.', hint: 'Ask: "What do you USE this with?"' },
+  'n-l-same':        { title: 'Same vs. Different', intro: 'Look carefully! Count, compare, and pick the right answer.', example: '🐝🐝🐝 has FEWER than 🐝🐝🐝🐝🐝.', hint: 'Count slowly. Point with your finger!' },
+  'n-l-colors':      { title: 'Colors All Around', intro: 'Colors are everywhere. You can even MIX colors to make new ones!', example: 'Blue + Yellow = Green! 🔵 + 🟡 = 🟢', hint: 'The rainbow has 7 colors: Red, Orange, Yellow, Green, Blue, Indigo, Violet.' },
+  'n-l-patterns3':   { title: 'Harder Patterns', intro: 'Some patterns have 3 or more parts that repeat. Look extra carefully!', example: '🔺⬛⭕🔺⬛⭕🔺 ? → next is ⬛', hint: 'If you can say it out loud, you\'ve got it!' },
+  'n-l-riddles':     { title: 'Solving Riddles', intro: 'A riddle is a puzzle-sentence. Use the clues to figure out what it describes!', example: '"I am round, bright, and up in the sky during the day." → The Sun! ☀️', hint: 'Each clue is a piece of the answer. Put them together.' },
+  'n-l-clues':       { title: 'Clue by Clue', intro: 'Real detectives use clues. Read each one, then pick what fits ALL of them.', example: '"A fruit. Red. Grows on a tree." → Apple! 🍎', hint: 'Cross out answers that don\'t match every clue.' },
+
+  /* ---------- NISHAN: math ---------- */
+  'n-m-count':       { title: 'Counting Practice', intro: 'Counting means saying numbers in order: 1, 2, 3, 4, 5… Point to each thing as you count!', example: '🍎🍎🍎 → 1, 2, 3 apples!', exampleVisual: '🍎🍎🍎 = 3', hint: 'Point and say each number so you don\'t skip any.' },
+  'n-m-numbers':     { title: 'Number Names', intro: 'Every number has a digit (like 7) AND a name (like "seven"). Learn to match them!', example: 'seven = 7, five = 5, ten = 10', exampleVisual: '7 = seven', hint: 'Practice writing 1–10 and saying their names.' },
+  'n-m-compare':     { title: 'Bigger & Smaller', intro: 'Numbers get bigger as they go up. 17 is bigger than 12 because it comes later when counting.', example: '17 > 12', exampleVisual: '17 > 12', hint: 'Think: "Which number comes later when counting?"' },
+  'n-m-shapes':      { title: 'Shape Sides & Corners', intro: 'Shapes have SIDES (straight lines) and CORNERS (where sides meet). Count them!', example: 'Triangle 🔺 → 3 sides, 3 corners.', exampleVisual: '🔺 = 3 sides', hint: 'Circles have 0 sides — they\'re a smooth curve!' },
+  'n-m-add':         { title: 'Adding Numbers', intro: 'Adding (+) means putting numbers together. The answer gets BIGGER.', example: '3 + 4 = 7 (three + four more = seven!)', exampleVisual: '3 + 4 = 7', hint: 'Count up on your fingers if it helps.' },
+  'n-m-sub':         { title: 'Taking Away', intro: 'Subtracting (−) means taking some away. The answer gets SMALLER.', example: '10 − 4 = 6 (ten, take 4 away → 6 left)', exampleVisual: '10 − 4 = 6', hint: 'Start with the first number and count backwards.' },
+  'n-m-order':       { title: 'Numbers in Order', intro: 'Numbers have a set order: 1, then 2, then 3, and so on.', example: '1 · 3 · 5 · 7 — smallest to biggest!', hint: 'Think of numbers like stairs — each step goes up by one.' },
+  'n-m-ten':         { title: 'Making 10', intro: 'Ten is a special number! Many sums add up to 10 — try to memorise them.', example: '5 + 5 = 10. 6 + 4 = 10. 7 + 3 = 10.', exampleVisual: '5 + 5 = 10', hint: 'If you know 6+4, you also know 4+6 — same thing!' },
+  'n-m-morecount':   { title: 'Counting Past 10', intro: 'After 10 comes 11, 12, 13… all the way to 20. The "teen" numbers have "teen" in their name!', example: '11, 12, 13, 14, 15, 16, 17, 18, 19, 20', exampleVisual: '10 → 20', hint: 'After 19 comes 20 — a brand new tens number!' },
+  'n-m-add20':       { title: 'Adding Bigger', intro: 'You can add numbers to go past 10. Count in your head or on your fingers!', example: '8 + 5 = 13 (start at 8, count up 5 → 13)', hint: 'Try: "8+2=10, then 3 more = 13". Cross 10 in your mind!' },
+  'n-m-sub20':       { title: 'Subtracting Bigger', intro: 'Subtract from numbers up to 20. Take some away, see how many are left.', example: '15 − 7 = 8', hint: 'Or ask: "7 + what = 15?" — same answer!' },
+  'n-m-story':       { title: 'Word Problems', intro: 'A word problem tells a story with math inside. Decide: is it adding or subtracting?', example: '"You had 5, got 3 more. How many now?" → 5 + 3 = 8', hint: '"Got more" = add. "Ate some" = subtract.' },
+  'n-m-skip':        { title: 'Skip Counting', intro: 'Skip counting means jumping. Count by 2s: 2, 4, 6, 8. By 5s: 5, 10, 15, 20. By 10s!', example: '2, 4, 6, 8, 10 (skipping by 2s)', hint: 'Skip counting helps count things faster — like a cheat code!' },
+
+  /* ---------- NISHAN: french ---------- */
+  'n-f-greetings':   { title: 'Parlez-vous français?', intro: 'French is spoken in France, Canada, and many more places. Let\'s learn friendly words!', example: '"Bonjour" = Hello! "Merci" = Thank you!', exampleVisual: 'Bonjour! 👋', hint: 'Say every new word OUT LOUD to practice.' },
+  'n-f-numbers':     { title: 'Counting in French', intro: 'French numbers have different names, but they count the same as English.', example: '1 = un, 2 = deux, 3 = trois', exampleVisual: 'un · deux · trois', hint: 'Pronounce: un (uhn), deux (duh), trois (twah).' },
+  'n-f-colors':      { title: 'French Colors', intro: 'The world is colourful in every language! Learn the French words for colours.', example: 'rouge = red, bleu = blue, jaune = yellow', exampleVisual: '🔴 rouge', hint: 'Try pointing at things around you and saying their French colour.' },
+  'n-f-animals':     { title: 'French Animals', intro: 'Cats, dogs, birds — they all have French names too!', example: 'le chat = cat 🐱, le chien = dog 🐶', exampleVisual: '🐱 le chat', hint: '"Le" = "the" for boy words, "la" = "the" for girl words.' },
+  'n-f-food':        { title: 'French Food', intro: 'French people love food! Here are words for everyday food and drinks.', example: 'la pomme = apple, le pain = bread', exampleVisual: '🍞 le pain', hint: 'Some French food words sneak into English — like "omelette".' },
+  'n-f-family':      { title: 'Family in French', intro: 'Your family are the people you love. French has special words for them!', example: 'Maman = Mom, Papa = Dad', exampleVisual: 'Maman · Papa', hint: 'These sound a lot like English baby words!' },
+  'n-f-body':        { title: 'Body Parts', intro: 'Your body has lots of parts. Let\'s name them in French!', example: 'la tête = head, la main = hand, le pied = foot', exampleVisual: 'tête · main · pied', hint: 'Point to each body part as you say its French name.' },
+  'n-f-phrases':     { title: 'Talking in French', intro: 'Put words together to make sentences! Small phrases help you start talking in French.', example: '"Je m\'appelle…" = "My name is…"', exampleVisual: "Je m'appelle…", hint: 'Try: "Je m\'appelle Nishan!"' },
+  'n-f-shapes':      { title: 'Shapes in French', intro: 'Shapes are everywhere. Let\'s name them in French.', example: 'le cercle = circle ⭕, le carré = square 🟦', exampleVisual: '⭕ le cercle', hint: '"Triangle" is the SAME word in French and English!' },
+  'n-f-days':        { title: 'Days of the Week', intro: 'The week has 7 days. In French, most day names end in "-di".', example: 'lundi = Monday, mardi = Tuesday', exampleVisual: 'lundi → vendredi', hint: 'Sunday is the odd one out: dimanche.' },
+  'n-f-weather':     { title: 'French Weather', intro: 'Weather in French usually starts with "Il fait…" — literally "It is…"', example: '"Il fait beau" = "The weather is nice" ☀️', exampleVisual: '☀️ Il fait beau', hint: '"Il pleut" = raining. "Il neige" = snowing.' },
+  'n-f-home':        { title: 'At Home', intro: 'Your home has lots of things — here are their French names!', example: 'la maison = house, la porte = door', exampleVisual: '🏠 la maison', hint: 'Most house words use "la" (girl-word "the").' },
+  'n-f-toys':        { title: 'Toys!', intro: 'Toys make playtime fun. Here are their French names.', example: 'le ballon = ball, la poupée = doll', exampleVisual: '⚽ le ballon', hint: 'Say your favourite toy in French!' },
+  'n-f-nature':      { title: 'Nature', intro: 'Nature is full of amazing things. Let\'s learn some French nature words!', example: 'le soleil = sun ☀️, la lune = moon 🌙', exampleVisual: '☀️ le soleil', hint: 'Look outside and try naming what you see in French.' },
+  'n-f-verbs':       { title: 'Actions', intro: 'Verbs are ACTION words — they tell what you DO.', example: 'courir = to run, sauter = to jump', exampleVisual: '🏃 courir', hint: 'Try doing the action while saying the French word!' },
+
+  /* ---------- RUSHAN: reading ---------- */
+  'r-r-passage':     { title: 'Reading Comprehension', intro: 'After reading a passage, you should be able to answer questions about it. That\'s comprehension!', example: 'If a story says "Maya fed her turtle lettuce", you know Maya has a turtle.', hint: 'Read the whole passage carefully — look back if you forget details.' },
+  'r-r-vocab':       { title: 'Word Meanings', intro: 'Vocabulary is knowing what words mean. Synonyms mean the SAME. Antonyms mean the OPPOSITE.', example: 'Synonyms: huge = gigantic. Antonyms: hot ↔ cold.', hint: 'Think about words in sentences to lock in their meaning.' },
+  'r-r-order':       { title: 'Sentence Structure', intro: 'English sentences have a natural flow: subject → verb → details. Unscramble by asking "what makes sense?"', example: '"The curious cat quietly climbed the tall tree."', hint: 'Usually: Who → what they did → where/when.' },
+  'r-r-inference':   { title: 'Reading Between the Lines', intro: 'Sometimes a story doesn\'t SAY everything — you figure it out from clues!', example: '"Mia grabbed her umbrella." → You can INFER: it\'s raining!', hint: 'Ask: "What do the clues tell me that\'s not said directly?"' },
+  'r-r-figurative':  { title: 'Fun Phrases', intro: 'Some phrases don\'t mean exactly what they say. "Raining cats and dogs" = raining hard!', example: '"Time flies" = time passes quickly. "Piece of cake" = very easy.', hint: 'Figurative language paints a picture — think what it reminds you of.' },
+  'r-r-main':        { title: 'The Main Idea', intro: 'The main idea is what a passage is MOSTLY about. Other sentences support it.', example: 'A paragraph about bees making honey, pollinating flowers, and helping plants → main idea: "Bees are amazing and helpful."', hint: 'Sum the whole thing up in one sentence — that\'s the main idea.' },
+
+  /* ---------- RUSHAN: writing ---------- */
+  'r-w-punct':       { title: 'Punctuation Marks', intro: 'Punctuation tells you HOW to read. Period (.) stops. Question (?) asks. Exclamation (!) shouts!', example: '"How are you?" vs "I am fine." vs "Wow!"', hint: 'Commas (,) separate list items: "apples, bananas, and grapes."' },
+  'r-w-build':       { title: 'Complete Sentences', intro: 'A complete sentence needs a subject (who/what) AND a verb (did/is). It has to make sense on its own.', example: '"The tired puppy curled up on the soft pillow." ✓', hint: '"Running fast." is NOT complete — WHO is running?' },
+  'r-w-topic':       { title: 'Topic Sentences', intro: 'A topic sentence is the FIRST sentence of a paragraph. It tells you what the paragraph will be about.', example: '"Dogs make wonderful pets." → the rest explains why.', hint: 'Pick the broadest sentence — one the others support.' },
+  'r-w-para':        { title: 'Ordering a Paragraph', intro: 'Events in a paragraph happen in order. Look for clue words: First, Next, Then, Finally.', example: 'Baking a cake: 1) gather tools → 2) mix → 3) pour → 4) bake.', hint: 'Ask: "What must happen BEFORE this?"' },
+  'r-w-capital':     { title: 'Capitalization Rules', intro: 'Capital letters start sentences and names. Always capitalise: "I", names, places, days, months.', example: '"My friend Sam lives in Toronto."', hint: 'Check the start of each sentence AND every name.' },
+  'r-w-spell':       { title: 'Tricky Spellings', intro: 'Some words are spelled in surprising ways. Memorise the tricky ones!', example: '"Friend" has a sneaky "i" before "e". "Because" has "cause" inside it.', hint: 'If a word looks weird, it probably IS — just memorise it.' },
+  'r-w-syn':         { title: 'Same vs. Opposite', intro: 'Synonyms = SAME meaning. Antonyms = OPPOSITE meaning.', example: 'Synonyms: happy / glad. Antonyms: hot / cold.', hint: 'Ask: "Could I swap these words and keep the meaning?"' },
+  'r-w-pos':         { title: 'Types of Words', intro: 'Every word has a job. Nouns = person/place/thing. Verbs = actions. Adjectives = describing words.', example: '"The fluffy cat slept." → cat (noun), slept (verb), fluffy (adjective)', hint: 'Ask: is it a thing? An action? Or describes something?' },
+  'r-w-homophones':  { title: 'Sound-Alikes', intro: 'Homophones are words that sound the same but mean different things. "Bear" (animal) vs "Bare" (naked).', example: '"I saw a bear." vs "My feet are bare."', hint: 'Pick the one that makes sense in the sentence!' },
+  'r-w-suffix':      { title: 'Word Parts', intro: 'Tiny word-parts change meaning. "Un-" = not. "Re-" = again. "-ful" = full of.', example: 'Un + happy = Unhappy. Re + write = Rewrite.', hint: 'Break the word apart — figure out each piece\'s meaning.' },
+  'r-w-commas':      { title: 'Comma Rules', intro: 'Commas separate items in a list, join greetings, and set off extra info.', example: '"I bought apples, oranges, and pears."', hint: 'Read it aloud — commas are where you pause.' },
+  'r-w-paragraph':   { title: 'Paragraph Sense', intro: 'Every sentence in a paragraph should connect to the main topic. A sentence that doesn\'t fit → doesn\'t belong.', example: 'A paragraph about DOGS shouldn\'t say "Pizza is delicious."', hint: 'Ask: "Does this support the main topic?"' },
+
+  /* ---------- RUSHAN: logic ---------- */
+  'r-l-pattern':     { title: 'Number Patterns', intro: 'Numbers can form patterns — adding the same amount, doubling, going backwards, etc.', example: '3, 6, 9, 12 → +3 each time → next: 15!', hint: 'Find the difference between each pair of numbers.' },
+  'r-l-riddle':      { title: 'Solving Riddles', intro: 'Riddles give clues that describe something. Use them to figure out WHAT!', example: '"I have a face and hands but no arms." → a clock! 🕐', hint: 'What could fit ALL the clues at once?' },
+  'r-l-sort':        { title: 'Which Doesn\'t Belong?', intro: 'Find the ONE item that\'s different — the "odd one out".', example: 'Chair, Table, Sofa, Moon → Moon doesn\'t belong (not furniture!)', hint: 'What do three of these have in common?' },
+  'r-l-seq':         { title: 'Putting Things in Order', intro: 'Events and processes have a natural order. Think about first, next, and last.', example: 'Sandwich: 1) bread → 2) fillings → 3) combine → 4) eat!', hint: 'Look for clue words like First, Next, Finally.' },
+  'r-l-analogy':     { title: 'Analogies', intro: 'An analogy shows how two pairs relate the same way. "Bird : Sky :: Fish : Water"', example: 'Dog : Puppy :: Cat : Kitten (parent/baby)', hint: 'Figure out the RELATIONSHIP in the first pair, then apply it.' },
+  'r-l-ifthen':      { title: 'Logical Thinking', intro: 'If one thing is true, then something else MUST follow. That\'s logic!', example: '"All cats purr. Whiskers is a cat. So Whiskers purrs."', hint: 'Go step by step — each "if" leads to a "then".' },
+  'r-l-code':        { title: 'Simple Codes', intro: 'A code uses symbols for other things. Letters can be numbers (A=1, B=2, C=3…).', example: 'If A=1 and B=2, then C=3 and D=4!', hint: 'Find the pattern, then apply it to solve.' },
+  'r-l-categorize':  { title: 'Grouping Things', intro: 'Things belong to groups (categories). A dog is a "Mammal" and also a "Pet".', example: 'Piano → "Instruments". Saturn → "Planets".', hint: 'Ask: "What\'s the biggest group this thing fits in?"' },
+  'r-l-maze':        { title: 'Tricky Brain Teasers', intro: 'Some puzzles have sneaky twists! Read carefully — don\'t pick the first answer.', example: '"17 sheep. All but 9 run away. How many left?" → 9!', hint: 'Read again — the trick is in the wording.' },
+  'r-l-number':      { title: 'Mystery Numbers', intro: 'Use clues to figure out a secret number. Each clue narrows it down.', example: '"Between 10 and 20. Even. Ends in 4." → 14!', hint: 'Apply each clue one at a time to shrink the choices.' },
+  'r-l-multistep':   { title: 'Multi-Step Problems', intro: 'Some problems need MORE than one step. Do step 1, then use that to do step 2.', example: '"3 packs of 8, gave away 5." → 3×8=24, then 24−5=19.', hint: 'Break big problems into small steps. One at a time.' },
+  'r-l-venn':        { title: 'Things in Many Groups', intro: 'Some things belong to more than one group. A dolphin is a mammal AND lives in water.', example: 'A tomato is a fruit AND red.', hint: 'Check if it fits ALL the required categories.' },
+  'r-l-sequences':   { title: 'Tricky Patterns', intro: 'Not every pattern just adds. Some double, some halve, some follow special rules (like Fibonacci!).', example: '1, 1, 2, 3, 5, 8 → each = sum of the two before!', hint: 'Try: add, subtract, multiply — find what connects the steps.' },
+
+  /* ---------- RUSHAN: math ---------- */
+  'r-m-add':         { title: 'Adding 2-Digit Numbers', intro: 'Add ones first, then tens. If ones ≥ 10, carry 1 to the tens column!', example: '28 + 17 → 8+7=15 (write 5, carry 1) → 2+1+1=4 → 45!', exampleVisual: '28 + 17 = 45', hint: 'Line up ones under ones, tens under tens.' },
+  'r-m-sub':         { title: 'Subtraction with Borrowing', intro: 'When the top digit is smaller than the bottom, BORROW 1 from the tens column.', example: '42 − 15 → 2<5 so borrow → 12−5=7 → 3−1=2 → 27!', hint: 'Borrow when the top is smaller than the bottom.' },
+  'r-m-place':       { title: 'Place Value', intro: 'Each digit has a place. 523 = 5 hundreds + 2 tens + 3 ones.', example: '74 → 7 is tens (70), 4 is ones (4). 74 = 70 + 4.', hint: 'Picture the columns: hundreds | tens | ones.' },
+  'r-m-word':        { title: 'Reading Math Problems', intro: 'Word problems hide math inside a story. Look for clue words and numbers!', example: '"Sam had 25, lost 8, found 4." → 25 − 8 + 4 = 21', hint: 'Underline the numbers and the question.' },
+  'r-m-skip':        { title: 'Skip Counting', intro: 'Skip count by 2s, 3s, 5s, 10s, 25s, 100s — jumping by a set amount each step.', example: 'By 5s: 5, 10, 15, 20, 25!', hint: 'Skip counting is the foundation for multiplication.' },
+  'r-m-mult':        { title: 'Multiplication Basics', intro: 'Multiplying = adding the same number MANY times. 3 × 4 = 3 added 4 times = 12.', example: '3 × 4 = 3 + 3 + 3 + 3 = 12', exampleVisual: '3 × 4 = 12', hint: '3 × 4 = 4 × 3 — order doesn\'t matter!' },
+  'r-m-time':        { title: 'Reading Clocks', intro: 'A clock has a BIG hand (minutes) and LITTLE hand (hours). 60 min = 1 hour. 24 hrs = 1 day.', example: 'Big hand on 12, little on 3 → 3:00!', hint: 'Big hand at 6 = "half past". Big hand at 12 = "on the hour".' },
+  'r-m-evenodd':     { title: 'Even vs. Odd', intro: 'Even numbers end in 0, 2, 4, 6, or 8. Odd numbers end in 1, 3, 5, 7, or 9.', example: '8 is even. 13 is odd. 20 is even.', hint: 'Only look at the LAST digit to decide!' },
+  'r-m-fractions':   { title: 'Fractions', intro: 'A fraction is a PART of a whole. 1/2 = half. 1/4 = a quarter (one of four equal parts).', example: 'Pizza cut in 4 equal slices → one slice is 1/4.', exampleVisual: '🍕 1/4', hint: 'Bottom = total parts. Top = parts you have.' },
+  'r-m-money':       { title: 'Counting Money', intro: 'Coins have different values. Penny = 1¢, Nickel = 5¢, Dime = 10¢, Quarter = 25¢.', example: '2 quarters = 50¢. 4 quarters = $1!', hint: 'Start with the BIGGEST coins, then add up.' },
+  'r-m-measure':     { title: 'Measuring', intro: 'Length = rulers (cm, m, km). Weight = scales (g, kg). Volume = cups (mL, L).', example: 'Pencils → cm. Buses → m. Cities apart → km.', hint: 'Pick the unit that fits the size!' },
+  'r-m-missing':     { title: 'Fill in the Blank', intro: 'When a number is missing, ask: "What number makes this true?"', example: '7 + ? = 15 → what + 7 = 15? → 8!', hint: 'Use the opposite operation: 15 − 7 = 8.' },
+  'r-m-greater':     { title: 'Comparing Numbers', intro: '> means "greater than". < means "less than". = means "equal". The big end points to the bigger number!', example: '15 > 9. 22 < 30. 50 = 50.', hint: '> is like a hungry mouth — it opens to the BIGGER number.' },
+  'r-m-add3d':       { title: 'Adding Big Numbers', intro: 'Add 3-digit numbers like 2-digit: start right, carry when needed.', example: '125 + 134 → 5+4=9, 2+3=5, 1+1=2 → 259!', hint: 'Keep the columns lined up perfectly.' },
+  'r-m-sub3d':       { title: 'Subtracting Big Numbers', intro: 'Same rules for 3-digit subtraction. Borrow across zeros carefully!', example: '500 − 175 = 325', hint: 'When there\'s a zero, you may need to borrow from TWO columns.' },
+  'r-m-tables':      { title: 'Times Tables', intro: 'Memorising times tables saves TONS of time. Practice until 6×7 is as fast as your name!', example: '6 × 7 = 42. 8 × 4 = 32. 9 × 6 = 54.', hint: 'Anything × 10 just adds a zero: 8 × 10 = 80!' },
+  'r-m-divide':      { title: 'Dividing', intro: 'Division splits into equal groups. 12 ÷ 3 = 4 means 12 things, 3 groups → 4 per group.', example: '12 ÷ 3 = 4 (3 friends share 12 cookies → 4 each)', hint: 'Division is the OPPOSITE of multiplication: 3×4=12 ↔ 12÷3=4.' },
+  'r-m-fractions2':  { title: 'More Fractions', intro: 'Fractions with BIGGER bottom numbers are SMALLER pieces!', example: '1/2 > 1/4 > 1/8 — more parts = smaller each.', hint: 'Bigger bottom = smaller slice. Think pizza!' },
+  'r-m-elapsed':     { title: 'Time That Passes', intro: 'Elapsed time = how much time has gone by. School 8:00 → 3:00 = 7 hours.', example: '3:00 + 2 hrs = 5:00. 4:00 → 4:45 = 45 min.', hint: 'Count up on your fingers: 8,9,10,11,12,1,2,3 → 7 hours!' },
+  'r-m-perimeter':   { title: 'Around the Shape', intro: 'Perimeter = the total distance AROUND a shape. Add up all the sides!', example: 'Square with 5 cm sides → 5+5+5+5 = 20 cm.', hint: 'Walk around the shape mentally — how far did you go?' },
+  'r-m-multistep':   { title: 'Big Word Problems', intro: 'Real problems often need many steps. Break them down and solve in order.', example: '"3 packs of 8 stickers. Gave 5 to sister." → 3×8=24 → 24−5=19.', hint: 'Write each step. Don\'t skip ahead!' },
+
+  /* ---------- RUSHAN: french ---------- */
+  'r-f-start':         { title: 'Bienvenue!', intro: 'French is spoken by 300 million people around the world. These are the essential first words!', example: '"Bonjour" = Hello. "Merci" = Thank you. "Oui" = Yes.', exampleVisual: 'Bonjour!', hint: 'Say every new word out loud — that\'s how you really learn.' },
+  'r-f-basicnumbers':  { title: 'Counting in French', intro: 'French numbers 1 to 10 — memorise these and you\'re on your way.', example: 'un, deux, trois, quatre, cinq, six, sept, huit, neuf, dix', exampleVisual: 'un · deux · trois', hint: 'Count your fingers in French!' },
+  'r-f-basiccolors':   { title: 'Les Couleurs', intro: 'Colours in French. Some sound like English, some are totally different!', example: 'rouge = red, bleu = blue, vert = green', exampleVisual: '🔴 rouge', hint: '"Violet" and "orange" are the same in both languages.' },
+  'r-f-basicanimals':  { title: 'Les Animaux', intro: 'French has different names for common animals. Learn a few each day!', example: 'le chat = cat 🐱, le chien = dog 🐶', exampleVisual: '🐱 le chat', hint: 'The tiny word "le" or "la" means "the" in French.' },
+  'r-f-basicfood':     { title: 'La Nourriture', intro: 'French cooking is world-famous. Start with these everyday food words!', example: 'la pomme = apple, le pain = bread, le fromage = cheese', exampleVisual: '🍞 le pain', hint: 'Many French food words show up in English restaurants!' },
+  'r-f-basicfamily':   { title: 'La Famille', intro: 'Family words in French — some sound like English baby words!', example: 'Maman = Mom, Papa = Dad, frère = brother, sœur = sister', hint: 'Maman and Papa are easy — almost the same!' },
+  'r-f-greetings':     { title: 'Being Polite', intro: 'French culture values politeness. There are formal AND casual greetings.', example: '"Bonjour" = formal hello. "Salut" = casual hi. "Enchanté" = nice to meet you!', hint: 'Use "Bonjour" with teachers. "Salut" with friends.' },
+  'r-f-numbers':       { title: 'Counting Higher', intro: 'After 10, French gets creative! 11–16 have unique names, 17–19 = "ten-seven", etc.', example: '11 = onze, 15 = quinze, 17 = dix-sept (10+7)', hint: '20 = vingt. Then: vingt-et-un (21), vingt-deux (22)…' },
+  'r-f-colors':        { title: 'Colors & Agreement', intro: 'French colour words change based on the word they describe. Boy (le) vs girl (la) versions!', example: 'un chapeau blanc (white hat, masc.). une maison blanche (white house, fem.).', hint: 'Add "-e" at the end for feminine nouns.' },
+  'r-f-days':          { title: 'Days of the Week', intro: 'All French weekdays end in "-di" (Monday–Saturday). Sunday = dimanche.', example: 'lundi, mardi, mercredi, jeudi, vendredi, samedi, dimanche', hint: 'hier = yesterday. aujourd\'hui = today. demain = tomorrow.' },
+  'r-f-months':        { title: 'Months of the Year', intro: 'French months look SIMILAR to English — just a bit different spelling!', example: 'janvier, mars, juillet, décembre', hint: 'If you know English months, you can guess most French ones.' },
+  'r-f-weather':       { title: 'Weather Phrases', intro: 'French weather usually starts with "Il fait…" (literally "It makes…")', example: '"Il fait beau" = Nice weather. "Il pleut" = It\'s raining.', hint: '"Il neige" = snowing. "Il fait froid" = cold.' },
+  'r-f-verbs':         { title: 'Two Essential Verbs', intro: '"Être" = to be. "Avoir" = to have. You\'ll use these all the time!', example: 'Je suis (I am), J\'ai (I have). Elle est (She is).', hint: 'In French, you HAVE years: "J\'ai 8 ans" = "I am 8"!' },
+  'r-f-sentences':     { title: 'French Sentences', intro: 'Put French words into sentences. Order: Subject + Verb + Rest.', example: '"J\'ai un chat" = "I have a cat". "Je m\'appelle Tom" = "My name is Tom".', hint: '"J\'" = short for "Je" (used before vowel sounds).' },
+  'r-f-school':        { title: 'At School', intro: 'School words in French. You\'ll recognise things in your classroom!', example: 'le livre = book, le crayon = pencil, le professeur = teacher', hint: 'Try naming things you see at school in French!' },
+  'r-f-questions':     { title: 'Question Words', intro: 'To ask questions in French, use: Qui (Who), Quoi (What), Où (Where), Quand (When), Pourquoi (Why), Comment (How).', example: '"Comment ça va?" = "How are you?"', hint: '"Combien" = how many / how much.' },
+
+};
+
 /* ============================================================
    MULTI-USER STATE & CLOUD SYNC
    ============================================================
@@ -4532,13 +4763,22 @@ function renderActivity(root, child, activityId) {
   const found = findActivity(child, activityId);
   if (!found) { go('home'); return; }
 
+  // Build the working question list: prepend a lesson screen if present.
+  // The lesson can either be inline on the activity, or in the global LESSONS map.
+  const base = found.activity.questions;
+  const lesson = found.activity.lesson || (typeof LESSONS !== 'undefined' && LESSONS[activityId]);
+  const questions = lesson
+    ? [{ type: 'lesson', lesson }, ...base]
+    : base.slice();
+
   quiz = {
     child, activityId,
     subject: found.subject,
     activity: found.activity,
+    questions,
     idx: 0,
     correct: 0,
-    answers: new Array(found.activity.questions.length).fill(null),
+    answers: new Array(questions.length).fill(null),
     locked: false
   };
 
@@ -4550,8 +4790,8 @@ function renderActivity(root, child, activityId) {
 function renderQuestion(wrap) {
   wrap.innerHTML = '';
   const a = quiz.activity;
-  const q = a.questions[quiz.idx];
-  const total = a.questions.length;
+  const q = quiz.questions[quiz.idx];
+  const total = quiz.questions.length;
 
   const subjectIcon = SUBJECTS.find(s => s.id === quiz.subject).icon;
   const head = h('div', { class: 'quiz-head' }, [
@@ -4567,32 +4807,37 @@ function renderQuestion(wrap) {
 
   const card = h('div', { class: 'q-card' }, []);
 
-  // Passage for reading questions
-  if (q.type === 'passage' && q.passage) {
-    card.appendChild(h('div', { class: 'q-passage' }, q.passage));
-  }
+  // Lesson screen — completely replaces normal card content
+  if (q.type === 'lesson') {
+    renderLesson(card, q);
+  } else {
+    // Passage for reading questions
+    if (q.type === 'passage' && q.passage) {
+      card.appendChild(h('div', { class: 'q-passage' }, q.passage));
+    }
 
-  // Question text
-  card.appendChild(h('div', { class: 'q-text' }, q.q));
+    // Question text
+    card.appendChild(h('div', { class: 'q-text' }, q.q));
 
-  // Visual (emoji strings etc.)
-  if (q.visual) card.appendChild(h('div', { class: 'q-visual' }, q.visual));
+    // Visual (emoji strings etc.)
+    if (q.visual) card.appendChild(h('div', { class: 'q-visual' }, q.visual));
 
-  // Render by type
-  if (q.type === 'mcq' || q.type === 'count' || q.type === 'passage') {
-    renderMCQ(card, q);
-  } else if (q.type === 'compare') {
-    renderCompare(card, q);
-  } else if (q.type === 'fill') {
-    renderFill(card, q);
-  } else if (q.type === 'match') {
-    renderMatch(card, q);
-  } else if (q.type === 'order') {
-    renderOrder(card, q);
-  } else if (q.type === 'sentence') {
-    renderSentence(card, q);
-  } else if (q.type === 'action') {
-    renderActionScreen(card, q);
+    // Render by type
+    if (q.type === 'mcq' || q.type === 'count' || q.type === 'passage') {
+      renderMCQ(card, q);
+    } else if (q.type === 'compare') {
+      renderCompare(card, q);
+    } else if (q.type === 'fill') {
+      renderFill(card, q);
+    } else if (q.type === 'match') {
+      renderMatch(card, q);
+    } else if (q.type === 'order') {
+      renderOrder(card, q);
+    } else if (q.type === 'sentence') {
+      renderSentence(card, q);
+    } else if (q.type === 'action') {
+      renderActionScreen(card, q);
+    }
   }
 
   // Feedback slot
@@ -4610,6 +4855,55 @@ function renderQuestion(wrap) {
     ]),
   ]);
   wrap.appendChild(controls);
+}
+
+/* ---- Lesson screen (shown once before questions) ---- */
+function renderLesson(card, q) {
+  card.innerHTML = '';
+  card.classList.add('lesson-card');
+  const L = q.lesson || {};
+
+  card.appendChild(h('div', { class: 'lesson-badge' }, [
+    svgIcon('i-grad', 14),
+    h('span', {}, 'QUICK LESSON')
+  ]));
+
+  if (L.title) {
+    card.appendChild(h('h3', { class: 'lesson-title' }, L.title));
+  }
+
+  if (L.intro) {
+    card.appendChild(h('p', { class: 'lesson-intro' }, L.intro));
+  }
+
+  if (L.example) {
+    const ex = h('div', { class: 'lesson-example' }, []);
+    ex.appendChild(h('div', { class: 'lesson-example-label' }, 'Example'));
+    if (L.exampleVisual) {
+      ex.appendChild(h('div', { class: 'lesson-example-visual' }, L.exampleVisual));
+    }
+    ex.appendChild(h('div', { class: 'lesson-example-text' }, L.example));
+    card.appendChild(ex);
+  }
+
+  if (L.hint) {
+    card.appendChild(h('div', { class: 'lesson-hint' }, [
+      svgIcon('i-sparkle', 14),
+      h('span', {}, L.hint)
+    ]));
+  }
+
+  // No scoring — mark as "answered" and surface Next immediately
+  quiz.locked = false;
+  setTimeout(() => {
+    const btn = document.getElementById('nextBtn');
+    if (btn) {
+      btn.style.display = 'inline-flex';
+      btn.innerHTML = '';
+      btn.appendChild(h('span', {}, 'Let\'s practice!'));
+      btn.appendChild(svgIcon('i-arrow-right', 14));
+    }
+  }, 0);
 }
 
 /* ---- Sentence screen (story mode, one sentence at a time) ---- */
@@ -4927,7 +5221,7 @@ function showNext() {
   const btn = $('#nextBtn');
   if (!btn) return;
   btn.style.display = 'inline-flex';
-  const isLast = (quiz.idx + 1) >= quiz.activity.questions.length;
+  const isLast = (quiz.idx + 1) >= quiz.questions.length;
   btn.innerHTML = '';
   btn.appendChild(h('span', {}, isLast ? 'Finish' : 'Next'));
   btn.appendChild(svgIcon(isLast ? 'i-check' : 'i-arrow-right', 14));
@@ -4935,7 +5229,7 @@ function showNext() {
 
 function nextQuestion() {
   sfx.click();
-  if (quiz.idx + 1 < quiz.activity.questions.length) {
+  if (quiz.idx + 1 < quiz.questions.length) {
     quiz.idx++;
     quiz.locked = false;
     renderQuestion($('.quiz'));
@@ -4947,8 +5241,8 @@ function nextQuestion() {
 /* ---------- FINISH / REWARD ---------- */
 function finishActivity() {
   const a = quiz.activity;
-  // Only MCQ-style questions count toward a score. Sentence/action screens are for pacing.
-  const scorable = a.questions.filter(q => !['sentence','action'].includes(q.type));
+  // Only MCQ-style questions count toward a score. Sentence/action/lesson screens are for pacing or teaching.
+  const scorable = a.questions.filter(q => !['sentence','action','lesson'].includes(q.type));
   const total = scorable.length || 1;
   const correct = quiz.correct;
 
