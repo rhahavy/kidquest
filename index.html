@@ -3999,12 +3999,20 @@ function pickVoice(lang) {
    (high-quality neural voices) with the browser's Web Speech
    API as a fallback. Chunks long text so it doesn't hit the
    ~200-char limit per request.
+
+   `speakGen` is an "invalidation" counter. Every time someone
+   asks us to speak (or stop), we bump it. Callbacks from the
+   OLD playback check their generation against the current one
+   and bail out — this prevents two voices playing on top of
+   each other when the user taps multiple speakers quickly.
    ---------------------------------------------------------- */
 let currentAudio = null;
+let speakGen = 0;
 
 function stopAllAudio() {
+  speakGen++;   // invalidates any in-flight playback callbacks
   if (currentAudio) {
-    try { currentAudio.pause(); } catch(_e) {}
+    try { currentAudio.pause(); currentAudio.src = ''; } catch(_e) {}
     currentAudio = null;
   }
   if (AUDIO_SUPPORTED) {
@@ -4053,33 +4061,44 @@ function googleTtsUrl(text, lang) {
   return 'https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=' + tl + '&q=' + encodeURIComponent(text);
 }
 
-function speakViaGoogle(text, lang) {
+function speakViaGoogle(text, lang, myGen) {
   return new Promise((resolve, reject) => {
     const chunks = chunkText(text, 180);
     let i = 0;
+    // Track if anything actually started playing, so we never fall back
+    // to a different voice mid-sentence.
+    const state = { anyPlayed: false };
+    const isStale = () => myGen !== speakGen;
+
     function playNext() {
-      if (i >= chunks.length) { resolve(); return; }
+      if (isStale()) return resolve({ anyPlayed: state.anyPlayed, stale: true });
+      if (i >= chunks.length) return resolve({ anyPlayed: state.anyPlayed, stale: false });
+
       const chunk = chunks[i++];
       const audio = new Audio(googleTtsUrl(chunk, lang));
       audio.preload = 'auto';
       currentAudio = audio;
-      // 8-second timeout for load
-      const timer = setTimeout(() => {
+
+      let settled = false;
+      const once = (fn) => { if (!settled) { settled = true; fn(); } };
+      const timer = setTimeout(() => once(() => {
         try { audio.pause(); } catch(_e) {}
-        reject(new Error('Google TTS timeout'));
-      }, 8000);
-      audio.addEventListener('ended', () => {
+        if (state.anyPlayed || isStale()) resolve({ anyPlayed: state.anyPlayed, stale: isStale() });
+        else reject(new Error('timeout'));
+      }), 9000);
+
+      audio.addEventListener('playing', () => { state.anyPlayed = true; });
+      audio.addEventListener('ended',   () => once(() => { clearTimeout(timer); playNext(); }));
+      audio.addEventListener('error',   () => once(() => {
         clearTimeout(timer);
-        playNext();
-      }, { once: true });
-      audio.addEventListener('error', () => {
+        if (state.anyPlayed || isStale()) resolve({ anyPlayed: state.anyPlayed, stale: isStale() });
+        else reject(new Error('audio error'));
+      }));
+      audio.play().catch(err => once(() => {
         clearTimeout(timer);
-        reject(new Error('Google TTS audio error'));
-      }, { once: true });
-      audio.play().catch(err => {
-        clearTimeout(timer);
-        reject(err);
-      });
+        if (state.anyPlayed || isStale()) resolve({ anyPlayed: state.anyPlayed, stale: isStale() });
+        else reject(err);
+      }));
     }
     playNext();
   });
@@ -4102,12 +4121,18 @@ function speakViaBrowser(text, lang) {
 
 async function speak(text, lang) {
   if (!speechEnabled || !text) return;
-  stopAllAudio();
+  stopAllAudio();              // bumps speakGen — prior playbacks become "stale"
+  const myGen = speakGen;
   const useLang = lang || currentLang();
   try {
-    await speakViaGoogle(String(text), useLang);
+    await speakViaGoogle(String(text), useLang, myGen);
+    // If we got here, Google TTS handled it (possibly partial if superseded).
+    // Nothing to do.
   } catch (err) {
-    // Network/CORS/rate-limit — gracefully fall back to browser TTS
+    // Fall back to the browser voice ONLY if:
+    //   - this speak() is still the latest one (not superseded), AND
+    //   - nothing actually played yet (so we won't overlap with another voice)
+    if (myGen !== speakGen) return;
     console.warn('[LA] Cloud TTS unavailable, using browser voice:', err && err.message);
     speakViaBrowser(text, useLang);
   }
