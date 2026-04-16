@@ -251,6 +251,30 @@ img{max-width:100%}
 .btn-ghost{background:rgba(0,0,0,.05);color:var(--ink2)}
 .btn-ghost:hover{background:rgba(0,0,0,.1)}
 
+/* ---- Write (typing) question ---- */
+.write-area{max-width:600px;margin:16px auto 0}
+.write-prompt{font-size:16px;font-weight:700;color:var(--ink);margin-bottom:10px;line-height:1.4}
+.write-textarea{width:100%;min-height:120px;padding:14px 16px;border:2px solid var(--line);border-radius:var(--r);font-family:var(--font);font-size:15px;font-weight:600;color:var(--ink);resize:vertical;transition:border-color .2s;line-height:1.5}
+.write-textarea:focus{outline:none;border-color:var(--primary)}
+.write-textarea::placeholder{color:var(--ink3)}
+.write-meta{display:flex;justify-content:space-between;align-items:center;margin-top:8px;font-size:13px;color:var(--ink3);font-weight:600}
+.write-submit{margin-top:12px;width:100%;padding:14px;border-radius:var(--r);background:var(--primary);color:#fff;font-size:16px;font-weight:800;box-shadow:0 6px 18px rgba(108,92,231,.35);transition:all .2s}
+.write-submit:hover{transform:translateY(-2px)}
+.write-submit:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.rubric{margin-top:16px;padding:18px;background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);animation:cardUp .4s var(--spring)}
+.rubric-level{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.rubric-badge{display:inline-flex;align-items:center;justify-content:center;width:42px;height:42px;border-radius:14px;font-size:20px;font-weight:800;color:#fff;flex-shrink:0}
+.rubric-badge.lv1{background:var(--coral)}
+.rubric-badge.lv2{background:var(--sun);color:#7a5e00}
+.rubric-badge.lv3{background:var(--mint)}
+.rubric-badge.lv4{background:var(--primary)}
+.rubric-title{font-size:18px;font-weight:800}
+.rubric-fb{font-size:14px;color:var(--ink2);margin-top:4px;line-height:1.5}
+.rubric-details{margin-top:10px;display:flex;gap:6px;flex-wrap:wrap}
+.rubric-tag{padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700}
+.rubric-tag.pass{background:rgba(0,206,201,.15);color:#00855a}
+.rubric-tag.miss{background:rgba(255,118,117,.12);color:#c0392b}
+
 /* Lesson card */
 .lesson-card{background:linear-gradient(180deg,#faf9ff,#fff)!important;border:2px dashed rgba(253,203,110,.5)!important;text-align:left!important;padding:clamp(22px,3vw,32px)!important}
 .lesson-badge{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;background:linear-gradient(135deg,#ffeaa7,var(--sun));color:#5b3e00;border-radius:999px;font-size:11px;font-weight:800;letter-spacing:.06em}
@@ -371,7 +395,7 @@ img{max-width:100%}
 /* ========== STUDENT CONFIGURATION ==========
    Change emoji PINs here. Each student has ONE emoji they memorize. */
 const STUDENTS = [
-  { id:'akshayan', name:'Akshayan', grade:'Grade 3 (Review)', initial:'A', mascot:'🦁', pin:'🦁', hint:'(l__n)',     color:'var(--akshayan)' },
+  { id:'akshayan', name:'Akshayan', grade:'Grade 3', initial:'A', mascot:'🦁', pin:'🦁', hint:'(l__n)',     color:'var(--akshayan)' },
   { id:'rushan',   name:'Rushan',   grade:'Grade 2',          initial:'R', mascot:'🐶', pin:'🐶', hint:'(d_g)',      color:'var(--rushan)' },
   { id:'akaran',   name:'Akaran',   grade:'Grade 1',          initial:'K', mascot:'⭐', pin:'⭐', hint:'(s_ar)',     color:'var(--akaran)' },
   { id:'nishan',   name:'Nishan',   grade:'Senior Kindergarten',initial:'N',mascot:'🌈', pin:'🌈', hint:'(r_inb_w)', color:'var(--nishan)' },
@@ -498,13 +522,13 @@ nishan: {
         {type:'match',q:'Match each big letter to its small letter.',pairs:[['A','a'],['B','b'],['D','d'],['M','m']]},
         {type:'match',q:'Match more letters!',pairs:[['G','g'],['R','r'],['S','s'],['T','t']]},
       ]},
-    { id:'w1-nishan-w5', title:'Finish the Sentence', emoji:'✏️',
-      lesson:{title:'Completing Sentences',intro:'A sentence tells a complete idea. Pick the word that makes it make sense!',example:'"Fish swim in the ___" → water!',hint:'Try each word in your head — which one sounds right?'},
+    { id:'w1-nishan-w5', title:'My Writing!', emoji:'✍️',
+      lesson:{title:'Writing Your Own Words!',intro:'Now YOU get to write! Type your own answer. Use your best words!',example:'If the prompt says "Tell me about your pet" → "I have a cat. She is soft."',hint:'Try to write at least 3 words. Start with a capital letter!'},
       questions:[
+        {type:'write',q:'Write about your favorite animal.',prompt:'🐾 What is your favorite animal? Write about it!',placeholder:'I like cats because...',minWords:3,goodWords:6,keywords:['cat','dog','fish','bird','rabbit','bear','lion','horse','turtle','hamster']},
+        {type:'write',q:'What do you like to eat?',prompt:'🍎 What is your favorite food? Tell me about it!',placeholder:'My favorite food is...',minWords:3,goodWords:6,keywords:['pizza','apple','banana','ice cream','cookies','cake','rice','chicken','pasta','milk']},
+        {type:'write',q:'Tell me about your family.',prompt:'👨‍👩‍👧‍👦 Who is in your family? Write about them!',placeholder:'My family has...',minWords:3,goodWords:8,keywords:['mom','dad','brother','sister','baby','grandma','grandpa','family','love']},
         {type:'mcq',q:'"I see a ___ in the sky."',choices:['fish','cloud','rug','book'],answer:1},
-        {type:'mcq',q:'"The cat likes to ___."',choices:['swim','bark','purr','fly'],answer:2},
-        {type:'mcq',q:'"We eat with a ___."',choices:['book','spoon','shoe','hat'],answer:1},
-        {type:'mcq',q:'"Fish swim in the ___."',choices:['sky','tree','water','grass'],answer:2},
         {type:'mcq',q:'"Birds can ___."',choices:['drive','fly','read','cook'],answer:1},
       ]},
   ],
@@ -687,12 +711,12 @@ akaran: {
         {type:'mcq',q:'Which is a complete sentence?',choices:['Running fast.','The boy runs.','Boy fast.','Fast very.'],answer:1},
         {type:'mcq',q:'Which is a complete sentence?',choices:['Blue sky.','The sky is blue.','Is blue sky.','Sky blue the.'],answer:1},
       ]},
-    { id:'w1-akaran-w5', title:'Fill In', emoji:'✏️',
-      lesson:{title:'Missing Words',intro:'Read the sentence. Pick the word that makes the most sense!',example:'"I ___ to school every day." → go!',hint:'Try each word in the blank. Which sounds right?'},
+    { id:'w1-akaran-w5', title:'My Writing!', emoji:'✍️',
+      lesson:{title:'Write Your Own Sentences!',intro:'Now it\'s YOUR turn to write! Type real sentences. Remember: capital letter at the start, period at the end.',example:'Prompt: "What do you like at school?" → "I like art class. We paint pictures."',hint:'Write at least 5 words. Start with a capital and end with a period!'},
       questions:[
-        {type:'mcq',q:'"The bird can ___."',choices:['swim','fly','drive','cook'],answer:1},
-        {type:'mcq',q:'"We ___ lunch at noon."',choices:['read','sing','eat','throw'],answer:2},
-        {type:'mcq',q:'"I ___ my teeth every morning."',choices:['wash','brush','cut','paint'],answer:1},
+        {type:'write',q:'Write about your best friend.',prompt:'👫 Who is your best friend? What do you like to do together?',placeholder:'My best friend is...',minWords:5,goodWords:10,keywords:['friend','play','like','fun','together','school','nice','best','happy'],expectSentences:true},
+        {type:'write',q:'What do you like about school?',prompt:'🏫 What is your favorite thing about school? Why do you like it?',placeholder:'I like school because...',minWords:5,goodWords:10,keywords:['school','teacher','learn','read','math','fun','friends','play','favorite'],expectSentences:true},
+        {type:'write',q:'Describe your favorite day.',prompt:'🌞 What does your perfect day look like? What would you do?',placeholder:'On my favorite day I would...',minWords:5,goodWords:12,keywords:['play','eat','go','fun','happy','park','home','family','friends'],expectSentences:true},
         {type:'mcq',q:'"The sun is ___."',choices:['cold','dark','bright','quiet'],answer:2},
         {type:'mcq',q:'"Mom ___ dinner for us."',choices:['reads','cooks','flies','runs'],answer:1},
       ]},
@@ -875,14 +899,14 @@ rushan: {
         {type:'mcq',q:'In "The red ball bounced," which is the adjective?',choices:['The','red','ball','bounced'],answer:1},
         {type:'mcq',q:'In "The dog barks loudly," which is the verb?',choices:['The','dog','barks','loudly'],answer:2},
       ]},
-    { id:'w1-rushan-w5', title:'Synonyms & Antonyms', emoji:'🔄',
-      lesson:{title:'Same and Opposite Meanings',intro:'Synonyms = SAME meaning. Antonyms = OPPOSITE meaning.',example:'Synonyms: happy / glad. Antonyms: hot / cold.',hint:'Ask: could I swap these words and keep the meaning?'},
+    { id:'w1-rushan-w5', title:'Free Writing', emoji:'✍️',
+      lesson:{title:'Write a Short Paragraph!',intro:'Now you get to write YOUR OWN paragraph. Use at least 2-3 sentences. Remember capitals, periods, and descriptive words!',example:'Prompt: "Describe your room" → "My room is small but cozy. I have a blue bed and a bookshelf. My favorite toy is on the shelf."',hint:'Write 8+ words. Use describing words like "big," "colorful," "exciting."'},
       questions:[
+        {type:'write',q:'Write about your favorite place.',prompt:'🌍 What is your favorite place to go? Describe what it looks like and why you like it.',placeholder:'My favorite place is...',minWords:8,goodWords:18,keywords:['place','like','go','because','favorite','fun','beautiful','love','visit','see'],expectSentences:true},
+        {type:'write',q:'Describe an animal you like.',prompt:'🐾 Pick an animal and describe it. What does it look like? What does it eat? Why do you like it?',placeholder:'The animal I like is...',minWords:8,goodWords:18,keywords:['animal','fur','big','small','eat','live','because','like','pet','wild'],expectSentences:true},
+        {type:'write',q:'What did you do last weekend?',prompt:'📅 Write about what you did last weekend. Where did you go? Who were you with?',placeholder:'Last weekend I...',minWords:8,goodWords:20,keywords:['went','played','ate','saw','family','friend','fun','weekend','home','park'],expectSentences:true},
         {type:'mcq',q:'Which means the SAME as "happy"?',choices:['Sad','Glad','Mad','Tired'],answer:1},
-        {type:'mcq',q:'Which means the SAME as "big"?',choices:['Tiny','Small','Huge','Soft'],answer:2},
         {type:'mcq',q:'What is the OPPOSITE of "fast"?',choices:['Quick','Speedy','Slow','Rapid'],answer:2},
-        {type:'mcq',q:'What is the OPPOSITE of "open"?',choices:['Closed','Wide','Empty','Broken'],answer:0},
-        {type:'match',q:'Match opposites!',pairs:[['Hot','Cold'],['Wet','Dry'],['Light','Dark'],['Full','Empty']]},
       ]},
   ],
   math: [
@@ -981,7 +1005,7 @@ rushan: {
   ],
 },
 
-/* ---- AKSHAYAN (Grade 3, reviewing Grade 2) ---- */
+/* ---- AKSHAYAN (Grade 3) ---- */
 akshayan: {
   reading: [
     { id:'w1-akshayan-r1', title:'The Explorer', emoji:'🧭',
@@ -1065,13 +1089,13 @@ akshayan: {
         {type:'passage',passage:'A paragraph talks about brushing teeth morning and night, eating healthy food, and visiting the dentist.',q:'Best topic sentence?',choices:['I like cartoons.','Healthy teeth need good care.','The sky is blue.','My dog is fluffy.'],answer:1},
         {type:'mcq',q:'Which does NOT belong in a paragraph about summer?',choices:['Swimming at the beach','Eating ice cream','Building snowmen','Having picnics'],answer:2},
       ]},
-    { id:'w1-akshayan-w5', title:'Prefixes & Suffixes', emoji:'🔧',
-      lesson:{title:'Word Parts',intro:'"Un-" means NOT. "Re-" means AGAIN. "-ful" means FULL OF. "-less" means WITHOUT.',example:'Un+happy = Unhappy (not happy). Re+write = Rewrite (write again).',hint:'Break the word apart — figure out each piece.'},
+    { id:'w1-akshayan-w5', title:'Paragraph Writing', emoji:'✍️',
+      lesson:{title:'Write a Full Paragraph!',intro:'A strong paragraph has a TOPIC SENTENCE (main idea), DETAIL SENTENCES (supporting info), and a CLOSING SENTENCE. Use descriptive language!',example:'Topic: My pet → "I have a dog named Buddy. He is a golden retriever with soft, fluffy fur. Every morning, he wakes me up by licking my face. Buddy is the best pet I could ever have!"',hint:'Write 12+ words with 3+ sentences. Use adjectives like "amazing," "colorful," "exciting."'},
       questions:[
+        {type:'write',q:'Write about your hero.',prompt:'🦸 Who is someone you look up to? Why do you admire them? Write a paragraph about your hero.',placeholder:'My hero is... because...',minWords:12,goodWords:25,keywords:['hero','because','admire','brave','kind','strong','help','important','look up to','respect','love'],expectSentences:true},
+        {type:'write',q:'Describe your dream vacation.',prompt:'✈️ If you could go ANYWHERE in the world, where would you go? Describe what you would see and do there.',placeholder:'If I could go anywhere, I would go to...',minWords:12,goodWords:25,keywords:['travel','visit','see','beautiful','amazing','beach','mountain','city','explore','adventure','because','would'],expectSentences:true},
+        {type:'write',q:'Write about a time you learned something new.',prompt:'💡 Think of a time you learned a new skill or discovered something interesting. How did it feel? Write about it!',placeholder:'One time I learned...',minWords:12,goodWords:30,keywords:['learned','new','tried','practice','difficult','easy','proud','excited','because','finally','felt','happy'],expectSentences:true},
         {type:'mcq',q:'What does "un-" mean in "unhappy"?',choices:['Very','Not','Again','Before'],answer:1},
-        {type:'mcq',q:'What does "re-" mean in "rewrite"?',choices:['Stop','Before','Again','Not'],answer:2},
-        {type:'mcq',q:'What does "-ful" mean in "colorful"?',choices:['Without','Full of','Before','Small'],answer:1},
-        {type:'mcq',q:'What does "-less" mean in "hopeless"?',choices:['Without','Full of','More','Less than'],answer:0},
         {type:'mcq',q:'Which word means "not safe"?',choices:['safer','unsafe','safely','safety'],answer:1},
       ]},
   ],
@@ -1489,7 +1513,8 @@ function renderQ(wrap){
     if(q.type==='passage'&&q.passage) card.appendChild(h('div',{class:'q-passage'},q.passage));
     card.appendChild(h('div',{class:'q-text'},q.q||''));
     if(q.visual) card.appendChild(h('div',{class:'q-visual'},q.visual));
-    if(q.type==='mcq'||q.type==='passage'||q.type==='fill') renderMCQ(card,q);
+    if(q.type==='write') renderWrite(card,q);
+    else if(q.type==='mcq'||q.type==='passage'||q.type==='fill') renderMCQ(card,q);
     else if(q.type==='compare') renderCompare(card,q);
     else if(q.type==='match') renderMatch(card,q);
     else if(q.type==='order') renderOrder(card,q);
@@ -1584,6 +1609,76 @@ function renderOrder(card,q){
   card.appendChild(slots);card.appendChild(pool);refresh();
 }
 
+/* ---- Write (typing) question ---- */
+function renderWrite(card,q){
+  const area=h('div',{class:'write-area'});
+  if(q.prompt) area.appendChild(h('div',{class:'write-prompt'},q.prompt));
+  const ta=h('textarea',{class:'write-textarea',placeholder:q.placeholder||'Type your answer here...',rows:'5'});
+  area.appendChild(ta);
+  const meta=h('div',{class:'write-meta'},[h('span',{id:'wCount'},'0 words'),h('span',{},'Min: '+(q.minWords||3)+' words')]);
+  area.appendChild(meta);
+  ta.addEventListener('input',()=>{const wc=ta.value.trim().split(/\s+/).filter(w=>w).length;$('#wCount').textContent=wc+' words'});
+  const btn=h('button',{class:'write-submit',onclick:()=>{
+    const text=ta.value.trim();
+    const wc=text.split(/\s+/).filter(w=>w).length;
+    if(wc<(q.minWords||2)){$('#fb').className='feedback no';$('#fb').textContent='Write a bit more! You need at least '+(q.minWords||2)+' words.';return}
+    btn.disabled=true; ta.disabled=true;
+    const result=gradeWriting(text,q);
+    quiz.correct+=(result.level>=3?1:0); // Level 3-4 counts as correct
+    // Show rubric
+    const rubric=h('div',{class:'rubric'});
+    const lvNames=['','Needs Work','Getting There','Good Job!','Excellent!'];
+    const lvEmoji=['','😊','👍','⭐','🌟'];
+    rubric.appendChild(h('div',{class:'rubric-level'},[
+      h('div',{class:'rubric-badge lv'+result.level},result.level),
+      h('div',{},[h('div',{class:'rubric-title'},lvNames[result.level]+' '+lvEmoji[result.level]),]),
+    ]));
+    rubric.appendChild(h('div',{class:'rubric-fb'},result.feedback));
+    const tags=h('div',{class:'rubric-details'});
+    result.checks.forEach(c=>{tags.appendChild(h('span',{class:'rubric-tag '+(c.pass?'pass':'miss')},(c.pass?'✓ ':'✗ ')+c.label))});
+    rubric.appendChild(tags);
+    area.appendChild(rubric);
+    quiz.locked=true;
+    showNext();
+  }},'Submit Writing ✏️');
+  area.appendChild(btn);
+  card.appendChild(area);
+}
+
+/* Grade writing using heuristic rubric (1-4 scale).
+   Checks: word count, capitalization, punctuation, key words, detail/description. */
+function gradeWriting(text,q){
+  const words=text.trim().split(/\s+/).filter(w=>w);
+  const wc=words.length;
+  const minW=q.minWords||3;
+  const goodW=q.goodWords||(minW*2);
+  const startsCapital=/^[A-Z]/.test(text.trim());
+  const endsPunct=/[.!?]$/.test(text.trim());
+  const hasKeyword=q.keywords?q.keywords.some(kw=>text.toLowerCase().includes(kw.toLowerCase())):true;
+  const hasDescriptive=/(very|really|beautiful|amazing|great|wonderful|big|small|happy|sad|because|favorite|love|best|funny|exciting|important|carefully|quickly|slowly)/i.test(text);
+  const hasSentences=(text.match(/[.!?]/g)||[]).length;
+  const checks=[
+    {label:'Enough words ('+minW+'+)',pass:wc>=minW},
+    {label:'Starts with capital',pass:startsCapital},
+    {label:'Ends with punctuation',pass:endsPunct},
+    {label:'Uses topic words',pass:hasKeyword},
+  ];
+  if(goodW>minW) checks.push({label:'Detailed ('+goodW+'+ words)',pass:wc>=goodW});
+  if(q.expectSentences) checks.push({label:'Multiple sentences',pass:hasSentences>=2});
+  const passCount=checks.filter(c=>c.pass).length;
+  const ratio=passCount/checks.length;
+  let level=ratio>=.9?4:ratio>=.7?3:ratio>=.5?2:1;
+  // Bonus for descriptive language
+  if(hasDescriptive&&level<4) level=Math.min(4,level+1);
+  const fbMap={
+    1:'Keep trying! Focus on writing more words and using capitals and periods.',
+    2:'Good start! Try adding more detail and check your capitals and periods.',
+    3:'Nice work! Your writing is clear and follows the rules well.',
+    4:'Outstanding writing! Great details, proper grammar, and excellent effort!',
+  };
+  return {level,feedback:fbMap[level],checks};
+}
+
 /* ---- Feedback & Navigation ---- */
 const PRAISE=['Awesome! 🌟','You got it!','Great thinking!','High five! ✋','Fantastic!','Well done!'];
 const ENCOUR=['Good try!','Try again next time!','Almost!','Nice effort!'];
@@ -1596,7 +1691,7 @@ function nextQ(){
 
 function finishActivity(){
   const a=quiz.activity;
-  const scorable=a.questions.filter(q=>q.type!=='lesson').length||1;
+  const scorable=a.questions.filter(q=>q.type!=='lesson').length||1; // 'write' type IS scorable (Level 3-4 = correct)
   const correct=quiz.correct;
   let stars=1;if(correct/scorable>=.5)stars++;if(correct===scorable)stars++;
   const coins=5+(correct===scorable?5:0);
