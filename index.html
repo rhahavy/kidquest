@@ -57,13 +57,15 @@ img{max-width:100%}
 @keyframes bgDrift{to{filter:hue-rotate(12deg)}}
 
 /* Floating decorative shapes */
+/* Blobs sit BEHIND all content (z:-1). The white cards cover what's directly under them,
+   so blobs only peek through in the gutters/edges — visible but never obscuring text. */
 .bg-shapes{position:fixed;inset:0;pointer-events:none;z-index:-1;overflow:hidden}
-.bg-shapes .blob{position:absolute;border-radius:50%;filter:blur(40px);opacity:.35;animation:floatBlob 18s ease-in-out infinite}
-.bg-shapes .b1{width:180px;height:180px;background:radial-gradient(circle at 30% 30%,#A29BFE,#6C5CE7);top:-40px;left:-40px;animation-delay:0s}
-.bg-shapes .b2{width:140px;height:140px;background:radial-gradient(circle at 30% 30%,#FFD89B,#FDCB6E);top:10%;right:-50px;animation-delay:-4s;animation-duration:22s}
-.bg-shapes .b3{width:220px;height:220px;background:radial-gradient(circle at 30% 30%,#81ECEC,#00CEC9);bottom:-60px;left:-60px;animation-delay:-8s;animation-duration:24s}
-.bg-shapes .b4{width:130px;height:130px;background:radial-gradient(circle at 30% 30%,#FFD0D8,#FF7675);bottom:20%;right:-40px;animation-delay:-12s;animation-duration:20s}
-.bg-shapes .b5{width:100px;height:100px;background:radial-gradient(circle at 30% 30%,#A5DFFF,#74B9FF);top:45%;right:8%;animation-delay:-6s;animation-duration:17s;opacity:.22}
+.bg-shapes .blob{position:absolute;border-radius:50%;filter:blur(2px);opacity:.5;animation:floatBlob 18s ease-in-out infinite}
+.bg-shapes .b1{width:160px;height:160px;background:radial-gradient(circle at 30% 30%,#A29BFE,#6C5CE7);top:6%;left:2%;animation-delay:0s}
+.bg-shapes .b2{width:120px;height:120px;background:radial-gradient(circle at 30% 30%,#FFD89B,#FDCB6E);top:14%;right:3%;animation-delay:-4s;animation-duration:22s}
+.bg-shapes .b3{width:180px;height:180px;background:radial-gradient(circle at 30% 30%,#81ECEC,#00CEC9);bottom:8%;left:2%;animation-delay:-8s;animation-duration:24s;border-radius:45% 55% 60% 40% / 50% 45% 55% 50%}
+.bg-shapes .b4{width:110px;height:110px;background:radial-gradient(circle at 30% 30%,#FFD0D8,#FF7675);bottom:22%;right:3%;animation-delay:-12s;animation-duration:20s}
+.bg-shapes .b5{width:85px;height:85px;background:radial-gradient(circle at 30% 30%,#A5DFFF,#74B9FF);top:48%;right:1%;animation-delay:-6s;animation-duration:17s}
 @keyframes floatBlob{
   0%,100%{transform:translate(0,0) rotate(0)}
   25%{transform:translate(20px,-30px) rotate(8deg)}
