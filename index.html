@@ -1086,6 +1086,40 @@
   .level-chip.lvl-4 { background: rgba(255,107,129,.14); color: #C4364A; }
   .level-chip.lvl-5 { background: rgba(139,127,255,.16); color: #6A58D9; }
 
+  /* Challenge tier — progressively hotter / more "intense" */
+  .level-chip.lvl-6  { background: linear-gradient(135deg, #FFE3D0, #FFC9A8); color: #B85420; }
+  .level-chip.lvl-7  { background: linear-gradient(135deg, #FFD4DC, #FFB0BD); color: #B82A48; }
+  .level-chip.lvl-8  { background: linear-gradient(135deg, #FFC0CC, #FF8FA3); color: #fff; box-shadow: 0 4px 10px -3px rgba(255,107,129,.5); }
+  .level-chip.lvl-9  { background: linear-gradient(135deg, #C4B6FF, #8B7FFF); color: #fff; box-shadow: 0 4px 10px -3px rgba(139,127,255,.5); }
+  .level-chip.lvl-10 {
+    background: linear-gradient(135deg, #FFD96B, #FF9F2C);
+    color: #5C3A00;
+    box-shadow: 0 4px 14px -3px rgba(255,159,44,.6);
+    font-weight: 800;
+    letter-spacing: .08em;
+    animation: lvl10Pulse 2.6s ease-in-out infinite;
+  }
+  @keyframes lvl10Pulse {
+    0%, 100% { box-shadow: 0 4px 14px -3px rgba(255,159,44,.55); transform: scale(1); }
+    50%      { box-shadow: 0 6px 22px -3px rgba(255,159,44,.85); transform: scale(1.04); }
+  }
+
+  /* Subtle visual cue on the whole challenge card */
+  .activity-card.is-challenge {
+    background: linear-gradient(180deg, var(--card) 0%, #FFF8F2 100%);
+  }
+  .activity-card.is-challenge::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(135deg, transparent 50%, rgba(255,159,44,.35) 100%);
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor; mask-composite: exclude;
+    pointer-events: none;
+  }
+
   /* Grid section heading */
   .grid-section-head {
     margin: 22px 0 14px;
@@ -5286,7 +5320,18 @@ function renderChild(root, child) {
   const warmUp    = list.slice(0, warmUpCount);
   const challenge = list.slice(warmUpCount);
 
-  function buildCard(a, levelIdx) {
+  // Helper that scales an activity's index within its tier into a level number.
+  // Warm Up:   1, 2, 3, 4, 5  (capped at 5)
+  // Challenge: 6, 7, 8, 9, 10 (capped at 10) — increase as you progress
+  function levelFor(idx, isChallenge, tierSize) {
+    if (!isChallenge) return Math.min(5, idx + 1);
+    if (tierSize <= 1) return 6;
+    // Linearly spread positions across 6..10 so a longer tier still tops out at 10
+    const span = 4; // 10 - 6
+    return 6 + Math.min(span, Math.round((idx / (tierSize - 1)) * span));
+  }
+
+  function buildCard(a, lvl) {
     const p = state.progress[a.id] || { best: 0, attempts: 0, done: false };
     const totalQ = a.questions.length;
     const pct = Math.min(100, Math.round((p.best / totalQ) * 100));
@@ -5294,9 +5339,10 @@ function renderChild(root, child) {
     const qLabel = a.isStory
       ? `${a.questions.filter(q => q.type === 'sentence').length} pages · ${scorable} questions`
       : totalQ + ' questions';
-    const lvl = Math.min(5, levelIdx + 1);
+    // Pick a more "intense" icon for higher levels
+    const chipIcon = lvl >= 9 ? 'i-trophy' : lvl >= 6 ? 'i-flame' : 'i-sparkle';
     return h('button', {
-      class: 'activity-card subj-' + activeSubject + (a.isStory ? ' story-activity' : ''),
+      class: 'activity-card subj-' + activeSubject + (a.isStory ? ' story-activity' : '') + (lvl >= 6 ? ' is-challenge' : ''),
       onclick: () => go('activity', { child, activity: a.id })
     }, [
       a.isStory && !p.done ? h('span', { class: 'story-tag' }, [svgIcon('i-book', 11), h('span', {}, 'STORY')]) : null,
@@ -5305,7 +5351,7 @@ function renderChild(root, child) {
       h('h3', {}, a.title),
       h('div', { class: 'meta' }, a.blurb + ' · ' + qLabel),
       h('div', { class: 'level-chip lvl-' + lvl }, [
-        svgIcon('i-sparkle', 10),
+        svgIcon(chipIcon, 10),
         h('span', {}, 'Level ' + lvl)
       ]),
       h('div', { class: 'bar' }, h('i', { style: `width:${pct}%;` }))
@@ -5316,12 +5362,12 @@ function renderChild(root, child) {
     root.appendChild(h('div', { class: 'grid-section-head' }, [
       h('div', { class: 'grid-section-title' }, [
         h('span', { class: 'chip chip-warmup' }, [svgIcon('i-play', 11), h('span', {}, 'WARM UP')]),
-        h('span', {}, 'Starter activities')
+        h('span', {}, 'Levels 1 – 5 · Starter activities')
       ]),
       h('div', { class: 'grid-section-count' }, warmUp.length + ' to explore')
     ]));
     const warmGrid = h('div', { class: 'activity-grid' });
-    warmUp.forEach((a, i) => warmGrid.appendChild(buildCard(a, i)));
+    warmUp.forEach((a, i) => warmGrid.appendChild(buildCard(a, levelFor(i, false, warmUp.length))));
     root.appendChild(warmGrid);
   }
 
@@ -5329,12 +5375,12 @@ function renderChild(root, child) {
     root.appendChild(h('div', { class: 'grid-section-head' }, [
       h('div', { class: 'grid-section-title' }, [
         h('span', { class: 'chip chip-challenge' }, [svgIcon('i-flame', 11), h('span', {}, 'CHALLENGE')]),
-        h('span', {}, 'Harder stuff — push your brain!')
+        h('span', {}, 'Levels 6 – 10 · Push your brain!')
       ]),
       h('div', { class: 'grid-section-count' }, challenge.length + ' advanced')
     ]));
     const chalGrid = h('div', { class: 'activity-grid' });
-    challenge.forEach((a, i) => chalGrid.appendChild(buildCard(a, warmUp.length + i)));
+    challenge.forEach((a, i) => chalGrid.appendChild(buildCard(a, levelFor(i, true, challenge.length))));
     root.appendChild(chalGrid);
   }
 
