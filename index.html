@@ -229,6 +229,7 @@ img{max-width:100%}
 .subj-card .s-ico.writing{background:#ede7f6;color:#6c5ce7}
 .subj-card .s-ico.math{background:#fff8e1;color:#e17055}
 .subj-card .s-ico.logic{background:#e0f7f5;color:#00b894}
+.subj-card .s-ico.french{background:#ffe4ef;color:#e84393}
 .subj-card .s-info{flex:1;min-width:0}
 .subj-card .s-name{font-size:17px;font-weight:800}
 .subj-card .s-prog{font-size:13px;color:var(--ink3);font-weight:600;margin-top:2px}
@@ -239,6 +240,7 @@ img{max-width:100%}
 .s-bar i.writing{background:linear-gradient(90deg,#a29bfe,#6c5ce7)}
 .s-bar i.math{background:linear-gradient(90deg,#ffeaa7,#e17055)}
 .s-bar i.logic{background:linear-gradient(90deg,#55efc4,#00b894)}
+.s-bar i.french{background:linear-gradient(90deg,#fd79a8,#e84393)}
 
 /* ---- WEEK VIEW (level cards) ---- */
 .week-head{margin-top:24px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
@@ -510,6 +512,7 @@ const ICON_PATHS = {
   play:'<path d="M8 5v14l11-7Z" fill="currentColor" stroke="none"/>',
   'arrow-right':'<path d="M5 12h14M13 5l7 7-7 7"/>',
   'arrow-left':'<path d="M19 12H5M11 5l-7 7 7 7"/>',
+  globe:'<circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a15 15 0 0 1 0 18"/><path d="M12 3a15 15 0 0 0 0 18"/>',
 };
 function icon(name,size){
   size=size||20;
@@ -545,6 +548,7 @@ const SUBJECTS = [
   { id:'writing', name:'Writing', iconName:'pencil', color:'#6c5ce7', bg:'#ede7f6' },
   { id:'math',    name:'Math',    iconName:'hash',   color:'#e17055', bg:'#fff8e1' },
   { id:'logic',   name:'Logic',   iconName:'puzzle', color:'#00b894', bg:'#e0f7f5' },
+  { id:'french',  name:'French',  iconName:'globe',  color:'#e84393', bg:'#ffe4ef' },
 ];
 
 /* ========== VIDEO LINKS (YouTube search queries per activity) ==========
@@ -556,21 +560,25 @@ const VIDEOS = {
   'w1-nishan-w1':'beginning+letter+sounds+phonics+kids','w1-nishan-w2':'spelling+3+letter+words+CVC+kids','w1-nishan-w3':'middle+vowel+sounds+CVC+words+kids','w1-nishan-w4':'uppercase+lowercase+letters+matching+kids','w1-nishan-w5':'writing+sentences+for+kindergarten',
   'w1-nishan-m1':'counting+objects+for+kids+kindergarten','w1-nishan-m2':'number+names+1+to+10+for+kids','w1-nishan-m3':'bigger+smaller+numbers+kindergarten','w1-nishan-m4':'shapes+for+kids+circle+triangle+square','w1-nishan-m5':'simple+addition+for+kindergarten',
   'w1-nishan-l1':'things+that+go+together+matching+kids','w1-nishan-l2':'odd+one+out+for+kids','w1-nishan-l3':'patterns+for+kids+what+comes+next','w1-nishan-l4':'sorting+by+size+for+kids','w1-nishan-l5':'comparing+groups+more+less+kindergarten',
+  'w1-nishan-f1':'french+greetings+for+kids+bonjour','w1-nishan-f2':'french+colors+for+kids','w1-nishan-f3':'french+numbers+1+to+5+kids','w1-nishan-f4':'french+animals+for+kids','w1-nishan-f5':'french+family+words+for+kids',
   // AKARAN (G1)
   'w1-akaran-r1':'reading+comprehension+grade+1+stories','w1-akaran-r2':'reading+comprehension+school+story+grade+1','w1-akaran-r3':'reading+stories+for+kids+grade+1','w1-akaran-r4':'reading+comprehension+grade+1','w1-akaran-r5':'reading+about+family+grade+1',
   'w1-akaran-w1':'capital+letters+rules+for+kids','w1-akaran-w2':'period+question+mark+exclamation+kids','w1-akaran-w3':'spelling+words+grade+1','w1-akaran-w4':'building+sentences+grade+1','w1-akaran-w5':'writing+sentences+grade+1',
   'w1-akaran-m1':'counting+to+20+for+kids','w1-akaran-m2':'addition+for+kids+grade+1','w1-akaran-m3':'subtraction+for+kids+grade+1','w1-akaran-m4':'number+order+smallest+to+biggest+kids','w1-akaran-m5':'math+word+problems+grade+1',
   'w1-akaran-l1':'patterns+for+kids+grade+1+what+comes+next','w1-akaran-l2':'odd+one+out+categories+kids','w1-akaran-l3':'opposites+for+kids+matching','w1-akaran-l4':'daily+routine+order+of+events+kids','w1-akaran-l5':'riddles+for+kids+grade+1',
+  'w1-akaran-f1':'french+greetings+polite+phrases+kids','w1-akaran-f2':'french+colors+for+kids','w1-akaran-f3':'french+numbers+1+to+10+for+kids','w1-akaran-f4':'french+food+words+for+kids','w1-akaran-f5':'french+days+of+the+week+kids',
   // RUSHAN (G2)
   'w1-rushan-r1':'reading+comprehension+grade+2','w1-rushan-r2':'making+inferences+reading+grade+2','w1-rushan-r3':'reading+comprehension+stories+grade+2','w1-rushan-r4':'vocabulary+words+grade+2','w1-rushan-r5':'unscramble+sentences+grade+2',
   'w1-rushan-w1':'punctuation+for+kids+grade+2','w1-rushan-w2':'spelling+practice+grade+2','w1-rushan-w3':'building+sentences+grade+2','w1-rushan-w4':'nouns+verbs+adjectives+for+kids','w1-rushan-w5':'writing+paragraphs+grade+2',
   'w1-rushan-m1':'two+digit+addition+with+regrouping','w1-rushan-m2':'two+digit+subtraction+with+borrowing','w1-rushan-m3':'math+word+problems+grade+2','w1-rushan-m4':'skip+counting+by+2s+5s+10s+kids','w1-rushan-m5':'place+value+tens+and+ones+grade+2',
   'w1-rushan-l1':'number+patterns+grade+2','w1-rushan-l2':'sorting+challenge+odd+one+out+grade+2','w1-rushan-l3':'analogies+for+kids+grade+2','w1-rushan-l4':'sequencing+events+in+order+kids','w1-rushan-l5':'code+breaker+puzzles+kids',
+  'w1-rushan-f1':'french+conversation+basics+for+kids','w1-rushan-f2':'french+numbers+11+to+30','w1-rushan-f3':'french+days+and+months','w1-rushan-f4':'french+weather+phrases+il+fait','w1-rushan-f5':'french+etre+avoir+je+suis+jai',
   // AKSHAYAN (G3)
   'w1-akshayan-r1':'reading+comprehension+grade+3+inference','w1-akshayan-r2':'context+clues+vocabulary+grade+3','w1-akshayan-r3':'character+analysis+reading+grade+3','w1-akshayan-r4':'main+idea+and+details+grade+3','w1-akshayan-r5':'figurative+language+similes+kids',
   'w1-akshayan-w1':'commas+quotation+marks+grade+3','w1-akshayan-w2':'homophones+their+there+theyre+kids','w1-akshayan-w3':'compound+sentences+grade+3','w1-akshayan-w4':'topic+sentences+paragraph+writing','w1-akshayan-w5':'paragraph+writing+for+kids',
   'w1-akshayan-m1':'3+digit+addition+with+regrouping','w1-akshayan-m2':'3+digit+subtraction+with+borrowing','w1-akshayan-m3':'introduction+to+multiplication+kids','w1-akshayan-m4':'multi+step+word+problems+grade+3','w1-akshayan-m5':'fractions+for+kids+halves+quarters',
   'w1-akshayan-l1':'number+patterns+doubling+grade+3','w1-akshayan-l2':'if+then+logic+puzzles+kids','w1-akshayan-l3':'analogies+for+kids+grade+3','w1-akshayan-l4':'number+detective+puzzles+kids','w1-akshayan-l5':'brain+teasers+for+kids+grade+3',
+  'w1-akshayan-f1':'french+polite+phrases+conversation+kids','w1-akshayan-f2':'french+numbers+1+to+100','w1-akshayan-f3':'french+verbs+je+veux+je+peux+jaime','w1-akshayan-f4':'french+simple+sentences+translation','w1-akshayan-f5':'french+question+words+qui+quoi+ou',
 };
 
 /* ========== BADGES ========== */
@@ -582,6 +590,7 @@ const BADGES = [
   { id:'writing-pro',   name:'Word Wizard',    icon:'✏️', desc:'Complete 5 Writing activities' },
   { id:'math-pro',      name:'Math Master',    icon:'🔢', desc:'Complete 5 Math activities' },
   { id:'logic-pro',     name:'Logic Legend',   icon:'🧩', desc:'Complete 5 Logic activities' },
+  { id:'french-pro',    name:'French Friend',  icon:'🇫🇷', desc:'Complete 5 French activities' },
   { id:'streak-3',      name:'On Fire',        icon:'🔥', desc:'3-day streak' },
   { id:'coin-50',       name:'Coin Collector', icon:'🪙', desc:'Earn 50 coins' },
   { id:'star-50',       name:'Star Collector', icon:'✨', desc:'Collect 50 stars' },
@@ -782,6 +791,53 @@ nishan: {
         {type:'mcq',q:'Which group has the SAME number as ⭐⭐⭐?',choices:['🍎🍎','🍎🍎🍎','🍎🍎🍎🍎','🍎'],answer:1},
       ]},
   ],
+  french: [
+    { id:'w1-nishan-f1', title:'Bonjour!', emoji:'👋',
+      lesson:{title:'First French Words',intro:'French is a fun language. These are the friendliest words to start with!',example:'Bonjour (bon-zhoor) = Hello! Merci (mehr-see) = Thank you!',hint:'Say the words OUT LOUD — French loves sounds!'},
+      questions:[
+        {type:'mcq',q:'What does "Bonjour" mean?',choices:['Goodbye','Hello','Please','Sorry'],answer:1},
+        {type:'mcq',q:'What does "Merci" mean?',choices:['Please','Yes','Thank you','No'],answer:2},
+        {type:'mcq',q:'What does "Oui" mean?',choices:['No','Yes','Maybe','Hi'],answer:1},
+        {type:'mcq',q:'What does "Non" mean?',choices:['Yes','No','Sorry','Hi'],answer:1},
+        {type:'mcq',q:'What does "Au revoir" mean?',choices:['Hello','Goodbye','Good night','Thanks'],answer:1},
+      ]},
+    { id:'w1-nishan-f2', title:'Les Couleurs', emoji:'🎨',
+      lesson:{title:'Colors in French',intro:'Colors in French sound different, but they\'re still the same colors you know!',example:'rouge = red, bleu = blue, jaune = yellow',hint:'Try pointing at things around you and naming their French color.'},
+      questions:[
+        {type:'mcq',q:'What is "rouge"?',choices:['🔵 Blue','🔴 Red','🟢 Green','🟡 Yellow'],answer:1},
+        {type:'mcq',q:'What is "bleu"?',choices:['🟡 Yellow','🔵 Blue','🟢 Green','🔴 Red'],answer:1},
+        {type:'mcq',q:'What is "jaune"?',choices:['🟡 Yellow','🟢 Green','🟣 Purple','🔴 Red'],answer:0},
+        {type:'mcq',q:'What is "vert"?',choices:['🔴 Red','🟢 Green','🔵 Blue','⚫ Black'],answer:1},
+        {type:'match',q:'Match each color to its French name!',pairs:[['🔴','rouge'],['🔵','bleu'],['🟡','jaune'],['🟢','vert']]},
+      ]},
+    { id:'w1-nishan-f3', title:'Les Nombres 1-5', emoji:'🔢',
+      lesson:{title:'Counting in French',intro:'French numbers sound different but count the same: 1, 2, 3, 4, 5.',example:'un (uhn), deux (duh), trois (twah), quatre (kat-r), cinq (sank)',hint:'Count your fingers in French!'},
+      questions:[
+        {type:'mcq',q:'What number is "un"?',choices:['1','2','3','5'],answer:0},
+        {type:'mcq',q:'What number is "trois"?',choices:['2','3','4','5'],answer:1},
+        {type:'mcq',q:'What number is "cinq"?',choices:['3','4','5','6'],answer:2},
+        {type:'mcq',q:'How do you say "2" in French?',choices:['un','deux','trois','quatre'],answer:1},
+        {type:'match',q:'Match the French number to the digit.',pairs:[['un','1'],['deux','2'],['trois','3'],['quatre','4']]},
+      ]},
+    { id:'w1-nishan-f4', title:'Les Animaux', emoji:'🐾',
+      lesson:{title:'French Animals',intro:'Cats, dogs, birds — they all have French names too!',example:'le chat = cat, le chien = dog, l\'oiseau = bird',hint:'"Le" and "la" both mean "the" in French.'},
+      questions:[
+        {type:'mcq',q:'What is "le chat"?',choices:['🐶 Dog','🐱 Cat','🐦 Bird','🐟 Fish'],answer:1},
+        {type:'mcq',q:'What is "le chien"?',choices:['🐱 Cat','🐶 Dog','🐰 Rabbit','🐸 Frog'],answer:1},
+        {type:'mcq',q:'What is "le poisson"?',choices:['🐟 Fish','🐸 Frog','🐢 Turtle','🐛 Bug'],answer:0},
+        {type:'mcq',q:'How do you say "dog" in French?',choices:['chat','chien','cheval','cochon'],answer:1},
+        {type:'match',q:'Match each animal to its French name!',pairs:[['🐱','chat'],['🐶','chien'],['🐟','poisson'],['🐦','oiseau']]},
+      ]},
+    { id:'w1-nishan-f5', title:'La Famille', emoji:'👨‍👩‍👧‍👦',
+      lesson:{title:'Family in French',intro:'Family words in French — some sound like English baby words!',example:'Maman = Mom, Papa = Dad, frère = brother, sœur = sister',hint:'Maman and Papa are easy — almost the same as English!'},
+      questions:[
+        {type:'mcq',q:'What is "Maman"?',choices:['Dad','Mom','Sister','Grandma'],answer:1},
+        {type:'mcq',q:'What is "Papa"?',choices:['Mom','Dad','Brother','Uncle'],answer:1},
+        {type:'mcq',q:'What is "le frère"?',choices:['Brother','Sister','Cousin','Father'],answer:0},
+        {type:'mcq',q:'What is "la sœur"?',choices:['Brother','Sister','Mother','Aunt'],answer:1},
+        {type:'match',q:'Match the French family words!',pairs:[['Maman','Mom'],['Papa','Dad'],['frère','Brother'],['sœur','Sister']]},
+      ]},
+  ],
 },
 
 /* ---- AKARAN (Grade 1) ---- */
@@ -972,6 +1028,53 @@ akaran: {
         {type:'mcq',q:'I have hands but no arms. I have a face but no eyes. What am I?',choices:['Doll','Mirror','Clock','Robot'],answer:2},
         {type:'mcq',q:'If all fish live in water, and Nemo is a fish, where does Nemo live?',choices:['In a tree','In water','In a cage','On land'],answer:1},
         {type:'mcq',q:'Ava is taller than Ben. Ben is taller than Cal. Who is the SHORTEST?',choices:['Ava','Ben','Cal','Same height'],answer:2},
+      ]},
+  ],
+  french: [
+    { id:'w1-akaran-f1', title:'Greetings & Politeness', emoji:'🙋',
+      lesson:{title:'Being Polite in French',intro:'French culture values politeness. Knowing "please" and "thank you" is very important!',example:'Bonjour = Hello · Merci = Thank you · S\'il vous plaît = Please · Pardon = Excuse me',hint:'These 4 words will get you far in any French conversation!'},
+      questions:[
+        {type:'mcq',q:'What does "S\'il vous plaît" mean?',choices:['Please','Thank you','Sorry','Goodbye'],answer:0},
+        {type:'mcq',q:'What does "Pardon" mean?',choices:['Hello','Thank you','Excuse me / Sorry','Please'],answer:2},
+        {type:'mcq',q:'What does "Salut" mean?',choices:['Goodbye','Hi (casual)','Please','Very good'],answer:1},
+        {type:'mcq',q:'How do you say "good evening"?',choices:['Bonjour','Bonsoir','Bonne nuit','Bonbon'],answer:1},
+        {type:'match',q:'Match these polite words!',pairs:[['Bonjour','Hello'],['Merci','Thank you'],['Pardon','Sorry'],['S\'il te plaît','Please']]},
+      ]},
+    { id:'w1-akaran-f2', title:'Les Couleurs', emoji:'🎨',
+      lesson:{title:'More Colors',intro:'Now you can learn even more colors in French!',example:'rouge, bleu, jaune, vert, noir (black), blanc (white), rose (pink)',hint:'Some like "orange" are almost the same in both languages!'},
+      questions:[
+        {type:'mcq',q:'What color is "noir"?',choices:['⚪ White','⚫ Black','🟤 Brown','🔵 Blue'],answer:1},
+        {type:'mcq',q:'What color is "blanc"?',choices:['⚫ Black','⚪ White','🟣 Purple','🔴 Red'],answer:1},
+        {type:'mcq',q:'What color is "rose"?',choices:['🔴 Red','🟢 Green','🌸 Pink','🟡 Yellow'],answer:2},
+        {type:'mcq',q:'How do you say "orange" in French?',choices:['oranj','orange','naranja','oren'],answer:1},
+        {type:'match',q:'Match the colors!',pairs:[['⚫','noir'],['⚪','blanc'],['🌸','rose'],['🟠','orange']]},
+      ]},
+    { id:'w1-akaran-f3', title:'Les Nombres 1-10', emoji:'🔢',
+      lesson:{title:'Counting to 10',intro:'Now let\'s count all the way to TEN in French!',example:'un, deux, trois, quatre, cinq, six, sept, huit, neuf, dix',hint:'Say them in rhythm — French has a musical feel!'},
+      questions:[
+        {type:'mcq',q:'What number is "sept"?',choices:['5','6','7','9'],answer:2},
+        {type:'mcq',q:'What number is "dix"?',choices:['8','9','10','20'],answer:2},
+        {type:'mcq',q:'How do you say "8" in French?',choices:['six','sept','huit','neuf'],answer:2},
+        {type:'mcq',q:'How do you say "9" in French?',choices:['huit','neuf','dix','sept'],answer:1},
+        {type:'order',q:'Count from 1 to 5 in French!',items:['un','deux','trois','quatre','cinq'],correctOrder:[0,1,2,3,4]},
+      ]},
+    { id:'w1-akaran-f4', title:'La Nourriture', emoji:'🍎',
+      lesson:{title:'French Food Words',intro:'French cooking is famous! Start with these everyday food words.',example:'la pomme = apple, le pain = bread, le lait = milk, le fromage = cheese',hint:'Many French food words sneak into English (like "baguette"!).'},
+      questions:[
+        {type:'mcq',q:'What is "la pomme"?',choices:['🍌 Banana','🍎 Apple','🍞 Bread','🍪 Cookie'],answer:1},
+        {type:'mcq',q:'What is "le pain"?',choices:['🥛 Milk','🍞 Bread','🧀 Cheese','🍎 Apple'],answer:1},
+        {type:'mcq',q:'What is "le lait"?',choices:['🥛 Milk','💧 Water','☕ Coffee','🧃 Juice'],answer:0},
+        {type:'mcq',q:'What is "le fromage"?',choices:['🥚 Egg','🧀 Cheese','🍞 Bread','🍝 Pasta'],answer:1},
+        {type:'match',q:'Match the food words!',pairs:[['🍎','pomme'],['🍞','pain'],['🥛','lait'],['🧀','fromage']]},
+      ]},
+    { id:'w1-akaran-f5', title:'Les Jours', emoji:'📅',
+      lesson:{title:'Days of the Week',intro:'In French, most day names end in "-di". The week starts with Monday (lundi).',example:'lundi, mardi, mercredi, jeudi, vendredi, samedi, dimanche',hint:'"Samedi" = Saturday. "Dimanche" = Sunday. Those are the odd ones!'},
+      questions:[
+        {type:'mcq',q:'What day is "lundi"?',choices:['Sunday','Monday','Tuesday','Friday'],answer:1},
+        {type:'mcq',q:'What day is "vendredi"?',choices:['Wednesday','Thursday','Friday','Saturday'],answer:2},
+        {type:'mcq',q:'What day is "samedi"?',choices:['Friday','Saturday','Sunday','Monday'],answer:1},
+        {type:'mcq',q:'How do you say "Wednesday"?',choices:['mardi','mercredi','jeudi','vendredi'],answer:1},
+        {type:'order',q:'Put weekdays in order (Monday → Friday).',items:['lundi','mardi','mercredi','jeudi','vendredi'],correctOrder:[0,1,2,3,4]},
       ]},
   ],
 },
@@ -1165,6 +1268,53 @@ rushan: {
         {type:'mcq',q:'If ⭐=3, what is ⭐+⭐+⭐?',choices:['6','9','12','3'],answer:1},
       ]},
   ],
+  french: [
+    { id:'w1-rushan-f1', title:'Conversation Basics', emoji:'💬',
+      lesson:{title:'Everyday Conversation',intro:'Putting words together makes real conversation! Learn common phrases.',example:'"Comment ça va?" = How are you? · "Ça va bien" = I\'m doing well!',hint:'"Enchanté" (on-shan-tay) = Nice to meet you.'},
+      questions:[
+        {type:'mcq',q:'"Comment ça va?" means...',choices:['What is this?','How are you?','Who are you?','Where is it?'],answer:1},
+        {type:'mcq',q:'A nice answer to "Ça va?" is...',choices:['Ça va bien','Non non','Au revoir','Bonbon'],answer:0},
+        {type:'mcq',q:'What does "Enchanté(e)" mean?',choices:['I am lost','Nice to meet you','Good night','Thanks'],answer:1},
+        {type:'mcq',q:'What does "Je m\'appelle..." mean?',choices:['My name is...','I am going...','I like...','I am tired'],answer:0},
+        {type:'mcq',q:'What does "De rien" mean?',choices:['Please','No problem / You\'re welcome','Sorry','Goodnight'],answer:1},
+      ]},
+    { id:'w1-rushan-f2', title:'Nombres 11-30', emoji:'🔢',
+      lesson:{title:'Bigger Numbers',intro:'After 10, French gets creative! 11-16 have unique names. Then 17-19 = "ten-seven", etc.',example:'onze (11), douze (12), treize (13), quatorze (14), quinze (15), seize (16), dix-sept (17 = 10+7)',hint:'After 20, combine: vingt-et-un (21), vingt-deux (22)...'},
+      questions:[
+        {type:'mcq',q:'What number is "onze"?',choices:['9','10','11','12'],answer:2},
+        {type:'mcq',q:'What number is "quinze"?',choices:['14','15','16','50'],answer:1},
+        {type:'mcq',q:'What number is "vingt"?',choices:['15','20','22','25'],answer:1},
+        {type:'mcq',q:'How do you say "25"?',choices:['vingt-cinq','cinq-vingt','deux-cinq','vingt-quatre'],answer:0},
+        {type:'match',q:'Match French to numbers!',pairs:[['onze','11'],['douze','12'],['quinze','15'],['vingt','20']]},
+      ]},
+    { id:'w1-rushan-f3', title:'Jours et Mois', emoji:'📅',
+      lesson:{title:'Days & Months',intro:'Days end in "-di" (mostly). Months look similar to English with small changes.',example:'lundi-dimanche; janvier, février, mars, avril, mai, juin...',hint:'Today = aujourd\'hui. Yesterday = hier. Tomorrow = demain.'},
+      questions:[
+        {type:'mcq',q:'What does "aujourd\'hui" mean?',choices:['yesterday','today','tomorrow','next week'],answer:1},
+        {type:'mcq',q:'What does "demain" mean?',choices:['today','tomorrow','yesterday','always'],answer:1},
+        {type:'mcq',q:'Which month is "mars"?',choices:['March','May','August','April'],answer:0},
+        {type:'mcq',q:'Which month is "juillet"?',choices:['June','July','August','January'],answer:1},
+        {type:'order',q:'Order the last 4 months of the year.',items:['septembre','octobre','novembre','décembre'],correctOrder:[0,1,2,3]},
+      ]},
+    { id:'w1-rushan-f4', title:'La Météo', emoji:'🌤️',
+      lesson:{title:'Weather Phrases',intro:'French weather phrases start with "Il fait..." (literally "It makes...").',example:'"Il fait beau" = Nice weather · "Il pleut" = It\'s raining · "Il neige" = It\'s snowing',hint:'"Il fait chaud" = hot. "Il fait froid" = cold.'},
+      questions:[
+        {type:'mcq',q:'"Il fait beau" means...',choices:['It\'s raining','The weather is nice','It\'s snowing','It\'s cold'],answer:1},
+        {type:'mcq',q:'"Il pleut" means...',choices:['It\'s snowing','It\'s raining','It\'s windy','It\'s sunny'],answer:1},
+        {type:'mcq',q:'"Il fait froid" means...',choices:['It\'s hot','It\'s cold','It\'s nice','It\'s late'],answer:1},
+        {type:'mcq',q:'"Il neige" means...',choices:['It\'s raining','It\'s snowing','It\'s sunny','It\'s cloudy'],answer:1},
+        {type:'match',q:'Match weather phrases!',pairs:[['Il fait beau','Nice weather'],['Il pleut','It rains'],['Il neige','It snows'],['Il fait chaud','It\'s hot']]},
+      ]},
+    { id:'w1-rushan-f5', title:'Être & Avoir', emoji:'✏️',
+      lesson:{title:'Two Essential Verbs',intro:'"Être" = to be. "Avoir" = to have. You\'ll use these ALL the time!',example:'Je suis (I am) · J\'ai (I have) · Tu es (You are) · Tu as (You have)',hint:'Fun fact: In French, you HAVE years! "J\'ai 7 ans" = "I am 7" (literally "I have 7 years").'},
+      questions:[
+        {type:'mcq',q:'"Je suis" means...',choices:['I have','I am','I want','I go'],answer:1},
+        {type:'mcq',q:'"J\'ai" means...',choices:['I am','I go','I have','I like'],answer:2},
+        {type:'mcq',q:'How do you say "She is"?',choices:['Il est','Elle est','Ils sont','Elle a'],answer:1},
+        {type:'mcq',q:'How do you say "I have 7 years" (= I am 7)?',choices:['Je suis 7','J\'ai sept ans','Je sept','Moi 7'],answer:1},
+        {type:'match',q:'Match the verb forms.',pairs:[['Je suis','I am'],['Tu es','You are'],['J\'ai','I have'],['Tu as','You have']]},
+      ]},
+  ],
 },
 
 /* ---- AKSHAYAN (Grade 3) ---- */
@@ -1353,6 +1503,53 @@ akshayan: {
         {type:'mcq',q:'Maya reads 5 pages a day. After 4 days, how many pages?',choices:['9','15','20','25'],answer:2},
         {type:'mcq',q:'A farmer has 17 sheep. All but 9 run away. How many left?',choices:['8','9','17','0'],answer:1},
         {type:'mcq',q:'What month has 28 days?',choices:['Only February','All of them','None','Just March'],answer:1},
+      ]},
+  ],
+  french: [
+    { id:'w1-akshayan-f1', title:'Polite Phrases', emoji:'🤝',
+      lesson:{title:'Formal French',intro:'French has TWO ways to address people: casual (tu) and formal (vous). Adults use formal with strangers and people they respect.',example:'"Comment allez-vous?" (formal) = How are you? · "Ça va?" (casual) = How\'s it going?',hint:'Use "vous" with teachers, strangers, and adults. "Tu" with friends and family.'},
+      questions:[
+        {type:'mcq',q:'"Comment allez-vous?" is used when speaking to...',choices:['A friend','A teacher or adult','A baby','Yourself'],answer:1},
+        {type:'mcq',q:'What does "À bientôt" mean?',choices:['See you soon','Thank you','Good night','I\'m hungry'],answer:0},
+        {type:'mcq',q:'Which means "Please" formally?',choices:['Merci','S\'il te plaît','S\'il vous plaît','De rien'],answer:2},
+        {type:'mcq',q:'What does "Je vous en prie" mean?',choices:['Please','You\'re welcome (formal)','Excuse me','Bye'],answer:1},
+        {type:'match',q:'Match formal phrases!',pairs:[['Bonjour','Good morning'],['Bonsoir','Good evening'],['Au revoir','Goodbye'],['Excusez-moi','Excuse me']]},
+      ]},
+    { id:'w1-akshayan-f2', title:'Nombres 1-100', emoji:'💯',
+      lesson:{title:'Counting to 100',intro:'French tens: vingt (20), trente (30), quarante (40), cinquante (50), soixante (60). Numbers 21, 31, etc. use "et un" (and one).',example:'21 = vingt-et-un, 35 = trente-cinq, 50 = cinquante, 100 = cent',hint:'Numbers 70-99 get tricky in French — 70 is "soixante-dix" (60+10)!'},
+      questions:[
+        {type:'mcq',q:'What is "trente"?',choices:['13','30','33','300'],answer:1},
+        {type:'mcq',q:'What is "cinquante"?',choices:['5','15','50','500'],answer:2},
+        {type:'mcq',q:'How do you say "42"?',choices:['deux-quarante','quarante-et-deux','quarante-deux','deux-quarante'],answer:2},
+        {type:'mcq',q:'What number is "soixante"?',choices:['16','60','66','600'],answer:1},
+        {type:'mcq',q:'What is "cent"?',choices:['10','50','100','1000'],answer:2},
+      ]},
+    { id:'w1-akshayan-f3', title:'Verbs in Context', emoji:'✍️',
+      lesson:{title:'Useful Verbs',intro:'Learn verbs that let you express wants, likes, and abilities.',example:'J\'aime = I like · Je veux = I want · Je peux = I can · Je vais = I go',hint:'These all start with "Je" (I). Listen for that "zhuh" sound!'},
+      questions:[
+        {type:'mcq',q:'"J\'aime les chiens" means...',choices:['I have dogs','I like dogs','I see dogs','I want dogs'],answer:1},
+        {type:'mcq',q:'"Je veux" means...',choices:['I have','I want','I go','I like'],answer:1},
+        {type:'mcq',q:'"Je peux nager" means...',choices:['I want to swim','I can swim','I like swimming','I swam'],answer:1},
+        {type:'mcq',q:'Which verb means "to go"?',choices:['avoir','être','aller','faire'],answer:2},
+        {type:'match',q:'Match the French phrases!',pairs:[['J\'aime','I like'],['Je veux','I want'],['Je peux','I can'],['Je vais','I go']]},
+      ]},
+    { id:'w1-akshayan-f4', title:'Simple Sentences', emoji:'💬',
+      lesson:{title:'Translating Sentences',intro:'Put French words together in order: Subject + Verb + Object. Just like English!',example:'"Je mange une pomme" = I eat an apple · "Tu as un chat" = You have a cat',hint:'"Un/une" = a/an. "Le/la" = the.'},
+      questions:[
+        {type:'mcq',q:'What does "Je m\'appelle Marc" mean?',choices:['I like Marc','My name is Marc','I see Marc','Marc has a dog'],answer:1},
+        {type:'mcq',q:'What does "J\'ai un chat rouge" mean?',choices:['I want a red cat','I have a red cat','I see a red cat','I am a red cat'],answer:1},
+        {type:'mcq',q:'What does "Où est la maison?" mean?',choices:['What is the house?','Where is the house?','Who is at home?','How big is the house?'],answer:1},
+        {type:'mcq',q:'Which sentence means "I am 8 years old"?',choices:['Je suis 8','J\'ai huit ans','Je huit','Moi 8'],answer:1},
+        {type:'order',q:'Unscramble: "I have a red cat."',items:['J\'ai','un','chat','rouge'],correctOrder:[0,1,2,3]},
+      ]},
+    { id:'w1-akshayan-f5', title:'Question Words', emoji:'❓',
+      lesson:{title:'Asking Questions in French',intro:'To ask questions, use: Qui (Who), Quoi (What), Où (Where), Quand (When), Pourquoi (Why), Comment (How).',example:'"Comment tu t\'appelles?" = What\'s your name? · "Où est le livre?" = Where is the book?',hint:'"Combien" = how many/how much.'},
+      questions:[
+        {type:'mcq',q:'"Qui" means...',choices:['What','Where','Who','When'],answer:2},
+        {type:'mcq',q:'"Où" means...',choices:['When','Who','Where','Why'],answer:2},
+        {type:'mcq',q:'"Pourquoi" means...',choices:['How','Why','When','Where'],answer:1},
+        {type:'mcq',q:'How do you ask "What time is it?"',choices:['Quelle heure est-il?','Quel temps fait-il?','Où es-tu?','Qui es-tu?'],answer:0},
+        {type:'match',q:'Match each question word!',pairs:[['Qui','Who'],['Quoi','What'],['Où','Where'],['Quand','When']]},
       ]},
   ],
 },
@@ -2005,8 +2202,8 @@ function finishActivity(){
   // Badges
   const td=Object.keys(state.completedActivities).length;
   const pd=Object.keys(state.perfectActivities).length;
-  const sc={reading:0,writing:0,math:0,logic:0};
-  Object.keys(state.completedActivities).forEach(id=>{const m=id.match(/w\d+-\w+-(r|w|m|l)\d/);if(m){const k={r:'reading',w:'writing',m:'math',l:'logic'}[m[1]];if(k)sc[k]++}});
+  const sc={reading:0,writing:0,math:0,logic:0,french:0};
+  Object.keys(state.completedActivities).forEach(id=>{const m=id.match(/w\d+-\w+-(r|w|m|l|f)\d/);if(m){const k={r:'reading',w:'writing',m:'math',l:'logic',f:'french'}[m[1]];if(k)sc[k]++}});
   if(td>=3)state.badges['first-steps']=true;
   if(state.totalStars>=10)state.badges['ten-stars']=true;
   if(correct===scorable)state.badges['perfect-score']=true;
@@ -2014,6 +2211,7 @@ function finishActivity(){
   if(sc.writing>=5)state.badges['writing-pro']=true;
   if(sc.math>=5)state.badges['math-pro']=true;
   if(sc.logic>=5)state.badges['logic-pro']=true;
+  if(sc.french>=5)state.badges['french-pro']=true;
   if(state.streak>=3)state.badges['streak-3']=true;
   if(state.coins>=50)state.badges['coin-50']=true;
   if(state.totalStars>=50)state.badges['star-50']=true;
