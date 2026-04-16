@@ -53,7 +53,30 @@ img{max-width:100%}
   radial-gradient(ellipse 70% 50% at 90% 5%, rgba(253,203,110,.2), transparent 55%),
   radial-gradient(ellipse 75% 55% at 85% 90%, rgba(0,206,201,.15), transparent 55%),
   radial-gradient(ellipse 80% 60% at 5% 85%, rgba(116,185,255,.18), transparent 55%),
-  var(--bg)}
+  var(--bg);animation:bgDrift 20s ease-in-out infinite alternate}
+@keyframes bgDrift{to{filter:hue-rotate(12deg)}}
+
+/* Floating decorative shapes */
+.bg-shapes{position:fixed;inset:0;pointer-events:none;z-index:-1;overflow:hidden}
+.bg-shapes .blob{position:absolute;border-radius:50%;filter:blur(40px);opacity:.35;animation:floatBlob 18s ease-in-out infinite}
+.bg-shapes .b1{width:180px;height:180px;background:radial-gradient(circle at 30% 30%,#A29BFE,#6C5CE7);top:-40px;left:-40px;animation-delay:0s}
+.bg-shapes .b2{width:140px;height:140px;background:radial-gradient(circle at 30% 30%,#FFD89B,#FDCB6E);top:10%;right:-50px;animation-delay:-4s;animation-duration:22s}
+.bg-shapes .b3{width:220px;height:220px;background:radial-gradient(circle at 30% 30%,#81ECEC,#00CEC9);bottom:-60px;left:-60px;animation-delay:-8s;animation-duration:24s}
+.bg-shapes .b4{width:130px;height:130px;background:radial-gradient(circle at 30% 30%,#FFD0D8,#FF7675);bottom:20%;right:-40px;animation-delay:-12s;animation-duration:20s}
+.bg-shapes .b5{width:100px;height:100px;background:radial-gradient(circle at 30% 30%,#A5DFFF,#74B9FF);top:45%;right:8%;animation-delay:-6s;animation-duration:17s;opacity:.22}
+@keyframes floatBlob{
+  0%,100%{transform:translate(0,0) rotate(0)}
+  25%{transform:translate(20px,-30px) rotate(8deg)}
+  50%{transform:translate(-15px,-40px) rotate(-6deg)}
+  75%{transform:translate(25px,-15px) rotate(10deg)}
+}
+.bg-shapes .sparkle{position:absolute;width:12px;height:12px;color:var(--primary);opacity:.7;animation:twinkle 3s ease-in-out infinite}
+.bg-shapes .sparkle::before{content:'✦';font-size:20px;color:inherit}
+.bg-shapes .s1{top:15%;left:40%;color:#FDCB6E;animation-delay:0s}
+.bg-shapes .s2{top:70%;left:25%;color:#6C5CE7;animation-delay:-1s}
+.bg-shapes .s3{top:30%;right:30%;color:#00CEC9;animation-delay:-2s}
+.bg-shapes .s4{bottom:20%;left:55%;color:#FF7675;animation-delay:-1.5s}
+@keyframes twinkle{0%,100%{opacity:0;transform:scale(.5) rotate(0)}50%{opacity:.9;transform:scale(1.2) rotate(180deg)}}
 
 /* App shell */
 .app{max-width:960px;margin:0 auto;padding:16px 18px 120px}
@@ -73,23 +96,36 @@ img{max-width:100%}
 .pill-coin{background:linear-gradient(135deg,#fffde7,#fff9c4);color:#c6930a}
 
 /* ---- SCREEN TRANSITIONS ---- */
-#screen{animation:fadeIn .35s var(--spring)}
+#screen{animation:screenIn .5s var(--spring)}
+@keyframes screenIn{from{opacity:0;transform:translateY(16px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
 @keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes popIn{0%{opacity:0;transform:scale(.85)}60%{transform:scale(1.04)}100%{opacity:1;transform:scale(1)}}
+@keyframes slideInLeft{from{opacity:0;transform:translateX(-30px)}to{opacity:1;transform:translateX(0)}}
+@keyframes slideInRight{from{opacity:0;transform:translateX(30px)}to{opacity:1;transform:translateX(0)}}
+@keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+@keyframes glow{0%,100%{box-shadow:0 0 0 0 rgba(108,92,231,0)}50%{box-shadow:0 0 0 12px rgba(108,92,231,.12)}}
+@keyframes bounce{0%,20%,60%,100%{transform:translateY(0)}40%{transform:translateY(-10px)}80%{transform:translateY(-4px)}}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
+@keyframes wiggle{0%,100%{transform:rotate(0)}25%{transform:rotate(-3deg)}75%{transform:rotate(3deg)}}
 
 /* ---- HERO (homepage) ---- */
 .hero{margin-top:32px;padding:clamp(32px,6vw,60px) clamp(24px,4vw,48px);background:var(--card);border:1px solid var(--line);border-radius:var(--r-lg);box-shadow:var(--shadow-lg);position:relative;overflow:hidden;text-align:center}
-.hero h1{font-size:clamp(36px,7vw,64px);font-weight:800;letter-spacing:-.04em;line-height:1;background:linear-gradient(135deg,var(--primary),#e84393,var(--sun),var(--mint));background-size:300% 300%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:gradShift 6s ease infinite}
+.hero h1{font-size:clamp(36px,7vw,64px);font-weight:800;letter-spacing:-.04em;line-height:1;background:linear-gradient(135deg,var(--primary),#e84393,var(--sun),var(--mint));background-size:300% 300%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:gradShift 6s ease infinite,popIn .7s var(--spring)}
 @keyframes gradShift{0%,100%{background-position:0 50%}50%{background-position:100% 50%}}
-.hero .sub{margin-top:14px;font-size:clamp(16px,2vw,20px);color:var(--ink2);font-weight:600}
-.hero .cta{margin-top:28px;display:inline-flex;align-items:center;gap:10px;padding:16px 32px;border-radius:999px;background:var(--primary);color:#fff;font-weight:800;font-size:17px;box-shadow:0 8px 24px rgba(108,92,231,.4);transition:all .3s var(--spring)}
-.hero .cta:hover{transform:translateY(-3px) scale(1.04);box-shadow:0 14px 36px rgba(108,92,231,.5)}
+.hero .sub{margin-top:14px;font-size:clamp(16px,2vw,20px);color:var(--ink2);font-weight:600;animation:fadeIn .6s ease .15s backwards}
+.hero .cta{margin-top:28px;display:inline-flex;align-items:center;gap:10px;padding:16px 32px;border-radius:999px;background:var(--primary);color:#fff;font-weight:800;font-size:17px;box-shadow:0 8px 24px rgba(108,92,231,.4);transition:all .3s var(--spring);animation:fadeIn .6s ease .3s backwards, pulse 2.6s ease-in-out 1.5s infinite;position:relative;overflow:hidden}
+.hero .cta::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.3),transparent);transform:translateX(-100%);animation:shimmer 3s ease-in-out 2s infinite}
+.hero .cta:hover{transform:translateY(-3px) scale(1.06);box-shadow:0 14px 36px rgba(108,92,231,.55);animation-play-state:paused}
 .hero .cta:active{transform:scale(.97)}
 
 /* Feature cards */
 .features{margin-top:32px;display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
-.feat{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:22px;box-shadow:var(--shadow);transition:all .3s var(--spring);text-align:left}
-.feat:hover{transform:translateY(-4px);box-shadow:var(--shadow-lg)}
-.feat .ico{font-size:32px;margin-bottom:10px}
+.feat{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:22px;box-shadow:var(--shadow);transition:all .35s var(--spring);text-align:left;position:relative;overflow:hidden}
+.feat::after{content:'';position:absolute;inset:0;background:radial-gradient(circle at 50% 0%,rgba(108,92,231,.08),transparent 60%);opacity:0;transition:opacity .3s;pointer-events:none}
+.feat:hover{transform:translateY(-8px) scale(1.02);box-shadow:var(--shadow-lg)}
+.feat:hover::after{opacity:1}
+.feat:hover .ico{transform:scale(1.15) rotate(-5deg);color:var(--primary)}
+.feat .ico{font-size:32px;margin-bottom:10px;transition:all .35s var(--spring);display:inline-flex;align-items:center;justify-content:center;width:56px;height:56px;border-radius:16px;background:linear-gradient(135deg,rgba(108,92,231,.12),rgba(108,92,231,.04));color:var(--primary)}
 .feat h3{font-size:16px;font-weight:800;color:var(--ink)}
 .feat p{font-size:13px;color:var(--ink2);margin-top:6px;line-height:1.4}
 
@@ -107,14 +143,18 @@ img{max-width:100%}
 
 /* ---- PROFILE CARDS ---- */
 .profiles{margin-top:28px;display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
-.profile-card{background:var(--card);border:1px solid var(--line);border-radius:var(--r-lg);padding:28px 22px;text-align:center;box-shadow:var(--shadow);transition:all .3s var(--spring);position:relative;overflow:hidden;width:100%}
-.profile-card:hover{transform:translateY(-6px);box-shadow:var(--shadow-lg)}
+.profile-card{background:var(--card);border:1px solid var(--line);border-radius:var(--r-lg);padding:28px 22px;text-align:center;box-shadow:var(--shadow);transition:all .35s var(--spring);position:relative;overflow:hidden;width:100%}
+.profile-card::after{content:'';position:absolute;inset:0;background:linear-gradient(120deg,transparent 30%,rgba(255,255,255,.5),transparent 70%);transform:translateX(-120%);transition:transform .7s;pointer-events:none}
+.profile-card:hover{transform:translateY(-10px) scale(1.02);box-shadow:var(--shadow-lg),0 0 0 3px rgba(108,92,231,.1)}
+.profile-card:hover::after{transform:translateX(120%)}
+.profile-card:hover .avatar{transform:scale(1.08) rotate(-3deg)}
+.profile-card:active{transform:translateY(-4px) scale(.99)}
 .profile-card::before{content:'';position:absolute;top:0;left:0;right:0;height:6px;border-radius:var(--r-lg) var(--r-lg) 0 0}
 .profile-card.c-akshayan::before{background:var(--akshayan)}
 .profile-card.c-rushan::before{background:var(--rushan)}
 .profile-card.c-akaran::before{background:var(--akaran)}
 .profile-card.c-nishan::before{background:var(--nishan)}
-.profile-card .avatar{width:80px;height:80px;border-radius:24px;display:grid;place-items:center;margin:0 auto 14px;font-size:40px;color:#fff;font-weight:800;border:3px solid #fff;box-shadow:var(--shadow)}
+.profile-card .avatar{width:80px;height:80px;border-radius:24px;display:grid;place-items:center;margin:0 auto 14px;font-size:40px;color:#fff;font-weight:800;border:3px solid #fff;box-shadow:var(--shadow);transition:transform .4s var(--spring);position:relative;z-index:1}
 .c-akshayan .avatar{background:linear-gradient(135deg,#ff7675,#d63031)}
 .c-rushan .avatar{background:linear-gradient(135deg,#00cec9,#00b894)}
 .c-akaran .avatar{background:linear-gradient(135deg,#a29bfe,#6c5ce7)}
@@ -134,11 +174,16 @@ img{max-width:100%}
 .pin-hint{margin:8px 0 18px;font-size:15px;color:var(--ink2);font-weight:600}
 .pin-hint code{background:rgba(108,92,231,.1);padding:4px 10px;border-radius:8px;font-family:var(--font);font-size:14px;color:var(--primary)}
 .emoji-pad{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;max-width:340px;margin:0 auto}
-.emoji-btn{font-size:36px;padding:16px;background:var(--card);border:2px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);transition:all .2s var(--spring);line-height:1}
-.emoji-btn:hover{transform:scale(1.1);border-color:var(--primary);box-shadow:0 8px 20px rgba(108,92,231,.25)}
-.emoji-btn:active{transform:scale(.95)}
-.emoji-btn.wrong{animation:shake .4s;border-color:var(--coral)}
-@keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.emoji-btn{font-size:36px;padding:16px;background:var(--card);border:2px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);transition:all .25s var(--spring);line-height:1;animation:popIn .4s var(--spring) backwards}
+.emoji-btn:nth-child(1){animation-delay:.05s}.emoji-btn:nth-child(2){animation-delay:.1s}.emoji-btn:nth-child(3){animation-delay:.15s}.emoji-btn:nth-child(4){animation-delay:.2s}
+.emoji-btn:nth-child(5){animation-delay:.25s}.emoji-btn:nth-child(6){animation-delay:.3s}.emoji-btn:nth-child(7){animation-delay:.35s}.emoji-btn:nth-child(8){animation-delay:.4s}
+.emoji-btn:nth-child(9){animation-delay:.45s}.emoji-btn:nth-child(10){animation-delay:.5s}.emoji-btn:nth-child(11){animation-delay:.55s}.emoji-btn:nth-child(12){animation-delay:.6s}
+.emoji-btn:hover{transform:scale(1.12) translateY(-3px);border-color:var(--primary);box-shadow:0 10px 24px rgba(108,92,231,.3)}
+.emoji-btn:active{transform:scale(.92)}
+.emoji-btn.wrong{animation:shake .5s;border-color:var(--coral);background:#fff0f0}
+.emoji-btn.correct{animation:correctBounce .6s var(--spring);border-color:var(--mint);background:#e6fffa;box-shadow:0 0 0 4px rgba(0,206,201,.25)}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-8px)}50%{transform:translateX(8px)}75%{transform:translateX(-6px)}}
+@keyframes correctBounce{0%{transform:scale(1)}30%{transform:scale(1.3) rotate(6deg)}60%{transform:scale(.95) rotate(-3deg)}100%{transform:scale(1) rotate(0)}}
 .pin-msg{margin-top:16px;font-size:16px;font-weight:700;min-height:28px}
 .pin-msg.ok{color:#00b894}
 .pin-msg.no{color:var(--coral)}
@@ -152,6 +197,8 @@ img{max-width:100%}
 .t-submit{width:100%;padding:14px;border-radius:var(--r);background:var(--primary);color:#fff;font-size:16px;font-weight:800;box-shadow:0 6px 18px rgba(108,92,231,.35);transition:all .2s}
 .t-submit:hover{transform:translateY(-2px)}
 .t-msg{margin-top:12px;font-size:14px;font-weight:700;color:var(--coral);min-height:22px}
+.t-reset{margin-top:18px;padding:10px 18px;border-radius:var(--r);background:transparent;color:var(--coral);font-size:13px;font-weight:700;border:1.5px dashed var(--coral);transition:all .2s;display:inline-block}
+.t-reset:hover{background:rgba(255,118,117,.08);transform:translateY(-1px)}
 
 /* ---- STUDENT DASHBOARD ---- */
 .dash-hero{margin-top:24px;padding:28px;background:var(--card);border-radius:var(--r-lg);box-shadow:var(--shadow);display:flex;align-items:center;gap:20px;flex-wrap:wrap;position:relative;overflow:hidden}
@@ -160,15 +207,21 @@ img{max-width:100%}
 .dash-hero h1{font-size:clamp(24px,4vw,34px);font-weight:800;letter-spacing:-.02em}
 .dash-hero .grade-pill{display:inline-block;margin-top:6px;padding:4px 12px;border-radius:999px;font-size:12px;font-weight:700;background:rgba(0,0,0,.06);color:var(--ink2)}
 .dash-stats{margin-top:20px;display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(130px,1fr))}
-.d-stat{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px;text-align:center;box-shadow:var(--shadow);transition:all .3s var(--spring)}
-.d-stat:hover{transform:translateY(-3px)}
-.d-stat .num{font-size:28px;font-weight:800}
-.d-stat .lbl{font-size:12px;color:var(--ink3);font-weight:700;margin-top:4px}
+.d-stat{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px;text-align:center;box-shadow:var(--shadow);transition:all .3s var(--spring);position:relative;overflow:hidden}
+.d-stat::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(108,92,231,.06),transparent 60%);opacity:0;transition:opacity .3s}
+.d-stat:hover{transform:translateY(-5px) scale(1.02);box-shadow:var(--shadow-lg)}
+.d-stat:hover::before{opacity:1}
+.d-stat .num{font-size:28px;font-weight:800;display:flex;align-items:center;justify-content:center;gap:6px;position:relative;z-index:1}
+.d-stat .lbl{font-size:12px;color:var(--ink3);font-weight:700;margin-top:4px;position:relative;z-index:1}
 
 /* Subject cards */
 .subjects{margin-top:24px;display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
-.subj-card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:20px;box-shadow:var(--shadow);transition:all .3s var(--spring);display:flex;align-items:center;gap:14px;width:100%}
-.subj-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-lg)}
+.subj-card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:20px;box-shadow:var(--shadow);transition:all .35s var(--spring);display:flex;align-items:center;gap:14px;width:100%;position:relative;overflow:hidden}
+.subj-card::before{content:'';position:absolute;top:0;left:0;bottom:0;width:4px;background:var(--primary);transform:scaleY(0);transform-origin:top;transition:transform .3s}
+.subj-card:hover{transform:translateY(-6px) scale(1.015);box-shadow:var(--shadow-lg)}
+.subj-card:hover::before{transform:scaleY(1)}
+.subj-card:hover .s-ico{transform:scale(1.1) rotate(-5deg)}
+.subj-card .s-ico{transition:transform .3s var(--spring)}
 .subj-card .s-ico{width:52px;height:52px;border-radius:16px;display:grid;place-items:center;font-size:26px;flex-shrink:0}
 .subj-card .s-ico.reading{background:#e3f2ff;color:#0984e3}
 .subj-card .s-ico.writing{background:#ede7f6;color:#6c5ce7}
@@ -178,7 +231,8 @@ img{max-width:100%}
 .subj-card .s-name{font-size:17px;font-weight:800}
 .subj-card .s-prog{font-size:13px;color:var(--ink3);font-weight:600;margin-top:2px}
 .subj-card .s-bar{margin-top:8px;height:8px;border-radius:99px;background:rgba(0,0,0,.06);overflow:hidden}
-.subj-card .s-bar i{display:block;height:100%;border-radius:99px;transition:width .5s var(--spring)}
+.subj-card .s-bar i{display:block;height:100%;border-radius:99px;transition:width .8s var(--spring);position:relative;overflow:hidden}
+.subj-card .s-bar i::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.5),transparent);transform:translateX(-100%);animation:shimmer 2s ease-in-out infinite}
 .s-bar i.reading{background:linear-gradient(90deg,#74b9ff,#0984e3)}
 .s-bar i.writing{background:linear-gradient(90deg,#a29bfe,#6c5ce7)}
 .s-bar i.math{background:linear-gradient(90deg,#ffeaa7,#e17055)}
@@ -190,8 +244,11 @@ img{max-width:100%}
 .week-head .back-btn{padding:8px 16px;border-radius:999px;background:rgba(0,0,0,.05);font-weight:700;font-size:14px;color:var(--ink2);transition:all .2s}
 .week-head .back-btn:hover{background:rgba(0,0,0,.1)}
 .levels{margin-top:16px;display:flex;flex-direction:column;gap:12px}
-.level-card{display:flex;align-items:center;gap:16px;padding:18px 20px;background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);transition:all .3s var(--spring);width:100%}
-.level-card:hover:not(.locked){transform:translateX(6px);box-shadow:var(--shadow-lg)}
+.level-card{display:flex;align-items:center;gap:16px;padding:18px 20px;background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);transition:all .35s var(--spring);width:100%}
+.level-card:hover:not(.locked){transform:translateX(8px) scale(1.01);box-shadow:var(--shadow-lg)}
+.level-card:hover:not(.locked) .l-emoji{transform:scale(1.15) rotate(-5deg)}
+.level-card .l-emoji{transition:transform .3s var(--spring)}
+.level-card.current .l-num{animation:pulse 2s ease-in-out infinite}
 .level-card.locked{opacity:.55;cursor:not-allowed}
 .level-card.done{border-left:4px solid #00b894}
 .level-card.current{border-left:4px solid var(--primary);background:linear-gradient(90deg,rgba(108,92,231,.04),transparent)}
@@ -246,12 +303,18 @@ img{max-width:100%}
 .feedback.ok{color:#00b894}
 .feedback.no{color:var(--coral)}
 .controls{margin-top:14px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
-.btn{display:inline-flex;align-items:center;gap:8px;padding:12px 22px;border-radius:999px;font-weight:700;font-size:14px;transition:all .3s var(--spring)}
-.btn:active{transform:scale(.96)}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:12px 22px;border-radius:999px;font-weight:700;font-size:14px;transition:all .25s var(--spring);position:relative;overflow:hidden}
+.btn:active{transform:scale(.94)}
 .btn-primary{background:var(--primary);color:#fff;box-shadow:0 6px 18px rgba(108,92,231,.35)}
-.btn-primary:hover{transform:translateY(-2px);background:#5a4bd1}
+.btn-primary:hover{transform:translateY(-3px) scale(1.04);background:#5a4bd1;box-shadow:0 10px 24px rgba(108,92,231,.45)}
 .btn-ghost{background:rgba(0,0,0,.05);color:var(--ink2)}
-.btn-ghost:hover{background:rgba(0,0,0,.1)}
+.btn-ghost:hover{background:rgba(0,0,0,.1);transform:translateY(-2px)}
+
+/* Choice buttons animations */
+.choice{transition:all .25s var(--spring)}
+.choice:hover:not(.locked){transform:translateY(-3px) scale(1.02);border-color:var(--primary);box-shadow:0 8px 20px rgba(108,92,231,.2)}
+.choice.correct{animation:correctPop .6s var(--spring)}
+@keyframes correctPop{0%{transform:scale(1)}40%{transform:scale(1.08)}80%{transform:scale(.98)}100%{transform:scale(1)}}
 
 /* ---- Write (typing) question ---- */
 .write-area{max-width:600px;margin:16px auto 0}
@@ -303,9 +366,11 @@ img{max-width:100%}
 /* ---- REWARD OVERLAY ---- */
 .reward-overlay{position:fixed;inset:0;z-index:100;background:rgba(26,16,53,.45);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;padding:24px}
 .reward-overlay.show{display:flex;animation:fadeIn .3s}
-.reward-card{background:#fff;border-radius:var(--r-lg);padding:36px 28px;max-width:420px;width:100%;text-align:center;box-shadow:var(--shadow-lg);animation:pop .5s var(--spring)}
-.reward-card h2{font-size:28px;font-weight:800;margin-top:8px}
-.reward-card .big-emoji{font-size:72px;line-height:1;margin:8px 0}
+.reward-card{background:#fff;border-radius:var(--r-lg);padding:36px 28px;max-width:420px;width:100%;text-align:center;box-shadow:var(--shadow-lg);animation:rewardIn .7s var(--spring);position:relative;overflow:hidden}
+.reward-card::before{content:'';position:absolute;inset:-30px;background:radial-gradient(circle,rgba(253,203,110,.25),transparent 60%);animation:glow 2s ease-in-out infinite;pointer-events:none}
+@keyframes rewardIn{0%{opacity:0;transform:scale(.6) rotate(-6deg)}50%{transform:scale(1.05) rotate(2deg)}100%{opacity:1;transform:scale(1) rotate(0)}}
+.reward-card h2{font-size:28px;font-weight:800;margin-top:8px;position:relative;z-index:1}
+.reward-card .big-emoji{font-size:72px;line-height:1;margin:8px 0;animation:bounce 1s ease infinite;display:inline-block;position:relative;z-index:1}
 .reward-card .msg{color:var(--ink2);font-size:15px;margin-top:6px}
 .reward-stats{display:flex;justify-content:center;gap:12px;margin:18px 0;font-weight:700}
 .reward-stats span{background:rgba(0,0,0,.05);padding:8px 14px;border-radius:12px;font-size:14px}
@@ -376,12 +441,13 @@ img{max-width:100%}
     <div class="brand-footer">KidQuest v1.0 · Built by Rhahavy</div>
   </footer>
 </div>
-<button id="fab" class="fab hidden" title="Home"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5V20a1.5 1.5 0 0 1-1.5 1.5h-4v-6h-7v6h-4A1.5 1.5 0 0 1 3 20Z"/></svg></button>
-<div class="reward-overlay" id="reward">
+<button id="fab" class="fab hidden" title="Home" aria-label="Go home"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5V20a1.5 1.5 0 0 1-1.5 1.5h-4v-6h-7v6h-4A1.5 1.5 0 0 1 3 20Z"/></svg></button>
+<!-- Reward overlay is hidden by default. Only shown via JS after activity completion. -->
+<div class="reward-overlay" id="reward" style="display:none" aria-hidden="true">
   <div class="reward-card">
-    <div class="big-emoji" id="rwEmoji">🏆</div>
-    <h2 id="rwTitle">Awesome!</h2>
-    <p class="msg" id="rwMsg">You finished!</p>
+    <div class="big-emoji" id="rwEmoji"></div>
+    <h2 id="rwTitle"></h2>
+    <p class="msg" id="rwMsg"></p>
     <div class="reward-stats">
       <span><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none" style="vertical-align:-2px"><path d="m12 2.6 2.9 5.9 6.5.9-4.7 4.6 1.1 6.4L12 17.4l-5.8 3 1.1-6.4L2.6 9.4l6.5-.9Z"/></svg> <b id="rwStars">0</b></span>
       <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M9 9.5h4.5a2 2 0 0 1 0 4H9"/></svg> <b id="rwCoins">0</b></span>
@@ -392,6 +458,12 @@ img{max-width:100%}
       <button class="btn btn-primary" id="rwNext">Continue →</button>
     </div>
   </div>
+</div>
+<!-- Decorative floating background shapes -->
+<div class="bg-shapes" aria-hidden="true">
+  <span class="blob b1"></span><span class="blob b2"></span><span class="blob b3"></span>
+  <span class="blob b4"></span><span class="blob b5"></span>
+  <span class="sparkle s1"></span><span class="sparkle s2"></span><span class="sparkle s3"></span><span class="sparkle s4"></span>
 </div>
 <script>
 /* ============================================================
@@ -1286,8 +1358,12 @@ akshayan: {
 }};
 
 /* ========== STATE & PERSISTENCE ========== */
-const STORAGE_KEY = 'kidquest-v1';
+/* APP_VERSION is stored with the data; if a user has OLD incompatible data
+   from a previous version, we auto-clear it to avoid the app breaking. */
+const APP_VERSION = 2;
+const STORAGE_KEY = 'kidquest-v2';
 const LOCAL_USER_KEY = 'kidquest-current-user';
+const VERSION_KEY = 'kidquest-version';
 const CLOUD_BUCKET = 'kidquest-dca83c70e20a70f247b6';
 const CLOUD_URL = 'https://textdb.dev/api/data/' + CLOUD_BUCKET;
 const POLL_MS = 25000;
@@ -1304,12 +1380,46 @@ const defaultAll = () => ({
 // Reset URL handler: ?reset=1 or ?reset=cloud
 (function(){try{const u=new URL(location.href),r=u.searchParams.get('reset');if(!r)return;localStorage.removeItem(STORAGE_KEY);localStorage.removeItem(LOCAL_USER_KEY);if(r==='cloud'){fetch(CLOUD_URL,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify(defaultAll())}).catch(()=>{})}u.searchParams.delete('reset');history.replaceState({},'',u.pathname)}catch(e){}})();
 
+/* Safely load stored data. If version mismatch or corrupt, wipe and start fresh. */
+function nukeBadData(reason){
+  console.warn('[KidQuest] Resetting local state:', reason);
+  try{localStorage.removeItem(STORAGE_KEY);localStorage.removeItem(LOCAL_USER_KEY);}catch(e){}
+  try{localStorage.setItem(VERSION_KEY,String(APP_VERSION));}catch(e){}
+}
 let allData = (function(){
-  try{const r=localStorage.getItem(STORAGE_KEY);if(r){const p=JSON.parse(r),d=defaultAll();if(p.users){STUDENTS.forEach(s=>{d.users[s.id]=Object.assign(defaultUser(),p.users[s.id]||{})});d.teacher=p.teacher||{lastLogin:0};d.updatedAt=p.updatedAt||0}return d}}catch(e){}return defaultAll()
+  // Version check — clear incompatible data from previous KidQuest versions
+  try{
+    const sv = parseInt(localStorage.getItem(VERSION_KEY)||'0',10);
+    if(sv !== APP_VERSION){ nukeBadData('version mismatch ('+sv+' vs '+APP_VERSION+')'); return defaultAll(); }
+  }catch(e){ nukeBadData('version check failed'); return defaultAll(); }
+
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(!raw) return defaultAll();
+    const p = JSON.parse(raw);
+    // Validate structure — must have users object with our 4 known ids
+    if(!p || typeof p !== 'object' || !p.users || typeof p.users !== 'object'){
+      nukeBadData('invalid stored shape'); return defaultAll();
+    }
+    const d = defaultAll();
+    STUDENTS.forEach(s=>{
+      const u = p.users[s.id];
+      if(u && typeof u === 'object') d.users[s.id] = Object.assign(defaultUser(), u);
+    });
+    d.teacher = (p.teacher && typeof p.teacher === 'object') ? p.teacher : {lastLogin:0};
+    d.updatedAt = typeof p.updatedAt === 'number' ? p.updatedAt : 0;
+    return d;
+  }catch(e){
+    nukeBadData('JSON parse error: '+e.message);
+    return defaultAll();
+  }
 })();
 
-let currentUser = localStorage.getItem(LOCAL_USER_KEY)||null;
-if(currentUser && !STUDENTS.find(s=>s.id===currentUser)) currentUser=null;
+let currentUser = null;
+try{
+  const stored = localStorage.getItem(LOCAL_USER_KEY);
+  if(stored && STUDENTS.find(s=>s.id===stored)) currentUser = stored;
+}catch(e){}
 let isTeacher = false;
 let state = currentUser ? allData.users[currentUser] : null;
 let currentWeek = 1;
@@ -1319,7 +1429,10 @@ let currentOpts = {};
 function saveState(){
   if(currentUser && state) allData.users[currentUser]=state;
   allData.updatedAt=Date.now();
-  try{localStorage.setItem(STORAGE_KEY,JSON.stringify(allData))}catch(e){}
+  try{
+    localStorage.setItem(STORAGE_KEY,JSON.stringify(allData));
+    localStorage.setItem(VERSION_KEY,String(APP_VERSION));
+  }catch(e){console.warn('[KidQuest] saveState failed:',e)}
   syncToCloud();
 }
 
@@ -1412,29 +1525,54 @@ function updateTopbar(screen){
 /* ========== ROUTING ========== */
 function go(screen,opts={}){
   currentScreen=screen; currentOpts=opts;
-  const root=$('#screen'); root.innerHTML='';
+  const root=$('#screen');
+  if(!root){console.warn('[KidQuest] #screen not found'); return;}
+  root.innerHTML='';
   window.scrollTo({top:0,behavior:'smooth'});
-  updateTopbar(screen);
-  // Fab
+
+  // Always hide the reward overlay on navigation (belt-and-suspenders)
+  const rew = $('#reward'); if(rew){rew.classList.remove('show'); rew.style.display='none'}
+
+  try{ updateTopbar(screen); }catch(e){ console.warn('[KidQuest] updateTopbar failed:',e); }
+
+  // FAB visibility
   const fab=$('#fab');
   if(fab) fab.classList.toggle('hidden', !currentUser||screen==='home'||screen==='dashboard'||isTeacher);
 
-  if(screen==='home') renderHome(root);
-  else if(screen==='profiles') renderProfiles(root);
-  else if(screen==='pin') renderPin(root,opts.student);
-  else if(screen==='teacher-login') renderTeacherLogin(root);
-  else if(screen==='dashboard') renderDashboard(root);
-  else if(screen==='week') renderWeek(root,opts.subject);
-  else if(screen==='activity') renderActivity(root,opts.activityId,opts.subject);
-  else if(screen==='badges') renderBadges(root);
-  else if(screen==='teacher') renderTeacher(root);
+  // Defensive routing: if current user but no state, force to home
+  if(currentUser && !state && screen!=='home' && screen!=='profiles'){
+    console.warn('[KidQuest] state missing for currentUser; resetting to home');
+    currentUser=null; isTeacher=false;
+    try{localStorage.removeItem(LOCAL_USER_KEY);}catch(e){}
+    screen='home';
+  }
+
+  try{
+    if(screen==='home') renderHome(root);
+    else if(screen==='profiles') renderProfiles(root);
+    else if(screen==='pin') renderPin(root,opts.student);
+    else if(screen==='teacher-login') renderTeacherLogin(root);
+    else if(screen==='dashboard') renderDashboard(root);
+    else if(screen==='week') renderWeek(root,opts.subject);
+    else if(screen==='activity') renderActivity(root,opts.activityId,opts.subject);
+    else if(screen==='badges') renderBadges(root);
+    else if(screen==='teacher') renderTeacher(root);
+    else renderHome(root); // unknown screen → safe fallback
+  }catch(err){
+    console.error('[KidQuest] Render error on screen "'+screen+'":',err);
+    // Fall back to home on any render failure
+    if(screen !== 'home'){
+      root.innerHTML='';
+      try{ renderHome(root); }catch(e){ console.error('[KidQuest] Home render also failed:',e); }
+    }
+  }
 }
 
 /* ========== HOME ========== */
 function renderHome(root){
   const hero=h('section',{class:'hero'},[
     h('h1',{},'KidQuest'),
-    h('p',{class:'sub'},'Where learning becomes an adventure'),
+    h('p',{class:'sub'},'Play, learn, and level up'),
     h('button',{class:'cta',onclick:()=>go('profiles')},['Get Started →']),
   ]);
   root.appendChild(hero);
@@ -1490,13 +1628,27 @@ function renderPin(root,sid){
 function renderTeacherLogin(root){
   const wrap=h('div',{class:'teacher-form'});
   wrap.appendChild(h('h2',{},'🔑 Teacher Login'));
-  const pw=h('input',{class:'t-field',type:'password',placeholder:'Password'});
+  const pw=h('input',{class:'t-field',type:'password',placeholder:'Password',onkeydown:(e)=>{if(e.key==='Enter')submit()}});
   const msg=h('div',{class:'t-msg',id:'tMsg'},'');
-  const btn=h('button',{class:'t-submit',onclick:()=>{
+  function submit(){
     if(pw.value===TEACHER_CREDS.password){msg.textContent='Welcome, Teacher!';msg.style.color='#00b894';setTimeout(loginTeacher,500)}
     else{msg.textContent='Incorrect password. Try again.';msg.style.color='var(--coral)'}
-  }},'Log In');
+  }
+  const btn=h('button',{class:'t-submit',onclick:submit},'Log In');
   wrap.appendChild(pw); wrap.appendChild(btn); wrap.appendChild(msg);
+  // Reset demo data (teacher-only, for clearing broken/cached state during testing)
+  const resetBtn=h('button',{class:'t-reset',onclick:()=>{
+    if(confirm('⚠️ Reset ALL demo data?\n\nThis clears every student\'s progress, stars, coins, and saved login on THIS device. This cannot be undone.')){
+      try{
+        localStorage.removeItem(STORAGE_KEY);
+        localStorage.removeItem(LOCAL_USER_KEY);
+        localStorage.removeItem(VERSION_KEY);
+      }catch(e){}
+      alert('✓ Demo data cleared. Reloading...');
+      location.reload();
+    }
+  }},'⚠ Reset Demo Data');
+  wrap.appendChild(resetBtn);
   wrap.appendChild(h('button',{class:'pin-back',onclick:()=>go('profiles')},'← Back'));
   root.appendChild(wrap);
 }
@@ -1942,14 +2094,37 @@ function renderTeacher(root){
 /* ========== UTILS ========== */
 function shuffle(a){const b=[...a];for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]]}return b}
 
-/* ========== BOOT ========== */
-initCloud();
-$('#fab').addEventListener('click',()=>go('dashboard'));
-$('#rwAgain').addEventListener('click',()=>{closeReward();go('activity',{activityId:quiz.activityId,subject:quiz.subject})});
-$('#rwNext').addEventListener('click',()=>{closeReward();go('week',{subject:quiz.subject})});
+/* ========== BOOT ==========
+   Defensive initialization. Any failure → safe fallback to home screen.
+   Never leaves the user stuck on a half-rendered state. */
+try { initCloud(); } catch(e) { console.warn('[KidQuest] initCloud failed:',e); }
 
-if(currentUser) go('dashboard');
-else go('home');
+try {
+  const fabEl = $('#fab');
+  if(fabEl) fabEl.addEventListener('click',()=>go(currentUser?'dashboard':'home'));
+  const rwAgainEl = $('#rwAgain');
+  if(rwAgainEl) rwAgainEl.addEventListener('click',()=>{
+    closeReward();
+    if(quiz && quiz.activityId) go('activity',{activityId:quiz.activityId,subject:quiz.subject});
+    else go(currentUser?'dashboard':'home');
+  });
+  const rwNextEl = $('#rwNext');
+  if(rwNextEl) rwNextEl.addEventListener('click',()=>{
+    closeReward();
+    if(quiz && quiz.subject) go('week',{subject:quiz.subject});
+    else go(currentUser?'dashboard':'home');
+  });
+} catch(e) { console.warn('[KidQuest] Button wiring failed:',e); }
+
+// Always start on home or dashboard — NEVER on a "finished" screen
+try {
+  if(currentUser && state && allData.users[currentUser]) go('dashboard');
+  else { currentUser=null; state=null; go('home'); }
+} catch(e) {
+  console.error('[KidQuest] Initial routing failed, forcing home:',e);
+  currentUser=null; state=null;
+  try{ go('home'); }catch(e2){ document.getElementById('screen').innerHTML='<div style="padding:40px;text-align:center"><h2>KidQuest</h2><p>Something went wrong. <button onclick="localStorage.clear();location.reload()" style="padding:12px 24px;background:#6C5CE7;color:#fff;border:none;border-radius:12px;font-weight:700;cursor:pointer">Reset & Reload</button></p></div>'; }
+}
 </script>
 </body>
 </html>
