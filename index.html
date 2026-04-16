@@ -284,6 +284,9 @@ img{max-width:100%}
 .lesson-example-label{font-size:11px;font-weight:800;color:var(--sky);letter-spacing:.06em;margin-bottom:6px}
 .lesson-example-text{font-size:16px;font-weight:700;line-height:1.4}
 .lesson-hint{margin-top:12px;padding:10px 14px;background:rgba(0,206,201,.1);border-radius:var(--r);font-size:14px;color:#00855a;display:flex;align-items:center;gap:8px}
+.lesson-video{display:inline-flex;align-items:center;gap:8px;margin-top:14px;padding:12px 20px;border-radius:var(--r);background:linear-gradient(135deg,#FF0000,#CC0000);color:#fff;font-size:15px;font-weight:700;box-shadow:0 6px 16px rgba(255,0,0,.25);transition:all .3s var(--spring);text-decoration:none}
+.lesson-video:hover{transform:translateY(-2px) scale(1.03);box-shadow:0 10px 24px rgba(255,0,0,.35)}
+.lesson-video:active{transform:scale(.97)}
 
 /* ---- REWARD OVERLAY ---- */
 .reward-overlay{position:fixed;inset:0;z-index:100;background:rgba(26,16,53,.45);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;padding:24px}
@@ -413,6 +416,32 @@ const SUBJECTS = [
   { id:'math',    name:'Math',    emoji:'🔢', color:'#e17055', bg:'#fff8e1' },
   { id:'logic',   name:'Logic',   emoji:'🧩', color:'#00b894', bg:'#e0f7f5' },
 ];
+
+/* ========== VIDEO LINKS (YouTube search queries per activity) ==========
+   Each maps to a YouTube search showing best educational videos for that topic.
+   Opens in a new tab. Always fresh & relevant. */
+const VIDEOS = {
+  // NISHAN (SK)
+  'w1-nishan-r1':'reading+simple+stories+for+kindergarten','w1-nishan-r2':'learn+to+read+short+stories+kindergarten','w1-nishan-r3':'sight+words+for+kids+kindergarten','w1-nishan-r4':'big+and+small+for+kids+comparison','w1-nishan-r5':'reading+about+places+kindergarten',
+  'w1-nishan-w1':'beginning+letter+sounds+phonics+kids','w1-nishan-w2':'spelling+3+letter+words+CVC+kids','w1-nishan-w3':'middle+vowel+sounds+CVC+words+kids','w1-nishan-w4':'uppercase+lowercase+letters+matching+kids','w1-nishan-w5':'writing+sentences+for+kindergarten',
+  'w1-nishan-m1':'counting+objects+for+kids+kindergarten','w1-nishan-m2':'number+names+1+to+10+for+kids','w1-nishan-m3':'bigger+smaller+numbers+kindergarten','w1-nishan-m4':'shapes+for+kids+circle+triangle+square','w1-nishan-m5':'simple+addition+for+kindergarten',
+  'w1-nishan-l1':'things+that+go+together+matching+kids','w1-nishan-l2':'odd+one+out+for+kids','w1-nishan-l3':'patterns+for+kids+what+comes+next','w1-nishan-l4':'sorting+by+size+for+kids','w1-nishan-l5':'comparing+groups+more+less+kindergarten',
+  // AKARAN (G1)
+  'w1-akaran-r1':'reading+comprehension+grade+1+stories','w1-akaran-r2':'reading+comprehension+school+story+grade+1','w1-akaran-r3':'reading+stories+for+kids+grade+1','w1-akaran-r4':'reading+comprehension+grade+1','w1-akaran-r5':'reading+about+family+grade+1',
+  'w1-akaran-w1':'capital+letters+rules+for+kids','w1-akaran-w2':'period+question+mark+exclamation+kids','w1-akaran-w3':'spelling+words+grade+1','w1-akaran-w4':'building+sentences+grade+1','w1-akaran-w5':'writing+sentences+grade+1',
+  'w1-akaran-m1':'counting+to+20+for+kids','w1-akaran-m2':'addition+for+kids+grade+1','w1-akaran-m3':'subtraction+for+kids+grade+1','w1-akaran-m4':'number+order+smallest+to+biggest+kids','w1-akaran-m5':'math+word+problems+grade+1',
+  'w1-akaran-l1':'patterns+for+kids+grade+1+what+comes+next','w1-akaran-l2':'odd+one+out+categories+kids','w1-akaran-l3':'opposites+for+kids+matching','w1-akaran-l4':'daily+routine+order+of+events+kids','w1-akaran-l5':'riddles+for+kids+grade+1',
+  // RUSHAN (G2)
+  'w1-rushan-r1':'reading+comprehension+grade+2','w1-rushan-r2':'making+inferences+reading+grade+2','w1-rushan-r3':'reading+comprehension+stories+grade+2','w1-rushan-r4':'vocabulary+words+grade+2','w1-rushan-r5':'unscramble+sentences+grade+2',
+  'w1-rushan-w1':'punctuation+for+kids+grade+2','w1-rushan-w2':'spelling+practice+grade+2','w1-rushan-w3':'building+sentences+grade+2','w1-rushan-w4':'nouns+verbs+adjectives+for+kids','w1-rushan-w5':'writing+paragraphs+grade+2',
+  'w1-rushan-m1':'two+digit+addition+with+regrouping','w1-rushan-m2':'two+digit+subtraction+with+borrowing','w1-rushan-m3':'math+word+problems+grade+2','w1-rushan-m4':'skip+counting+by+2s+5s+10s+kids','w1-rushan-m5':'place+value+tens+and+ones+grade+2',
+  'w1-rushan-l1':'number+patterns+grade+2','w1-rushan-l2':'sorting+challenge+odd+one+out+grade+2','w1-rushan-l3':'analogies+for+kids+grade+2','w1-rushan-l4':'sequencing+events+in+order+kids','w1-rushan-l5':'code+breaker+puzzles+kids',
+  // AKSHAYAN (G3)
+  'w1-akshayan-r1':'reading+comprehension+grade+3+inference','w1-akshayan-r2':'context+clues+vocabulary+grade+3','w1-akshayan-r3':'character+analysis+reading+grade+3','w1-akshayan-r4':'main+idea+and+details+grade+3','w1-akshayan-r5':'figurative+language+similes+kids',
+  'w1-akshayan-w1':'commas+quotation+marks+grade+3','w1-akshayan-w2':'homophones+their+there+theyre+kids','w1-akshayan-w3':'compound+sentences+grade+3','w1-akshayan-w4':'topic+sentences+paragraph+writing','w1-akshayan-w5':'paragraph+writing+for+kids',
+  'w1-akshayan-m1':'3+digit+addition+with+regrouping','w1-akshayan-m2':'3+digit+subtraction+with+borrowing','w1-akshayan-m3':'introduction+to+multiplication+kids','w1-akshayan-m4':'multi+step+word+problems+grade+3','w1-akshayan-m5':'fractions+for+kids+halves+quarters',
+  'w1-akshayan-l1':'number+patterns+doubling+grade+3','w1-akshayan-l2':'if+then+logic+puzzles+kids','w1-akshayan-l3':'analogies+for+kids+grade+3','w1-akshayan-l4':'number+detective+puzzles+kids','w1-akshayan-l5':'brain+teasers+for+kids+grade+3',
+};
 
 /* ========== BADGES ========== */
 const BADGES = [
@@ -1536,6 +1565,17 @@ function renderLesson(card,q){
   if(L.intro) card.appendChild(h('p',{class:'lesson-intro'},L.intro));
   if(L.example){const ex=h('div',{class:'lesson-example'},[h('div',{class:'lesson-example-label'},'EXAMPLE'),h('div',{class:'lesson-example-text'},L.example)]);card.appendChild(ex)}
   if(L.hint) card.appendChild(h('div',{class:'lesson-hint'},['💡 ',L.hint]));
+  // Video link (if available for this activity)
+  const vidQ = VIDEOS[quiz.activityId];
+  if(vidQ){
+    const link = document.createElement('a');
+    link.className='lesson-video';
+    link.href='https://www.youtube.com/results?search_query='+vidQ;
+    link.target='_blank';
+    link.rel='noopener';
+    link.textContent='▶ Watch a Video First';
+    card.appendChild(link);
+  }
   quiz.locked=false;
   setTimeout(()=>{const b=$('#nextBtn');if(b){b.style.display='inline-flex';b.textContent="Let's practice! →"}},0);
 }
