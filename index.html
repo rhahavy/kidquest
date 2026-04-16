@@ -404,6 +404,268 @@ img{max-width:100%}
 .t-subj-bar .t-bar i{display:block;height:100%;border-radius:99px;transition:width .5s}
 .t-controls{margin-top:20px;display:flex;gap:10px;flex-wrap:wrap}
 
+/* ---- REPORT CARD ---- */
+.report-card{margin-top:28px;background:var(--card);border:1px solid var(--line);border-radius:var(--r-lg);padding:clamp(18px,3vw,28px);box-shadow:var(--shadow);position:relative;overflow:hidden}
+.report-card::before{content:'';position:absolute;top:0;left:0;right:0;height:6px;background:linear-gradient(90deg,#6c5ce7,#0984e3,#00b894,#fdcb6e,#e84393);background-size:200% 100%;animation:shimmer 4s ease-in-out infinite}
+.rc-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:4px}
+.rc-title{font-size:22px;font-weight:800;display:flex;align-items:center;gap:10px}
+.rc-title .rc-emoji{font-size:26px}
+.rc-sub{font-size:13px;color:var(--ink3);font-weight:600;margin-bottom:18px}
+.rc-overall{display:flex;align-items:center;gap:12px;padding:12px 16px;background:linear-gradient(135deg,rgba(108,92,231,.08),rgba(9,132,227,.08));border-radius:14px;margin-bottom:20px;flex-wrap:wrap}
+.rc-overall-lbl{font-size:13px;color:var(--ink3);font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+.rc-overall-lvl{font-size:16px;font-weight:800;display:flex;align-items:center;gap:6px}
+.rc-subjects{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+.rc-subject{background:#fafaff;border:1px solid var(--line);border-radius:16px;padding:16px;transition:all .3s var(--spring);position:relative;overflow:hidden}
+.rc-subject:hover{transform:translateY(-3px);box-shadow:var(--shadow)}
+.rc-subj-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
+.rc-subj-name{font-size:15px;font-weight:800;display:flex;align-items:center;gap:6px}
+.rc-subj-name .rc-sicon{font-size:20px}
+.rc-badge{font-size:12px;font-weight:800;padding:4px 10px;border-radius:999px;display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
+.rc-badge.lv1{background:#fff5ec;color:#b56820;border:1px solid #ffe0c0}
+.rc-badge.lv2{background:#fff9db;color:#96690b;border:1px solid #ffe89e}
+.rc-badge.lv3{background:#e3f2ff;color:#0970c0;border:1px solid #b8ddf7}
+.rc-badge.lv4{background:#e0f7f0;color:#0a7b5a;border:1px solid #a8e6ce}
+.rc-bar{height:10px;border-radius:99px;background:rgba(0,0,0,.06);overflow:hidden;margin-top:10px}
+.rc-bar i{display:block;height:100%;border-radius:99px;transition:width 1s var(--spring);position:relative;overflow:hidden}
+.rc-bar i::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.5),transparent);transform:translateX(-100%);animation:shimmer 2.5s ease-in-out infinite}
+.rc-bar i.lv1{background:linear-gradient(90deg,#ffa94d,#e17055)}
+.rc-bar i.lv2{background:linear-gradient(90deg,#ffd43b,#fdcb6e)}
+.rc-bar i.lv3{background:linear-gradient(90deg,#74b9ff,#0984e3)}
+.rc-bar i.lv4{background:linear-gradient(90deg,#55efc4,#00b894)}
+.rc-skills{margin-top:10px;font-size:12.5px;color:var(--ink2);font-weight:600;line-height:1.5}
+.rc-skills li{margin-top:3px;list-style:none;padding-left:16px;position:relative}
+.rc-skills li::before{content:'✓';position:absolute;left:0;color:#00b894;font-weight:800}
+.rc-comment{margin-top:10px;font-size:13px;color:var(--ink);font-style:italic;line-height:1.5;padding:10px 12px;background:rgba(108,92,231,.05);border-left:3px solid var(--primary);border-radius:8px}
+.rc-encourage{margin-top:18px;text-align:center;padding:14px;background:linear-gradient(135deg,#fff8e1,#ffe4ef);border-radius:14px;font-size:14px;font-weight:700;color:#e84393}
+.rc-encourage .rc-en-emoji{font-size:20px;margin-right:6px}
+
+/* Report card: teacher-detailed extras */
+.rc-teacher{margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;font-size:11px;font-weight:700;color:var(--ink3)}
+.rc-teacher span{background:rgba(0,0,0,.05);padding:3px 8px;border-radius:999px}
+
+/* Legend */
+.rc-legend{margin-top:16px;border:1px dashed var(--line);border-radius:14px;overflow:hidden;background:#fafaff}
+.rc-legend-head{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;cursor:pointer;font-weight:800;font-size:14px;color:var(--ink);user-select:none;transition:background .2s}
+.rc-legend-head:hover{background:rgba(108,92,231,.05)}
+.rc-legend-head .rc-chevron{transition:transform .3s;font-size:12px;color:var(--ink3)}
+.rc-legend.open .rc-chevron{transform:rotate(180deg)}
+.rc-legend-body{max-height:0;overflow:hidden;transition:max-height .4s ease}
+.rc-legend.open .rc-legend-body{max-height:500px}
+.rc-legend-inner{padding:4px 16px 16px}
+.rc-legend-item{display:flex;align-items:flex-start;gap:10px;padding:8px 10px;border-radius:10px;margin-top:6px;transition:background .2s}
+.rc-legend-item:hover{background:#fff}
+.rc-legend-item .rc-li-em{font-size:22px;flex-shrink:0;line-height:1}
+.rc-legend-item .rc-li-body{flex:1;min-width:0}
+.rc-legend-item .rc-li-name{font-size:14px;font-weight:800}
+.rc-legend-item .rc-li-desc{font-size:12.5px;color:var(--ink2);font-weight:500;line-height:1.4;margin-top:1px}
+.rc-legend-item.lv1 .rc-li-name{color:#b56820}
+.rc-legend-item.lv2 .rc-li-name{color:#96690b}
+.rc-legend-item.lv3 .rc-li-name{color:#0970c0}
+.rc-legend-item.lv4 .rc-li-name{color:#0a7b5a}
+
+/* ==========================================================================
+   KIDQUEST STORE — catalog cards, item detail, challenge modal, order list
+   ========================================================================== */
+.store-head{margin-top:20px;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
+.store-head h2{font-size:24px;font-weight:800;display:flex;align-items:center;gap:10px}
+.store-head .coin-pill{display:inline-flex;align-items:center;gap:8px;padding:10px 18px;border-radius:999px;background:linear-gradient(135deg,#ffe58a,#fdcb6e);color:#7a4a00;font-weight:800;font-size:15px;box-shadow:inset 0 -2px 0 rgba(0,0,0,.08),var(--shadow);border:2px solid #fff0b8}
+.store-head .coin-pill .coin-emoji{font-size:18px;animation:coinSpin 4s ease-in-out infinite}
+.store-sub{font-size:14px;color:var(--ink3);font-weight:600;margin-top:4px}
+.store-tabs{margin-top:16px;display:flex;gap:8px;flex-wrap:wrap}
+.store-tab{padding:8px 16px;border-radius:999px;background:rgba(108,92,231,.08);color:var(--ink2);font-weight:800;font-size:13px;cursor:pointer;transition:all .25s var(--spring);border:2px solid transparent;display:inline-flex;align-items:center;gap:6px}
+.store-tab:hover{background:rgba(108,92,231,.15);transform:translateY(-1px)}
+.store-tab.active{background:linear-gradient(135deg,var(--primary),#8b7bff);color:#fff;box-shadow:0 6px 14px rgba(108,92,231,.35);border-color:#fff}
+.store-grid{margin-top:16px;display:grid;gap:16px;grid-template-columns:repeat(auto-fill,minmax(230px,1fr))}
+.store-item{position:relative;background:var(--card);border:1px solid var(--line);border-radius:20px;padding:16px;box-shadow:var(--shadow);transition:all .35s var(--spring);cursor:pointer;overflow:hidden;display:flex;flex-direction:column;gap:10px}
+.store-item::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(108,92,231,.05),transparent 60%);opacity:0;transition:opacity .3s;pointer-events:none}
+.store-item:hover{transform:translateY(-6px) rotate(-.5deg);box-shadow:var(--shadow-lg)}
+.store-item:hover::before{opacity:1}
+.store-item:hover .si-emoji{transform:scale(1.15) rotate(-6deg)}
+.store-item .si-thumb{height:120px;border-radius:14px;background:linear-gradient(135deg,#fff0d9,#ffe0ec);display:grid;place-items:center;position:relative;overflow:hidden}
+.store-item .si-thumb img{width:100%;height:100%;object-fit:cover;border-radius:14px}
+.store-item .si-emoji{font-size:58px;line-height:1;filter:drop-shadow(0 6px 10px rgba(0,0,0,.08));transition:transform .35s var(--spring)}
+.store-item .si-name{font-size:15px;font-weight:800;line-height:1.25}
+.store-item .si-cat{font-size:11px;color:var(--ink3);font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+.store-item .si-coin{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;background:linear-gradient(135deg,#ffe58a,#fdcb6e);color:#7a4a00;font-weight:800;font-size:13px;box-shadow:inset 0 -2px 0 rgba(0,0,0,.1);align-self:flex-start}
+.store-item .si-reqs{display:flex;flex-wrap:wrap;gap:4px;margin-top:2px}
+.store-item .si-req{font-size:10.5px;font-weight:700;padding:3px 8px;border-radius:999px;background:rgba(0,0,0,.06);color:var(--ink2);display:inline-flex;align-items:center;gap:3px}
+.store-item .si-req.ok{background:rgba(0,184,148,.12);color:#0a7b5a}
+.store-item .si-req.no{background:rgba(225,112,85,.12);color:#b54a2f}
+.store-item.special{background:linear-gradient(135deg,#fff8f0,#fff0f6);border:2px solid #ffd166}
+.store-item.special::after{content:'✨';position:absolute;top:10px;right:12px;font-size:22px;animation:pulse 2s ease-in-out infinite;pointer-events:none}
+.store-item.locked{opacity:.6;cursor:not-allowed}
+.store-item.locked:hover{transform:none;box-shadow:var(--shadow)}
+.store-item .si-lock{position:absolute;bottom:14px;right:14px;width:30px;height:30px;border-radius:50%;background:rgba(0,0,0,.55);color:#fff;display:grid;place-items:center;font-size:14px;backdrop-filter:blur(4px);z-index:2;box-shadow:0 4px 10px rgba(0,0,0,.2)}
+.store-item.locked.special::after{content:''}
+
+/* Modal backdrop + detail/challenge panels */
+.store-modal{position:fixed;inset:0;background:rgba(20,20,35,.55);backdrop-filter:blur(6px);z-index:200;display:grid;place-items:center;padding:20px;animation:modalFade .2s ease}
+@keyframes modalFade{from{opacity:0}to{opacity:1}}
+.store-modal .sm-panel{background:var(--card);border-radius:24px;padding:26px;max-width:520px;width:100%;box-shadow:0 30px 70px rgba(0,0,0,.3);border:1px solid var(--line);animation:modalUp .35s var(--spring);max-height:90vh;overflow:auto}
+@keyframes modalUp{from{opacity:0;transform:translateY(30px) scale(.94)}to{opacity:1;transform:none}}
+.store-modal .sm-close{position:absolute;top:16px;right:16px;width:40px;height:40px;border-radius:50%;background:rgba(0,0,0,.06);display:grid;place-items:center;font-size:18px;color:var(--ink2);cursor:pointer;transition:all .2s;border:none}
+.store-modal .sm-close:hover{background:rgba(0,0,0,.12);transform:rotate(90deg)}
+.sm-panel{position:relative}
+.sm-hero{display:flex;align-items:center;gap:16px;padding:20px;border-radius:16px;background:linear-gradient(135deg,#fff0d9,#ffe0ec);margin-bottom:14px}
+.sm-hero .sh-emoji{font-size:64px;line-height:1;flex-shrink:0}
+.sm-hero .sh-info{flex:1;min-width:0}
+.sm-hero .sh-name{font-size:20px;font-weight:800}
+.sm-hero .sh-cat{font-size:12px;color:var(--ink3);font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-top:2px}
+.sm-hero .sh-coin{margin-top:6px;display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:999px;background:linear-gradient(135deg,#ffe58a,#fdcb6e);color:#7a4a00;font-weight:800;font-size:14px}
+.sm-desc{font-size:14px;color:var(--ink2);line-height:1.5;margin-bottom:14px}
+.sm-check-head{font-size:13px;font-weight:800;color:var(--ink3);text-transform:uppercase;letter-spacing:.5px;margin-top:10px;margin-bottom:8px}
+.sm-checklist{display:flex;flex-direction:column;gap:8px}
+.sm-check{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:12px;font-size:13.5px;font-weight:700;transition:all .3s}
+.sm-check.ok{background:rgba(0,184,148,.1);color:#0a7b5a}
+.sm-check.no{background:rgba(225,112,85,.1);color:#b54a2f}
+.sm-check .sm-icon{font-size:18px;flex-shrink:0}
+.sm-actions{margin-top:18px;display:flex;gap:10px;flex-wrap:wrap}
+.sm-actions button{flex:1;min-width:140px;padding:14px 20px;border-radius:14px;font-weight:800;font-size:15px;cursor:pointer;transition:all .25s var(--spring);border:none}
+.sm-btn-primary{background:linear-gradient(135deg,var(--primary),#8b7bff);color:#fff;box-shadow:0 8px 20px rgba(108,92,231,.35)}
+.sm-btn-primary:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 12px 26px rgba(108,92,231,.45)}
+.sm-btn-primary:disabled{opacity:.5;cursor:not-allowed}
+.sm-btn-ghost{background:rgba(0,0,0,.05);color:var(--ink2)}
+.sm-btn-ghost:hover{background:rgba(0,0,0,.1)}
+
+/* Challenge modal */
+.ch-head{text-align:center;margin-bottom:14px}
+.ch-head .ch-title{font-size:22px;font-weight:800;display:flex;align-items:center;justify-content:center;gap:8px}
+.ch-head .ch-sub{font-size:13px;color:var(--ink3);font-weight:600;margin-top:4px}
+.ch-progress{display:flex;gap:6px;justify-content:center;margin:12px 0}
+.ch-dot{width:10px;height:10px;border-radius:50%;background:rgba(0,0,0,.1);transition:all .3s}
+.ch-dot.active{background:var(--primary);transform:scale(1.3)}
+.ch-dot.ok{background:#00b894}
+.ch-dot.no{background:#e17055}
+.ch-q{font-size:17px;font-weight:800;text-align:center;margin:12px 0 16px;line-height:1.4}
+.ch-choices{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(130px,1fr))}
+.ch-choice{padding:14px;border-radius:14px;background:#fafaff;border:2px solid var(--line);font-weight:800;font-size:15px;cursor:pointer;transition:all .2s var(--spring)}
+.ch-choice:hover:not(:disabled){transform:translateY(-2px);border-color:var(--primary);background:rgba(108,92,231,.05)}
+.ch-choice:disabled{cursor:not-allowed}
+.ch-choice.correct{background:rgba(0,184,148,.15);border-color:#00b894;color:#0a7b5a}
+.ch-choice.wrong{background:rgba(225,112,85,.15);border-color:#e17055;color:#b54a2f}
+.ch-result{text-align:center;padding:20px}
+.ch-result .ch-emoji{font-size:72px;margin-bottom:10px;animation:scaleIn .5s var(--spring)}
+.ch-result .ch-msg{font-size:20px;font-weight:800;margin-bottom:6px}
+.ch-result .ch-sub2{font-size:14px;color:var(--ink3);font-weight:600;margin-bottom:16px;line-height:1.5}
+.ch-result .ch-bonus{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:999px;background:linear-gradient(135deg,#ffe58a,#fdcb6e);color:#7a4a00;font-weight:800;font-size:13px;margin-bottom:10px}
+
+/* Success burst */
+.success-burst{text-align:center;padding:10px}
+.success-burst .sb-emoji{font-size:84px;margin:10px 0;animation:burstPop .7s var(--spring)}
+@keyframes burstPop{0%{transform:scale(.3) rotate(-20deg);opacity:0}60%{transform:scale(1.2) rotate(5deg);opacity:1}100%{transform:scale(1)}}
+.success-burst .sb-title{font-size:24px;font-weight:800;margin-bottom:6px}
+.success-burst .sb-line{font-size:15px;color:var(--ink2);font-weight:700;margin-bottom:4px}
+.success-burst .sb-line-soft{font-size:14px;color:var(--ink3);font-weight:600;margin-bottom:14px}
+
+/* Student orders history */
+.orders-list{display:flex;flex-direction:column;gap:10px;margin-top:16px}
+.order-row{display:flex;align-items:center;gap:14px;padding:14px 16px;background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow)}
+.order-row .or-emoji{font-size:32px;flex-shrink:0}
+.order-row .or-info{flex:1;min-width:0}
+.order-row .or-name{font-size:15px;font-weight:800}
+.order-row .or-meta{font-size:12px;color:var(--ink3);font-weight:600;margin-top:2px}
+.order-row .or-status{font-size:12px;font-weight:800;padding:4px 12px;border-radius:999px;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap}
+.or-status.pending{background:#fff5ec;color:#b56820}
+.or-status.approved{background:#e0f2ff;color:#0970c0}
+.or-status.ordered{background:#ede7f6;color:#5a4dc7}
+.or-status.delivered{background:#e0f7f0;color:#0a7b5a}
+.or-status.declined{background:#fee5e5;color:#b04040}
+
+/* Teacher: orders management */
+.t-orders{margin-top:30px}
+.t-orders h2{font-size:20px;font-weight:800;margin-bottom:6px}
+.t-orders .t-orders-sub{font-size:13px;color:var(--ink3);font-weight:600;margin-bottom:14px}
+.t-orders-stats{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));margin-bottom:16px}
+.t-stat-card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;box-shadow:var(--shadow);text-align:center}
+.t-stat-card .tsc-num{font-size:22px;font-weight:800}
+.t-stat-card .tsc-lbl{font-size:11px;color:var(--ink3);font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-top:2px}
+.t-order-row{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;padding:14px 16px;background:var(--card);border:1px solid var(--line);border-radius:14px;margin-bottom:8px}
+.t-order-row .tor-emoji{font-size:30px}
+.t-order-row .tor-info{min-width:0}
+.t-order-row .tor-top{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.t-order-row .tor-student{font-size:14px;font-weight:800}
+.t-order-row .tor-item{font-size:13px;color:var(--ink2);font-weight:700}
+.t-order-row .tor-meta{font-size:11px;color:var(--ink3);font-weight:600;margin-top:3px}
+.t-order-row select{padding:8px 12px;border-radius:10px;border:1.5px solid var(--line);background:#fafaff;font-weight:700;font-size:12px;color:var(--ink);cursor:pointer}
+.t-order-actions{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.t-order-actions button{padding:6px 10px;border-radius:8px;font-size:11px;font-weight:700;border:1px solid var(--line);background:#fafaff;cursor:pointer;color:var(--ink2)}
+.t-order-actions button:hover{background:rgba(0,0,0,.05)}
+
+/* Teacher: catalog edit */
+.t-catalog{margin-top:30px}
+.t-catalog h2{font-size:20px;font-weight:800;margin-bottom:6px}
+.t-cat-sub{font-size:13px;color:var(--ink3);font-weight:600;margin-bottom:14px}
+.t-cat-note{font-size:12px;color:#b56820;background:#fff5ec;border:1px solid #ffe0c0;padding:10px 14px;border-radius:10px;margin-bottom:14px;font-weight:600}
+.t-cat-grid{display:grid;gap:10px;grid-template-columns:repeat(auto-fill,minmax(280px,1fr))}
+.t-cat-row{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;display:flex;gap:12px;align-items:flex-start}
+.t-cat-row .tcr-emoji{font-size:32px;flex-shrink:0}
+.t-cat-row .tcr-body{flex:1;min-width:0}
+.t-cat-row .tcr-name{font-size:14px;font-weight:800}
+.t-cat-row .tcr-meta{font-size:12px;color:var(--ink3);font-weight:600;margin-top:3px}
+.t-cat-row .tcr-budget{font-size:11px;font-weight:800;padding:2px 8px;border-radius:999px;margin-top:6px;display:inline-block}
+.t-cat-row .tcr-budget.ok{background:rgba(0,184,148,.15);color:#0a7b5a}
+.t-cat-row .tcr-budget.over{background:rgba(225,112,85,.15);color:#b54a2f}
+.t-cat-row .tcr-ctrl{margin-top:8px;display:flex;gap:6px;flex-wrap:wrap}
+.t-cat-row .tcr-ctrl button{padding:5px 10px;border-radius:8px;font-size:11px;font-weight:700;border:1px solid var(--line);background:#fafaff;cursor:pointer}
+.t-cat-row .tcr-ctrl button:hover{background:rgba(0,0,0,.05)}
+.t-cat-row .tcr-ctrl button.on{background:rgba(0,184,148,.12);color:#0a7b5a;border-color:#9be5cf}
+
+/* Dashboard store entry buttons */
+.dash-store-row{margin-top:20px;display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(180px,1fr))}
+.dash-store-btn{padding:16px 18px;border-radius:18px;border:none;cursor:pointer;font-weight:800;font-size:15px;display:flex;align-items:center;gap:10px;transition:all .3s var(--spring);box-shadow:var(--shadow)}
+.dash-store-btn.store{background:linear-gradient(135deg,#ffd166,#ff9f43);color:#5a3200}
+.dash-store-btn.orders{background:linear-gradient(135deg,#a0e7e5,#74b9ff);color:#0a3a66}
+.dash-store-btn:hover{transform:translateY(-3px) scale(1.02);box-shadow:var(--shadow-lg)}
+.dash-store-btn .dsb-emoji{font-size:22px}
+
+/* ---- SAVE-UP PROGRESS + NUDGES + WISHLIST ---- */
+.save-row{margin-top:4px}
+.save-bar-wrap{height:8px;border-radius:99px;background:rgba(0,0,0,.08);overflow:hidden;position:relative}
+.save-bar{display:block;height:100%;border-radius:99px;transition:width 1s var(--spring);background:linear-gradient(90deg,#ffd166,#ff9f43);position:relative;overflow:hidden}
+.save-bar::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.65),transparent);transform:translateX(-100%);animation:shimmer 2.2s ease-in-out infinite}
+.save-bar.ready{background:linear-gradient(90deg,#55efc4,#00b894)}
+.save-meta{display:flex;justify-content:space-between;align-items:center;margin-top:5px;font-size:11px;font-weight:700;color:var(--ink3)}
+.save-meta .save-count{color:var(--ink2)}
+.save-meta .save-ready{color:#0a7b5a}
+.nudge{margin-top:4px;font-size:11.5px;font-weight:700;color:#b56820;font-style:italic}
+.nudge.ready{color:#0a7b5a;font-style:normal}
+
+/* Wishlist heart (on item card) */
+.wish-btn{position:absolute;top:10px;left:12px;width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.95);display:grid;place-items:center;font-size:16px;cursor:pointer;transition:all .25s var(--spring);border:2px solid rgba(0,0,0,.05);box-shadow:0 4px 10px rgba(0,0,0,.1);z-index:3}
+.wish-btn:hover{transform:scale(1.15) rotate(-8deg);background:#fff0f6;border-color:#ffb0cc}
+.wish-btn.on{background:linear-gradient(135deg,#ff6b9d,#ff4081);color:#fff;border-color:#fff;animation:heartPop .5s var(--spring)}
+@keyframes heartPop{0%{transform:scale(1)}30%{transform:scale(1.35) rotate(-10deg)}60%{transform:scale(.95)}100%{transform:scale(1)}}
+.wish-ribbon{position:absolute;top:14px;right:-6px;font-size:10.5px;font-weight:800;padding:3px 10px 3px 12px;background:linear-gradient(90deg,#ff6b9d,#ff4081);color:#fff;border-radius:4px 0 0 4px;box-shadow:0 3px 8px rgba(255,64,129,.35);z-index:2;letter-spacing:.3px}
+.wish-ribbon::after{content:'';position:absolute;top:100%;right:0;width:0;height:0;border-top:4px solid #c92a5c;border-right:6px solid transparent}
+
+/* Wishlist toast */
+.wish-toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:#2c2c40;color:#fff;padding:12px 22px;border-radius:999px;font-weight:800;font-size:14px;box-shadow:0 10px 30px rgba(0,0,0,.3);z-index:250;animation:toastIn .25s var(--spring);display:flex;align-items:center;gap:8px}
+@keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(15px)}to{opacity:1;transform:translateX(-50%)}}
+.wish-toast.out{animation:toastOut .25s ease forwards}
+@keyframes toastOut{to{opacity:0;transform:translateX(-50%) translateY(15px)}}
+
+/* Wishlist section */
+.wish-section{margin-top:20px;padding:20px;background:linear-gradient(135deg,rgba(255,107,157,.06),rgba(253,203,110,.06));border:1px solid rgba(255,107,157,.15);border-radius:20px}
+.wish-section h3{font-size:18px;font-weight:800;display:flex;align-items:center;gap:8px;margin-bottom:4px}
+.wish-section .wish-sub{font-size:13px;color:var(--ink3);font-weight:600;margin-bottom:14px}
+.wish-empty{padding:24px;text-align:center;color:var(--ink3);font-weight:600;font-size:14px}
+
+/* Teacher: wishlist insights */
+.t-wish{margin-top:26px;padding:18px;background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow)}
+.t-wish h3{font-size:16px;font-weight:800;margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.t-wish-sub{font-size:12px;color:var(--ink3);font-weight:600;margin-bottom:12px}
+.t-wish-grid{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+.t-wish-card{background:#fafaff;border:1px solid var(--line);border-radius:12px;padding:12px}
+.t-wish-card .twc-head{font-size:14px;font-weight:800;display:flex;align-items:center;gap:6px;margin-bottom:6px}
+.t-wish-card .twc-list{display:flex;flex-direction:column;gap:6px}
+.t-wish-card .twc-item{font-size:12px;font-weight:700;color:var(--ink2);display:flex;justify-content:space-between;gap:6px;padding:6px 10px;background:#fff;border-radius:8px;border:1px solid var(--line)}
+.t-wish-card .twc-item .twc-prog{font-size:10.5px;color:var(--ink3);font-weight:700}
+.t-wish-empty{font-size:12px;color:var(--ink3);font-style:italic}
+.t-wish-top{margin-top:14px;padding:12px;background:linear-gradient(135deg,#fff5ec,#fff0f6);border-radius:12px;border:1px solid rgba(255,107,157,.15)}
+.t-wish-top h4{font-size:13px;font-weight:800;color:var(--ink2);margin-bottom:6px}
+.t-wish-top-list{display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:700;color:var(--ink2)}
+.t-wish-top-list span.cnt{background:rgba(255,64,129,.15);color:#c92a5c;padding:2px 8px;border-radius:999px;font-size:11px}
+
 /* ---- BADGES ---- */
 .badges-grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fill,minmax(140px,1fr))}
 .badge{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:18px;text-align:center;box-shadow:var(--shadow);transition:all .3s var(--spring)}
@@ -440,6 +702,9 @@ img{max-width:100%}
 }
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
 </style>
+<!-- EmailJS SDK (optional) — only sends if keys are configured in EMAIL_CONFIG.
+     Safe to leave loaded even when unconfigured: no requests fire without keys. -->
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js" defer></script>
 </head>
 <body>
 <div class="bg-mesh"></div>
@@ -1567,6 +1832,174 @@ akshayan: {
 
 }};
 
+/* ==========================================================================
+   KIDQUEST STORE — REWARD CATALOG + REQUEST SYSTEM
+   --------------------------------------------------------------------------
+   ▸ EDIT ITEMS: update STORE_ITEMS below — name, price, coinCost, etc.
+   ▸ EDIT PRICES: tweak `approxPrice` (USD) and `coinCost` per item.
+   ▸ EDIT UNLOCK RULES: each item.requirements controls how hard it is to earn.
+       - minLevels: total activities student must have completed THIS WEEK
+       - minSubjects: how many DIFFERENT subjects they've touched this week
+       - challenge: 'easy' | 'medium' | 'hard' — mini-quiz difficulty
+   ▸ RARE "SPECIAL" ITEMS: set `special:true` for glowing treatment.
+   ▸ IMAGES: put real images in an /images folder and set `image:'images/foo.png'`,
+             or leave `image:null` and the emoji/icon will be used as the visual.
+   ▸ AMAZON LINKS: paste the real Amazon URL in `amazonLink` so I (the teacher)
+                   can quickly fulfill the order. This link is shown to the teacher
+                   ONLY — never shown to students.
+   ▸ BUDGET RULE: all items should stay under $15 unless manually changed.
+   ▸ CATEGORIES: edit CATEGORIES array below to add/rename/reorder tabs.
+   ========================================================================== */
+
+const CATEGORIES = [
+  { id:'all',       name:'All',            emoji:'🛍️' },
+  { id:'plush',     name:'Plush',          emoji:'🧸' },
+  { id:'art',       name:'Art',            emoji:'🎨' },
+  { id:'school',    name:'School Fun',     emoji:'✏️' },
+  { id:'fidget',    name:'Fidgets',        emoji:'🌀' },
+  { id:'reading',   name:'Reading',        emoji:'📚' },
+  { id:'stickers',  name:'Stickers',       emoji:'🌟' },
+];
+
+/* COIN COST TIERS (guideline only — each item sets its own coinCost)
+   Low-cost (~$3-6)   ≈ 1,000–1,500 coins
+   Mid-cost (~$7-10)  ≈ 2,000–2,500 coins
+   Higher-cost (~$11-15) ≈ 3,000 coins
+   Special rare       ≈ 3,500–4,000 coins + extra requirements
+*/
+const STORE_ITEMS = [
+  { id:'sticker-pack', name:'Mega Sticker Pack', category:'stickers', emoji:'🌟',
+    description:'A huge pack of shiny, sparkly stickers to decorate notebooks, water bottles, or anything you want.',
+    approxPrice:4.99, coinCost:1000, image:null, amazonLink:'', isAvailable:true, special:false,
+    requirements:{ minLevels:1, minSubjects:1, challenge:'easy' } },
+  { id:'mini-plush', name:'Mini Plush Keychain', category:'plush', emoji:'🧸',
+    description:'A cute mini plushie that clips onto your backpack. Tiny, fluffy, adorable.',
+    approxPrice:8.99, coinCost:2000, image:null, amazonLink:'', isAvailable:true, special:false,
+    requirements:{ minLevels:2, minSubjects:2, challenge:'easy' } },
+  { id:'gel-pens', name:'Glitter Gel Pens (12 pack)', category:'art', emoji:'🖊️',
+    description:'Twelve glittery gel pens in rainbow colors. Makes homework extra sparkly.',
+    approxPrice:7.49, coinCost:1800, image:null, amazonLink:'', isAvailable:true, special:false,
+    requirements:{ minLevels:2, minSubjects:2, challenge:'easy' } },
+  { id:'pop-fidget', name:'Pop-It Fidget Toy', category:'fidget', emoji:'🌈',
+    description:'Satisfying poppable silicone toy. Pop, flip, repeat. Great for focus.',
+    approxPrice:5.99, coinCost:1500, image:null, amazonLink:'', isAvailable:true, special:false,
+    requirements:{ minLevels:2, minSubjects:1, challenge:'easy' } },
+  { id:'fun-bookmark', name:'3D Dinosaur Bookmarks', category:'reading', emoji:'🦖',
+    description:'A set of 3D animal bookmarks that peek out of the top of your book.',
+    approxPrice:6.49, coinCost:1500, image:null, amazonLink:'', isAvailable:true, special:false,
+    requirements:{ minLevels:2, minSubjects:2, challenge:'easy' } },
+  { id:'fancy-pencils', name:'Fancy Pencils (Pack of 10)', category:'school', emoji:'✏️',
+    description:'Ten gorgeous patterned pencils with fun erasers. Perfect for school.',
+    approxPrice:6.99, coinCost:1500, image:null, amazonLink:'', isAvailable:true, special:false,
+    requirements:{ minLevels:2, minSubjects:1, challenge:'easy' } },
+  { id:'mini-notebook', name:'Mini Sketch Notebook', category:'art', emoji:'📓',
+    description:'A pocket-size sketch notebook for doodling, drawing, and story ideas.',
+    approxPrice:8.99, coinCost:2000, image:null, amazonLink:'', isAvailable:true, special:false,
+    requirements:{ minLevels:3, minSubjects:2, challenge:'medium' } },
+  { id:'scratch-art', name:'Rainbow Scratch Art Kit', category:'art', emoji:'🌈',
+    description:'Scratch off the black coating to reveal rainbow designs. Includes stylus!',
+    approxPrice:9.99, coinCost:2500, image:null, amazonLink:'', isAvailable:true, special:false,
+    requirements:{ minLevels:3, minSubjects:3, challenge:'medium' } },
+  { id:'squishy-ball', name:'Stretchy Squishy Ball', category:'fidget', emoji:'🟢',
+    description:'A stretchy, squishy stress ball you can pull, squish, and bounce back.',
+    approxPrice:5.49, coinCost:1200, image:null, amazonLink:'', isAvailable:true, special:false,
+    requirements:{ minLevels:1, minSubjects:1, challenge:'easy' } },
+  { id:'puzzle-book', name:'Puzzle & Activity Book', category:'reading', emoji:'🧩',
+    description:'A book full of mazes, word searches, and brain puzzles to solve.',
+    approxPrice:7.99, coinCost:2000, image:null, amazonLink:'', isAvailable:true, special:false,
+    requirements:{ minLevels:3, minSubjects:3, challenge:'medium' } },
+  // ✨ SPECIAL rare items — glowing badge, harder to unlock
+  { id:'rainbow-loom', name:'✨ Rainbow Loom Bracelet Kit', category:'art', emoji:'🪄',
+    description:'Make your own colorful bracelets with rubber bands and a mini loom.',
+    approxPrice:12.99, coinCost:3500, image:null, amazonLink:'', isAvailable:true, special:true,
+    requirements:{ minLevels:5, minSubjects:3, challenge:'hard' } },
+  { id:'build-kit', name:'✨ Mini Build-It Science Kit', category:'school', emoji:'🔬',
+    description:'A mini science build-it kit with experiments and surprises inside.',
+    approxPrice:14.99, coinCost:4000, image:null, amazonLink:'', isAvailable:true, special:true,
+    requirements:{ minLevels:6, minSubjects:4, challenge:'hard' } },
+];
+
+/* ==========================================================================
+   CHALLENGE BANK — mini-quiz questions gate every purchase.
+   --------------------------------------------------------------------------
+   ▸ EDIT DIFFICULTY: add/remove questions from each array.
+   ▸ PASS RULE: students must get ≥2 out of 3 correct (see CHALLENGE_PASS_MIN).
+   ▸ BONUS: small coin reward on pass (CHALLENGE_BONUS_COINS) to make the
+     challenge itself feel rewarding, not punishing.
+   ========================================================================== */
+const CHALLENGE_QUESTIONS_PER_CHALLENGE = 3;
+const CHALLENGE_PASS_MIN = 2;
+const CHALLENGE_BONUS_COINS = 5;
+
+const CHALLENGE_BANK = {
+  easy: [
+    { q:'What is 3 + 4?', choices:['6','7','8','9'], answer:1 },
+    { q:'Which word rhymes with "cat"?', choices:['dog','hat','fish','sun'], answer:1 },
+    { q:'How many sides does a triangle have?', choices:['2','3','4','5'], answer:1 },
+    { q:'Which letter comes after "B"?', choices:['A','C','D','E'], answer:1 },
+    { q:'What is 10 - 4?', choices:['4','5','6','7'], answer:2 },
+    { q:'Which one is a fruit?', choices:['Carrot','Apple','Lettuce','Bread'], answer:1 },
+    { q:'What color do you get mixing red and yellow?', choices:['Green','Orange','Purple','Blue'], answer:1 },
+    { q:'What is the opposite of "big"?', choices:['Tall','Small','Round','Fast'], answer:1 },
+    { q:'How many days in a week?', choices:['5','6','7','8'], answer:2 },
+    { q:'Which one is a shape?', choices:['Bark','Circle','Run','Sing'], answer:1 },
+  ],
+  medium: [
+    { q:'What is 12 + 15?', choices:['25','27','28','30'], answer:1 },
+    { q:'A story character is called the...', choices:['Author','Protagonist','Title','Ending'], answer:1 },
+    { q:'What is half of 30?', choices:['10','12','15','20'], answer:2 },
+    { q:'Which word is a synonym for "happy"?', choices:['Sad','Joyful','Tired','Angry'], answer:1 },
+    { q:'What is 8 × 3?', choices:['21','24','27','32'], answer:1 },
+    { q:'Which pattern comes next: A, B, A, B, ___?', choices:['A','B','C','D'], answer:0 },
+    { q:'Noun, verb, adjective — which describes an action?', choices:['Noun','Verb','Adjective','All'], answer:1 },
+    { q:'How many minutes in an hour?', choices:['30','45','60','100'], answer:2 },
+    { q:'Which is NOT a continent?', choices:['Asia','Europe','Canada','Africa'], answer:2 },
+    { q:'What is 100 - 37?', choices:['53','63','73','83'], answer:1 },
+  ],
+  hard: [
+    { q:'What is 25 × 4?', choices:['75','85','95','100'], answer:3 },
+    { q:'Which sentence is written correctly?', choices:['the dog ran','The dog ran.','the dog ran.','The Dog Ran'], answer:1 },
+    { q:'Complete the pattern: 2, 4, 8, 16, ___', choices:['24','28','32','64'], answer:2 },
+    { q:'If today is Wednesday, what day is it in 5 days?', choices:['Sunday','Monday','Tuesday','Saturday'], answer:1 },
+    { q:'Which word means "very small"?', choices:['Enormous','Tiny','Medium','Regular'], answer:1 },
+    { q:'What is 144 ÷ 12?', choices:['10','11','12','14'], answer:2 },
+    { q:'A pentagon has how many sides?', choices:['4','5','6','7'], answer:1 },
+    { q:'Which is an example of a simile?', choices:['Fast as a cheetah','A big tree','The wind blew','I ran home'], answer:0 },
+    { q:'What is 15% of 100?', choices:['5','10','15','20'], answer:2 },
+    { q:'Which fraction is largest?', choices:['1/4','1/3','1/2','1/5'], answer:2 },
+  ],
+};
+
+/* ==========================================================================
+   EMAIL NOTIFICATION CONFIG
+   --------------------------------------------------------------------------
+   ▸ RECOMMENDED: EmailJS (https://www.emailjs.com) — free tier, works from
+     pure frontend. 1) create free account, 2) add Gmail/Outlook service,
+     3) create template with variables below, 4) paste keys here.
+   ▸ ALTERNATIVES: Formspree, Zapier webhook, or tiny serverless function
+     (Cloudflare Worker / Netlify Function) that wraps an SMTP call.
+   ▸ FALLBACK: if EmailJS isn't configured, every order is STILL saved to the
+     cloud (`allData.orders`) and visible in the Teacher Dashboard — no data
+     is ever silently dropped. A mailto: link is also logged to the console
+     so the teacher can manually review.
+   ▸ SECURITY: EmailJS public key is safe to expose in frontend (rate-limited
+     + domain-restricted in their dashboard). Never paste an SMTP password.
+   ========================================================================== */
+const EMAIL_CONFIG = {
+  teacherEmail: 'rhahavy@example.com',  // TODO: replace with your real email
+  teacherName:  'Rhahavy',
+  emailjs: {
+    publicKey:  '',   // e.g. 'user_AbCd1234' — from EmailJS dashboard
+    serviceId:  '',   // e.g. 'service_gmail_xyz'
+    templateId: '',   // e.g. 'template_reward_request'
+  },
+};
+
+// Template vars sent to EmailJS (configure matching {{vars}} in your template):
+//   student_name, student_grade, reward_name, reward_category,
+//   coin_cost, approx_price, remaining_coins, requested_at,
+//   item_id, amazon_link
+
 /* ========== STATE & PERSISTENCE ========== */
 /* APP_VERSION is stored with the data; if a user has OLD incompatible data
    from a previous version, we auto-clear it to avoid the app breaking. */
@@ -1580,11 +2013,18 @@ const POLL_MS = 25000;
 
 const defaultUser = () => ({
   totalStars:0, coins:0, streak:0, lastActiveDate:'',
-  badges:{}, progress:{}, completedActivities:{}, perfectActivities:{}
+  badges:{}, progress:{}, completedActivities:{}, perfectActivities:{},
+  wishlist: []   // array of STORE_ITEMS ids the student has saved for later
 });
 const defaultAll = () => ({
   users: Object.fromEntries(STUDENTS.map(s=>[s.id, defaultUser()])),
-  teacher:{lastLogin:0}, updatedAt:0
+  teacher:{lastLogin:0},
+  // Store: reward-request ledger + editable catalog overrides.
+  // orders[] accumulates across all students; teacher manages status.
+  // catalogOverrides{} lets teacher edit items live without touching source.
+  orders: [],
+  catalogOverrides: {},
+  updatedAt:0
 });
 
 // Reset URL handler: ?reset=1 or ?reset=cloud
@@ -1617,6 +2057,8 @@ let allData = (function(){
       if(u && typeof u === 'object') d.users[s.id] = Object.assign(defaultUser(), u);
     });
     d.teacher = (p.teacher && typeof p.teacher === 'object') ? p.teacher : {lastLogin:0};
+    d.orders = Array.isArray(p.orders) ? p.orders : [];
+    d.catalogOverrides = (p.catalogOverrides && typeof p.catalogOverrides==='object') ? p.catalogOverrides : {};
     d.updatedAt = typeof p.updatedAt === 'number' ? p.updatedAt : 0;
     return d;
   }catch(e){
@@ -1684,7 +2126,7 @@ function initCloud(){
   document.addEventListener('visibilitychange',()=>{if(!document.hidden)pullCloud(false)});
 }
 async function pullCloud(init){
-  try{const r=await fetch(CLOUD_URL+'?_='+Date.now(),{cache:'no-store'});if(!r.ok)throw 0;const t=await r.text();if(!t)return;const d=JSON.parse(t);if(!d||!d.users)return;if((d.updatedAt||0)<=(allData.updatedAt||0))return;STUDENTS.forEach(s=>{allData.users[s.id]=Object.assign(defaultUser(),d.users[s.id]||{})});allData.updatedAt=d.updatedAt;if(currentUser)state=allData.users[currentUser];try{localStorage.setItem(STORAGE_KEY,JSON.stringify(allData))}catch(e){}if(!init&&currentScreen&&currentScreen!=='activity')go(currentScreen,currentOpts)}catch(e){if(init)throw e}
+  try{const r=await fetch(CLOUD_URL+'?_='+Date.now(),{cache:'no-store'});if(!r.ok)throw 0;const t=await r.text();if(!t)return;const d=JSON.parse(t);if(!d||!d.users)return;if((d.updatedAt||0)<=(allData.updatedAt||0))return;STUDENTS.forEach(s=>{allData.users[s.id]=Object.assign(defaultUser(),d.users[s.id]||{})});if(Array.isArray(d.orders))allData.orders=d.orders;if(d.catalogOverrides&&typeof d.catalogOverrides==='object')allData.catalogOverrides=d.catalogOverrides;allData.updatedAt=d.updatedAt;if(currentUser)state=allData.users[currentUser];try{localStorage.setItem(STORAGE_KEY,JSON.stringify(allData))}catch(e){}if(!init&&currentScreen&&currentScreen!=='activity')go(currentScreen,currentOpts)}catch(e){if(init)throw e}
 }
 async function syncToCloud(){
   if(cloudBusy){pendingWrite=true;return}cloudBusy=true;
@@ -1711,6 +2153,220 @@ function getStudentInfo(sid){return STUDENTS.find(s=>s.id===sid)}
 function getWeekActivities(sid,subj){return(WEEKS[currentWeek]&&WEEKS[currentWeek][sid]&&WEEKS[currentWeek][sid][subj])||[]}
 function countDone(sid,subj){const acts=getWeekActivities(sid,subj);const ud=getStudentData(sid);return acts.filter(a=>ud.completedActivities[a.id]).length}
 function isActivityDone(sid,aid){return !!(getStudentData(sid).completedActivities[aid])}
+
+/* ==========================================================================
+   STORE HELPERS — requirements, orders, email
+   --------------------------------------------------------------------------
+   ▸ getCatalog()          — returns STORE_ITEMS merged with teacher overrides
+   ▸ countWeekLevels(sid)  — total activities completed across all subjects
+   ▸ countWeekSubjects(sid)— number of DIFFERENT subjects touched this week
+   ▸ checkRequirements(item, sid) — returns {coins, levels, subjects, canAttempt}
+   ▸ placeOrder(item)      — deducts coins, saves request, triggers email
+   ▸ sendOrderEmail(order) — EmailJS primary, cloud-state fallback
+   ========================================================================== */
+function getCatalog(){
+  // Merge live teacher edits with the source STORE_ITEMS catalog.
+  // Teacher can disable, rename, or adjust price/coinCost from the admin view.
+  return STORE_ITEMS.map(base=>{
+    const ov = (allData.catalogOverrides||{})[base.id] || {};
+    return Object.assign({}, base, ov);
+  });
+}
+function getItemById(id){ return getCatalog().find(i=>i.id===id); }
+function countWeekLevels(sid){
+  const ud = getStudentData(sid);
+  let total = 0;
+  SUBJECTS.forEach(s=>{ total += countDone(sid, s.id); });
+  return total;
+}
+function countWeekSubjects(sid){
+  const ud = getStudentData(sid);
+  let n = 0;
+  SUBJECTS.forEach(s=>{ if(countDone(sid, s.id) > 0) n++; });
+  return n;
+}
+/**
+ * Check whether a student meets the three unlock gates for an item.
+ * Returns a detailed status object used by the UI to show the checklist.
+ */
+function checkRequirements(item, sid){
+  const ud = getStudentData(sid);
+  const req = item.requirements || {};
+  const coins = (ud.coins||0) >= item.coinCost;
+  const levels = countWeekLevels(sid) >= (req.minLevels||0);
+  const subjects = countWeekSubjects(sid) >= (req.minSubjects||0);
+  const available = item.isAvailable !== false;
+  // canAttempt = can open the challenge; actual purchase still requires passing it.
+  const canAttempt = coins && levels && subjects && available;
+  return { coins, levels, subjects, available, canAttempt,
+           needLevels: req.minLevels||0, needSubjects: req.minSubjects||0,
+           haveLevels: countWeekLevels(sid), haveSubjects: countWeekSubjects(sid) };
+}
+/**
+ * Create + persist an order request. Deducts coins, writes to allData.orders,
+ * syncs cloud, and fires the email notification (with graceful fallback).
+ * Returns the saved order object.
+ */
+function placeOrder(item){
+  if(!currentUser || !state) return null;
+  const sInfo = getStudentInfo(currentUser);
+  if((state.coins||0) < item.coinCost) return null;
+  state.coins = (state.coins||0) - item.coinCost;
+  const order = {
+    id: 'ord-'+Date.now()+'-'+Math.random().toString(36).slice(2,7),
+    studentId: currentUser,
+    studentName: sInfo.name,
+    studentGrade: sInfo.grade,
+    itemId: item.id,
+    itemName: item.name,
+    itemCategory: item.category,
+    coinCost: item.coinCost,
+    approxPrice: item.approxPrice,
+    amazonLink: item.amazonLink || '',
+    requestedAt: Date.now(),
+    status: 'pending',
+    remainingCoins: state.coins,
+  };
+  allData.orders = allData.orders || [];
+  allData.orders.unshift(order);
+  saveState();
+  sendOrderEmail(order);
+  return order;
+}
+/**
+ * Fire the teacher email notification for a reward request.
+ *  1) If EmailJS keys are set in EMAIL_CONFIG, send via EmailJS (recommended).
+ *  2) Otherwise log a ready-to-click mailto: link to the console so the
+ *     teacher can still review + dispatch manually. Order is ALWAYS saved
+ *     to allData.orders regardless of email status.
+ *
+ * DEPLOYMENT NOTES (for production):
+ *   The cleanest setup is EmailJS (pure frontend, free tier) — sign up,
+ *   add your Gmail service, create a template, paste the 3 keys into
+ *   EMAIL_CONFIG.emailjs above. That's it.
+ *   If you prefer a backend: create a Cloudflare Worker / Netlify Function
+ *   / Vercel API route that accepts a POST and sends via SendGrid/Resend/SMTP,
+ *   then replace the body of this function with a single fetch() call to
+ *   that endpoint. The rest of the app stays identical.
+ */
+function sendOrderEmail(order){
+  const cfg = EMAIL_CONFIG.emailjs || {};
+  const body =
+`Student: ${order.studentName}
+Grade: ${order.studentGrade}
+Reward: ${order.itemName}
+Category: ${order.itemCategory}
+Coins Spent: ${order.coinCost}
+Approx Price: $${order.approxPrice.toFixed(2)}
+Remaining Coins: ${order.remainingCoins}
+Requested At: ${new Date(order.requestedAt).toLocaleString()}
+Item ID: ${order.itemId}
+Amazon Link: ${order.amazonLink || '(none on file)'}
+`;
+  const subject = `KidQuest Reward Request — ${order.studentName} ordered ${order.itemName}`;
+  const mailto = 'mailto:'+encodeURIComponent(EMAIL_CONFIG.teacherEmail)+
+                 '?subject='+encodeURIComponent(subject)+
+                 '&body='+encodeURIComponent(body);
+  console.log('[KidQuest Store] Order saved:', order);
+  console.log('[KidQuest Store] Manual send link (if email service not configured):', mailto);
+
+  // EmailJS path: only fires when all 3 keys are present.
+  if(cfg.publicKey && cfg.serviceId && cfg.templateId && window.emailjs){
+    const params = {
+      student_name: order.studentName, student_grade: order.studentGrade,
+      reward_name: order.itemName, reward_category: order.itemCategory,
+      coin_cost: order.coinCost, approx_price: order.approxPrice,
+      remaining_coins: order.remainingCoins,
+      requested_at: new Date(order.requestedAt).toLocaleString(),
+      item_id: order.itemId, amazon_link: order.amazonLink || '',
+      teacher_email: EMAIL_CONFIG.teacherEmail,
+      teacher_name: EMAIL_CONFIG.teacherName,
+    };
+    try {
+      window.emailjs.send(cfg.serviceId, cfg.templateId, params, cfg.publicKey)
+        .then(()=>{ console.log('[KidQuest Store] EmailJS sent ✓'); })
+        .catch((e)=>{ console.warn('[KidQuest Store] EmailJS failed:', e); });
+    } catch(e){ console.warn('[KidQuest Store] EmailJS threw:', e); }
+  }
+}
+/* ==========================================================================
+   MOTIVATION HELPERS — save-up progress, "coins away" nudges, wishlist
+   --------------------------------------------------------------------------
+   ▸ saveUpProgress(item, sid) — 0..1 ratio of how close student is to affording
+   ▸ coinsAway(item, sid)      — number of coins still needed (0 if affordable)
+   ▸ nudgeMessage(item, sid)   — friendly, variety-based encouragement string
+   ▸ isInWishlist / toggleWishlist — per-student wishlist CRUD
+   --------------------------------------------------------------------------
+   ▸ EDIT NUDGE TEXT: tweak the strings in NUDGE_* arrays below.
+   ▸ EDIT PROGRESS STYLE: bar colors in `.save-bar` CSS class.
+   ▸ WHERE WISHLIST IS STORED: each student's state.wishlist array. Lives in
+     localStorage + cloud. One wishlist per student, per design.
+   ========================================================================== */
+const NUDGE_READY = [
+  "You've saved enough! 🎉",
+  "Ready to unlock this reward!",
+  "You can get this one! ✨",
+];
+const NUDGE_CLOSE = [   // within 20 coins
+  "Almost there!",
+  "Only {N} more coins to go!",
+  "Just {N} coins away — you're so close!",
+];
+const NUDGE_MID = [     // within 50%
+  "You're getting closer!",
+  "You're {N} coins away — keep going!",
+  "Over halfway there — great work!",
+];
+const NUDGE_FAR = [     // far off
+  "Start saving for this reward!",
+  "You're {N} coins away — keep earning!",
+  "Keep playing to save up!",
+];
+function saveUpProgress(item, sid){
+  const have = (getStudentData(sid).coins||0);
+  const need = item.coinCost || 1;
+  return Math.max(0, Math.min(1, have/need));
+}
+function coinsAway(item, sid){
+  const have = (getStudentData(sid).coins||0);
+  return Math.max(0, (item.coinCost||0) - have);
+}
+function nudgeMessage(item, sid){
+  const away = coinsAway(item, sid);
+  if(away <= 0) return NUDGE_READY[Math.floor(Math.random()*NUDGE_READY.length)];
+  const ratio = saveUpProgress(item, sid);
+  let pool;
+  if(away <= 20) pool = NUDGE_CLOSE;
+  else if(ratio >= 0.5) pool = NUDGE_MID;
+  else pool = NUDGE_FAR;
+  return pool[Math.floor(Math.random()*pool.length)].replace('{N}', String(away));
+}
+function isInWishlist(itemId, sid){
+  const ud = getStudentData(sid || currentUser);
+  return Array.isArray(ud.wishlist) && ud.wishlist.includes(itemId);
+}
+function toggleWishlist(itemId){
+  if(!currentUser || !state) return false;
+  if(!Array.isArray(state.wishlist)) state.wishlist = [];
+  const i = state.wishlist.indexOf(itemId);
+  if(i >= 0) state.wishlist.splice(i,1);
+  else state.wishlist.push(itemId);
+  saveState();
+  return state.wishlist.includes(itemId);
+}
+
+function updateOrderStatus(orderId, status, refund){
+  if(!Array.isArray(allData.orders)) return;
+  const o = allData.orders.find(x=>x.id===orderId);
+  if(!o) return;
+  o.status = status;
+  o.updatedAt = Date.now();
+  if(refund && allData.users[o.studentId]){
+    allData.users[o.studentId].coins = (allData.users[o.studentId].coins||0) + o.coinCost;
+    if(currentUser===o.studentId) state = allData.users[currentUser];
+  }
+  saveState();
+}
 
 /* ========== TOPBAR ========== */
 function updateTopbar(screen){
@@ -1765,6 +2421,8 @@ function go(screen,opts={}){
     else if(screen==='week') renderWeek(root,opts.subject);
     else if(screen==='activity') renderActivity(root,opts.activityId,opts.subject);
     else if(screen==='badges') renderBadges(root);
+    else if(screen==='store') renderStore(root);
+    else if(screen==='orders') renderOrders(root);
     else if(screen==='teacher') renderTeacher(root);
     else renderHome(root); // unknown screen → safe fallback
   }catch(err){
@@ -1865,6 +2523,187 @@ function renderTeacherLogin(root){
   root.appendChild(wrap);
 }
 
+/* ========== REPORT CARD ==========
+   Calculates a performance level per subject and generates personalized
+   encouraging comments. Levels: 1=Growing, 2=Developing, 3=Strong, 4=Excellent.
+   Scoring blends: completion ratio + accuracy (perfect activities / completed). */
+const RC_LEVELS = [
+  {lv:1, emoji:'🌱', name:'Growing',    cls:'lv1'},
+  {lv:2, emoji:'🌿', name:'Developing', cls:'lv2'},
+  {lv:3, emoji:'🌟', name:'Strong',     cls:'lv3'},
+  {lv:4, emoji:'🚀', name:'Excellent',  cls:'lv4'},
+];
+const RC_LEGEND = [
+  {lv:1, emoji:'🌱', name:'Growing',    desc:'Just getting started — practice builds strength.', cls:'lv1'},
+  {lv:2, emoji:'🌿', name:'Developing', desc:'Improving and understanding the basics — still needs some help.', cls:'lv2'},
+  {lv:3, emoji:'🌟', name:'Strong',     desc:'Working well independently — good understanding of skills.', cls:'lv3'},
+  {lv:4, emoji:'🚀', name:'Excellent',  desc:'Very confident and accurate — ready for bigger challenges!', cls:'lv4'},
+];
+const RC_SKILL_NOTES = {
+  reading: ['Reads sentences and finds meaning','Understands main ideas and details'],
+  writing: ['Writes clear sentences','Uses descriptive words and punctuation'],
+  math:    ['Solves number problems','Applies math to word problems'],
+  logic:   ['Finds patterns and connections','Reasons step by step'],
+  french:  ['Recognizes French words','Understands simple phrases'],
+};
+
+function computeSubjectStats(sid, subjId){
+  const ud = getStudentData(sid);
+  const acts = getWeekActivities(sid, subjId);
+  const total = acts.length || 1;
+  let done = 0, perfect = 0;
+  acts.forEach(a=>{
+    if(ud.completedActivities[a.id]) done++;
+    if(ud.perfectActivities[a.id]) perfect++;
+  });
+  const completion = done/total;
+  const accuracy = done ? perfect/done : 0;
+  // Blend: 60% completion + 40% accuracy
+  const score = completion*0.6 + accuracy*0.4;
+  let lv = 1;
+  if(score >= 0.85) lv = 4;
+  else if(score >= 0.55) lv = 3;
+  else if(score >= 0.25) lv = 2;
+  else lv = 1;
+  // Special case: if nothing done yet, stay at Growing
+  if(done === 0) lv = 1;
+  return {done, perfect, total, completion, accuracy, score, lv, pct:Math.round(completion*100)};
+}
+
+function generateSubjectComment(name, subjId, stats){
+  const subjName = {reading:'reading',writing:'writing',math:'math',logic:'logic puzzles',french:'French'}[subjId] || subjId;
+  if(stats.done === 0){
+    const opts = [
+      `${name} hasn't started ${subjName} this week — a fresh adventure awaits!`,
+      `Ready to dive into ${subjName}, ${name}? Start any lesson to begin growing.`,
+      `${name}, your first ${subjName} lesson is waiting — you've got this!`,
+    ];
+    return opts[Math.floor(Math.random()*opts.length)];
+  }
+  if(stats.lv === 4){
+    const opts = [
+      `Wow, ${name}! ${stats.perfect} perfect score${stats.perfect===1?'':'s'} in ${subjName} — truly excellent work!`,
+      `${name} is shining in ${subjName} — ${stats.pct}% complete with amazing accuracy!`,
+      `Outstanding ${subjName} skills, ${name}! Keep pushing for bigger challenges.`,
+    ];
+    return opts[Math.floor(Math.random()*opts.length)];
+  }
+  if(stats.lv === 3){
+    const opts = [
+      `Great job, ${name}! You're doing ${subjName} all by yourself — keep it up!`,
+      `${name} is showing strong ${subjName} skills — ${stats.done} of ${stats.total} done!`,
+      `Solid work in ${subjName}, ${name} — confidence is building every day.`,
+    ];
+    return opts[Math.floor(Math.random()*opts.length)];
+  }
+  if(stats.lv === 2){
+    const opts = [
+      `${name} is making steady progress in ${subjName} — keep practicing to get even stronger!`,
+      `Nice start in ${subjName}, ${name}! A few more lessons and you'll feel super confident.`,
+      `${name} is building ${subjName} skills step by step — every try counts.`,
+    ];
+    return opts[Math.floor(Math.random()*opts.length)];
+  }
+  const opts = [
+    `${name} is just beginning ${subjName} — practice makes progress!`,
+    `Every expert started here, ${name}. Try a lesson in ${subjName} to keep growing.`,
+    `${name}, ${subjName} is a great adventure — take it one lesson at a time.`,
+  ];
+  return opts[Math.floor(Math.random()*opts.length)];
+}
+
+function computeOverallLevel(sid){
+  const subs = ['reading','writing','math','logic','french'];
+  let sum = 0, count = 0;
+  subs.forEach(id=>{
+    const acts = getWeekActivities(sid, id);
+    if(acts.length){ sum += computeSubjectStats(sid, id).lv; count++; }
+  });
+  const avg = count ? sum/count : 1;
+  const lv = Math.max(1, Math.min(4, Math.round(avg)));
+  return RC_LEVELS[lv-1];
+}
+
+function renderReportCard(sid, isTeacher){
+  const s = getStudentInfo(sid);
+  const ud = getStudentData(sid);
+  const wrap = h('div',{class:'report-card'});
+  const overall = computeOverallLevel(sid);
+  wrap.appendChild(h('div',{class:'rc-head'},[
+    h('div',{class:'rc-title'},[
+      h('span',{class:'rc-emoji'},'📊'),
+      h('span',{}, isTeacher ? s.name+"'s Progress Report" : 'Your Progress Report'),
+    ]),
+  ]));
+  wrap.appendChild(h('div',{class:'rc-sub'}, isTeacher ? ('Week '+currentWeek+' · '+s.grade) : ('Week '+currentWeek+' · Keep going, '+s.name+'!')));
+  wrap.appendChild(h('div',{class:'rc-overall'},[
+    h('span',{class:'rc-overall-lbl'},'Overall'),
+    h('span',{class:'rc-overall-lvl'},[h('span',{},overall.emoji),h('span',{},overall.name)]),
+  ]));
+  const grid = h('div',{class:'rc-subjects'});
+  SUBJECTS.forEach(sub=>{
+    const st = computeSubjectStats(sid, sub.id);
+    const lvl = RC_LEVELS[st.lv-1];
+    const card = h('div',{class:'rc-subject'});
+    card.appendChild(h('div',{class:'rc-subj-head'},[
+      h('div',{class:'rc-subj-name'},[
+        h('span',{class:'rc-sicon'},sub.emoji),
+        h('span',{},sub.name),
+      ]),
+      h('span',{class:'rc-badge '+lvl.cls},[h('span',{},lvl.emoji),h('span',{},lvl.name)]),
+    ]));
+    card.appendChild(h('div',{class:'rc-bar'},[h('i',{class:lvl.cls,style:'width:'+Math.max(5,st.pct)+'%'})]));
+    const skills = RC_SKILL_NOTES[sub.id] || [];
+    const ul = h('ul',{class:'rc-skills'});
+    skills.forEach(sk=> ul.appendChild(h('li',{},sk)));
+    card.appendChild(ul);
+    card.appendChild(h('div',{class:'rc-comment'}, generateSubjectComment(s.name, sub.id, st)));
+    if(isTeacher){
+      card.appendChild(h('div',{class:'rc-teacher'},[
+        h('span',{},'Completed: '+st.done+'/'+st.total),
+        h('span',{},'Perfect: '+st.perfect),
+        h('span',{},'Accuracy: '+Math.round(st.accuracy*100)+'%'),
+      ]));
+    }
+    grid.appendChild(card);
+  });
+  wrap.appendChild(grid);
+  if(!isTeacher){
+    wrap.appendChild(h('div',{class:'rc-encourage'},[
+      h('span',{class:'rc-en-emoji'},'💫'),
+      h('span',{},"You're improving every day, "+s.name+" — keep up the awesome work!"),
+    ]));
+  }
+  wrap.appendChild(renderLegend());
+  return wrap;
+}
+
+function renderLegend(){
+  const wrap = h('div',{class:'rc-legend'});
+  const head = h('div',{class:'rc-legend-head',onclick:(e)=>{
+    const p = e.currentTarget.parentElement;
+    if(p) p.classList.toggle('open');
+  }},[
+    h('span',{},'What do these levels mean?'),
+    h('span',{class:'rc-chevron'},'▼'),
+  ]);
+  const body = h('div',{class:'rc-legend-body'});
+  const inner = h('div',{class:'rc-legend-inner'});
+  RC_LEGEND.forEach(lg=>{
+    inner.appendChild(h('div',{class:'rc-legend-item '+lg.cls},[
+      h('span',{class:'rc-li-em'},lg.emoji),
+      h('div',{class:'rc-li-body'},[
+        h('div',{class:'rc-li-name'},lg.name),
+        h('div',{class:'rc-li-desc'},lg.desc),
+      ]),
+    ]));
+  });
+  body.appendChild(inner);
+  wrap.appendChild(head);
+  wrap.appendChild(body);
+  return wrap;
+}
+
 /* ========== STUDENT DASHBOARD ========== */
 function renderDashboard(root){
   if(!currentUser||!state){go('home');return}
@@ -1902,6 +2741,21 @@ function renderDashboard(root){
     ]));
   });
   root.appendChild(subjs);
+  // Store + Orders entry buttons — quick access from the dashboard
+  const pending = (allData.orders||[]).filter(o=>o.studentId===currentUser).length;
+  root.appendChild(h('div',{class:'dash-store-row'},[
+    h('button',{class:'dash-store-btn store',onclick:()=>go('store')},[
+      h('span',{class:'dsb-emoji'},'🛍️'),
+      h('span',{},'Open KidQuest Store'),
+    ]),
+    h('button',{class:'dash-store-btn orders',onclick:()=>go('orders')},[
+      h('span',{class:'dsb-emoji'},'📦'),
+      h('span',{}, pending ? 'My Orders ('+pending+')' : 'My Orders'),
+    ]),
+  ]));
+  // Report Card — personalized progress summary
+  try { root.appendChild(renderReportCard(currentUser, false)); }
+  catch(e){ console.warn('[KidQuest] renderReportCard failed:',e); }
 }
 
 /* ========== WEEK VIEW ========== */
@@ -2245,6 +3099,381 @@ function finishActivity(){
 
 function closeReward(){$('#reward').classList.remove('show')}
 
+/* ==========================================================================
+   KIDQUEST STORE — UI
+   --------------------------------------------------------------------------
+   Screens:
+     renderStore     — category tabs + item grid (kids see coin cost only)
+     renderOrders    — student-facing history of their own reward requests
+   Modals (injected into document.body, removed on close):
+     openItemDetail  — item hero + requirements checklist + "Start Challenge"
+     openChallenge   — mini-quiz gate; pass with ≥2/3 correct
+     openSuccess     — celebratory burst after order submitted
+   ========================================================================== */
+
+// Picks a random challenge set for a given difficulty.
+function pickChallengeQuestions(difficulty){
+  const pool = CHALLENGE_BANK[difficulty] || CHALLENGE_BANK.easy;
+  return shuffle(pool).slice(0, CHALLENGE_QUESTIONS_PER_CHALLENGE);
+}
+
+let activeStoreCategory = 'all';
+
+function renderStore(root){
+  if(!currentUser||!state){go('home');return}
+  const sInfo = getStudentInfo(currentUser);
+  const catalog = getCatalog();
+
+  const head = h('div',{class:'store-head'},[
+    h('h2',{},[h('span',{},'🛍️'),h('span',{},'KidQuest Store')]),
+    h('div',{class:'coin-pill'},[
+      h('span',{class:'coin-emoji'},'🪙'),
+      h('span',{},String(state.coins||0)+' coins'),
+    ]),
+  ]);
+  root.appendChild(head);
+  root.appendChild(h('p',{class:'store-sub'},'Spend your coins on cool rewards! Complete a quick challenge to unlock each one. 💪'));
+
+  // Back + Orders link
+  root.appendChild(h('div',{style:'margin-top:10px;display:flex;gap:8px;flex-wrap:wrap'},[
+    h('button',{class:'back-btn',onclick:()=>go('dashboard')},'← Back'),
+    h('button',{class:'back-btn',onclick:()=>go('orders')},'📦 My Orders'),
+  ]));
+
+  // Category tabs (Wishlist is a pseudo-category that filters to wish items)
+  const tabs = h('div',{class:'store-tabs'});
+  const tabList = [ {id:'wishlist', name:'My Wishlist', emoji:'⭐'} ].concat(CATEGORIES);
+  tabList.forEach(cat=>{
+    const btn = h('button',{class:'store-tab'+(activeStoreCategory===cat.id?' active':''),
+      onclick:()=>{activeStoreCategory=cat.id;go('store');}},
+      [h('span',{},cat.emoji),h('span',{},cat.name)]);
+    tabs.appendChild(btn);
+  });
+  root.appendChild(tabs);
+
+  // --- My Wishlist preview section (only shown on "All" tab and only if student has wishlisted items) ---
+  const wishlistIds = Array.isArray(state.wishlist) ? state.wishlist : [];
+  if(activeStoreCategory==='all' && wishlistIds.length){
+    const section = h('div',{class:'wish-section'});
+    section.appendChild(h('h3',{},[h('span',{},'⭐'),h('span',{},'Your Wishlist')]));
+    section.appendChild(h('div',{class:'wish-sub'},'You\'re saving up for these! Keep earning to unlock them.'));
+    const wgrid = h('div',{class:'store-grid'});
+    wishlistIds.forEach(id=>{
+      const item = getItemById(id);
+      if(item) wgrid.appendChild(buildStoreItemCard(item));
+    });
+    section.appendChild(wgrid);
+    root.appendChild(section);
+  }
+
+  // --- Main item grid ---
+  const grid = h('div',{class:'store-grid stagger'});
+  let items;
+  if(activeStoreCategory==='wishlist'){
+    items = catalog.filter(i=>wishlistIds.includes(i.id));
+  } else {
+    items = catalog.filter(i=>activeStoreCategory==='all'||i.category===activeStoreCategory);
+  }
+  if(!items.length){
+    const emptyMsg = activeStoreCategory==='wishlist'
+      ? 'Your wishlist is empty! Tap the heart on any reward to save it here. ⭐'
+      : 'No items in this category yet.';
+    grid.appendChild(h('div',{style:'padding:30px;text-align:center;color:var(--ink3);grid-column:1/-1'}, emptyMsg));
+  }
+  items.forEach(item=>{ grid.appendChild(buildStoreItemCard(item)); });
+  root.appendChild(grid);
+}
+
+/* Build a single store item card with all motivation widgets.
+   Used by renderStore (main grid) AND the My Wishlist section. */
+function buildStoreItemCard(item){
+  const req = checkRequirements(item, currentUser);
+  const locked = !req.canAttempt;
+  const pct = Math.round(saveUpProgress(item, currentUser) * 100);
+  const have = (state.coins||0);
+  const need = item.coinCost;
+  const away = coinsAway(item, currentUser);
+  const ready = away <= 0;
+  const inWish = isInWishlist(item.id);
+  const nudge = nudgeMessage(item, currentUser);
+
+  const card = h('button',{class:'store-item'+(item.special?' special':'')+(locked?' locked':''),
+    title: locked ? 'Complete more quests to unlock' : 'Tap to see details',
+    onclick:()=>{ openItemDetail(item); }},[
+    h('div',{class:'si-thumb'},[
+      item.image ? h('img',{src:item.image,alt:item.name}) : h('span',{class:'si-emoji'},item.emoji||'🎁'),
+    ]),
+    h('div',{class:'si-cat'},(CATEGORIES.find(c=>c.id===item.category)||{}).name || item.category),
+    h('div',{class:'si-name'},item.name),
+    h('div',{class:'si-coin'},[h('span',{},'🪙'),h('span',{},String(item.coinCost)+' coins')]),
+    // --- SAVE-UP PROGRESS BAR ---
+    h('div',{class:'save-row'},[
+      h('div',{class:'save-bar-wrap'},[
+        h('i',{class:'save-bar'+(ready?' ready':''),style:'width:'+Math.max(4,pct)+'%'}),
+      ]),
+      h('div',{class:'save-meta'},[
+        h('span',{class:'save-count'}, have+' / '+need+' coins'),
+        h('span',{class: ready?'save-ready':''}, ready ? '✓ Ready!' : pct+'%'),
+      ]),
+      h('div',{class:'nudge'+(ready?' ready':'')}, nudge),
+    ]),
+    h('div',{class:'si-reqs'},[
+      h('span',{class:'si-req '+(req.coins?'ok':'no')},[h('span',{},'💰'),h('span',{},'Coins')]),
+      h('span',{class:'si-req '+(req.levels?'ok':'no')},[h('span',{},'⭐'),h('span',{},req.needLevels+' levels')]),
+      h('span',{class:'si-req '+(req.subjects?'ok':'no')},[h('span',{},'📚'),h('span',{},req.needSubjects+' subjects')]),
+      h('span',{class:'si-req'},[h('span',{},'🧠'),h('span',{},'Challenge')]),
+    ]),
+  ]);
+  // Wishlist heart — stop propagation so clicking it doesn't open the modal.
+  const heart = h('div',{class:'wish-btn'+(inWish?' on':''),
+    title: inWish ? 'Remove from wishlist' : 'Add to wishlist',
+    onclick:(e)=>{
+      e.stopPropagation(); e.preventDefault();
+      const nowIn = toggleWishlist(item.id);
+      showWishToast(nowIn ? 'Added to your wishlist! ⭐' : 'Removed from wishlist');
+      go('store');  // re-render to reflect the change
+    },
+  }, inWish ? '❤️' : '🤍');
+  card.appendChild(heart);
+  if(inWish) card.appendChild(h('div',{class:'wish-ribbon'},'⭐ On your wishlist'));
+  if(locked) card.appendChild(h('div',{class:'si-lock'},'🔒'));
+  return card;
+}
+
+/* Transient toast confirmation for wishlist actions. */
+function showWishToast(msg){
+  document.querySelectorAll('.wish-toast').forEach(t=>t.remove());
+  const t = h('div',{class:'wish-toast'},[h('span',{},'⭐'),h('span',{},msg)]);
+  document.body.appendChild(t);
+  setTimeout(()=>{ t.classList.add('out'); setTimeout(()=>t.remove(), 260); }, 1600);
+}
+
+function closeStoreModal(){
+  document.querySelectorAll('.store-modal').forEach(m=>m.remove());
+}
+
+function openItemDetail(item){
+  closeStoreModal();
+  const req = checkRequirements(item, currentUser);
+  const cat = (CATEGORIES.find(c=>c.id===item.category)||{}).name || item.category;
+  const modal = h('div',{class:'store-modal',onclick:(e)=>{if(e.target===e.currentTarget)closeStoreModal()}});
+  const panel = h('div',{class:'sm-panel'});
+  panel.appendChild(h('button',{class:'sm-close',onclick:()=>closeStoreModal()},'✕'));
+  panel.appendChild(h('div',{class:'sm-hero'},[
+    h('div',{class:'sh-emoji'}, item.emoji||'🎁'),
+    h('div',{class:'sh-info'},[
+      h('div',{class:'sh-name'}, item.name),
+      h('div',{class:'sh-cat'}, cat),
+      h('div',{class:'sh-coin'},[h('span',{},'🪙'),h('span',{},String(item.coinCost)+' coins')]),
+    ]),
+  ]));
+  panel.appendChild(h('div',{class:'sm-desc'}, item.description));
+  // --- Save-up progress bar + nudge + wishlist button (detail view) ---
+  const pctD = Math.round(saveUpProgress(item, currentUser)*100);
+  const havD = state.coins||0, needD = item.coinCost;
+  const awayD = coinsAway(item, currentUser);
+  const readyD = awayD<=0;
+  const inWishD = isInWishlist(item.id);
+  panel.appendChild(h('div',{class:'save-row',style:'margin-bottom:14px'},[
+    h('div',{class:'save-bar-wrap'},[
+      h('i',{class:'save-bar'+(readyD?' ready':''),style:'width:'+Math.max(4,pctD)+'%'}),
+    ]),
+    h('div',{class:'save-meta'},[
+      h('span',{class:'save-count'}, havD+' / '+needD+' coins'),
+      h('span',{class:readyD?'save-ready':''}, readyD?'✓ Ready!':pctD+'%'),
+    ]),
+    h('div',{class:'nudge'+(readyD?' ready':'')}, nudgeMessage(item, currentUser)),
+  ]));
+  panel.appendChild(h('button',{
+    style:'margin-bottom:14px;width:100%;padding:12px;border-radius:14px;border:2px solid '+(inWishD?'#ff4081':'rgba(0,0,0,.08)')+';background:'+(inWishD?'linear-gradient(135deg,#ffe5f0,#fff0f6)':'#fafaff')+';font-weight:800;font-size:13px;color:'+(inWishD?'#c92a5c':'var(--ink2)')+';cursor:pointer',
+    onclick:()=>{
+      const nowIn = toggleWishlist(item.id);
+      showWishToast(nowIn ? 'Added to your wishlist! ⭐' : 'Removed from wishlist');
+      closeStoreModal();
+      go('store');
+    }
+  }, inWishD ? '❤️ In Your Wishlist — Tap to Remove' : '🤍 Add to Wishlist'));
+  panel.appendChild(h('div',{class:'sm-check-head'},'To Unlock This Reward:'));
+  const list = h('div',{class:'sm-checklist'});
+  list.appendChild(h('div',{class:'sm-check '+(req.coins?'ok':'no')},[
+    h('span',{class:'sm-icon'}, req.coins?'✅':'⚠️'),
+    h('span',{}, req.coins ? 'You have enough coins ('+state.coins+' / '+item.coinCost+')' : 'Need '+(item.coinCost-state.coins)+' more coins'),
+  ]));
+  list.appendChild(h('div',{class:'sm-check '+(req.levels?'ok':'no')},[
+    h('span',{class:'sm-icon'}, req.levels?'✅':'⏳'),
+    h('span',{}, req.levels ? 'Completed enough levels ('+req.haveLevels+' / '+req.needLevels+')' : 'Complete '+(req.needLevels-req.haveLevels)+' more level'+(req.needLevels-req.haveLevels===1?'':'s')),
+  ]));
+  list.appendChild(h('div',{class:'sm-check '+(req.subjects?'ok':'no')},[
+    h('span',{class:'sm-icon'}, req.subjects?'✅':'📚'),
+    h('span',{}, req.subjects ? 'Practiced enough subjects ('+req.haveSubjects+' / '+req.needSubjects+')' : 'Try '+(req.needSubjects-req.haveSubjects)+' more subject'+(req.needSubjects-req.haveSubjects===1?'':'s')),
+  ]));
+  list.appendChild(h('div',{class:'sm-check'},[
+    h('span',{class:'sm-icon'}, '🧠'),
+    h('span',{}, 'Pass a quick challenge to finish unlocking'),
+  ]));
+  panel.appendChild(list);
+  const actions = h('div',{class:'sm-actions'});
+  actions.appendChild(h('button',{class:'sm-btn-ghost',onclick:()=>closeStoreModal()},'Not now'));
+  const buyAttrs = {class:'sm-btn-primary',onclick:()=>{
+    if(!req.canAttempt) return;
+    closeStoreModal(); openChallenge(item);
+  }};
+  if(!req.canAttempt) buyAttrs.disabled = 'disabled';
+  const buyBtn = h('button', buyAttrs, req.canAttempt ? '🧠 Start Challenge' : 'Complete more quests to unlock');
+  actions.appendChild(buyBtn);
+  panel.appendChild(actions);
+  modal.appendChild(panel);
+  document.body.appendChild(modal);
+}
+
+function openChallenge(item){
+  closeStoreModal();
+  const difficulty = (item.requirements && item.requirements.challenge) || 'easy';
+  const questions = pickChallengeQuestions(difficulty);
+  let idx = 0, correct = 0, locked = false;
+  const results = []; // 'ok' | 'no'
+
+  const modal = h('div',{class:'store-modal'});
+  const panel = h('div',{class:'sm-panel'});
+  panel.appendChild(h('button',{class:'sm-close',onclick:()=>closeStoreModal()},'✕'));
+  modal.appendChild(panel);
+  document.body.appendChild(modal);
+
+  const renderStep = ()=>{
+    panel.innerHTML='';
+    panel.appendChild(h('button',{class:'sm-close',onclick:()=>closeStoreModal()},'✕'));
+    panel.appendChild(h('div',{class:'ch-head'},[
+      h('div',{class:'ch-title'},[h('span',{},'🧠'),h('span',{},'Unlock Challenge')]),
+      h('div',{class:'ch-sub'}, 'Get at least '+CHALLENGE_PASS_MIN+' out of '+questions.length+' correct'),
+    ]));
+    const dots = h('div',{class:'ch-progress'});
+    for(let i=0;i<questions.length;i++){
+      dots.appendChild(h('div',{class:'ch-dot'+(i<results.length?' '+results[i]:(i===idx?' active':''))}));
+    }
+    panel.appendChild(dots);
+    const q = questions[idx];
+    panel.appendChild(h('div',{class:'ch-q'}, q.q));
+    const grid = h('div',{class:'ch-choices'});
+    q.choices.forEach((c,ci)=>{
+      const btn = h('button',{class:'ch-choice',onclick:()=>{
+        if(locked) return; locked=true;
+        const ok = ci===q.answer;
+        if(ok) correct++;
+        results.push(ok?'ok':'no');
+        grid.querySelectorAll('button').forEach((b,bi)=>{
+          b.disabled=true;
+          if(bi===q.answer) b.classList.add('correct');
+          else if(bi===ci && !ok) b.classList.add('wrong');
+        });
+        setTimeout(()=>{
+          locked=false; idx++;
+          if(idx<questions.length) renderStep();
+          else finishChallenge();
+        }, 750);
+      }}, c);
+      grid.appendChild(btn);
+    });
+    panel.appendChild(grid);
+  };
+
+  const finishChallenge = ()=>{
+    const passed = correct >= CHALLENGE_PASS_MIN;
+    panel.innerHTML='';
+    panel.appendChild(h('button',{class:'sm-close',onclick:()=>closeStoreModal()},'✕'));
+    const result = h('div',{class:'ch-result'});
+    if(passed){
+      // Reward effort even before purchase
+      state.coins = (state.coins||0) + CHALLENGE_BONUS_COINS;
+      saveState();
+      result.appendChild(h('div',{class:'ch-emoji'},'🎉'));
+      result.appendChild(h('div',{class:'ch-msg'},'You unlocked this reward!'));
+      result.appendChild(h('div',{class:'ch-sub2'},'Great job! You got '+correct+' out of '+questions.length+' correct.'));
+      result.appendChild(h('div',{class:'ch-bonus'},[h('span',{},'🪙'),h('span',{},'+'+CHALLENGE_BONUS_COINS+' bonus coins!')]));
+      const actions = h('div',{class:'sm-actions'});
+      actions.appendChild(h('button',{class:'sm-btn-ghost',onclick:()=>closeStoreModal()},'Cancel'));
+      actions.appendChild(h('button',{class:'sm-btn-primary',onclick:()=>{
+        // Re-check coin sufficiency (defensive)
+        if((state.coins||0) < item.coinCost){
+          alert('You need more coins for this reward.');
+          closeStoreModal();
+          return;
+        }
+        const order = placeOrder(item);
+        closeStoreModal();
+        if(order) openSuccess(item, order);
+      }},'✅ Confirm & Send Order'));
+      result.appendChild(actions);
+    } else {
+      result.appendChild(h('div',{class:'ch-emoji'},'💡'));
+      result.appendChild(h('div',{class:'ch-msg'},'Almost! Complete a quick challenge to unlock your reward'));
+      result.appendChild(h('div',{class:'ch-sub2'},'You got '+correct+' out of '+questions.length+'. Try again — you\'ve got this!'));
+      const actions = h('div',{class:'sm-actions'});
+      actions.appendChild(h('button',{class:'sm-btn-ghost',onclick:()=>closeStoreModal()},'Maybe later'));
+      actions.appendChild(h('button',{class:'sm-btn-primary',onclick:()=>{ closeStoreModal(); openChallenge(item); }},'🔁 Try Again'));
+      result.appendChild(actions);
+    }
+    panel.appendChild(result);
+  };
+
+  renderStep();
+}
+
+function openSuccess(item, order){
+  closeStoreModal();
+  const modal = h('div',{class:'store-modal'});
+  const panel = h('div',{class:'sm-panel'});
+  panel.appendChild(h('button',{class:'sm-close',onclick:()=>{closeStoreModal();go('store');}},'✕'));
+  const sb = h('div',{class:'success-burst'},[
+    h('div',{class:'sb-emoji'}, item.emoji||'🎁'),
+    h('div',{class:'sb-title'},'Your order was sent to Rhahavy! 🎉'),
+    h('div',{class:'sb-line'},'Keep earning coins while you wait 👀'),
+    h('div',{class:'sb-line-soft'},'You\'ll see it in "My Orders" with its status.'),
+  ]);
+  const actions = h('div',{class:'sm-actions'});
+  actions.appendChild(h('button',{class:'sm-btn-ghost',onclick:()=>{closeStoreModal();go('store');}},'🛍️ Keep Shopping'));
+  actions.appendChild(h('button',{class:'sm-btn-primary',onclick:()=>{closeStoreModal();go('orders');}},'📦 See My Orders'));
+  sb.appendChild(actions);
+  panel.appendChild(sb);
+  modal.appendChild(panel);
+  document.body.appendChild(modal);
+  // Extra celebration
+  try { confettiBurst(80); } catch(e){}
+}
+
+/* ========== STUDENT ORDERS HISTORY ========== */
+function renderOrders(root){
+  if(!currentUser||!state){go('home');return}
+  root.appendChild(h('div',{class:'store-head'},[
+    h('h2',{},[h('span',{},'📦'),h('span',{},'My Orders')]),
+    h('div',{class:'coin-pill'},[h('span',{class:'coin-emoji'},'🪙'),h('span',{},String(state.coins||0)+' coins')]),
+  ]));
+  root.appendChild(h('div',{style:'margin-top:10px;display:flex;gap:8px;flex-wrap:wrap'},[
+    h('button',{class:'back-btn',onclick:()=>go('dashboard')},'← Back to Dashboard'),
+    h('button',{class:'back-btn',onclick:()=>go('store')},'🛍️ Go Shopping'),
+  ]));
+  const mine = (allData.orders||[]).filter(o=>o.studentId===currentUser);
+  if(!mine.length){
+    root.appendChild(h('div',{style:'margin-top:24px;padding:28px;text-align:center;background:var(--card);border-radius:16px;border:1px dashed var(--line)'},[
+      h('div',{style:'font-size:48px;margin-bottom:8px'},'🎁'),
+      h('div',{style:'font-size:15px;font-weight:700'},'No orders yet — earn coins and visit the Store!'),
+    ]));
+    return;
+  }
+  const list = h('div',{class:'orders-list stagger'});
+  mine.forEach(o=>{
+    const item = getItemById(o.itemId) || {emoji:'🎁'};
+    list.appendChild(h('div',{class:'order-row'},[
+      h('div',{class:'or-emoji'}, item.emoji||'🎁'),
+      h('div',{class:'or-info'},[
+        h('div',{class:'or-name'}, o.itemName),
+        h('div',{class:'or-meta'}, '🪙 '+o.coinCost+' coins · '+new Date(o.requestedAt).toLocaleDateString()),
+      ]),
+      h('div',{class:'or-status '+o.status}, o.status),
+    ]));
+  });
+  root.appendChild(list);
+}
+
 /* ========== BADGES ========== */
 function renderBadges(root){
   if(!currentUser||!state){go('home');return}
@@ -2295,13 +3524,198 @@ function renderTeacher(root){
     grid.appendChild(card);
   });
   dash.appendChild(grid);
+  // Per-student detailed Report Cards (teacher view)
+  const rcHead=h('div',{style:'margin-top:32px;margin-bottom:-6px'},[
+    h('h2',{style:'font-size:20px;font-weight:800'},'📊 Detailed Report Cards'),
+    h('p',{style:'font-size:13px;color:var(--ink3);font-weight:600;margin-top:4px'},'Performance level, accuracy, and auto-generated comments per student.'),
+  ]);
+  dash.appendChild(rcHead);
+  STUDENTS.forEach(s=>{
+    try { dash.appendChild(renderReportCard(s.id, true)); }
+    catch(e){ console.warn('[KidQuest] teacher report card failed:',e); }
+  });
+  // Store management: reward requests + catalog editor + stats
+  try { dash.appendChild(renderTeacherStore()); }
+  catch(e){ console.warn('[KidQuest] teacher store failed:',e); }
   // Controls
   const ctrl=h('div',{class:'t-controls'},[
     h('button',{class:'btn btn-ghost',onclick:()=>{if(confirm('Export all data as JSON?')){navigator.clipboard.writeText(JSON.stringify(allData,null,2)).then(()=>alert('Copied!'))}}},'📋 Export JSON'),
     h('button',{class:'btn btn-ghost',onclick:()=>{if(confirm('Reset ALL student progress?')){STUDENTS.forEach(s=>{allData.users[s.id]=defaultUser()});saveState();go('teacher')}}},'🔄 Reset All'),
+    h('button',{class:'btn btn-ghost',onclick:()=>{if(confirm('Clear ALL reward order history?')){allData.orders=[];saveState();go('teacher')}}},'🧹 Clear Orders'),
   ]);
   dash.appendChild(ctrl);
   root.appendChild(dash);
+}
+
+/* ==========================================================================
+   TEACHER STORE MANAGEMENT
+   --------------------------------------------------------------------------
+   Sections rendered:
+     1) Summary stats (pending, total requests, total coins spent, most-requested)
+     2) Recent reward requests — change status, refund on decline, Amazon link
+     3) Editable catalog — toggle availability, spot price-over-budget items
+   All edits persist via saveState() → localStorage + cloud sync.
+   ========================================================================== */
+function renderTeacherStore(){
+  const wrap = h('div');
+  const orders = Array.isArray(allData.orders) ? allData.orders : [];
+  const pending = orders.filter(o=>o.status==='pending').length;
+  const totalCoins = orders.reduce((s,o)=>s+(o.coinCost||0),0);
+  const byItem = {};
+  orders.forEach(o=>{ byItem[o.itemName]=(byItem[o.itemName]||0)+1; });
+  const topItem = Object.entries(byItem).sort((a,b)=>b[1]-a[1])[0];
+
+  // --- Stats ---
+  const statsWrap = h('div',{class:'t-orders'},[
+    h('h2',{},'🛍️ Store Management'),
+    h('p',{class:'t-orders-sub'},'Reward requests, catalog, and summary stats. Email config lives in EMAIL_CONFIG in the source file.'),
+    h('div',{class:'t-orders-stats'},[
+      h('div',{class:'t-stat-card'},[h('div',{class:'tsc-num'},String(pending)),h('div',{class:'tsc-lbl'},'Pending')]),
+      h('div',{class:'t-stat-card'},[h('div',{class:'tsc-num'},String(orders.length)),h('div',{class:'tsc-lbl'},'Total Requests')]),
+      h('div',{class:'t-stat-card'},[h('div',{class:'tsc-num'},String(totalCoins)),h('div',{class:'tsc-lbl'},'Coins Spent')]),
+      h('div',{class:'t-stat-card'},[h('div',{class:'tsc-num'},topItem?topItem[0]:'—'),h('div',{class:'tsc-lbl'},'Most Requested')]),
+    ]),
+  ]);
+  wrap.appendChild(statsWrap);
+
+  // --- Orders list ---
+  if(!orders.length){
+    wrap.appendChild(h('div',{style:'padding:20px;text-align:center;background:var(--card);border:1px dashed var(--line);border-radius:14px;color:var(--ink3)'},'No reward requests yet.'));
+  } else {
+    orders.forEach(o=>{
+      const itm = getItemById(o.itemId) || {emoji:'🎁'};
+      const row = h('div',{class:'t-order-row'},[
+        h('div',{class:'tor-emoji'}, itm.emoji||'🎁'),
+        h('div',{class:'tor-info'},[
+          h('div',{class:'tor-top'},[
+            h('span',{class:'tor-student'}, o.studentName),
+            h('span',{class:'tor-item'}, '→ '+o.itemName),
+            h('span',{class:'or-status '+o.status}, o.status),
+          ]),
+          h('div',{class:'tor-meta'},
+            '🪙 '+o.coinCost+' · ~$'+(o.approxPrice||0).toFixed(2)+
+            ' · '+new Date(o.requestedAt).toLocaleString()+
+            ' · remaining: '+o.remainingCoins+' coins'
+          ),
+          h('div',{class:'tor-meta'}, o.amazonLink ? ['🔗 ', h('a',{href:o.amazonLink,target:'_blank',rel:'noopener'},'Amazon link')] : '🔗 No Amazon link on file'),
+        ]),
+        (function(){
+          const actions = h('div',{class:'t-order-actions'});
+          const select = h('select',{onchange:(e)=>{ updateOrderStatus(o.id, e.target.value, false); go('teacher'); }});
+          ['pending','approved','ordered','delivered','declined'].forEach(st=>{
+            const opt = h('option',{value:st}, st.charAt(0).toUpperCase()+st.slice(1));
+            if(st===o.status) opt.selected = true;
+            select.appendChild(opt);
+          });
+          actions.appendChild(select);
+          actions.appendChild(h('button',{onclick:()=>{
+            if(confirm('Decline this order and refund '+o.coinCost+' coins to '+o.studentName+'?')){
+              updateOrderStatus(o.id, 'declined', true); go('teacher');
+            }
+          }},'↩ Refund'));
+          actions.appendChild(h('button',{onclick:()=>{
+            const body = 'Student: '+o.studentName+'\nGrade: '+o.studentGrade+
+              '\nReward: '+o.itemName+'\nCoins: '+o.coinCost+'\nApprox: $'+(o.approxPrice||0).toFixed(2);
+            navigator.clipboard.writeText(body).then(()=>alert('Order details copied.'));
+          }},'📋 Copy'));
+          return actions;
+        })(),
+      ]);
+      wrap.appendChild(row);
+    });
+  }
+
+  // --- Catalog editor ---
+  wrap.appendChild(h('div',{class:'t-catalog'},[
+    h('h2',{},'🎁 Reward Catalog'),
+    h('p',{class:'t-cat-sub'},'Toggle availability and spot items that exceed the budget cap. To edit names, prices, coin costs, or images, update STORE_ITEMS at the top of the file.'),
+    h('div',{class:'t-cat-note'},'💡 Budget guideline: all items should stay under $15 unless manually changed. Higher-priced items will be flagged below.'),
+  ]));
+  const catGrid = h('div',{class:'t-cat-grid'});
+  getCatalog().forEach(item=>{
+    const overBudget = item.approxPrice > 15;
+    const row = h('div',{class:'t-cat-row'},[
+      h('div',{class:'tcr-emoji'}, item.emoji||'🎁'),
+      h('div',{class:'tcr-body'},[
+        h('div',{class:'tcr-name'}, item.name),
+        h('div',{class:'tcr-meta'}, 'Category: '+item.category+' · 🪙 '+item.coinCost+' coins · ~$'+item.approxPrice.toFixed(2)),
+        h('div',{class:'tcr-meta'}, 'Requires: '+item.requirements.minLevels+' levels, '+item.requirements.minSubjects+' subjects, '+item.requirements.challenge+' challenge'+(item.special?' · ✨ Special':'')),
+        h('div',{class:'tcr-budget '+(overBudget?'over':'ok')}, overBudget ? '⚠️ Over $15 budget' : '✓ Under $15 budget'),
+        (function(){
+          const ctrl = h('div',{class:'tcr-ctrl'});
+          const avail = item.isAvailable !== false;
+          ctrl.appendChild(h('button',{class:avail?'on':'',onclick:()=>{
+            allData.catalogOverrides = allData.catalogOverrides || {};
+            const cur = allData.catalogOverrides[item.id] || {};
+            cur.isAvailable = !avail;
+            allData.catalogOverrides[item.id] = cur;
+            saveState(); go('teacher');
+          }}, avail ? '✓ Available' : '✕ Hidden'));
+          if(item.amazonLink){
+            ctrl.appendChild(h('a',{href:item.amazonLink,target:'_blank',rel:'noopener',style:'text-decoration:none'},
+              h('button',{},'🔗 View on Amazon')));
+          }
+          return ctrl;
+        })(),
+      ]),
+    ]);
+    catGrid.appendChild(row);
+  });
+  wrap.appendChild(catGrid);
+
+  // --- Wishlist insights: what each student is saving up for ---
+  const wishWrap = h('div',{class:'t-wish'});
+  wishWrap.appendChild(h('h3',{},[h('span',{},'⭐'),h('span',{},'Wishlist Insights')]));
+  wishWrap.appendChild(h('div',{class:'t-wish-sub'},'What each student is saving up for — use this to understand what motivates each child.'));
+  const wishGrid = h('div',{class:'t-wish-grid'});
+  // Tally "most wished-for" item across all students
+  const wishTally = {};
+  STUDENTS.forEach(s=>{
+    const ud = getStudentData(s.id);
+    const wl = Array.isArray(ud.wishlist) ? ud.wishlist : [];
+    const card = h('div',{class:'t-wish-card'},[
+      h('div',{class:'twc-head'},[h('span',{},s.decoEmoji||'👤'),h('span',{},s.name)]),
+    ]);
+    if(!wl.length){
+      card.appendChild(h('div',{class:'t-wish-empty'},'No wishlist items yet.'));
+    } else {
+      const list = h('div',{class:'twc-list'});
+      wl.forEach(id=>{
+        const item = getItemById(id);
+        if(!item) return;
+        wishTally[item.name] = (wishTally[item.name]||0)+1;
+        const have = ud.coins||0;
+        const need = item.coinCost;
+        const pct = Math.min(100, Math.round(have/need*100));
+        const away = Math.max(0, need - have);
+        list.appendChild(h('div',{class:'twc-item'},[
+          h('span',{}, (item.emoji||'🎁') + ' ' + item.name),
+          h('span',{class:'twc-prog'}, away<=0 ? '✓ Can afford' : (pct+'% · '+away+' away')),
+        ]));
+      });
+      card.appendChild(list);
+    }
+    wishGrid.appendChild(card);
+  });
+  wishWrap.appendChild(wishGrid);
+  // Top wishlisted items across all students
+  const topWish = Object.entries(wishTally).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  if(topWish.length){
+    const top = h('div',{class:'t-wish-top'});
+    top.appendChild(h('h4',{},'🔥 Most Wished-For'));
+    const topList = h('div',{class:'t-wish-top-list'});
+    topWish.forEach(([name,count])=>{
+      topList.appendChild(h('div',{style:'display:flex;justify-content:space-between;align-items:center'},[
+        h('span',{},name),
+        h('span',{class:'cnt'},count+' student'+(count===1?'':'s')),
+      ]));
+    });
+    top.appendChild(topList);
+    wishWrap.appendChild(top);
+  }
+  wrap.appendChild(wishWrap);
+
+  return wrap;
 }
 
 /* ========== UTILS ========== */
@@ -2311,6 +3725,17 @@ function shuffle(a){const b=[...a];for(let i=b.length-1;i>0;i--){const j=Math.fl
    Defensive initialization. Any failure → safe fallback to home screen.
    Never leaves the user stuck on a half-rendered state. */
 try { initCloud(); } catch(e) { console.warn('[KidQuest] initCloud failed:',e); }
+
+// Initialize EmailJS only when keys are configured. Safely no-op otherwise.
+try {
+  const ek = EMAIL_CONFIG.emailjs || {};
+  if(ek.publicKey && window.emailjs && typeof window.emailjs.init === 'function'){
+    window.emailjs.init({ publicKey: ek.publicKey });
+    console.log('[KidQuest Store] EmailJS initialized.');
+  } else {
+    console.log('[KidQuest Store] EmailJS keys not set — orders will be saved to cloud + logged to console.');
+  }
+} catch(e){ console.warn('[KidQuest Store] EmailJS init failed:',e); }
 
 try {
   const fabEl = $('#fab');
