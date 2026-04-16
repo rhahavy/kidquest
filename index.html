@@ -5104,6 +5104,7 @@ const CHILD_THEMES = {
     ],
     mascotEmoji: '🚀',
     mascotLabel: 'Explorer Rocket',
+    buddyEmoji: '⭐',
     accent: 'var(--sky)',
     accent2: 'var(--sun)',
     zoneGradient: 'linear-gradient(135deg, rgba(91,181,255,.14) 0%, rgba(255,192,67,.12) 100%)',
@@ -5122,6 +5123,7 @@ const CHILD_THEMES = {
     ],
     mascotEmoji: '🏆',
     mascotLabel: 'Champion Trophy',
+    buddyEmoji: '✨',
     accent: 'var(--grass)',
     accent2: 'var(--plum)',
     zoneGradient: 'linear-gradient(135deg, rgba(78,205,196,.15) 0%, rgba(139,127,255,.12) 100%)',
@@ -5142,7 +5144,7 @@ function renderChild(root, child) {
   /* ----- HERO ----- */
   const hero = h('section', { class: 'hero child-hero ' + child }, [
     h('div', { class: 'child-hero-inner' }, [
-      h('div', { class: 'avatar avatar-lg ' + child, 'data-buddy': T.mascotEmoji }, T.initial),
+      h('div', { class: 'avatar avatar-lg ' + child, 'data-buddy': T.buddyEmoji || '⭐' }, T.initial),
       h('div', { class: 'child-hero-text' }, [
         h('div', { class: 'eyebrow' }, [
           svgIcon('i-grad', 14),
