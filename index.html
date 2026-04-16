@@ -1013,16 +1013,30 @@ const EMOJI_KEYPAD = ['🐶','🐱','🦁','🦊','🌈','⭐','🎈','🚀','�
    Change teacher password here. */
 const TEACHER_CREDS = { password: 'Ryerye234' };
 
-/* ========== SUBJECTS ========== */
+/* ========== SUBJECTS ==========
+   Each subject has a default HERO IMAGE which is used automatically on any
+   lesson/question that doesn't specify its own image. This means every lesson
+   and question card gets at least one relevant picture without having to
+   hand-edit 175+ activities. Override at the lesson level with `heroImage: IMG.xxx`
+   or at the question level with `image: IMG.xxx`. */
 const SUBJECTS = [
-  { id:'reading', name:'Reading',        emoji:'📖', iconName:'book',   color:'#0984e3', bg:'#e3f2ff' },
-  { id:'writing', name:'Writing',        emoji:'✏️', iconName:'pencil', color:'#6c5ce7', bg:'#ede7f6' },
-  { id:'math',    name:'Math',           emoji:'🔢', iconName:'hash',   color:'#e17055', bg:'#fff8e1' },
-  { id:'logic',   name:'Logic',          emoji:'🧩', iconName:'puzzle', color:'#00b894', bg:'#e0f7f5' },
-  { id:'french',  name:'French',         emoji:'🇫🇷', iconName:'globe',  color:'#e84393', bg:'#ffe4ef' },
-  { id:'science', name:'Science',        emoji:'🔬', iconName:'flask',  color:'#16a085', bg:'#d1f2eb' },
-  { id:'social',  name:'Social Studies', emoji:'🍁', iconName:'maple',  color:'#c0392b', bg:'#fde8e6' },
+  { id:'reading', name:'Reading',        emoji:'📖', iconName:'book',   color:'#0984e3', bg:'#e3f2ff',
+    heroImage:'https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=800' },       // open books
+  { id:'writing', name:'Writing',        emoji:'✏️', iconName:'pencil', color:'#6c5ce7', bg:'#ede7f6',
+    heroImage:'https://images.unsplash.com/photo-1455390582262-044cdead277a?w=800' },       // pencil on notebook
+  { id:'math',    name:'Math',           emoji:'🔢', iconName:'hash',   color:'#e17055', bg:'#fff8e1',
+    heroImage:'https://images.unsplash.com/photo-1509228468518-180dd4864904?w=800' },       // math chalkboard
+  { id:'logic',   name:'Logic',          emoji:'🧩', iconName:'puzzle', color:'#00b894', bg:'#e0f7f5',
+    heroImage:'https://images.unsplash.com/photo-1611348586804-61bf6c080437?w=800' },       // puzzle pieces
+  { id:'french',  name:'French',         emoji:'🇫🇷', iconName:'globe',  color:'#e84393', bg:'#ffe4ef',
+    heroImage:'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=800' },       // Eiffel Tower
+  { id:'science', name:'Science',        emoji:'🔬', iconName:'flask',  color:'#16a085', bg:'#d1f2eb',
+    heroImage:'https://images.unsplash.com/photo-1532094349884-543bc11b234d?w=800' },       // science lab
+  { id:'social',  name:'Social Studies', emoji:'🍁', iconName:'maple',  color:'#c0392b', bg:'#fde8e6',
+    heroImage:'https://images.unsplash.com/photo-1506869640319-fe1a24fd76dc?w=800' },       // maple leaf
 ];
+// Convenience lookup for fallback imagery — used by renderLesson + renderActivity.
+const SUBJECT_IMG = Object.fromEntries(SUBJECTS.map(s=>[s.id, s.heroImage]));
 
 /* ========== VIDEO LINKS (YouTube search queries per activity) ==========
    Each maps to a YouTube search showing best educational videos for that topic.
@@ -3553,29 +3567,79 @@ function h(tag,a={},c=[]){
 }
 
 /* ==========================================================================
-   TEXT-TO-SPEECH — browser-native Web Speech API
+   TEXT-TO-SPEECH — browser-native Web Speech API with natural voice picking
    --------------------------------------------------------------------------
    ▸ Free, offline-capable, built into Chrome/Safari/Edge/Firefox.
    ▸ speak(text, 'fr-FR') for French · speak(text, 'en-US') for English.
-   ▸ Picks the best available voice for the language (preferring Google/Apple
-     voices which sound more natural than robotic defaults).
-   ▸ Slightly slower rate (0.92) + brighter pitch (1.05) — kid-friendly.
+   ▸ Voice selection priority (highest → lowest quality):
+       1. Named premium voices (Amélie/Thomas/Google français for FR,
+          Samantha/Google US English/Aria for EN)
+       2. Any voice with "Premium", "Enhanced", "Neural", "Natural" in name
+       3. Non-local (cloud) voices — usually much more natural than local
+       4. Any voice matching the language
+   ▸ rate=0.92 (slightly slower for clarity), pitch=1.0 (natural, not chipmunk)
    ▸ Cancels any previous utterance before starting a new one.
+   --------------------------------------------------------------------------
+   EDIT PREFERRED_VOICES below to add/remove preferred voice names per language.
+   The voice names you can use depend on the user's OS:
+     • macOS/iOS: Amélie, Thomas, Aurélie, Marie (FR) · Samantha, Siri, Alex (EN)
+     • Chrome:    "Google français", "Google US English"
+     • Edge:      "Microsoft Denise Online", "Microsoft Aria Online"
    ========================================================================== */
+const PREFERRED_VOICES = {
+  fr: [
+    'Amélie',       // macOS/iOS — French Canadian, very natural
+    'Thomas',       // macOS/iOS — French (Parisian), natural male
+    'Aurélie',      // macOS/iOS — French, natural female
+    'Marie',        // Some systems
+    'Google français',  // Chrome — cloud-based, very natural
+    'Microsoft Denise', // Edge — cloud-based
+    'Microsoft Henri',  // Edge
+    'Virginie',     // macOS
+  ],
+  en: [
+    'Samantha',     // macOS/iOS — iconic Siri voice, very natural
+    'Allison',      // macOS/iOS — natural female
+    'Ava',          // macOS/iOS (Premium) — extremely natural
+    'Siri',         // iOS
+    'Alex',         // macOS — natural male
+    'Moira',        // macOS — Irish accent, clear
+    'Karen',        // macOS — Australian, clear
+    'Google US English',   // Chrome — cloud
+    'Microsoft Aria',      // Edge — cloud Neural
+    'Microsoft Jenny',     // Edge — cloud Neural
+    'Microsoft Guy',       // Edge — cloud
+  ],
+};
 let _cachedVoices = null;
 function _getBestVoice(lang){
   if(!_cachedVoices || !_cachedVoices.length){
     try{ _cachedVoices = window.speechSynthesis.getVoices(); }catch(e){ _cachedVoices = []; }
   }
   if(!_cachedVoices.length) return null;
-  const langLower = (lang||'').toLowerCase();
-  const langPrefix = langLower.split('-')[0];
-  // Prefer exact lang match with "Google" or "Enhanced"/"Premium" in the name, then any match.
-  const match = (v) => (v.lang||'').toLowerCase().startsWith(langPrefix);
-  const premium = _cachedVoices.find(v => match(v) && /google|premium|enhanced|siri|neural/i.test(v.name));
-  if(premium) return premium;
-  const first = _cachedVoices.find(match);
-  return first || null;
+  const langPrefix = (lang||'').toLowerCase().split('-')[0];
+  const voices = _cachedVoices.filter(v => (v.lang||'').toLowerCase().startsWith(langPrefix));
+  if(!voices.length) return null;
+
+  // 1. Try preferred voices by name (case-insensitive substring match).
+  const preferred = PREFERRED_VOICES[langPrefix] || [];
+  for(const wantName of preferred){
+    const want = wantName.toLowerCase();
+    const match = voices.find(v => (v.name||'').toLowerCase().includes(want));
+    if(match) return match;
+  }
+
+  // 2. Voice names that signal high quality.
+  const hq = voices.find(v => /premium|enhanced|neural|natural|online/i.test(v.name||''));
+  if(hq) return hq;
+
+  // 3. Cloud voices (localService === false). These are usually much more
+  //    natural than on-device voices.
+  const cloud = voices.find(v => v.localService === false);
+  if(cloud) return cloud;
+
+  // 4. First voice in the requested language.
+  return voices[0];
 }
 function speak(text, lang){
   if(!text || typeof window.speechSynthesis === 'undefined') return;
@@ -3583,10 +3647,15 @@ function speak(text, lang){
     window.speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(String(text));
     u.lang = lang || 'en-US';
-    u.rate = 0.92;
-    u.pitch = 1.05;
+    u.rate = 0.92;   // Slightly slower for clarity
+    u.pitch = 1.0;   // Natural pitch — no chipmunk effect
     const v = _getBestVoice(u.lang);
-    if(v) u.voice = v;
+    if(v){
+      u.voice = v;
+      // IMPORTANT: when setting .voice, also ensure .lang matches the voice's
+      // native lang so the browser doesn't down-mix to a different engine.
+      u.lang = v.lang || u.lang;
+    }
     window.speechSynthesis.speak(u);
   }catch(e){ console.warn('[speak] failed:', e); }
 }
@@ -4432,13 +4501,21 @@ function renderQ(wrap){
     }
     card.appendChild(h('div',{class:'q-text'},q.q||''));
     if(q.visual) card.appendChild(h('div',{class:'q-visual'},q.visual));
-    // Optional real image/GIF above the answer choices (gracefully removed if it fails to load).
-    if(q.image){
+    // Real image above the answer choices. Priority:
+    //   1. q.image (question-specific, hand-curated)
+    //   2. Subject default image (auto-applied so every question gets a picture)
+    // Fallbacks gracefully: if the URL fails to load, the <img> is removed.
+    // Skipped on 'passage' questions because the passage already provides rich
+    // context — adding a banner there clutters the layout.
+    const qImgUrl = q.image
+      || (q.type !== 'passage' && quiz && SUBJECT_IMG[quiz.subject])
+      || null;
+    if(qImgUrl){
       const img = document.createElement('img');
       img.className='q-image';
       img.alt = q.imageAlt || '';
       img.loading='lazy';
-      img.src = q.image;
+      img.src = qImgUrl;
       img.onerror = ()=>img.remove();
       card.appendChild(img);
     }
@@ -4536,14 +4613,15 @@ function renderLesson(card,q){
   card.innerHTML='';card.classList.add('lesson-card');
   const L=q.lesson||{};
   card.appendChild(h('div',{class:'lesson-badge'},'🎓 QUICK LESSON'));
-  // Optional hero image (banner at the top) — gracefully degrades if the URL
-  // 404s or the browser is offline.
-  if(L.heroImage){
+  // Hero image (banner at the top). Priority: lesson.heroImage > subject default.
+  // Gracefully degrades if the URL 404s or the browser is offline.
+  const heroUrl = L.heroImage || (quiz && SUBJECT_IMG[quiz.subject]);
+  if(heroUrl){
     const img = document.createElement('img');
     img.className = 'lesson-hero';
     img.alt = L.title || '';
     img.loading = 'lazy';
-    img.src = L.heroImage;
+    img.src = heroUrl;
     img.onload = ()=>img.classList.add('loaded');
     img.onerror = ()=>img.remove();   // fail silently; text content still shines
     card.appendChild(img);
