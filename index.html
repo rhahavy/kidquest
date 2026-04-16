@@ -911,7 +911,7 @@ rushan: {
   ],
   math: [
     { id:'w1-rushan-m1', title:'Two-Digit Addition', emoji:'➕',
-      lesson:{title:'Adding with Carrying',intro:'Add ones first, then tens. If ones make 10+, carry to tens!',example:'28 + 17 → 8+7=15, write 5, carry 1 → 2+1+1=4 → 45!',hint:'Line up ones under ones, tens under tens.'},
+      lesson:{title:'Adding with Carrying',intro:'Add the ones column first. If the answer is 10 or more, carry the extra 1 over to the tens column.',example:'28 + 17 = 45. The ones: 8+7=15, so write 5 and carry 1!',hint:'Line up ones under ones, tens under tens.'},
       questions:[
         {type:'mcq',q:'28 + 17 = ?',choices:['35','45','44','55'],answer:1},
         {type:'mcq',q:'36 + 25 = ?',choices:['51','61','59','71'],answer:1},
@@ -920,7 +920,7 @@ rushan: {
         {type:'mcq',q:'69 + 14 = ?',choices:['73','82','83','93'],answer:2},
       ]},
     { id:'w1-rushan-m2', title:'Two-Digit Subtraction', emoji:'➖',
-      lesson:{title:'Subtracting with Borrowing',intro:'When top digit is smaller, borrow 1 from tens column!',example:'42 − 15: 2<5, borrow → 12−5=7, 3−1=2 → 27!',hint:'Borrow when the top is smaller than the bottom.'},
+      lesson:{title:'Subtracting with Borrowing',intro:'If the top digit is smaller than the bottom, borrow 1 from the column to the left.',example:'42 − 15 = 27. Since 2 is less than 5, borrow to make it 12−5=7!',hint:'Borrow when the top number is too small.'},
       questions:[
         {type:'mcq',q:'42 − 15 = ?',choices:['25','27','28','37'],answer:1},
         {type:'mcq',q:'63 − 27 = ?',choices:['34','36','44','46'],answer:1},
@@ -1101,7 +1101,7 @@ akshayan: {
   ],
   math: [
     { id:'w1-akshayan-m1', title:'Regrouping Addition', emoji:'➕',
-      lesson:{title:'Adding Big Numbers',intro:'Add ones first, then tens, then hundreds. Carry when digits add to 10+.',example:'148 + 275: ones 8+5=13 (write 3, carry 1), tens 4+7+1=12 (write 2, carry 1), hundreds 1+2+1=4 → 423!',hint:'Keep columns lined up. Carry carefully!'},
+      lesson:{title:'Adding Big Numbers',intro:'Line up the numbers. Add from right to left. If a column adds to 10 or more, carry the 1 to the next column.',example:'148 + 275 = 423. Start from the right: 8+5=13, 4+7+1=12, 1+2+1=4.',hint:'Always start from the ones (right side) and work left!'},
       questions:[
         {type:'mcq',q:'148 + 275 = ?',choices:['413','423','433','523'],answer:1},
         {type:'mcq',q:'267 + 158 = ?',choices:['325','415','425','435'],answer:2},
@@ -1110,7 +1110,7 @@ akshayan: {
         {type:'mcq',q:'189 + 356 = ?',choices:['445','535','545','555'],answer:2},
       ]},
     { id:'w1-akshayan-m2', title:'Regrouping Subtraction', emoji:'➖',
-      lesson:{title:'Subtracting Big Numbers',intro:'When top digit is smaller, borrow from the next column.',example:'403 − 187: borrow across zeros! 13−7=6, 9−8=1, 3−1=2 → 216',hint:'When there\'s a zero on top, you may need to borrow from two columns.'},
+      lesson:{title:'Subtracting Big Numbers',intro:'Line up the numbers. Subtract from right to left. If the top number is smaller, borrow from the column to the left.',example:'403 − 187 = 216. Borrow when the top digit is too small!',hint:'If there\'s a zero on top, borrow from the next column over.'},
       questions:[
         {type:'mcq',q:'403 − 187 = ?',choices:['206','216','226','316'],answer:1},
         {type:'mcq',q:'500 − 175 = ?',choices:['225','275','325','335'],answer:2},
