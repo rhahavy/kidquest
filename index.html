@@ -428,6 +428,17 @@ img{max-width:100%}
 .pic-card:hover{transform:translateY(-4px) scale(1.03);border-color:var(--primary);box-shadow:0 10px 24px rgba(108,92,231,.18)}
 .pic-card:active{transform:translateY(1px) scale(.98)}
 .pic-card .pc-emoji{font-size:44px;line-height:1;display:block;margin-bottom:8px;filter:drop-shadow(0 3px 6px rgba(26,16,53,.08))}
+.pic-card .pc-img{display:block;width:100%;height:84px;object-fit:cover;border-radius:10px;margin-bottom:8px;background:#f0eeff;box-shadow:0 2px 6px rgba(26,16,53,.12)}
+.pic-card .pc-img.loading{opacity:0}
+.pic-card .pc-img.loaded{opacity:1;transition:opacity .4s ease}
+
+/* Lesson hero image — banner above the lesson title */
+.lesson-hero{display:block;width:100%;max-height:220px;object-fit:cover;border-radius:var(--r);margin-bottom:14px;background:linear-gradient(135deg,#e3f2ff,#ede7f6);box-shadow:0 8px 22px rgba(26,16,53,.14)}
+.lesson-hero.loaded{animation:heroFade .5s ease}
+@keyframes heroFade{from{opacity:0;transform:scale(.98)}to{opacity:1;transform:scale(1)}}
+
+/* Question illustration — smaller banner above a question */
+.q-image{display:block;margin:8px auto 16px;max-width:100%;max-height:180px;object-fit:contain;border-radius:14px;box-shadow:0 6px 16px rgba(26,16,53,.1)}
 .pic-card .pc-word{font-weight:800;color:var(--ink);font-size:14px;line-height:1.2}
 .pic-card .pc-sub{font-size:11.5px;color:var(--ink3);font-weight:600;margin-top:3px}
 .pic-card .pc-speaker{position:absolute;top:6px;right:6px;width:26px;height:26px;border-radius:50%;background:rgba(108,92,231,.12);color:var(--primary);display:grid;place-items:center;font-size:12px;opacity:.6;transition:all .2s}
@@ -1099,6 +1110,61 @@ const BADGES = [
    passages, multi-step reasoning, higher-level vocabulary.
    ═══════════════════════════════════════════════════════════════════════════ */
 
+/* ══════════════════════════════════════════════════════════════════════════
+   📸 IMAGE LIBRARY — curated real photos + illustrations for lessons
+   ══════════════════════════════════════════════════════════════════════════
+   All URLs here are stable hotlink-safe sources:
+   - upload.wikimedia.org (Wikimedia Commons — CC/PD licensed, very reliable)
+   - images.unsplash.com (Unsplash — free for any use, stable CDN)
+   Any image that 404s is gracefully replaced with the emoji fallback at
+   render time (see img.onerror in renderLesson + pic-card + q-image).
+   Add new URLs here, reference them by key in lessons via heroImage/image.
+   MUST be declared BEFORE `const WEEKS` because WEEKS references IMG.xxx.
+   ══════════════════════════════════════════════════════════════════════════ */
+const IMG = {
+  // All URLs are topically-accurate Wikimedia Commons photos (CC/PD licensed).
+  // Wikimedia allows hotlinking from any public site and is extremely reliable
+  // on live sites. Each image has a `img.onerror → emoji` fallback in the
+  // renderer so any failed load gracefully swaps in the emoji.
+  // Canadian symbols
+  canadaFlag:   'https://upload.wikimedia.org/wikipedia/commons/thumb/c/cf/Flag_of_Canada.svg/640px-Flag_of_Canada.svg.png',
+  mapleLeaf:    'https://upload.wikimedia.org/wikipedia/commons/thumb/5/52/Sugar_Maple_Leaf.jpg/640px-Sugar_Maple_Leaf.jpg',
+  beaver:       'https://upload.wikimedia.org/wikipedia/commons/thumb/6/6b/American_Beaver.jpg/640px-American_Beaver.jpg',
+  canadaMap:    'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8b/Canada_%28orthographic_projection%29.svg/640px-Canada_%28orthographic_projection%29.svg.png',
+  rockies:      'https://upload.wikimedia.org/wikipedia/commons/thumb/1/17/Moraine_Lake_17092005.jpg/640px-Moraine_Lake_17092005.jpg',
+  parliament:   'https://upload.wikimedia.org/wikipedia/commons/thumb/8/82/Parliament_Hill%2C_Ottawa.jpg/640px-Parliament_Hill%2C_Ottawa.jpg',
+  niagara:      'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1f/NiagaraFallsFromCanada.jpg/640px-NiagaraFallsFromCanada.jpg',
+  inukshuk:     'https://upload.wikimedia.org/wikipedia/commons/thumb/6/6c/Inukshuk_Jardin_botanique1.jpg/640px-Inukshuk_Jardin_botanique1.jpg',
+
+  // Animals
+  butterfly:    'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b9/Monarch_Butterfly_Danaus_plexippus_Male_2664px.jpg/640px-Monarch_Butterfly_Danaus_plexippus_Male_2664px.jpg',
+  caterpillar:  'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9a/Monarch_caterpillar.jpg/640px-Monarch_caterpillar.jpg',
+  chrysalis:    'https://upload.wikimedia.org/wikipedia/commons/thumb/5/58/Monarch_chrysalis2.jpg/640px-Monarch_chrysalis2.jpg',
+  dog:          'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d9/Collage_of_Nine_Dogs.jpg/640px-Collage_of_Nine_Dogs.jpg',
+  cat:          'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/Cat03.jpg/640px-Cat03.jpg',
+  puppy:        'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3f/Labrador_Retriever_puppy.jpg/640px-Labrador_Retriever_puppy.jpg',
+  kitten:       'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9b/Gustav_chocolate.jpg/640px-Gustav_chocolate.jpg',
+
+  // Plants + life cycle
+  seedling:     'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5c/Seedling_02.jpg/640px-Seedling_02.jpg',
+  sunflower:    'https://upload.wikimedia.org/wikipedia/commons/thumb/4/40/Sunflower_sky_backdrop.jpg/640px-Sunflower_sky_backdrop.jpg',
+  tree:         'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b8/Arbol_Cuidado.jpg/640px-Arbol_Cuidado.jpg',
+
+  // Space
+  earth:        'https://upload.wikimedia.org/wikipedia/commons/thumb/9/97/The_Earth_seen_from_Apollo_17.jpg/640px-The_Earth_seen_from_Apollo_17.jpg',
+  moon:         'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e1/FullMoon2010.jpg/640px-FullMoon2010.jpg',
+  saturn:       'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c7/Saturn_during_Equinox.jpg/640px-Saturn_during_Equinox.jpg',
+  solarSystem:  'https://upload.wikimedia.org/wikipedia/commons/thumb/0/02/Planets2013.svg/640px-Planets2013.svg.png',
+
+  // Weather
+  rainbow:      'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5c/Arco_%C3%ADris_via_VLC.jpg/640px-Arco_%C3%ADris_via_VLC.jpg',
+  sunny:        'https://upload.wikimedia.org/wikipedia/commons/thumb/0/03/Sun_Over_Cloudscape.jpg/640px-Sun_Over_Cloudscape.jpg',
+
+  // Human body
+  heart:        'https://upload.wikimedia.org/wikipedia/commons/thumb/6/6c/Human_heart_with_great_vessels.png/640px-Human_heart_with_great_vessels.png',
+  skeleton:     'https://upload.wikimedia.org/wikipedia/commons/thumb/1/11/Human_skeleton_front_en.svg/640px-Human_skeleton_front_en.svg.png',
+};
+
 const WEEKS = { 1: {
 
 /* ---- NISHAN (Senior Kindergarten) ---- */
@@ -1401,11 +1467,11 @@ nishan: {
         {type:'mcq',q:'Clouds can bring...',choices:['Rain','Sunshine','Stars','Music'],answer:0},
       ]},
     { id:'w1-nishan-s4', title:'Animal Babies', emoji:'🐾',
-      lesson:{title:'Baby Animal Names',intro:'Every animal has a special name for their baby!',pictures:[
-        {emoji:'🐱', word:'Cat', label:'baby = kitten'},
-        {emoji:'🐶', word:'Dog', label:'baby = puppy'},
-        {emoji:'🐄', word:'Cow', label:'baby = calf'},
-        {emoji:'🐑', word:'Sheep', label:'baby = lamb'},
+      lesson:{title:'Baby Animal Names',intro:'Every animal has a special name for their baby!',heroImage:IMG.puppy,pictures:[
+        {emoji:'🐱', word:'Cat', label:'baby = kitten', image:IMG.cat},
+        {emoji:'🐶', word:'Dog', label:'baby = puppy', image:IMG.dog},
+        {emoji:'🐈', word:'Kitten', label:'baby cat', image:IMG.kitten},
+        {emoji:'🐕', word:'Puppy', label:'baby dog', image:IMG.puppy},
       ],hint:'A baby cat is a KITTEN. A baby dog is a PUPPY.'},
       questions:[
         {type:'mcq',q:'A baby cat is called a...',choices:['Puppy','Calf','Kitten','Lamb'],answer:2},
@@ -1415,11 +1481,11 @@ nishan: {
         {type:'mcq',q:'A baby chicken is called a...',choices:['Pup','Chick','Kit','Joey'],answer:1},
       ]},
     { id:'w1-nishan-s5', title:'Parts of a Plant', emoji:'🌻',
-      lesson:{title:'What Makes a Plant',intro:'A plant has ROOTS (in the ground), a STEM (holds it up), LEAVES (catch sunlight), and sometimes a FLOWER.',pictures:[
-        {emoji:'🌱', word:'Roots', label:'drink water'},
+      lesson:{title:'What Makes a Plant',intro:'A plant has ROOTS (in the ground), a STEM (holds it up), LEAVES (catch sunlight), and sometimes a FLOWER.',heroImage:IMG.sunflower,pictures:[
+        {emoji:'🌱', word:'Roots', label:'drink water', image:IMG.seedling},
         {emoji:'🌾', word:'Stem', label:'holds plant up'},
-        {emoji:'🍃', word:'Leaves', label:'catch sunlight'},
-        {emoji:'🌸', word:'Flower', label:'pretty bloom'},
+        {emoji:'🍃', word:'Leaves', label:'catch sunlight', image:IMG.tree},
+        {emoji:'🌸', word:'Flower', label:'pretty bloom', image:IMG.sunflower},
       ],hint:'Roots go DOWN, leaves reach UP!'},
       questions:[
         {type:'mcq',q:'What part of a plant is UNDER the ground?',choices:['Leaves','Roots','Flower','Stem'],answer:1},
@@ -1431,10 +1497,10 @@ nishan: {
   ],
   social: [
     { id:'w1-nishan-c1', title:'I Live in Canada 🍁', emoji:'🍁',
-      lesson:{title:'My Country: Canada',intro:'We live in CANADA. Canada\'s symbol is the red maple leaf 🍁. Our flag is red and white!',pictures:[
-        {emoji:'🍁', word:'Maple Leaf', label:'Canada\'s symbol'},
-        {emoji:'🇨🇦', word:'Flag', label:'red and white'},
-        {emoji:'🦫', word:'Beaver', label:'national animal'},
+      lesson:{title:'My Country: Canada',intro:'We live in CANADA. Canada\'s symbol is the red maple leaf 🍁. Our flag is red and white!',heroImage:IMG.canadaFlag,pictures:[
+        {emoji:'🍁', word:'Maple Leaf', label:'Canada\'s symbol', image:IMG.mapleLeaf},
+        {emoji:'🇨🇦', word:'Flag', label:'red and white', image:IMG.canadaFlag},
+        {emoji:'🦫', word:'Beaver', label:'national animal', image:IMG.beaver},
       ],hint:'The maple leaf is on our flag!'},
       questions:[
         {type:'mcq',q:'What country do we live in?',choices:['USA','Canada','France','Mexico'],answer:1},
@@ -1470,10 +1536,10 @@ nishan: {
         {type:'mcq',q:'Who brings letters and packages to your house?',choices:['Doctor','Mail carrier','Chef','Teacher'],answer:1},
       ]},
     { id:'w1-nishan-c4', title:'Canada\'s Symbols', emoji:'🍁',
-      lesson:{title:'Canadian Symbols',intro:'Canada has special things that are symbols of our country.',pictures:[
-        {emoji:'🍁', word:'Maple Leaf'},
-        {emoji:'🦫', word:'Beaver'},
-        {emoji:'🇨🇦', word:'Red & White Flag'},
+      lesson:{title:'Canadian Symbols',intro:'Canada has special things that are symbols of our country.',heroImage:IMG.canadaFlag,pictures:[
+        {emoji:'🍁', word:'Maple Leaf', image:IMG.mapleLeaf},
+        {emoji:'🦫', word:'Beaver', image:IMG.beaver},
+        {emoji:'🇨🇦', word:'Red & White Flag', image:IMG.canadaFlag},
         {emoji:'🎵', word:'O Canada', label:'our anthem'},
       ],hint:'"O Canada" is the song we sing for our country!'},
       questions:[
@@ -1795,8 +1861,8 @@ akaran: {
   ],
   social: [
     { id:'w1-akaran-c1', title:'Canada\'s Provinces', emoji:'🗺️',
-      lesson:{title:'Canada has 10 Provinces + 3 Territories',intro:'Canada is a BIG country with 10 PROVINCES and 3 TERRITORIES. A province is like a big area inside Canada.',pictures:[
-        {emoji:'🗺️', word:'Canada', label:'our country'},
+      lesson:{title:'Canada has 10 Provinces + 3 Territories',intro:'Canada is a BIG country with 10 PROVINCES and 3 TERRITORIES. A province is like a big area inside Canada.',heroImage:IMG.canadaMap,pictures:[
+        {emoji:'🗺️', word:'Canada', label:'our country', image:IMG.canadaMap},
         {emoji:'🔟', word:'10 Provinces'},
         {emoji:'3️⃣', word:'3 Territories'},
       ],hint:'Every province has its own capital city and government!'},
@@ -1808,8 +1874,8 @@ akaran: {
         {type:'mcq',q:'Canada is...',choices:['A city','A country','A continent','A small town'],answer:1},
       ]},
     { id:'w1-akaran-c2', title:'National Symbols', emoji:'🍁',
-      lesson:{title:'Symbols of Canada',intro:'A SYMBOL stands for something bigger. Canada has many symbols we all share.',pictures:[
-        {emoji:'🇨🇦', word:'Flag'},{emoji:'🍁', word:'Maple Leaf'},{emoji:'🦫', word:'Beaver'},{emoji:'🎵', word:'O Canada', label:'anthem'},{emoji:'🏒', word:'Hockey', label:'sport'},
+      lesson:{title:'Symbols of Canada',intro:'A SYMBOL stands for something bigger. Canada has many symbols we all share.',heroImage:IMG.canadaFlag,pictures:[
+        {emoji:'🇨🇦', word:'Flag', image:IMG.canadaFlag},{emoji:'🍁', word:'Maple Leaf', image:IMG.mapleLeaf},{emoji:'🦫', word:'Beaver', image:IMG.beaver},{emoji:'🎵', word:'O Canada', label:'anthem'},{emoji:'🏒', word:'Hockey', label:'sport'},
       ],hint:'Hockey is Canada\'s favourite winter sport!'},
       questions:[
         {type:'mcq',q:'Canada\'s anthem is...',choices:['O Canada','Happy Birthday','Hockey Night','The Beach'],answer:0},
@@ -2108,8 +2174,11 @@ rushan: {
   ],
   science: [
     { id:'w1-rushan-s1', title:'Life Cycles', emoji:'🐛',
-      lesson:{title:'The Butterfly Life Cycle',intro:'A LIFE CYCLE shows how an animal grows. A butterfly goes: egg → caterpillar → chrysalis → butterfly.',pictures:[
-        {emoji:'🥚', word:'1. Egg'},{emoji:'🐛', word:'2. Caterpillar'},{emoji:'🛌', word:'3. Chrysalis'},{emoji:'🦋', word:'4. Butterfly'},
+      lesson:{title:'The Butterfly Life Cycle',intro:'A LIFE CYCLE shows how an animal grows. A butterfly goes: egg → caterpillar → chrysalis → butterfly.',heroImage:IMG.butterfly,pictures:[
+        {emoji:'🥚', word:'1. Egg'},
+        {emoji:'🐛', word:'2. Caterpillar', image:IMG.caterpillar},
+        {emoji:'🛌', word:'3. Chrysalis', image:IMG.chrysalis},
+        {emoji:'🦋', word:'4. Butterfly', image:IMG.butterfly},
       ],hint:'Caterpillars eat lots of leaves before becoming butterflies!'},
       questions:[
         {type:'mcq',q:'What comes FIRST in a butterfly life cycle?',choices:['Butterfly','Egg','Caterpillar','Chrysalis'],answer:1},
@@ -2170,8 +2239,8 @@ rushan: {
   ],
   social: [
     { id:'w1-rushan-c1', title:'Provinces & Territories', emoji:'🗺️',
-      lesson:{title:'Canada\'s Big Map',intro:'Canada has 10 PROVINCES (like Ontario, Quebec, BC) and 3 TERRITORIES (Yukon, Northwest Territories, Nunavut). Ontario has the most people!',pictures:[
-        {emoji:'🍁', word:'Ontario'},{emoji:'⚜️', word:'Quebec'},{emoji:'🏔️', word:'British Columbia'},{emoji:'🌾', word:'Alberta'},{emoji:'❄️', word:'Yukon', label:'territory'},
+      lesson:{title:'Canada\'s Big Map',intro:'Canada has 10 PROVINCES (like Ontario, Quebec, BC) and 3 TERRITORIES (Yukon, Northwest Territories, Nunavut). Ontario has the most people!',heroImage:IMG.canadaMap,pictures:[
+        {emoji:'🍁', word:'Ontario'},{emoji:'⚜️', word:'Quebec'},{emoji:'🏔️', word:'British Columbia', image:IMG.rockies},{emoji:'🌾', word:'Alberta'},{emoji:'❄️', word:'Yukon', label:'territory'},
       ],hint:'The 3 territories are in the far NORTH of Canada.'},
       questions:[
         {type:'mcq',q:'How many provinces + territories total?',choices:['10','13','15','20'],answer:1},
@@ -2203,8 +2272,8 @@ rushan: {
         {type:'mcq',q:'Canadian cereal boxes usually have...',choices:['One language','English AND French','Only French','Emojis only'],answer:1},
       ]},
     { id:'w1-rushan-c4', title:'Canadian Geography', emoji:'🏔️',
-      lesson:{title:'Our Land & Water',intro:'Canada has MOUNTAINS (Rockies in the west), huge LAKES (the Great Lakes), long RIVERS (like the St. Lawrence), and an OCEAN on three sides.',pictures:[
-        {emoji:'🏔️', word:'Rocky Mountains'},{emoji:'🏞️', word:'Great Lakes'},{emoji:'🌊', word:'3 Oceans', label:'Atlantic, Pacific, Arctic'},
+      lesson:{title:'Our Land & Water',intro:'Canada has MOUNTAINS (Rockies in the west), huge LAKES (the Great Lakes), long RIVERS (like the St. Lawrence), and an OCEAN on three sides.',heroImage:IMG.rockies,pictures:[
+        {emoji:'🏔️', word:'Rocky Mountains', image:IMG.rockies},{emoji:'🏞️', word:'Niagara Falls', image:IMG.niagara},{emoji:'🌊', word:'3 Oceans', label:'Atlantic, Pacific, Arctic'},
       ],hint:'Canada is the SECOND-largest country in the world!'},
       questions:[
         {type:'mcq',q:'The Rocky Mountains are in the...',choices:['East of Canada','West of Canada','Middle','Far north only'],answer:1},
@@ -2587,8 +2656,8 @@ akshayan: {
         {type:'mcq',q:'Indigenous cultures are...',choices:['All the same','Diverse and unique','Made up','Extinct'],answer:1},
       ]},
     { id:'w1-akshayan-c2', title:'Provinces & Capitals', emoji:'🗺️',
-      lesson:{title:'Canadian Capitals',intro:'Each province has a CAPITAL — the city where the provincial government meets. Canada\'s national capital is OTTAWA.',pictures:[
-        {emoji:'🏛️', word:'Ottawa', label:'Canada'},{emoji:'🏙️', word:'Toronto', label:'Ontario'},{emoji:'⛪', word:'Quebec City', label:'Quebec'},{emoji:'🌊', word:'Victoria', label:'BC'},{emoji:'🛢️', word:'Edmonton', label:'Alberta'},
+      lesson:{title:'Canadian Capitals',intro:'Each province has a CAPITAL — the city where the provincial government meets. Canada\'s national capital is OTTAWA.',heroImage:IMG.parliament,pictures:[
+        {emoji:'🏛️', word:'Ottawa', label:'Canada', image:IMG.parliament},{emoji:'🏙️', word:'Toronto', label:'Ontario'},{emoji:'⛪', word:'Quebec City', label:'Quebec'},{emoji:'🌊', word:'Victoria', label:'BC'},{emoji:'🛢️', word:'Edmonton', label:'Alberta'},
       ],hint:'Capital ≠ biggest city! Toronto is bigger than Ottawa.'},
       questions:[
         {type:'mcq',q:'Canada\'s national capital is...',choices:['Toronto','Ottawa','Montreal','Vancouver'],answer:1},
@@ -2967,11 +3036,11 @@ isaiah: {
   ],
   science: [
     { id:'w1-isaiah-s1', title:'Human Body Systems', emoji:'🫀',
-      lesson:{title:'Body Systems Working Together',intro:'The human body is made of SYSTEMS that each do a job. CIRCULATORY (heart + blood) moves oxygen. DIGESTIVE (mouth → stomach → intestines) breaks down food. RESPIRATORY (lungs) takes in air. SKELETAL (bones) holds us up.',pictures:[
-        {emoji:'🫀', word:'Circulatory', label:'heart + blood'},
+      lesson:{title:'Body Systems Working Together',intro:'The human body is made of SYSTEMS that each do a job. CIRCULATORY (heart + blood) moves oxygen. DIGESTIVE (mouth → stomach → intestines) breaks down food. RESPIRATORY (lungs) takes in air. SKELETAL (bones) holds us up.',heroImage:IMG.skeleton,pictures:[
+        {emoji:'🫀', word:'Circulatory', label:'heart + blood', image:IMG.heart},
         {emoji:'🫁', word:'Respiratory', label:'lungs'},
         {emoji:'🫃', word:'Digestive', label:'stomach'},
-        {emoji:'🦴', word:'Skeletal', label:'bones'},
+        {emoji:'🦴', word:'Skeletal', label:'bones', image:IMG.skeleton},
       ],hint:'Every system works together — like a team!'},
       questions:[
         {type:'mcq',q:'The HEART is part of which system?',choices:['Digestive','Circulatory','Skeletal','Nervous'],answer:1},
@@ -3020,8 +3089,13 @@ isaiah: {
         {type:'mcq',q:'What starts every food chain?',choices:['A rock','Energy from the sun','A predator','A river'],answer:1},
       ]},
     { id:'w1-isaiah-s5', title:'Space & Planets (G5 Stretch!)', emoji:'🌟',
-      lesson:{title:'Our Solar System',intro:'Our solar system has the SUN and 8 PLANETS orbiting it: Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, Neptune. The MOON orbits Earth and goes through 8 PHASES each month.',pictures:[
-        {emoji:'☀️', word:'Sun'},{emoji:'🌍', word:'Earth'},{emoji:'🔴', word:'Mars'},{emoji:'🪐', word:'Saturn'},{emoji:'🌑', word:'New Moon'},{emoji:'🌕', word:'Full Moon'},
+      lesson:{title:'Our Solar System',intro:'Our solar system has the SUN and 8 PLANETS orbiting it: Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, Neptune. The MOON orbits Earth and goes through 8 PHASES each month.',heroImage:IMG.solarSystem,pictures:[
+        {emoji:'☀️', word:'Sun', image:IMG.sunny},
+        {emoji:'🌍', word:'Earth', image:IMG.earth},
+        {emoji:'🔴', word:'Mars'},
+        {emoji:'🪐', word:'Saturn', image:IMG.saturn},
+        {emoji:'🌑', word:'New Moon'},
+        {emoji:'🌕', word:'Full Moon', image:IMG.moon},
       ],hint:'Mnemonic: "My Very Educated Mother Just Served Us Nachos" = M V E M J S U N (planet order).'},
       questions:[
         {type:'mcq',q:'Which planet do we live on?',choices:['Mars','Earth','Venus','Jupiter'],answer:1},
@@ -3033,8 +3107,8 @@ isaiah: {
   ],
   social: [
     { id:'w1-isaiah-c1', title:'First Nations, Métis, Inuit', emoji:'🪶',
-      lesson:{title:'Indigenous Peoples of Canada',intro:'Canada recognizes THREE Indigenous groups: FIRST NATIONS (many nations across Canada), MÉTIS (mixed Indigenous + European ancestry, often in the Prairies), and INUIT (Arctic peoples). Each has unique languages, traditions, and treaties with the government.',pictures:[
-        {emoji:'🪶', word:'First Nations'},{emoji:'🏹', word:'Métis', label:'Prairies'},{emoji:'🛖', word:'Inuit', label:'Arctic'},
+      lesson:{title:'Indigenous Peoples of Canada',intro:'Canada recognizes THREE Indigenous groups: FIRST NATIONS (many nations across Canada), MÉTIS (mixed Indigenous + European ancestry, often in the Prairies), and INUIT (Arctic peoples). Each has unique languages, traditions, and treaties with the government.',heroImage:IMG.inukshuk,pictures:[
+        {emoji:'🪶', word:'First Nations'},{emoji:'🏹', word:'Métis', label:'Prairies'},{emoji:'🛖', word:'Inuit', label:'Arctic', image:IMG.inukshuk},
       ],hint:'Treaties are agreements between Indigenous nations and the Canadian government.'},
       questions:[
         {type:'mcq',q:'The three Indigenous groups in Canada are...',choices:['First Nations, Métis, Inuit','Vikings, Pilgrims, Settlers','English, French, Spanish','North, South, East'],answer:0},
@@ -3070,11 +3144,11 @@ isaiah: {
         {type:'mcq',q:'Garbage pickup and city parks are run by...',choices:['Federal','Provincial','Municipal','Nobody'],answer:2},
       ]},
     { id:'w1-isaiah-c4', title:'Provinces & Capitals', emoji:'🗺️',
-      lesson:{title:'All 10 Provinces + 3 Territories',intro:'Canada = 10 PROVINCES + 3 TERRITORIES. Learn the pattern east→west: Newfoundland & Labrador (St. John\'s), PEI (Charlottetown), Nova Scotia (Halifax), New Brunswick (Fredericton), Quebec (Quebec City), Ontario (Toronto), Manitoba (Winnipeg), Saskatchewan (Regina), Alberta (Edmonton), BC (Victoria). Territories: Yukon (Whitehorse), NWT (Yellowknife), Nunavut (Iqaluit).',pictures:[
+      lesson:{title:'All 10 Provinces + 3 Territories',intro:'Canada = 10 PROVINCES + 3 TERRITORIES. Learn the pattern east→west: Newfoundland & Labrador (St. John\'s), PEI (Charlottetown), Nova Scotia (Halifax), New Brunswick (Fredericton), Quebec (Quebec City), Ontario (Toronto), Manitoba (Winnipeg), Saskatchewan (Regina), Alberta (Edmonton), BC (Victoria). Territories: Yukon (Whitehorse), NWT (Yellowknife), Nunavut (Iqaluit).',heroImage:IMG.canadaMap,pictures:[
         {emoji:'🦞', word:'Atlantic', label:'NL/PE/NS/NB'},
         {emoji:'⚜️', word:'Quebec → Ontario'},
         {emoji:'🌾', word:'Prairies', label:'MB/SK/AB'},
-        {emoji:'🏔️', word:'BC'},
+        {emoji:'🏔️', word:'BC', image:IMG.rockies},
         {emoji:'❄️', word:'Territories', label:'YT/NT/NU'},
       ],hint:'Ontario has the biggest population; Nunavut has the smallest.'},
       questions:[
@@ -4358,6 +4432,16 @@ function renderQ(wrap){
     }
     card.appendChild(h('div',{class:'q-text'},q.q||''));
     if(q.visual) card.appendChild(h('div',{class:'q-visual'},q.visual));
+    // Optional real image/GIF above the answer choices (gracefully removed if it fails to load).
+    if(q.image){
+      const img = document.createElement('img');
+      img.className='q-image';
+      img.alt = q.imageAlt || '';
+      img.loading='lazy';
+      img.src = q.image;
+      img.onerror = ()=>img.remove();
+      card.appendChild(img);
+    }
     if(q.type==='write') renderWrite(card,q);
     else if(q.type==='mcq'||q.type==='passage'||q.type==='fill') renderMCQ(card,q);
     else if(q.type==='compare') renderCompare(card,q);
@@ -4452,6 +4536,18 @@ function renderLesson(card,q){
   card.innerHTML='';card.classList.add('lesson-card');
   const L=q.lesson||{};
   card.appendChild(h('div',{class:'lesson-badge'},'🎓 QUICK LESSON'));
+  // Optional hero image (banner at the top) — gracefully degrades if the URL
+  // 404s or the browser is offline.
+  if(L.heroImage){
+    const img = document.createElement('img');
+    img.className = 'lesson-hero';
+    img.alt = L.title || '';
+    img.loading = 'lazy';
+    img.src = L.heroImage;
+    img.onload = ()=>img.classList.add('loaded');
+    img.onerror = ()=>img.remove();   // fail silently; text content still shines
+    card.appendChild(img);
+  }
   if(L.title) card.appendChild(h('div',{class:'lesson-title'},L.title));
   if(L.intro) card.appendChild(h('p',{class:'lesson-intro'},L.intro));
   // If the lesson provides a stack spec OR array of specs, render those as
@@ -4476,6 +4572,25 @@ function renderLesson(card,q){
     const grid = h('div',{class:'pic-grid'});
     L.pictures.forEach(p=>{
       const speakText = p.speak || p.word;
+      const visual = p.image
+        ? (function(){
+            // Real image with emoji fallback on load error
+            const img = document.createElement('img');
+            img.className='pc-img loading';
+            img.alt = p.word || '';
+            img.loading = 'lazy';
+            img.src = p.image;
+            img.onload = ()=>{img.classList.remove('loading');img.classList.add('loaded')};
+            img.onerror = ()=>{
+              // Swap image out for the emoji fallback
+              const span = document.createElement('span');
+              span.className = 'pc-emoji';
+              span.textContent = p.emoji || '🔹';
+              img.replaceWith(span);
+            };
+            return img;
+          })()
+        : h('span',{class:'pc-emoji'}, p.emoji || '🔹');
       const card = h('div',{class:'pic-card',onclick:(e)=>{
         if(!lang) return;
         const c = e.currentTarget;
@@ -4484,7 +4599,7 @@ function renderLesson(card,q){
         speak(speakText, lang);
         setTimeout(()=>c.classList.remove('speaking'), Math.max(1200, speakText.length * 90));
       }},[
-        h('span',{class:'pc-emoji'}, p.emoji || '🔹'),
+        visual,
         h('div',{class:'pc-word'}, p.word || ''),
         p.label ? h('div',{class:'pc-sub'}, p.label) : null,
         lang ? h('span',{class:'pc-speaker', title:'Tap to hear pronunciation'}, '🔊') : null,
