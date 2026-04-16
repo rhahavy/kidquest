@@ -390,27 +390,32 @@
   .child-hero-text { flex: 1 1 240px; min-width: 0; }
   .mascot {
     margin-left: auto;
-    width: 96px; height: 96px;
-    border-radius: 28px;
+    width: 104px; height: 104px;
+    border-radius: 30px;
     display: grid; place-items: center;
     flex-shrink: 0;
+    font-size: 56px;
+    line-height: 1;
     animation: mascotBob 3s ease-in-out infinite;
+    border: 2px solid rgba(255,255,255,.7);
+    filter: drop-shadow(0 8px 18px rgba(26,31,58,.12));
   }
   .child-hero.nishan .mascot {
-    background: linear-gradient(135deg, rgba(91, 181, 255, .18), rgba(255, 192, 67, .22));
-    color: var(--sky);
+    background:
+      radial-gradient(circle at 30% 25%, rgba(255,255,255,.45) 0%, transparent 55%),
+      linear-gradient(135deg, #C8E6FF 0%, #8AC8FF 100%);
   }
   .child-hero.rushan .mascot {
-    background: linear-gradient(135deg, rgba(78, 205, 196, .22), rgba(139, 127, 255, .18));
-    color: #2EB5AB;
+    background:
+      radial-gradient(circle at 30% 25%, rgba(255,255,255,.45) 0%, transparent 55%),
+      linear-gradient(135deg, #C8F2EC 0%, #80DDD2 100%);
   }
   @keyframes mascotBob {
     0%, 100% { transform: translateY(0) rotate(-4deg); }
-    50%      { transform: translateY(-6px) rotate(4deg); }
+    50%      { transform: translateY(-8px) rotate(4deg); }
   }
   @media (max-width: 560px) {
-    .mascot { width: 64px; height: 64px; border-radius: 18px; margin-left: 0; }
-    .mascot svg { width: 32px; height: 32px; }
+    .mascot { width: 72px; height: 72px; border-radius: 22px; margin-left: 0; font-size: 38px; }
   }
 
   /* --------- ZONE STATS (per-subject mini cards) --------- */
@@ -4441,6 +4446,28 @@ const LESSONS = {
 const STORAGE_KEY = 'rhahavy-learning-adventure-v2';
 const LOCAL_USER_KEY = 'rhahavy-current-user';
 
+/* `?reset=1` URL — wipe this device's local cache and sign out.
+   The cloud bucket can be reset separately (or with ?reset=cloud).
+   Useful when you want a fresh start without writing a Reset button. */
+(function handleResetUrl() {
+  try {
+    const url = new URL(window.location.href);
+    const r = url.searchParams.get('reset');
+    if (!r) return;
+    localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(LOCAL_USER_KEY);
+    if (r === 'cloud' || r === 'all') {
+      // Best-effort cloud wipe (no-op if it fails)
+      const empty = '{"users":{"nishan":{"totalStars":0,"badges":{},"progress":{},"completedActivities":{},"completedByChild":{"nishan":{},"rushan":{}},"perfectActivities":{}},"rushan":{"totalStars":0,"badges":{},"progress":{},"completedActivities":{},"completedByChild":{"nishan":{},"rushan":{}},"perfectActivities":{}}},"updatedAt":' + Date.now() + '}';
+      fetch('https://textdb.dev/api/data/rhahavy-fam-69bae4a8778f54e007d4', {
+        method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: empty
+      }).catch(() => {});
+    }
+    url.searchParams.delete('reset');
+    window.history.replaceState({}, '', url.pathname + url.search);
+  } catch (_e) {}
+})();
+
 const defaultUserState = () => ({
   totalStars: 0,
   badges: {},               // id -> true
@@ -4916,7 +4943,7 @@ const CHILD_THEMES = {
       'Every star you earn makes you smarter — let\'s go!',
       'Grab a comfy seat and let\'s start your adventure.',
     ],
-    mascot: 'i-rocket',
+    mascotEmoji: '🚀',
     mascotLabel: 'Explorer Rocket',
     accent: 'var(--sky)',
     accent2: 'var(--sun)',
@@ -4934,7 +4961,7 @@ const CHILD_THEMES = {
       'Every challenge you solve grows your brain stronger.',
       'Ready to level up your thinking skills?',
     ],
-    mascot: 'i-trophy',
+    mascotEmoji: '🏆',
     mascotLabel: 'Champion Trophy',
     accent: 'var(--grass)',
     accent2: 'var(--plum)',
@@ -4965,7 +4992,7 @@ function renderChild(root, child) {
         h('h1', { class: 'child-title' }, `Hi, ${T.name}!`),
         h('p', { class: 'sub' }, welcome)
       ]),
-      h('div', { class: 'mascot', 'aria-hidden': 'true' }, svgIcon(T.mascot, 52))
+      h('div', { class: 'mascot ' + child, 'aria-hidden': 'true', title: T.mascotLabel }, T.mascotEmoji)
     ])
   ]);
   root.appendChild(hero);
