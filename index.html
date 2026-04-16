@@ -3994,29 +3994,129 @@ function pickVoice(lang) {
   return baseMatch || null;
 }
 
-/* Speak a piece of text out loud. Cancels any in-progress speech first. */
-function speak(text, lang) {
-  if (!speechEnabled || !AUDIO_SUPPORTED || !text) return;
+/* ----------------------------------------------------------
+   Speech playback — uses Google Translate's public TTS endpoint
+   (high-quality neural voices) with the browser's Web Speech
+   API as a fallback. Chunks long text so it doesn't hit the
+   ~200-char limit per request.
+   ---------------------------------------------------------- */
+let currentAudio = null;
+
+function stopAllAudio() {
+  if (currentAudio) {
+    try { currentAudio.pause(); } catch(_e) {}
+    currentAudio = null;
+  }
+  if (AUDIO_SUPPORTED) {
+    try { window.speechSynthesis.cancel(); } catch(_e) {}
+  }
+}
+
+function chunkText(text, maxLen) {
+  if (text.length <= maxLen) return [text];
+  // Split on sentence boundaries first
+  const parts = text.match(/[^.!?]+[.!?]+|[^.!?]+$/g) || [text];
+  const chunks = [];
+  let cur = '';
+  for (const p of parts) {
+    const piece = p.trim();
+    if (!piece) continue;
+    if ((cur + ' ' + piece).trim().length <= maxLen) {
+      cur = (cur + ' ' + piece).trim();
+    } else {
+      if (cur) chunks.push(cur);
+      if (piece.length <= maxLen) {
+        cur = piece;
+      } else {
+        // Very long single sentence — split at word boundaries
+        const words = piece.split(/\s+/);
+        let wc = '';
+        for (const w of words) {
+          if ((wc + ' ' + w).trim().length > maxLen) {
+            if (wc) chunks.push(wc);
+            wc = w;
+          } else {
+            wc = (wc + ' ' + w).trim();
+          }
+        }
+        cur = wc;
+      }
+    }
+  }
+  if (cur) chunks.push(cur);
+  return chunks;
+}
+
+function googleTtsUrl(text, lang) {
+  // Map 'en-US' → 'en', 'fr-FR' → 'fr' etc.
+  const tl = (lang || 'en').toLowerCase().split('-')[0];
+  return 'https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=' + tl + '&q=' + encodeURIComponent(text);
+}
+
+function speakViaGoogle(text, lang) {
+  return new Promise((resolve, reject) => {
+    const chunks = chunkText(text, 180);
+    let i = 0;
+    function playNext() {
+      if (i >= chunks.length) { resolve(); return; }
+      const chunk = chunks[i++];
+      const audio = new Audio(googleTtsUrl(chunk, lang));
+      audio.preload = 'auto';
+      currentAudio = audio;
+      // 8-second timeout for load
+      const timer = setTimeout(() => {
+        try { audio.pause(); } catch(_e) {}
+        reject(new Error('Google TTS timeout'));
+      }, 8000);
+      audio.addEventListener('ended', () => {
+        clearTimeout(timer);
+        playNext();
+      }, { once: true });
+      audio.addEventListener('error', () => {
+        clearTimeout(timer);
+        reject(new Error('Google TTS audio error'));
+      }, { once: true });
+      audio.play().catch(err => {
+        clearTimeout(timer);
+        reject(err);
+      });
+    }
+    playNext();
+  });
+}
+
+function speakViaBrowser(text, lang) {
+  if (!AUDIO_SUPPORTED) return;
   try {
     window.speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(String(text));
     u.lang = lang || currentLang();
-    // Kid-friendly settings: slower speech, higher & friendlier pitch
     u.rate = 0.85;
     u.pitch = 1.2;
     u.volume = 1.0;
-
     const v = pickVoice(u.lang);
     if (v) u.voice = v;
-
     window.speechSynthesis.speak(u);
-  } catch(_e) { /* ignore */ }
+  } catch(_e) {}
+}
+
+async function speak(text, lang) {
+  if (!speechEnabled || !text) return;
+  stopAllAudio();
+  const useLang = lang || currentLang();
+  try {
+    await speakViaGoogle(String(text), useLang);
+  } catch (err) {
+    // Network/CORS/rate-limit — gracefully fall back to browser TTS
+    console.warn('[LA] Cloud TTS unavailable, using browser voice:', err && err.message);
+    speakViaBrowser(text, useLang);
+  }
 }
 
 function toggleSpeech() {
   speechEnabled = !speechEnabled;
   try { localStorage.setItem(AUDIO_KEY, speechEnabled ? 'on' : 'off'); } catch(_e) {}
-  if (!speechEnabled && AUDIO_SUPPORTED) { try { window.speechSynthesis.cancel(); } catch(_e) {} }
+  if (!speechEnabled) stopAllAudio();
   updateTopbar(currentScreen || 'home');
 }
 
