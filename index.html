@@ -1014,29 +1014,19 @@ const EMOJI_KEYPAD = ['🐶','🐱','🦁','🦊','🌈','⭐','🎈','🚀','�
 const TEACHER_CREDS = { password: 'Ryerye234' };
 
 /* ========== SUBJECTS ==========
-   Each subject has a default HERO IMAGE which is used automatically on any
-   lesson/question that doesn't specify its own image. This means every lesson
-   and question card gets at least one relevant picture without having to
-   hand-edit 175+ activities. Override at the lesson level with `heroImage: IMG.xxx`
-   or at the question level with `image: IMG.xxx`. */
+   Images are set per-LESSON using `heroImage: IMG.xxx`, not at the subject
+   level. A single subject-wide stock photo ends up unrelated to most
+   individual lessons, which was confusing kids. The IMG library above has
+   topically-accurate photos — reference them on specific lessons only. */
 const SUBJECTS = [
-  { id:'reading', name:'Reading',        emoji:'📖', iconName:'book',   color:'#0984e3', bg:'#e3f2ff',
-    heroImage:'https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=800' },       // open books
-  { id:'writing', name:'Writing',        emoji:'✏️', iconName:'pencil', color:'#6c5ce7', bg:'#ede7f6',
-    heroImage:'https://images.unsplash.com/photo-1455390582262-044cdead277a?w=800' },       // pencil on notebook
-  { id:'math',    name:'Math',           emoji:'🔢', iconName:'hash',   color:'#e17055', bg:'#fff8e1',
-    heroImage:'https://images.unsplash.com/photo-1509228468518-180dd4864904?w=800' },       // math chalkboard
-  { id:'logic',   name:'Logic',          emoji:'🧩', iconName:'puzzle', color:'#00b894', bg:'#e0f7f5',
-    heroImage:'https://images.unsplash.com/photo-1611348586804-61bf6c080437?w=800' },       // puzzle pieces
-  { id:'french',  name:'French',         emoji:'🇫🇷', iconName:'globe',  color:'#e84393', bg:'#ffe4ef',
-    heroImage:'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=800' },       // Eiffel Tower
-  { id:'science', name:'Science',        emoji:'🔬', iconName:'flask',  color:'#16a085', bg:'#d1f2eb',
-    heroImage:'https://images.unsplash.com/photo-1532094349884-543bc11b234d?w=800' },       // science lab
-  { id:'social',  name:'Social Studies', emoji:'🍁', iconName:'maple',  color:'#c0392b', bg:'#fde8e6',
-    heroImage:'https://images.unsplash.com/photo-1506869640319-fe1a24fd76dc?w=800' },       // maple leaf
+  { id:'reading', name:'Reading',        emoji:'📖', iconName:'book',   color:'#0984e3', bg:'#e3f2ff' },
+  { id:'writing', name:'Writing',        emoji:'✏️', iconName:'pencil', color:'#6c5ce7', bg:'#ede7f6' },
+  { id:'math',    name:'Math',           emoji:'🔢', iconName:'hash',   color:'#e17055', bg:'#fff8e1' },
+  { id:'logic',   name:'Logic',          emoji:'🧩', iconName:'puzzle', color:'#00b894', bg:'#e0f7f5' },
+  { id:'french',  name:'French',         emoji:'🇫🇷', iconName:'globe',  color:'#e84393', bg:'#ffe4ef' },
+  { id:'science', name:'Science',        emoji:'🔬', iconName:'flask',  color:'#16a085', bg:'#d1f2eb' },
+  { id:'social',  name:'Social Studies', emoji:'🍁', iconName:'maple',  color:'#c0392b', bg:'#fde8e6' },
 ];
-// Convenience lookup for fallback imagery — used by renderLesson + renderActivity.
-const SUBJECT_IMG = Object.fromEntries(SUBJECTS.map(s=>[s.id, s.heroImage]));
 
 /* ========== VIDEO LINKS (YouTube search queries per activity) ==========
    Each maps to a YouTube search showing best educational videos for that topic.
@@ -4547,21 +4537,17 @@ function renderQ(wrap){
     }
     card.appendChild(h('div',{class:'q-text'},q.q||''));
     if(q.visual) card.appendChild(h('div',{class:'q-visual'},q.visual));
-    // Real image above the answer choices. Priority:
-    //   1. q.image (question-specific, hand-curated)
-    //   2. Subject default image (auto-applied so every question gets a picture)
-    // Fallbacks gracefully: if the URL fails to load, the <img> is removed.
-    // Skipped on 'passage' questions because the passage already provides rich
-    // context — adding a banner there clutters the layout.
-    const qImgUrl = q.image
-      || (q.type !== 'passage' && quiz && SUBJECT_IMG[quiz.subject])
-      || null;
-    if(qImgUrl){
+    // Real image above the answer choices — ONLY shown when q.image is
+    // specifically set on the question. We do NOT auto-apply a generic
+    // subject default here: a random stock photo that doesn't match the
+    // specific question is worse than no image at all. Use `image: IMG.xxx`
+    // on individual questions where a specific topical photo helps.
+    if(q.image){
       const img = document.createElement('img');
       img.className='q-image';
       img.alt = q.imageAlt || '';
       img.loading='lazy';
-      img.src = qImgUrl;
+      img.src = q.image;
       img.onerror = ()=>img.remove();
       card.appendChild(img);
     }
@@ -4659,15 +4645,17 @@ function renderLesson(card,q){
   card.innerHTML='';card.classList.add('lesson-card');
   const L=q.lesson||{};
   card.appendChild(h('div',{class:'lesson-badge'},'🎓 QUICK LESSON'));
-  // Hero image (banner at the top). Priority: lesson.heroImage > subject default.
-  // Gracefully degrades if the URL 404s or the browser is offline.
-  const heroUrl = L.heroImage || (quiz && SUBJECT_IMG[quiz.subject]);
-  if(heroUrl){
+  // Hero image — ONLY shown when lesson.heroImage is explicitly set.
+  // We don't auto-apply generic subject images: a generic "any math photo"
+  // doesn't actually match the specific lesson content, which was confusing.
+  // To add a banner, set `heroImage: IMG.xxx` on the lesson where you've
+  // verified the image matches.
+  if(L.heroImage){
     const img = document.createElement('img');
     img.className = 'lesson-hero';
     img.alt = L.title || '';
     img.loading = 'lazy';
-    img.src = heroUrl;
+    img.src = L.heroImage;
     img.onload = ()=>img.classList.add('loaded');
     img.onerror = ()=>img.remove();   // fail silently; text content still shines
     card.appendChild(img);
