@@ -523,6 +523,41 @@ img{max-width:100%}
 .lesson-video-wrap iframe{position:absolute;inset:0;width:100%;height:100%;border:0;display:block}
 .lesson-videos-title{font-size:12px;font-weight:800;color:var(--primary);letter-spacing:.06em;text-transform:uppercase;margin:14px 0 6px}
 
+/* ---- MAINTENANCE SCREEN ----
+   Shown when MAINTENANCE_MODE = true in the script section.
+   Teacher can bypass with ?admin=1 to continue working normally. */
+.maintenance-screen{position:fixed;inset:0;z-index:9999;background:linear-gradient(160deg,#6C5CE7 0%,#A29BFE 50%,#FD79A8 100%);display:flex;align-items:center;justify-content:center;padding:24px;font-family:inherit;color:#fff;text-align:center}
+.maintenance-card{max-width:520px;width:100%;background:rgba(255,255,255,.12);backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,.25);border-radius:24px;padding:44px 32px;box-shadow:0 20px 60px rgba(26,16,53,.35)}
+.maintenance-rocket{font-size:88px;display:inline-block;animation:rocketBob 2.4s ease-in-out infinite}
+@keyframes rocketBob{0%,100%{transform:translateY(0) rotate(-8deg)}50%{transform:translateY(-10px) rotate(8deg)}}
+.maintenance-gear{font-size:48px;display:inline-block;animation:gearSpin 4s linear infinite;margin-left:6px}
+@keyframes gearSpin{to{transform:rotate(360deg)}}
+.maintenance-title{font-size:clamp(26px,4vw,36px);font-weight:900;margin:18px 0 10px;letter-spacing:-.02em}
+.maintenance-msg{font-size:clamp(16px,2.2vw,19px);line-height:1.55;opacity:.92;margin:0 0 22px}
+.maintenance-footer{font-size:13px;opacity:.7;margin-top:26px;letter-spacing:.02em}
+.maintenance-dots{display:inline-flex;gap:6px;margin-top:10px}
+.maintenance-dots span{width:10px;height:10px;border-radius:50%;background:#fff;opacity:.55;animation:dotPulse 1.4s ease-in-out infinite}
+.maintenance-dots span:nth-child(2){animation-delay:.2s}
+.maintenance-dots span:nth-child(3){animation-delay:.4s}
+@keyframes dotPulse{0%,100%{opacity:.25;transform:scale(.8)}50%{opacity:1;transform:scale(1.2)}}
+.maint-unlock{margin-top:28px;background:rgba(255,255,255,.2);color:#fff;border:1px solid rgba(255,255,255,.4);padding:10px 20px;border-radius:999px;font-weight:700;font-size:14px;cursor:pointer;transition:all .2s;font-family:inherit;letter-spacing:.02em}
+.maint-unlock:hover{background:rgba(255,255,255,.3);transform:translateY(-1px)}
+.maint-unlock:active{transform:translateY(0)}
+/* Teacher maintenance controls (in dashboard) */
+.t-maint{background:#fff;border-radius:16px;padding:22px 22px 18px;margin-top:24px;box-shadow:var(--shadow);border:2px dashed rgba(108,92,231,.25)}
+.t-maint-title{font-size:18px;font-weight:800;margin:0 0 4px;color:var(--ink)}
+.t-maint-sub{font-size:13px;color:var(--ink3);margin:0 0 14px;font-weight:600}
+.t-maint-pill{display:inline-block;padding:6px 14px;border-radius:999px;font-weight:800;font-size:13px;margin-bottom:14px}
+.t-maint-pill.on{background:#ffe5e5;color:#c0392b}
+.t-maint-pill.off{background:#d7f8e8;color:#0b8c56}
+.t-maint-label{display:block;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);margin:8px 0 6px}
+.t-maint-textarea{width:100%;min-height:70px;padding:12px;border:2px solid #e8e6f0;border-radius:12px;font-family:inherit;font-size:14px;resize:vertical;box-sizing:border-box}
+.t-maint-textarea:focus{outline:none;border-color:var(--primary)}
+.t-maint-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+.t-maint-foot{font-size:11px;color:var(--ink3);margin-top:10px;font-weight:600}
+.btn-danger{background:linear-gradient(180deg,#ff6b6b 0%,#c0392b 100%);color:#fff;border-color:#fff;box-shadow:0 8px 22px rgba(192,57,43,.35),inset 0 -4px 0 rgba(0,0,0,.2)}
+.btn-danger:hover{transform:translateY(-3px) scale(1.03);box-shadow:0 14px 30px rgba(192,57,43,.5),inset 0 -4px 0 rgba(0,0,0,.2)}
+
 /* ---- REWARD OVERLAY ---- */
 .reward-overlay{position:fixed;inset:0;z-index:100;background:rgba(26,16,53,.45);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;padding:24px}
 .reward-overlay.show{display:flex;animation:fadeIn .3s}
@@ -3521,6 +3556,14 @@ const EMAIL_CONFIG = {
 //   coin_cost, approx_price, remaining_coins, requested_at,
 //   item_id, amazon_link
 
+/* ========== MAINTENANCE MODE ==========
+   Maintenance is toggled from the Teacher Dashboard (no code edit needed).
+   State lives in allData.maintenance — synced across devices via the cloud.
+   Unlocking the gate requires the teacher password (same as TEACHER_CREDS).
+   Progress (stars/coins/activities) is untouched while the gate is up. */
+const DEFAULT_MAINTENANCE_MESSAGE = "We're adding new lessons and polish! Come back in a few minutes — your stars and coins are safe. 🌟";
+const MAINTENANCE_BYPASS_KEY = 'kidquest-maint-bypass';
+
 /* ========== STATE & PERSISTENCE ========== */
 /* APP_VERSION is stored with the data; if a user has OLD incompatible data
    from a previous version, we auto-clear it to avoid the app breaking. */
@@ -3545,6 +3588,8 @@ const defaultAll = () => ({
   // catalogOverrides{} lets teacher edit items live without touching source.
   orders: [],
   catalogOverrides: {},
+  // Maintenance mode — teacher toggles from dashboard, synced via cloud.
+  maintenance: { active: false, message: DEFAULT_MAINTENANCE_MESSAGE, updatedAt: 0 },
   updatedAt:0
 });
 
@@ -3580,6 +3625,13 @@ let allData = (function(){
     d.teacher = (p.teacher && typeof p.teacher === 'object') ? p.teacher : {lastLogin:0};
     d.orders = Array.isArray(p.orders) ? p.orders : [];
     d.catalogOverrides = (p.catalogOverrides && typeof p.catalogOverrides==='object') ? p.catalogOverrides : {};
+    if(p.maintenance && typeof p.maintenance==='object'){
+      d.maintenance = {
+        active: !!p.maintenance.active,
+        message: typeof p.maintenance.message === 'string' && p.maintenance.message.trim() ? p.maintenance.message : DEFAULT_MAINTENANCE_MESSAGE,
+        updatedAt: typeof p.maintenance.updatedAt === 'number' ? p.maintenance.updatedAt : 0,
+      };
+    }
     d.updatedAt = typeof p.updatedAt === 'number' ? p.updatedAt : 0;
     return d;
   }catch(e){
@@ -3647,7 +3699,33 @@ function initCloud(){
   document.addEventListener('visibilitychange',()=>{if(!document.hidden)pullCloud(false)});
 }
 async function pullCloud(init){
-  try{const r=await fetch(CLOUD_URL+'?_='+Date.now(),{cache:'no-store'});if(!r.ok)throw 0;const t=await r.text();if(!t)return;const d=JSON.parse(t);if(!d||!d.users)return;if((d.updatedAt||0)<=(allData.updatedAt||0))return;STUDENTS.forEach(s=>{allData.users[s.id]=Object.assign(defaultUser(),d.users[s.id]||{})});if(Array.isArray(d.orders))allData.orders=d.orders;if(d.catalogOverrides&&typeof d.catalogOverrides==='object')allData.catalogOverrides=d.catalogOverrides;allData.updatedAt=d.updatedAt;if(currentUser)state=allData.users[currentUser];try{localStorage.setItem(STORAGE_KEY,JSON.stringify(allData))}catch(e){}if(!init&&currentScreen&&currentScreen!=='activity')go(currentScreen,currentOpts)}catch(e){if(init)throw e}
+  try{
+    const r=await fetch(CLOUD_URL+'?_='+Date.now(),{cache:'no-store'});if(!r.ok)throw 0;
+    const t=await r.text();if(!t)return;
+    const d=JSON.parse(t);if(!d||!d.users)return;
+    if((d.updatedAt||0)<=(allData.updatedAt||0))return;
+    STUDENTS.forEach(s=>{allData.users[s.id]=Object.assign(defaultUser(),d.users[s.id]||{})});
+    if(Array.isArray(d.orders))allData.orders=d.orders;
+    if(d.catalogOverrides&&typeof d.catalogOverrides==='object')allData.catalogOverrides=d.catalogOverrides;
+    // Maintenance state — sync so kids on other devices see the gate flip
+    if(d.maintenance&&typeof d.maintenance==='object'){
+      allData.maintenance={
+        active: !!d.maintenance.active,
+        message: typeof d.maintenance.message==='string'&&d.maintenance.message.trim() ? d.maintenance.message : DEFAULT_MAINTENANCE_MESSAGE,
+        updatedAt: typeof d.maintenance.updatedAt==='number' ? d.maintenance.updatedAt : 0,
+      };
+    }
+    allData.updatedAt=d.updatedAt;
+    if(currentUser)state=allData.users[currentUser];
+    try{localStorage.setItem(STORAGE_KEY,JSON.stringify(allData))}catch(e){}
+    // If maintenance just turned ON (and we're not bypassed), hijack the screen.
+    // Unless kid is mid-activity — let them finish, they'll gate on next screen change.
+    if(!init && allData.maintenance && allData.maintenance.active && !isMaintenanceBypassed() && !isTeacher && currentScreen!=='activity'){
+      renderMaintenanceScreen();
+      return;
+    }
+    if(!init&&currentScreen&&currentScreen!=='activity')go(currentScreen,currentOpts);
+  }catch(e){if(init)throw e}
 }
 async function syncToCloud(){
   if(cloudBusy){pendingWrite=true;return}cloudBusy=true;
@@ -5671,6 +5749,9 @@ function renderTeacher(root){
   // Store management: reward requests + catalog editor + stats
   try { dash.appendChild(renderTeacherStore()); }
   catch(e){ console.warn('[KidQuest] teacher store failed:',e); }
+  // Maintenance mode toggle
+  try { dash.appendChild(renderMaintenanceControls()); }
+  catch(e){ console.warn('[KidQuest] maintenance controls failed:',e); }
   // Controls — export/import/reset
   const ctrl=h('div',{class:'t-controls'},[
     h('button',{class:'btn btn-ghost',onclick:()=>{
@@ -5710,6 +5791,68 @@ function renderTeacher(root){
   ]);
   dash.appendChild(ctrl);
   root.appendChild(dash);
+}
+
+/* ==========================================================================
+   MAINTENANCE MODE — Teacher controls
+   --------------------------------------------------------------------------
+   Renders a card inside the teacher dashboard with:
+     - A big toggle button (ON/OFF) for maintenance mode
+     - Editable message students see on the gated screen
+     - Last-updated timestamp
+   State persists to allData.maintenance via saveState() → cloud sync.
+   Kids on other devices pick it up on next poll (POLL_MS = 25s) or reload.
+   ========================================================================== */
+function renderMaintenanceControls(){
+  if(!allData.maintenance) allData.maintenance = { active:false, message:DEFAULT_MAINTENANCE_MESSAGE, updatedAt:0 };
+  const m = allData.maintenance;
+  const wrap = h('div',{class:'t-maint'});
+  wrap.appendChild(h('h3',{class:'t-maint-title'},'🛠️ Maintenance Mode'));
+  wrap.appendChild(h('p',{class:'t-maint-sub'},
+    m.active ? 'Site is CURRENTLY gated for kids. Turn OFF when you\'re done editing.'
+             : 'Turn ON to show kids a "site is updating" screen. Progress is safe.'));
+  const statusPill = h('div',{class:'t-maint-pill '+(m.active?'on':'off')},
+    m.active ? '🔴 ON — kids see maintenance screen' : '🟢 OFF — site is live');
+  wrap.appendChild(statusPill);
+
+  // Editable message
+  const msgLabel = h('label',{class:'t-maint-label',for:'tMaintMsg'},'Message shown to students:');
+  const msgInput = h('textarea',{id:'tMaintMsg',class:'t-maint-textarea',rows:3,placeholder:DEFAULT_MAINTENANCE_MESSAGE},m.message || DEFAULT_MAINTENANCE_MESSAGE);
+  wrap.appendChild(msgLabel);
+  wrap.appendChild(msgInput);
+
+  // Action buttons
+  const actions = h('div',{class:'t-maint-actions'});
+  const toggleBtn = h('button',{class:'btn '+(m.active?'btn-ghost':'btn-danger'),onclick:()=>{
+    const newActive = !m.active;
+    const verb = newActive ? 'TURN ON' : 'TURN OFF';
+    const warn = newActive
+      ? 'Turn maintenance mode ON?\n\nKids on other devices will see the maintenance screen within ~25 seconds (next cloud sync) or on next page load. Their stars and coins are NOT affected.'
+      : 'Turn maintenance mode OFF?\n\nKids will regain access within ~25 seconds or on next page load.';
+    if(!confirm(warn)) return;
+    allData.maintenance = {
+      active: newActive,
+      message: (msgInput.value && msgInput.value.trim()) || DEFAULT_MAINTENANCE_MESSAGE,
+      updatedAt: Date.now(),
+    };
+    saveState();
+    go('teacher');
+  }}, m.active ? '🟢 Turn OFF maintenance' : '🔴 Turn ON maintenance');
+  const saveMsgBtn = h('button',{class:'btn btn-ghost',onclick:()=>{
+    const newMsg = (msgInput.value && msgInput.value.trim()) || DEFAULT_MAINTENANCE_MESSAGE;
+    allData.maintenance = Object.assign({active:!!m.active, updatedAt:Date.now()}, {message:newMsg});
+    saveState();
+    alert('Message saved.');
+  }},'💾 Save message only');
+  actions.appendChild(toggleBtn);
+  actions.appendChild(saveMsgBtn);
+  wrap.appendChild(actions);
+
+  if(m.updatedAt){
+    const d = new Date(m.updatedAt);
+    wrap.appendChild(h('div',{class:'t-maint-foot'},'Last changed: '+d.toLocaleString()));
+  }
+  return wrap;
 }
 
 /* ==========================================================================
@@ -5922,19 +6065,65 @@ try {
   });
 } catch(e) { console.warn('[KidQuest] Button wiring failed:',e); }
 
+// Maintenance gate: if allData.maintenance.active is true AND the teacher
+// hasn't unlocked (via password), show the holding screen instead of the app.
+// Teacher unlock persists in sessionStorage for the current tab session only
+// — closing the tab re-gates; a fresh open requires password again.
+function renderMaintenanceScreen(){
+  const msg = (allData.maintenance && allData.maintenance.message) || DEFAULT_MAINTENANCE_MESSAGE;
+  const root = document.getElementById('screen') || document.body;
+  // Escape HTML in the user-editable message so it can't break the DOM
+  const safeMsg = String(msg).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  root.innerHTML = ''
+    + '<div class="maintenance-screen">'
+    +   '<div class="maintenance-card">'
+    +     '<div><span class="maintenance-rocket">🚀</span><span class="maintenance-gear">⚙️</span></div>'
+    +     '<h1 class="maintenance-title">KidQuest is getting an upgrade!</h1>'
+    +     '<p class="maintenance-msg">' + safeMsg + '</p>'
+    +     '<div class="maintenance-dots"><span></span><span></span><span></span></div>'
+    +     '<div class="maintenance-footer">Tutor Rhahavy is working on something new. 🛠️</div>'
+    +     '<button class="maint-unlock" id="maintUnlockBtn">🔑 Teacher unlock</button>'
+    +   '</div>'
+    + '</div>';
+  const btn = document.getElementById('maintUnlockBtn');
+  if(btn) btn.addEventListener('click', promptMaintenanceUnlock);
+}
+function promptMaintenanceUnlock(){
+  const pw = prompt('Teacher password to unlock:');
+  if(pw === null) return; // user cancelled
+  if(pw === TEACHER_CREDS.password){
+    try{ sessionStorage.setItem(MAINTENANCE_BYPASS_KEY,'1'); }catch(e){}
+    location.reload();
+  } else {
+    alert('Incorrect password.');
+  }
+}
+function isMaintenanceBypassed(){
+  try{ return sessionStorage.getItem(MAINTENANCE_BYPASS_KEY) === '1'; }catch(e){ return false; }
+}
+const __maintenanceActive = (function(){
+  const m = allData && allData.maintenance;
+  if(!m || !m.active) return false;
+  if(isMaintenanceBypassed()) return false;
+  renderMaintenanceScreen();
+  return true;
+})();
+
 // Always land on the home screen on fresh page load.
 // The profile picker handles multi-student sharing — each kid picks their
 // name + re-enters the PIN every session. This prevents the site from
 // opening into whoever was last logged in on that device (which is wrong
 // for a shared tutoring setup).
-try {
-  currentUser = null; state = null; isTeacher = false;
-  try{ localStorage.removeItem(LOCAL_USER_KEY); }catch(e){}
-  go('home');
-} catch(e) {
-  console.error('[KidQuest] Initial routing failed, forcing home:',e);
-  currentUser=null; state=null;
-  try{ go('home'); }catch(e2){ document.getElementById('screen').innerHTML='<div style="padding:40px;text-align:center"><h2>KidQuest</h2><p>Something went wrong. <button onclick="localStorage.clear();location.reload()" style="padding:12px 24px;background:#6C5CE7;color:#fff;border:none;border-radius:12px;font-weight:700;cursor:pointer">Reset & Reload</button></p></div>'; }
+if(!__maintenanceActive){
+  try {
+    currentUser = null; state = null; isTeacher = false;
+    try{ localStorage.removeItem(LOCAL_USER_KEY); }catch(e){}
+    go('home');
+  } catch(e) {
+    console.error('[KidQuest] Initial routing failed, forcing home:',e);
+    currentUser=null; state=null;
+    try{ go('home'); }catch(e2){ document.getElementById('screen').innerHTML='<div style="padding:40px;text-align:center"><h2>KidQuest</h2><p>Something went wrong. <button onclick="localStorage.clear();location.reload()" style="padding:12px 24px;background:#6C5CE7;color:#fff;border:none;border-radius:12px;font-weight:700;cursor:pointer">Reset & Reload</button></p></div>'; }
+  }
 }
 </script>
 </body>
