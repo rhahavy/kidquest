@@ -266,9 +266,12 @@ img{max-width:100%}
 .demo-banner-left{display:flex;align-items:center;gap:12px;flex-wrap:wrap;flex:1;min-width:200px}
 .demo-banner-tag{background:#fd79a8;color:#fff;font-weight:900;letter-spacing:.1em;font-size:11px;padding:4px 10px;border-radius:999px;box-shadow:0 4px 12px rgba(253,121,168,.3)}
 .demo-banner-msg{font-size:13px;font-weight:700;color:var(--ink);line-height:1.4}
+.demo-banner-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.demo-banner-switch{background:#fff;color:var(--primary);border:1.5px solid rgba(108,92,231,.35);padding:8px 14px;border-radius:999px;font-weight:800;font-size:13px;cursor:pointer;transition:all .25s ease;font-family:inherit;white-space:nowrap;display:inline-flex;align-items:center;gap:6px}
+.demo-banner-switch:hover{background:rgba(108,92,231,.08);border-color:var(--primary);transform:translateY(-1px);box-shadow:0 6px 14px rgba(108,92,231,.18)}
 .demo-banner-exit{background:rgba(26,16,53,.85);color:#fff;border:none;padding:8px 16px;border-radius:999px;font-weight:800;font-size:13px;cursor:pointer;transition:all .25s ease;font-family:inherit;white-space:nowrap}
 .demo-banner-exit:hover{background:var(--ink);transform:translateY(-1px);box-shadow:0 6px 14px rgba(26,16,53,.25)}
-@media(max-width:520px){.demo-banner{flex-direction:column;align-items:stretch}.demo-banner-exit{align-self:flex-end}}
+@media(max-width:520px){.demo-banner{flex-direction:column;align-items:stretch}.demo-banner-actions{align-self:flex-end}}
 
 /* ---- PIN SCREEN ---- */
 .pin-screen{margin-top:28px;text-align:center}
@@ -7164,11 +7167,21 @@ function renderDashboard(root){
           `You're previewing the ${s.grade} student experience. ` +
           `Nothing you do here is saved.`),
       ]),
-      h('button',{class:'demo-banner-exit',onclick:()=>{
-        // Drop the in-memory demo user so a re-entry starts fresh
-        delete allData.users[currentUser];
-        logout();
-      }},'✕ Exit Demo'),
+      h('div',{class:'demo-banner-actions'},[
+        // Switch Grade — skip the PIN gate (they're already in demo mode)
+        // and drop the current in-memory demo user so the next pick starts
+        // fresh at Level 1 of whatever grade the parent chooses.
+        h('button',{class:'demo-banner-switch',onclick:()=>{
+          delete allData.users[currentUser];
+          currentUser = null; state = null;
+          go('demo-grade');
+        }},'🎓 Switch Grade'),
+        h('button',{class:'demo-banner-exit',onclick:()=>{
+          // Drop the in-memory demo user so a re-entry starts fresh
+          delete allData.users[currentUser];
+          logout();
+        }},'✕ Exit Demo'),
+      ]),
     ]));
   }
   const hero=h('div',{class:'dash-hero c-'+currentUser},[
