@@ -6743,6 +6743,15 @@ function renderPin(root, sid){
    and logs them in. */
 function renderPinSetup(root, sid, s){
   const wrap = h('div',{class:'pin-setup'});
+  // Top-left back button — if a kid tapped the wrong profile by mistake
+  // they shouldn't be trapped in first-time setup. The secondary "← Back"
+  // at the bottom of the form stays as well.
+  wrap.appendChild(h('button',{
+    class:'pin-back',
+    type:'button',
+    style:'display:inline-block;margin:0 0 12px;background:none;border:none;cursor:pointer;font-family:inherit',
+    onclick:()=>go('profiles'),
+  }, '← Pick someone else'));
   wrap.appendChild(h('div',{class:'who',style:'justify-content:center'},[
     h('div',{class:'av c-'+sid,style:'background:linear-gradient(135deg,'+s.color+','+s.color+')'},s.initial),
   ]));
