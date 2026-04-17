@@ -272,6 +272,32 @@ img{max-width:100%}
 @keyframes wave{0%,100%{transform:translateY(-50%) rotate(0)}25%{transform:translateY(-50%) rotate(15deg)}75%{transform:translateY(-50%) rotate(-15deg)}}
 .dash-hero .mascot-wrap{margin-left:auto;align-self:center}
 @media(max-width:640px){.dash-hero .mascot-wrap{margin-left:0;width:100%;justify-content:flex-start}.dash-hero .mascot-wrap .speech-bubble{max-width:none}}
+
+/* ==========================================================================
+   AVATAR PICKER — grid of emoji choices kids can pick for their tile
+   ========================================================================== */
+.av-emoji{font-family:'Apple Color Emoji','Segoe UI Emoji',system-ui,sans-serif!important;font-weight:normal!important}
+.dash-hero .av.av-emoji{font-size:56px}
+.avatar.av-emoji{font-size:38px}
+.avatar-preview{display:flex;align-items:center;gap:18px;margin:24px 0 8px;padding:20px 22px;background:var(--card);border-radius:var(--r-lg);box-shadow:var(--shadow);border:1.5px solid rgba(255,255,255,.9)}
+.avatar-preview .av{width:88px;height:88px;border-radius:24px;display:grid;place-items:center;font-size:48px;color:#fff;font-weight:700;font-family:var(--font-display);border:3px solid #fff;box-shadow:0 10px 22px rgba(26,16,53,.18);flex-shrink:0}
+.avatar-preview .av.av-emoji{font-size:48px}
+.avatar-preview-info{flex:1;min-width:0}
+.avatar-preview .ap-name{font-size:22px;font-weight:800;color:var(--ink)}
+.avatar-preview .ap-hint{font-size:14px;color:var(--ink2);margin-top:4px}
+.avatar-grid{margin-top:18px;display:grid;gap:10px;grid-template-columns:repeat(auto-fill,minmax(68px,1fr))}
+.avatar-choice{background:#fff;border:2px solid var(--line);border-radius:18px;padding:10px;cursor:pointer;display:grid;place-items:center;min-height:68px;font-size:36px;line-height:1;transition:all .25s var(--spring);font-family:inherit;color:var(--ink);position:relative;box-shadow:var(--shadow)}
+.avatar-choice:hover{transform:translateY(-3px) scale(1.05);border-color:var(--primary);box-shadow:0 10px 22px rgba(108,92,231,.2)}
+.avatar-choice:active{transform:translateY(0) scale(.97)}
+.avatar-choice.active{border-color:var(--primary);background:linear-gradient(135deg,rgba(108,92,231,.12),rgba(253,121,168,.08));box-shadow:0 0 0 3px rgba(108,92,231,.3),0 10px 22px rgba(108,92,231,.25)}
+.avatar-choice.active::after{content:'✓';position:absolute;top:4px;right:6px;width:18px;height:18px;border-radius:50%;background:var(--primary);color:#fff;font-size:11px;font-weight:900;display:grid;place-items:center}
+.avatar-choice.reset{background:linear-gradient(135deg,#fafaff,#eeeaff)}
+.avatar-choice .ac-letter{font-family:var(--font-display);font-size:28px;font-weight:700;color:var(--primary)}
+.avatar-choice .ac-emoji{font-family:'Apple Color Emoji','Segoe UI Emoji',system-ui,sans-serif;font-size:36px}
+
+/* "Change avatar" button on the dashboard hero */
+.dash-hero .change-avatar-btn{margin-top:6px;background:rgba(108,92,231,.12);color:var(--primary);border:1.5px solid rgba(108,92,231,.2);border-radius:999px;padding:4px 12px;font-size:12px;font-weight:700;cursor:pointer;transition:all .2s ease;font-family:inherit}
+.dash-hero .change-avatar-btn:hover{background:rgba(108,92,231,.22);transform:translateY(-1px)}
 .dash-hero .av{width:100px;height:100px;border-radius:28px;display:grid;place-items:center;font-size:52px;color:#fff;font-weight:700;font-family:var(--font-display);border:3px solid #fff;box-shadow:0 12px 26px rgba(26,16,53,.2),inset 0 -4px 0 rgba(0,0,0,.18);flex-shrink:0;transition:transform .4s var(--spring)}
 .dash-hero:hover .av{transform:rotate(-4deg) scale(1.04)}
 .dash-hero .info{flex:1;min-width:200px}
@@ -3644,7 +3670,8 @@ const POLL_MS = 25000;
 const defaultUser = () => ({
   totalStars:0, coins:0, streak:0, lastActiveDate:'',
   badges:{}, progress:{}, completedActivities:{}, perfectActivities:{},
-  wishlist: []   // array of STORE_ITEMS ids the student has saved for later
+  wishlist: [],  // array of STORE_ITEMS ids the student has saved for later
+  avatar: null   // optional emoji string — overrides initial-letter tile when set
 });
 const defaultAll = () => ({
   users: Object.fromEntries(STUDENTS.map(s=>[s.id, defaultUser()])),
@@ -4640,6 +4667,7 @@ function go(screen,opts={}){
     else if(screen==='week') renderWeek(root,opts.subject);
     else if(screen==='activity') renderActivity(root,opts.activityId,opts.subject);
     else if(screen==='badges') renderBadges(root);
+    else if(screen==='avatars') renderAvatarPicker(root);
     else if(screen==='store') renderStore(root);
     else if(screen==='orders') renderOrders(root);
     else if(screen==='teacher') renderTeacher(root);
@@ -4679,7 +4707,7 @@ function renderProfiles(root){
     const ud=getStudentData(s.id);
     grid.appendChild(h('button',{class:'profile-card c-'+s.id,onclick:()=>go('pin',{student:s.id})},[
       h('div',{class:'avatar-wrap'},[
-        h('div',{class:'avatar'},s.initial),
+        buildAvatarTile(s.id,'avatar'),
         h('span',{class:'avatar-chip'},s.decoEmoji),
       ]),
       h('h3',{},s.name),
@@ -4931,10 +4959,12 @@ function renderDashboard(root){
   if(!currentUser||!state){go('home');return}
   const s=getStudentInfo(currentUser);
   const hero=h('div',{class:'dash-hero c-'+currentUser},[
-    h('div',{class:'av',style:'background:linear-gradient(135deg,'+s.color+','+s.color+')'},s.initial),
+    buildAvatarTile(currentUser,'av'),
     h('div',{class:'info'},[
       h('h1',{},'Hi, '+s.name+'!'),
       h('span',{class:'grade-pill'},s.grade),
+      h('br'),
+      h('button',{class:'change-avatar-btn',onclick:()=>go('avatars')}, '🎨 Change avatar'),
     ]),
   ]);
   // Nova the alien mascot — greets by time-of-day, deterministic per kid per day.
@@ -6045,6 +6075,80 @@ function renderOrders(root){
     ]));
   });
   root.appendChild(list);
+}
+
+/* ========== AVATAR ==========
+   Each student can optionally pick an emoji avatar to replace the default
+   initial-letter tile. Stored as a single emoji string on ud.avatar (null =
+   use the letter). Shown on: profile picker, login screen, dashboard hero,
+   reward overlay. Accessible from a "Change avatar" button on the dashboard.
+*/
+const AVATAR_CHOICES = [
+  '🦊','🦁','🐯','🐼','🐸','🐵','🐰','🐻','🦄','🐶','🐱','🐙',
+  '🦖','🦋','🐢','🐧','🦉','🐝','🦀','🐳','🦩','🐞',
+  '⭐','🚀','🌈','⚡','🔥','❄️','🌟','☀️','🌙','🍀',
+  '🎮','🎨','🎵','🏀','⚽','🎯','🧩','🔮','💎','👑',
+  '🤖','👾','🧙','🧚','🦸','🥷','🐲','🧞',
+];
+/* Pick the best visual for a student's tile: their picked emoji OR initial. */
+function getStudentAvatarDisplay(sid){
+  const ud = allData.users[sid];
+  if(ud && ud.avatar) return { kind:'emoji', value: ud.avatar };
+  const s = getStudentInfo(sid);
+  return { kind:'letter', value: s ? s.initial : '?' };
+}
+/* Build a DOM element for the avatar tile. `classes` is merged into the tile
+   class string — e.g. 'av c-isaiah' in the dashboard, 'avatar' on the picker. */
+function buildAvatarTile(sid, classes, inlineStyle){
+  const s = getStudentInfo(sid);
+  const disp = getStudentAvatarDisplay(sid);
+  const color = s ? s.color : '#6C5CE7';
+  const gradient = s && s.colorLight && s.colorDark
+    ? 'linear-gradient(135deg,'+s.colorLight+','+s.colorDark+')'
+    : 'linear-gradient(135deg,'+color+','+color+')';
+  const cls = (classes||'') + (disp.kind==='emoji' ? ' av-emoji' : '');
+  const style = 'background:'+gradient + (inlineStyle ? ';'+inlineStyle : '');
+  return h('div',{class: cls.trim(), style}, disp.value);
+}
+/* Avatar picker screen — grid of emoji choices + reset-to-letter option.
+   Saves on click and routes back to dashboard. */
+function renderAvatarPicker(root){
+  if(!currentUser||!state){go('home');return}
+  const s = getStudentInfo(currentUser);
+  root.appendChild(h('div',{class:'week-head'},[
+    h('h2',{},[h('span',{style:'font-size:24px;margin-right:8px'},'🎨'),h('span',{},'Choose Your Avatar')]),
+    h('button',{class:'back-btn',onclick:()=>go('dashboard')},'← Back'),
+  ]));
+  // Current avatar preview
+  const preview = h('div',{class:'avatar-preview'},[
+    buildAvatarTile(currentUser,'av'),
+    h('div',{class:'avatar-preview-info'},[
+      h('div',{class:'ap-name'}, s.name),
+      h('div',{class:'ap-hint'}, state.avatar ? 'Tap any emoji below to change.' : 'Tap any emoji below to make it yours!'),
+    ]),
+  ]);
+  root.appendChild(preview);
+  // "Use my letter" reset tile
+  const grid = h('div',{class:'avatar-grid stagger'});
+  const resetBtn = h('button',{
+    class:'avatar-choice reset'+(state.avatar ? '' : ' active'),
+    onclick:()=>{ state.avatar = null; saveState(); go('avatars'); },
+    title:'Use your initial',
+  },[ h('span',{class:'ac-letter'}, s.initial) ]);
+  grid.appendChild(resetBtn);
+  AVATAR_CHOICES.forEach(em=>{
+    const active = state.avatar === em;
+    const btn = h('button',{
+      class:'avatar-choice'+(active ? ' active' : ''),
+      onclick:()=>{ state.avatar = em; saveState(); go('avatars'); },
+    },[ h('span',{class:'ac-emoji'}, em) ]);
+    grid.appendChild(btn);
+  });
+  root.appendChild(grid);
+  // Save & back button
+  root.appendChild(h('div',{style:'margin-top:24px;display:flex;justify-content:center'},[
+    h('button',{class:'btn btn-primary',onclick:()=>go('dashboard')}, 'Done →'),
+  ]));
 }
 
 /* ========== BADGES ========== */
