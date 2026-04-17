@@ -439,11 +439,9 @@ img{max-width:100%}
 .lesson-card{background:linear-gradient(180deg,#faf9ff,#fff)!important;border:2px dashed rgba(253,203,110,.5)!important;text-align:left!important;padding:clamp(22px,3vw,32px)!important}
 .lesson-badge{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;background:linear-gradient(135deg,#ffeaa7,var(--sun));color:#5b3e00;border-radius:999px;font-size:11px;font-weight:800;letter-spacing:.06em}
 .lesson-title{font-size:clamp(20px,3vw,26px);font-weight:800;margin-top:12px}
-/* Big emoji visual at the top of every lesson — auto-populated from the
-   activity's emoji field, or from lesson.visual for a more specific override.
-   Supports multi-emoji combos (e.g. '🐘 🌳') that tell a mini story matching
-   the lesson — spaces render with consistent gap, flex-wrap for small screens. */
-.lesson-visual{font-size:clamp(64px,10vw,92px);text-align:center;line-height:1.1;margin:6px 0 -2px;filter:drop-shadow(0 6px 14px rgba(26,16,53,.14));animation:popIn .5s var(--spring);letter-spacing:.15em;word-spacing:.25em}
+/* Big emoji visual at the top of every lesson. Tight vertical rhythm so
+   the emoji sits close to the title below without awkward floating space. */
+.lesson-visual{font-size:clamp(56px,9vw,78px);text-align:center;line-height:1;margin:0 0 2px;padding:0;filter:drop-shadow(0 4px 10px rgba(26,16,53,.12));animation:popIn .5s var(--spring);letter-spacing:0;word-spacing:.1em}
 .lesson-intro{font-size:15px;color:var(--ink);line-height:1.5;margin:10px 0}
 .lesson-example{margin-top:14px;padding:14px 16px;background:#fff;border:1px solid rgba(116,185,255,.2);border-left:4px solid var(--sky);border-radius:var(--r);box-shadow:var(--shadow)}
 .lesson-example-label{font-size:11px;font-weight:800;color:var(--sky);letter-spacing:.06em;margin-bottom:6px}
@@ -816,13 +814,16 @@ img{max-width:100%}
 .t-wish-top-list span.cnt{background:rgba(255,64,129,.15);color:#c92a5c;padding:2px 8px;border-radius:999px;font-size:11px}
 
 /* ---- BADGES ---- */
-.badges-grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fill,minmax(140px,1fr))}
-.badge{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:18px;text-align:center;box-shadow:var(--shadow);transition:all .3s var(--spring)}
+/* Fixed minimum height + flex column = every badge tile is the SAME size.
+   Lock + name + desc vertically aligned across the grid, no matter whether
+   a name wraps to 1 or 2 lines. */
+.badges-grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}
+.badge{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px 14px;text-align:center;box-shadow:var(--shadow);transition:all .3s var(--spring);display:flex;flex-direction:column;align-items:center;justify-content:flex-start;min-height:150px}
 .badge:hover{transform:translateY(-3px)}
-.badge .b-ico{font-size:36px;margin-bottom:8px}
+.badge .b-ico{font-size:36px;margin:0 0 6px;line-height:1}
 .badge.locked .b-ico{filter:grayscale(1);opacity:.4}
-.badge .b-name{font-size:14px;font-weight:800}
-.badge .b-desc{font-size:12px;color:var(--ink3);margin-top:3px}
+.badge .b-name{font-size:14px;font-weight:800;line-height:1.2;min-height:34px;display:flex;align-items:center;justify-content:center}
+.badge .b-desc{font-size:12px;color:var(--ink3);margin-top:auto;padding-top:6px;line-height:1.3}
 
 /* ---- FOOTER ---- */
 .footer{margin-top:40px;text-align:center;padding:18px;font-size:13px;color:var(--ink3)}
@@ -4965,44 +4966,29 @@ function renderLesson(card,q){
   }
   if(L.hint) card.appendChild(h('div',{class:'lesson-hint'},['💡 ',L.hint]));
   // Inline embedded videos — kid-safe, kids NEVER leave the app.
-  // Priority:
-  //   1. activity.videoIds[] — hand-curated YouTube video IDs (up to 2 per
-  //      lesson). Embedded via youtube-nocookie.com.
-  //   2. VIDEOS[activityId] — pre-curated search query (set up for every
-  //      lesson already). Embedded via YouTube's listType=search player so
-  //      kids see topic-matched videos in an iframe — they pick & watch
-  //      without ever landing on youtube.com's recommendation feed.
-  // iv_load_policy=3 hides video annotations; rel=0 hides related videos;
-  // modestbranding=1 removes the YouTube logo.
+  // ONLY shows when activity.videoIds[] is set with real YouTube video IDs
+  // (up to 2 per lesson). Embedded via youtube-nocookie.com with rel=0,
+  // modestbranding=1, iv_load_policy=3 so there's no related-video feed,
+  // no YouTube branding, and no annotations.
+  // Note: we do NOT use YouTube's listType=search embed — Google deprecated
+  // it and it now shows "This video is unavailable". No video block is
+  // rendered when videoIds isn't set — cleaner than a broken iframe.
   const vidIds = (quiz && quiz.activity && Array.isArray(quiz.activity.videoIds))
                    ? quiz.activity.videoIds.filter(Boolean) : [];
-  const searchQuery = (typeof VIDEOS!=='undefined') ? VIDEOS[quiz.activityId] : null;
-  const makeVideoIframe = (src, title)=>{
-    const wrap = h('div',{class:'lesson-video-wrap'});
-    const iframe = document.createElement('iframe');
-    iframe.src = src;
-    iframe.title = title || 'Lesson video';
-    iframe.loading = 'lazy';
-    iframe.allow = 'encrypted-media; picture-in-picture; fullscreen';
-    iframe.referrerPolicy = 'strict-origin-when-cross-origin';
-    wrap.appendChild(iframe);
-    return wrap;
-  };
   if(vidIds.length){
     const box = h('div',{class:'lesson-videos'});
     card.appendChild(h('div',{class:'lesson-videos-title'}, '▶ Watch & learn'));
     vidIds.slice(0,2).forEach(id=>{
-      box.appendChild(makeVideoIframe(
-        'https://www.youtube-nocookie.com/embed/'+encodeURIComponent(id)+'?rel=0&modestbranding=1&iv_load_policy=3',
-        L.title || 'Lesson video'));
+      const wrap = h('div',{class:'lesson-video-wrap'});
+      const iframe = document.createElement('iframe');
+      iframe.src = 'https://www.youtube-nocookie.com/embed/'+encodeURIComponent(id)+'?rel=0&modestbranding=1&iv_load_policy=3';
+      iframe.title = L.title || 'Lesson video';
+      iframe.loading = 'lazy';
+      iframe.allow = 'encrypted-media; picture-in-picture; fullscreen';
+      iframe.referrerPolicy = 'strict-origin-when-cross-origin';
+      wrap.appendChild(iframe);
+      box.appendChild(wrap);
     });
-    card.appendChild(box);
-  } else if(searchQuery){
-    const box = h('div',{class:'lesson-videos'});
-    card.appendChild(h('div',{class:'lesson-videos-title'}, '▶ Watch & learn'));
-    box.appendChild(makeVideoIframe(
-      'https://www.youtube.com/embed?listType=search&list='+encodeURIComponent(searchQuery)+'&rel=0&modestbranding=1&iv_load_policy=3',
-      (L.title||'Lesson')+' videos'));
     card.appendChild(box);
   }
   quiz.locked=false;
@@ -5162,15 +5148,32 @@ function nextQ(){
   else finishActivity();
 }
 
+/* Pass threshold — kids need at least this % correct to mark the level
+   DONE. Below this and the level must be redone. 60% = 3 out of 5 for a
+   5-question activity. Edit to tune difficulty. */
+const PASS_THRESHOLD = 0.6;
+
 function finishActivity(){
   const a=quiz.activity;
   const scorable=a.questions.filter(q=>q.type!=='lesson').length||1; // 'write' type IS scorable (Level 3-4 = correct)
   const correct=quiz.correct;
-  let stars=1;if(correct/scorable>=.5)stars++;if(correct===scorable)stars++;
-  const coins=5+(correct===scorable?5:0);
+  const pct = correct/scorable;
+  const passed = pct >= PASS_THRESHOLD;
+  let stars=1;if(pct>=.5)stars++;if(correct===scorable)stars++;
+  // Reduced coin reward for failing tries — still some (effort counts) but
+  // not the full 5-coin completion bonus.
+  const coins = passed ? (5 + (correct===scorable?5:0)) : 2;
   if(correct===scorable) state.perfectActivities[a.id]=true;
-  state.progress[a.id]={best:Math.max((state.progress[a.id]||{}).best||0,correct),attempts:((state.progress[a.id]||{}).attempts||0)+1,done:true};
-  state.completedActivities[a.id]=true;
+  // Record the attempt regardless of pass/fail, so teacher sees progress.
+  state.progress[a.id]={
+    best:Math.max((state.progress[a.id]||{}).best||0, correct),
+    attempts:((state.progress[a.id]||{}).attempts||0)+1,
+    done: passed || ((state.progress[a.id]||{}).done === true),  // once passed, stays passed
+  };
+  // ONLY mark the activity as completed when they meet the pass threshold.
+  // This gates the level gating / badges / next-level unlock behind
+  // actually learning the material (not just clicking through).
+  if(passed) state.completedActivities[a.id]=true;
   state.totalStars+=stars;
   state.coins+=coins;
   // Badges
@@ -5194,12 +5197,22 @@ function finishActivity(){
   if(td>=20){let all=true;SUBJECTS.forEach(sub=>{const acts=getWeekActivities(currentUser,sub.id);acts.forEach(a=>{if(!state.completedActivities[a.id])all=false})});if(all)state.badges['week-complete']=true}
   saveState();updateTopbar('activity');
   // Reward overlay
-  const pct=correct/scorable;
-  const emoji=pct===1?'🏆':pct>=.7?'✨':pct>=.4?'👍':'💪';
-  const title=pct===1?'Perfect Score!':pct>=.7?'Awesome!':pct>=.4?'Great Try!':'Keep Going!';
-  const msg=pct===1?'Every answer right!':pct>=.7?'Really well done!':pct>=.4?'Nice effort!':'Practice makes perfect!';
+  const emoji = !passed ? '💪' : pct===1?'🏆':pct>=.7?'✨':'👍';
+  const title = !passed ? 'Almost There!'
+              : pct===1 ? 'Perfect Score!'
+              : pct>=.7 ? 'Awesome!'
+              : 'Great Job!';
+  const msg   = !passed ? 'You need '+Math.ceil(scorable*PASS_THRESHOLD)+'/'+scorable+' to pass. Try again — you\'ve got this!'
+              : pct===1 ? 'Every answer right!'
+              : pct>=.7 ? 'Really well done!'
+              : 'Nice effort!';
   $('#rwEmoji').textContent=emoji;$('#rwTitle').textContent=title;$('#rwMsg').textContent=msg;
   $('#rwStars').textContent='+'+stars;$('#rwCoins').textContent='+'+coins;$('#rwScore').textContent=correct+'/'+scorable;
+  // Change button labels based on pass/fail — failing means MUST retry.
+  const nextBtn = $('#rwNext');
+  const againBtn = $('#rwAgain');
+  if(nextBtn){ nextBtn.textContent = passed ? 'Continue →' : '🔁 Try Again'; nextBtn.dataset.mustRetry = passed ? '' : '1'; }
+  if(againBtn){ againBtn.style.display = passed ? '' : 'none'; } // hide 2nd retry button when already forced
   $('#reward').classList.add('show');
   if(pct>=.5)confettiBurst(pct===1?100:50);
 }
@@ -5885,10 +5898,19 @@ try {
     else go(currentUser?'dashboard':'home');
   });
   const rwNextEl = $('#rwNext');
-  if(rwNextEl) rwNextEl.addEventListener('click',()=>{
+  if(rwNextEl) rwNextEl.addEventListener('click',(e)=>{
     closeReward();
-    if(quiz && quiz.subject) go('week',{subject:quiz.subject});
-    else go(currentUser?'dashboard':'home');
+    // If the student scored below the pass threshold, the Next button was
+    // flipped to "🔁 Try Again" — restart the SAME activity instead of
+    // advancing. Gating the next level behind actually passing this one.
+    const mustRetry = e.currentTarget.dataset.mustRetry === '1';
+    if(mustRetry && quiz && quiz.activityId){
+      go('activity',{activityId:quiz.activityId,subject:quiz.subject});
+    } else if(quiz && quiz.subject){
+      go('week',{subject:quiz.subject});
+    } else {
+      go(currentUser?'dashboard':'home');
+    }
   });
 } catch(e) { console.warn('[KidQuest] Button wiring failed:',e); }
 
