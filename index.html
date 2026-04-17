@@ -4272,14 +4272,14 @@ function updateTopbar(screen){
   const nav=$('#nav'); const pills=$('#pills');
   nav.innerHTML=''; pills.innerHTML='';
   if(isTeacher){
-    nav.appendChild(h('button',{class:'nav-btn active',onclick:()=>go('teacher')},'Dashboard'));
-    nav.appendChild(h('button',{class:'nav-btn',onclick:logout},'Log Out'));
+    nav.appendChild(h('button',{class:'nav-btn active',onclick:()=>go('teacher')},'📊 Dashboard'));
+    nav.appendChild(h('button',{class:'nav-btn',onclick:logout},'🚪 Log Out'));
     return;
   }
   if(!currentUser) return;
-  const items=[{id:'dashboard',label:'Home'},{id:'store',label:'🛍️ Store'}];
+  const items=[{id:'dashboard',label:'🏠 Home'},{id:'store',label:'🛍️ Store'}];
   items.forEach(i=>{nav.appendChild(h('button',{class:'nav-btn'+(screen===i.id?' active':''),onclick:()=>go(i.id)},i.label))});
-  nav.appendChild(h('button',{class:'nav-btn',onclick:logout},'Switch'));
+  nav.appendChild(h('button',{class:'nav-btn',onclick:logout},'👤 Switch'));
   if(state){
     pills.appendChild(h('span',{class:'pill pill-star'},'⭐ '+state.totalStars));
     pills.appendChild(h('span',{class:'pill pill-coin'},'💰 '+state.coins));
