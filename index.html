@@ -1075,6 +1075,70 @@ img{max-width:100%}
   .emoji-pad{grid-template-columns:repeat(3,1fr);max-width:260px}
 }
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+
+/* ==========================================================================
+   POLISH PASS — micro-interactions, press states, and dopamine feedback
+   --------------------------------------------------------------------------
+   Purely additive. Pairs with hover states already defined earlier in the
+   stylesheet. Goal: every tappable surface has a press-in squish so kids
+   get tactile feedback, and coin/star awards feel celebratory.
+   ========================================================================== */
+
+/* --- Press-in feedback on the big interactive tiles (hover already defined) --- */
+.subj-card:active{transform:translateY(-2px) scale(.99)}
+.brain-break-btn:active{transform:translateY(-1px) scale(.97)}
+.dash-store-btn:active{transform:translateY(-1px) scale(.97)}
+.mg-tile:active{transform:translateY(-2px) scale(.99)}
+.feat:active{transform:translateY(-1px) scale(.99)}
+.choice:active:not(.locked){transform:translateY(0) scale(.97);transition:transform .08s ease}
+.qm-choice:active{transform:translateY(0) scale(.96);transition:transform .08s ease}
+.mg-card:not(.flipped):not(.matched):active .mg-card-inner{transform:scale(.93);transition:transform .1s ease}
+.mg-diff:active{transform:scale(.94)}
+
+/* --- Coin / star pill celebration pop on award ---
+   JS adds .pill-bump when the value increments; animation removes itself
+   via animationend in updateTopbar. */
+@keyframes pillBump{
+  0%{transform:scale(1) rotate(0)}
+  25%{transform:scale(1.3) rotate(-5deg)}
+  50%{transform:scale(.92) rotate(3deg)}
+  75%{transform:scale(1.1) rotate(-1deg)}
+  100%{transform:scale(1) rotate(0)}
+}
+.pill.pill-bump{animation:pillBump .6s var(--spring)}
+.pill.pill-bump.pill-coin{box-shadow:0 8px 20px rgba(255,180,0,.55),inset 0 -2px 0 rgba(139,90,0,.18)}
+.pill.pill-bump.pill-star{box-shadow:0 8px 20px rgba(255,213,79,.55),inset 0 -2px 0 rgba(160,106,0,.15)}
+
+/* --- Nav tab — smoother active indicator with press state --- */
+.nav-btn{transition:all .22s var(--spring)}
+.nav-btn:active{transform:translateY(1px) scale(.96)}
+
+/* --- Profile card — already has active, make the avatar chip dance on hover --- */
+.profile-card:hover .avatar-chip{transform:scale(1.2) rotate(12deg)}
+.avatar-chip{transition:transform .3s var(--spring)}
+
+/* --- Subject card progress bar — bar-fill is already animated; make the
+       whole bar glow slightly brighter on parent hover --- */
+.subj-card:hover .s-bar{box-shadow:inset 0 0 0 1px rgba(108,92,231,.15)}
+.subj-card .s-bar{transition:box-shadow .3s}
+
+/* --- Dashboard hero avatar wobble on hover — lightweight, playful --- */
+.dash-hero .av{transition:transform .35s var(--spring)}
+.dash-hero:hover .av{transform:rotate(-4deg) scale(1.04)}
+
+/* --- Mini-game difficulty pill — active state pairs with existing hover --- */
+.mg-diff{transition:all .2s var(--spring)}
+
+/* --- Write/type inputs — soft focus ring (a11y + polish) --- */
+.write-textarea:focus,.t-field:focus,.t-maint-textarea:focus{box-shadow:0 0 0 4px rgba(108,92,231,.15)}
+
+/* --- Stat-card number — gentle scale-in on mount (respects reduced-motion via global rule) --- */
+@keyframes numPop{from{transform:scale(.82);opacity:0}60%{transform:scale(1.08)}to{transform:scale(1);opacity:1}}
+.d-stat .num{animation:numPop .55s var(--spring) both}
+
+/* --- Reward / memory-win overlay close button absent — add ESC affordance hint?
+       (Skipped — tapping outside not desired; kids should read the buttons.) --- */
+
 </style>
 <!-- EmailJS SDK (optional) — only sends if keys are configured in EMAIL_CONFIG.
      Safe to leave loaded even when unconfigured: no requests fire without keys. -->
@@ -3888,6 +3952,8 @@ function loginTeacher(){
 
 function logout(){
   currentUser=null; isTeacher=false; state=null;
+  // Reset topbar bump-cache so the next login doesn't see a bogus delta.
+  _prevTopbarUser = null; _prevTopbarStars = 0; _prevTopbarCoins = 0;
   try{localStorage.removeItem(LOCAL_USER_KEY)}catch(e){}
   go('home');
 }
@@ -4723,6 +4789,10 @@ function updateOrderStatus(orderId, status, refund){
 }
 
 /* ========== TOPBAR ========== */
+// Cached prev values so we can detect when stars/coins increase and bump
+// the corresponding topbar pill. Per-user so a profile switch doesn't
+// accidentally fire a bump. Reset in logout() / loginAs().
+let _prevTopbarUser = null, _prevTopbarStars = 0, _prevTopbarCoins = 0;
 function updateTopbar(screen){
   const nav=$('#nav'); const pills=$('#pills');
   nav.innerHTML=''; pills.innerHTML='';
@@ -4736,8 +4806,21 @@ function updateTopbar(screen){
   items.forEach(i=>{nav.appendChild(h('button',{class:'nav-btn'+(screen===i.id?' active':''),onclick:()=>go(i.id)},i.label))});
   nav.appendChild(h('button',{class:'nav-btn',onclick:logout},'👤 Switch'));
   if(state){
-    pills.appendChild(h('span',{class:'pill pill-star'},'⭐ '+state.totalStars));
-    pills.appendChild(h('span',{class:'pill pill-coin'},'💰 '+state.coins));
+    // Bump only when the SAME user's value went UP since last update —
+    // avoids false positives on first render / user switch.
+    const sameUser   = _prevTopbarUser === currentUser;
+    const starsBump  = sameUser && state.totalStars > _prevTopbarStars;
+    const coinsBump  = sameUser && state.coins      > _prevTopbarCoins;
+    const starPill   = h('span',{class:'pill pill-star'+(starsBump?' pill-bump':'')},'⭐ '+state.totalStars);
+    const coinPill   = h('span',{class:'pill pill-coin'+(coinsBump?' pill-bump':'')},'💰 '+state.coins);
+    // Remove the bump class once the animation ends so it can re-trigger next time.
+    starPill.addEventListener('animationend', ()=>starPill.classList.remove('pill-bump'));
+    coinPill.addEventListener('animationend', ()=>coinPill.classList.remove('pill-bump'));
+    pills.appendChild(starPill);
+    pills.appendChild(coinPill);
+    _prevTopbarUser  = currentUser;
+    _prevTopbarStars = state.totalStars;
+    _prevTopbarCoins = state.coins;
   }
 }
 
