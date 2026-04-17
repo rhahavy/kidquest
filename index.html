@@ -488,6 +488,13 @@ img{max-width:100%}
 /* Fast-track hint — level auto-unlocked because kid aced 2 levels back on
    first try. Violet accent distinguishes it from the amber stretch hint. */
 .level-card .l-fasttrack-hint{font-size:11px;font-weight:700;margin-top:3px;color:#4b21c4;display:inline-flex;align-items:center;gap:4px;background:linear-gradient(135deg,#e8defc,#c8b5f7);padding:3px 8px;border-radius:999px;border:1px solid rgba(108,92,231,.35);animation:fasttrackPulse 2.2s ease-in-out infinite}
+/* Attempt counter pill — shown when the kid has retried a level. Orange
+   "Attempt N" while they're still working on it, green "Got it on
+   attempt N" once they've passed. Gives visible credit for perseverance
+   and helps the teacher spot levels that needed multiple tries. */
+.level-card .l-attempt-pill{font-size:11px;font-weight:700;margin-top:3px;display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:999px;border:1px solid transparent}
+.level-card .l-attempt-pill.trying{color:#8a4e00;background:linear-gradient(135deg,#ffeacc,#ffd699);border-color:rgba(200,130,40,.3)}
+.level-card .l-attempt-pill.won{color:#116031;background:linear-gradient(135deg,#d4f5dd,#a8e8b8);border-color:rgba(30,150,70,.3)}
 @keyframes fasttrackPulse{0%,100%{box-shadow:0 0 0 0 rgba(108,92,231,.35)}50%{box-shadow:0 0 0 5px rgba(108,92,231,0)}}
 .level-card .l-emoji{font-size:28px;flex-shrink:0}
 
@@ -7871,6 +7878,23 @@ function renderWeek(root,subId){
         title:'Auto-unlocked because you aced Level '+(i-1)+' on the first try. You can still go back to the middle level anytime.',
       }, [h('span',{'aria-hidden':'true'},'⚡'), h('span',{},'Jump-ahead from Level '+(i-1))]));
     }
+    // Attempt counter — if the kid has tried more than once, show a pill
+    // with the attempt number. While still trying (not done) it's a warm
+    // "Attempt N" nudge; once they've passed it flips green to "Got it on
+    // attempt N" so effort gets visible credit. Skipped on first-try
+    // runs since attempts === 1 is the default case and needs no badge.
+    const attemptCount = (state.progress && state.progress[a.id] && state.progress[a.id].attempts) || 0;
+    if(attemptCount > 1){
+      const wonClass = done ? 'won' : 'trying';
+      const label = done ? 'Got it on attempt '+attemptCount : 'Attempt '+attemptCount;
+      const tipText = done
+        ? 'Took '+attemptCount+' tries — perseverance pays off!'
+        : 'You\'ve tried this level '+attemptCount+' times. Keep going!';
+      infoChildren.push(h('div',{
+        class:'l-attempt-pill '+wonClass,
+        title: tipText,
+      }, [h('span',{'aria-hidden':'true'},'🔁'), h('span',{}, label)]));
+    }
     const levelBtn = h('button',{class:cls,onclick:()=>{if(!locked)go('activity',{activityId:a.id,subject:subId})}},[
       h('div',{class:numCls},done?'✓':String(levelNum)),
       h('div',{class:'l-info'}, infoChildren),
@@ -8859,13 +8883,21 @@ function finishActivity(){
   const pct = correct/scorable;
   const passed = pct >= PASS_THRESHOLD;
   let stars=1;if(pct>=.5)stars++;if(correct===scorable)stars++;
-  // Coins = pure accuracy reward. 2 coins per correct answer, no base,
-  // no "you pressed Finish" participation bonus, no completion multiplier.
-  // 5/5 = 10 · 4/5 = 8 · 3/5 = 6 · 2/5 = 4 · 1/5 = 2 · 0/5 = 0.
-  // This prevents clicking-through behavior (kids used to get 5 coins
-  // just for reaching the last question). Stars still give a small
-  // effort floor (1 star minimum even on a zero score).
-  const coins = correct * 2;
+  // -------------------- COIN ANTI-FARM RULE --------------------
+  // Coins pay out ONCE per level — on the first-ever pass — at 2 coins
+  // per correct answer. After that, retrying awards 0 coins no matter
+  // the score, so kids can't farm the store by replaying an aced level
+  // on repeat. Failed attempts also pay 0: stars still give effort
+  // credit (min 1 star), but coins are a reward for completion, not
+  // participation.
+  // Stretch Mode is the exception — it ALWAYS pays, because the content
+  // is genuinely harder than what earned the original coins, and we
+  // want to reward kids who opt into the stretch pool.
+  const prevProgForCoins = state.progress[a.id] || {};
+  const wasAlreadyDone = prevProgForCoins.done === true;
+  const coins = isStretch
+    ? correct * 2
+    : (passed && !wasAlreadyDone ? correct * 2 : 0);
   // ------------------------------------------------------------
   // STRETCH MODE vs NORMAL MODE
   // ------------------------------------------------------------
@@ -8992,9 +9024,32 @@ function finishActivity(){
   }
   $('#reward').classList.add('show');
   if(pct>=.5)confettiBurst(pct===1?100:50);
+  // ---------- AUTO-ADVANCE BACK TO LEVELS ----------
+  // Kids shouldn't have to tap another button after a quiz — the reward
+  // pops, they see stars/coins, then we route them back to the subject
+  // page automatically. Manual buttons (Play Again, Jump Ahead) cancel
+  // this via closeReward() so they don't double-navigate.
+  if(rewardAutoDismissTimer){ clearTimeout(rewardAutoDismissTimer); rewardAutoDismissTimer = null; }
+  rewardAutoDismissTimer = setTimeout(()=>{
+    const ov = $('#reward');
+    if(!ov || !ov.classList.contains('show')) return;
+    // Autoplay mode keeps its own chain — don't poach it.
+    if(state && state.autoplay && state.autoplay.active) return;
+    closeReward();
+    if(quiz && quiz.subject) go('week',{subject:quiz.subject});
+    else go(currentUser ? 'dashboard' : 'home');
+  }, REWARD_AUTO_DISMISS_MS);
 }
 
-function closeReward(){$('#reward').classList.remove('show')}
+// Auto-dismiss timer for the reward overlay. Cleared whenever the
+// overlay is closed manually so we don't over-navigate.
+let rewardAutoDismissTimer = null;
+const REWARD_AUTO_DISMISS_MS = 3500;
+
+function closeReward(){
+  if(rewardAutoDismissTimer){ clearTimeout(rewardAutoDismissTimer); rewardAutoDismissTimer = null; }
+  $('#reward').classList.remove('show');
+}
 
 /* ==========================================================================
    KIDQUEST STORE — UI
