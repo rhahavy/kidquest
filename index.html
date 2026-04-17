@@ -3755,6 +3755,163 @@ if(typeof window.speechSynthesis !== 'undefined'){
   }catch(e){}
 }
 
+/* ==========================================================================
+   EMOJI KEYWORD MAPPER — auto-enriches questions/choices at render time
+   --------------------------------------------------------------------------
+   ▸ emojiFor(text) returns a topical emoji for text like "lion" → 🦁,
+     "rainy" → 🌧️, "Ottawa" → 🏛️. Checks LONGEST keyword first
+     so "ice cream" wins over "ice".
+   ▸ Used by renderMCQ (to auto-prefix every choice button with an emoji
+     when none is present) and by the question renderer (to derive a
+     visual for questions that lack one).
+   ▸ Result: all ~875 questions get topical visuals + emoji-prefixed
+     choices without hand-editing each one.
+   ▸ Teachers can still override by setting `visual: '...'` or prefixing
+     the choice string manually. Manual always wins.
+   ========================================================================== */
+const EMOJI_KEYWORDS = {
+  // Animals
+  'lion':'🦁','tiger':'🐯','cheetah':'🐆','penguin':'🐧','bear':'🐻','wolf':'🐺','fox':'🦊',
+  'rabbit':'🐰','bunny':'🐰','mouse':'🐭','dog':'🐶','puppy':'🐕','cat':'🐱','kitten':'🐈',
+  'fish':'🐟','bird':'🐦','chicken':'🐔','chick':'🐥','duck':'🦆','owl':'🦉','eagle':'🦅',
+  'butterfly':'🦋','caterpillar':'🐛','bee':'🐝','ant':'🐜','spider':'🕷️','ladybug':'🐞',
+  'frog':'🐸','turtle':'🐢','snake':'🐍','lizard':'🦎',
+  'elephant':'🐘','giraffe':'🦒','monkey':'🐵','ape':'🦍','zebra':'🦓','kangaroo':'🦘',
+  'cow':'🐄','calf':'🐄','pig':'🐖','piglet':'🐷','sheep':'🐑','lamb':'🐑','horse':'🐴','foal':'🐴',
+  'shark':'🦈','whale':'🐳','dolphin':'🐬','octopus':'🐙','crab':'🦀',
+  'bat':'🦇','dinosaur':'🦖','t-rex':'🦖','beaver':'🦫','hedgehog':'🦔',
+  'animal':'🐾','animals':'🐾',
+  // Weather / nature
+  'rain':'🌧️','rainy':'🌧️','raindrop':'💧','snow':'❄️','snowy':'❄️','snowflake':'❄️',
+  'sun':'☀️','sunny':'☀️','sunshine':'☀️','cloud':'☁️','cloudy':'☁️','cloudy day':'☁️',
+  'wind':'💨','windy':'💨','hurricane':'🌀','tornado':'🌪️','storm':'⛈️','lightning':'⚡',
+  'rainbow':'🌈','earthquake':'🌍','volcano':'🌋','fire':'🔥',
+  'tree':'🌳','forest':'🌲','leaves':'🍃','leaf':'🍃','flower':'🌸','grass':'🌾',
+  'mountain':'🏔️','rocky':'🏔️','rockies':'🏔️','hill':'⛰️','ocean':'🌊','sea':'🌊',
+  'river':'🏞️','lake':'🌊','waterfall':'💦','desert':'🏜️','beach':'🏖️','island':'🏝️',
+  'sky':'☁️','earth':'🌍','world':'🌍','globe':'🌍',
+  // Space
+  'moon':'🌙','star':'⭐','stars':'🌟','sparkle':'✨','saturn':'🪐','planet':'🪐','rocket':'🚀',
+  'space':'🌌','galaxy':'🌌','universe':'🌌','solar system':'🪐',
+  // Plants / food
+  'apple':'🍎','banana':'🍌','orange':'🍊','lemon':'🍋','grape':'🍇','strawberry':'🍓',
+  'carrot':'🥕','corn':'🌽','potato':'🥔','tomato':'🍅','broccoli':'🥦',
+  'bread':'🍞','milk':'🥛','cheese':'🧀','egg':'🥚','meat':'🥩','chicken drumstick':'🍗',
+  'pizza':'🍕','cookie':'🍪','cake':'🎂','cupcake':'🧁','ice cream':'🍦','donut':'🍩',
+  'sandwich':'🥪','burger':'🍔','fruit':'🍎','vegetable':'🥕','food':'🍽️','drink':'🥤',
+  'water':'💧','juice':'🧃','tea':'🍵','coffee':'☕',
+  // Tools / objects
+  'hammer':'🔨','saw':'🪚','drill':'🪛','screwdriver':'🔧','wrench':'🔧','tool':'🛠️','tools':'🛠️',
+  'key':'🔑','lock':'🔒','magnet':'🧲','battery':'🔋','bulb':'💡','light bulb':'💡',
+  // Music
+  'piano':'🎹','guitar':'🎸','drum':'🥁','violin':'🎻','trumpet':'🎺','saxophone':'🎷',
+  'music':'🎵','song':'🎵','band':'🎶','instrument':'🎵','note':'🎵',
+  // Furniture / house
+  'chair':'🪑','table':'🪑','bed':'🛏️','couch':'🛋️','sofa':'🛋️','lamp':'💡',
+  'house':'🏠','home':'🏡','door':'🚪','window':'🪟','roof':'🏠','garden':'🌷','yard':'🌿',
+  'school':'🏫','classroom':'🏫','library':'📚','hospital':'🏥','park':'🏞️','store':'🏪',
+  'building':'🏢','mall':'🏬','church':'⛪','mosque':'🕌','temple':'🛕','museum':'🏛️',
+  // Clothing
+  'shirt':'👕','t-shirt':'👕','pants':'👖','jeans':'👖','hat':'🎩','cap':'🧢','coat':'🧥','jacket':'🧥',
+  'shoe':'👟','shoes':'👟','sock':'🧦','dress':'👗','skirt':'👗','scarf':'🧣','glove':'🧤',
+  'mittens':'🧤','raincoat':'🧥','swimsuit':'👙','umbrella':'☂️',
+  // Transport
+  'car':'🚗','truck':'🚚','bus':'🚌','van':'🚐','train':'🚂','tram':'🚋',
+  'plane':'✈️','airplane':'✈️','helicopter':'🚁','boat':'⛵','ship':'🚢','submarine':'🚤',
+  'bike':'🚲','bicycle':'🚲','scooter':'🛴','skateboard':'🛹',
+  // Sports / play
+  'ball':'⚽','soccer':'⚽','basketball':'🏀','baseball':'⚾','football':'🏈','tennis':'🎾',
+  'hockey':'🏒','golf':'⛳','swim':'🏊','run':'🏃','jump':'🤸','dance':'💃',
+  'game':'🎮','puzzle':'🧩','toy':'🧸',
+  // School / subjects
+  'book':'📖','books':'📚','reading':'📖','pencil':'✏️','pen':'🖊️','crayon':'🖍️','marker':'🖊️',
+  'notebook':'📓','paper':'📄','letter':'📝','writing':'✍️','math':'🔢','number':'🔢',
+  'numbers':'🔢','add':'➕','addition':'➕','subtract':'➖','subtraction':'➖','multiply':'✖️',
+  'divide':'➗','division':'➗','equals':'🟰','science':'🔬','history':'📜',
+  'teacher':'👩‍🏫','student':'🧑‍🎓','kids':'👶','child':'👶','boy':'👦','girl':'👧',
+  'family':'👨‍👩‍👧','mom':'👩','mother':'👩','dad':'👨','father':'👨','brother':'👦','sister':'👧',
+  'grandma':'👵','grandpa':'👴','baby':'👶',
+  // Body / health
+  'heart':'❤️','brain':'🧠','hand':'✋','eye':'👁️','eyes':'👀','ear':'👂','nose':'👃','mouth':'👄',
+  'foot':'🦶','feet':'🦶','tongue':'👅','bone':'🦴','skeleton':'💀','muscle':'💪',
+  'doctor':'👩‍⚕️','nurse':'👩‍⚕️','medicine':'💊','hospital':'🏥','sick':'🤒',
+  // Canadian
+  'canada':'🇨🇦','canadian':'🇨🇦','flag':'🇨🇦','maple':'🍁','inuit':'🛖','igloo':'🛖',
+  'first nations':'🪶','indigenous':'🪶','métis':'🏹','metis':'🏹','ottawa':'🏛️',
+  'parliament':'🏛️','government':'🏛️','prime minister':'🏛️','premier':'🏢','mayor':'🏘️',
+  'province':'🗺️','provinces':'🗺️','territory':'❄️','niagara':'💦',
+  // Days / time
+  'monday':'📅','tuesday':'📅','wednesday':'📅','thursday':'📅','friday':'📅','saturday':'🎉',
+  'sunday':'☀️','weekend':'🎉','day':'☀️','night':'🌙','morning':'🌅','evening':'🌆',
+  'week':'📆','month':'📅','year':'📅','today':'📅','yesterday':'⏪','tomorrow':'⏩',
+  'spring':'🌷','summer':'☀️','fall':'🍂','autumn':'🍂','winter':'❄️',
+  // French words
+  'bonjour':'👋','merci':'🙏','oui':'✅','non':'❌','au revoir':'👋','salut':'👋',
+  'bonsoir':'🌆','pardon':'😬','enchanté':'🤝',
+  // Weather sensations
+  'hot':'🔥','cold':'❄️','warm':'☀️','cool':'🌡️','freezing':'🥶','burning':'🔥',
+  // Feelings
+  'happy':'😊','sad':'😢','angry':'😡','scared':'😨','nervous':'😰','excited':'🤩',
+  'tired':'😴','sleepy':'💤','bored':'😑','surprised':'😲','curious':'🧐',
+  // Actions
+  'sleep':'💤','eat':'🍽️','drink':'🥤','cook':'🍳','bake':'🧁','walk':'🚶','talk':'💬',
+  'sing':'🎤','shout':'📢','listen':'👂','watch':'👀','read':'📖','write':'✍️',
+  'think':'💭','learn':'📚','teach':'👩‍🏫','play':'🎮',
+  // Numbers
+  'one':'1️⃣','two':'2️⃣','three':'3️⃣','four':'4️⃣','five':'5️⃣',
+  'six':'6️⃣','seven':'7️⃣','eight':'8️⃣','nine':'9️⃣','ten':'🔟',
+  // Colors
+  'red':'🔴','blue':'🔵','green':'🟢','yellow':'🟡','purple':'🟣','orange':'🟠',
+  'black':'⚫','white':'⚪','pink':'🌸','brown':'🟤','gray':'⚫','grey':'⚫',
+  // Shapes
+  'circle':'⭕','square':'🟥','triangle':'🔺','rectangle':'▭','diamond':'♦️',
+  // Jobs / community
+  'firefighter':'🚒','police':'👮','chef':'👨‍🍳','farmer':'👨‍🌾','engineer':'👷','artist':'🎨',
+  'singer':'🎤','actor':'🎭','writer':'✍️','scientist':'🧑‍🔬','mail':'📮','postman':'📮',
+  'mail carrier':'📮',
+  // Holidays
+  'christmas':'🎄','halloween':'🎃','easter':'🐰','thanksgiving':'🦃','canada day':'🎆',
+  'remembrance':'🌺',
+  // Misc useful
+  'money':'💰','coin':'💰','ice':'🧊','steam':'💨','gas':'💨','solid':'🧊','liquid':'💧',
+  'time':'⏰','clock':'🕐','bell':'🔔','question':'❓','answer':'💬','example':'💡',
+  'hint':'💡','idea':'💡','mystery':'🕵️','detective':'🕵️','clue':'🔍',
+  'treasure':'💰','map':'🗺️','compass':'🧭','quest':'⚔️','adventure':'🧗',
+  'party':'🎉','gift':'🎁','balloon':'🎈','cake':'🎂',
+  'first':'🥇','second':'🥈','third':'🥉',
+};
+// Pre-sorted by descending length so "ice cream" is tested before "ice".
+const _emojiKeys = Object.keys(EMOJI_KEYWORDS).sort((a,b)=>b.length-a.length);
+/** Return the best topical emoji for a piece of text, or null if nothing matches. */
+function emojiFor(text){
+  const t = String(text||'').toLowerCase();
+  if(!t) return null;
+  for(const k of _emojiKeys){
+    // Word-boundary-ish match (works for multi-word like "ice cream")
+    if(t.includes(k)) return EMOJI_KEYWORDS[k];
+  }
+  return null;
+}
+/** Heuristic: does this string start with an emoji/symbol character? */
+function _startsWithEmoji(s){
+  if(!s) return false;
+  const first = Array.from(String(s))[0];
+  if(!first) return false;
+  const code = first.codePointAt(0);
+  // Symbol / pictograph / emoji / regional-indicator Unicode ranges
+  if(code >= 0x2600 && code <= 0x27BF) return true;         // misc symbols/dingbats
+  if(code >= 0x1F000 && code <= 0x1FFFF) return true;        // emoji planes
+  if(code >= 0x2300 && code <= 0x23FF) return true;          // misc technical (⏰ etc.)
+  return false;
+}
+/** Prepend a topical emoji to a choice string if it doesn't already lead with one. */
+function autoEmojiPrefix(text){
+  const s = String(text==null?'':text);
+  if(_startsWithEmoji(s)) return s;
+  const e = emojiFor(s);
+  return e ? (e + ' ' + s) : s;
+}
+
 function confettiBurst(n=50){
   const colors=['#6C5CE7','#74B9FF','#00CEC9','#FDCB6E','#FF7675','#A29BFE'];
   for(let i=0;i<n;i++){const d=document.createElement('div');d.className='confetti';d.style.left=Math.random()*100+'vw';d.style.background=colors[Math.floor(Math.random()*colors.length)];d.style.animationDuration=(1.5+Math.random()*1.5)+'s';document.body.appendChild(d);setTimeout(()=>d.remove(),3500)}
@@ -4588,10 +4745,15 @@ function renderQ(wrap){
       card.appendChild(pBox);
     }
     card.appendChild(h('div',{class:'q-text'},q.q||''));
-    // Big emoji visual above the question. Uses q.visual for question-specific
-    // override, else falls back to the activity's emoji — so every question
-    // has a visual anchor. Only shown when NO image is provided (image wins).
-    const qVisual = q.visual || (!q.image && quiz && quiz.activity && quiz.activity.emoji);
+    // Big emoji visual above the question. Priority:
+    //   1. q.visual (hand-curated)
+    //   2. emojiFor(q.q) — auto-detect a topical emoji from the question text
+    //      (so "Which does NOT belong: lion, tiger, cheetah, penguin?" gets
+    //      🦁 instead of a generic folder icon)
+    //   3. Activity's main emoji as last resort
+    // Only shown when NO image is provided (image wins over emoji visual).
+    const qVisual = q.visual
+      || (!q.image && (emojiFor(q.q) || (quiz && quiz.activity && quiz.activity.emoji)));
     if(qVisual) card.appendChild(h('div',{class:'q-visual'},qVisual));
     // Real image above the answer choices — ONLY shown when q.image is
     // specifically set on the question. We do NOT auto-apply a generic
@@ -4802,29 +4964,45 @@ function renderLesson(card,q){
     card.appendChild(panel);
   }
   if(L.hint) card.appendChild(h('div',{class:'lesson-hint'},['💡 ',L.hint]));
-  // Inline embedded videos — kid-safe.
-  // Uses videoIds[] on the activity (an array of YouTube video IDs). Renders
-  // each one as an iframe embed via youtube-nocookie.com with rel=0 and
-  // modestbranding=1 so kids see only the curated clip, no related-video
-  // temptation, no YouTube branding. The old external "Watch a Video First"
-  // link was removed because it sent kids to YouTube.com's search page.
+  // Inline embedded videos — kid-safe, kids NEVER leave the app.
+  // Priority:
+  //   1. activity.videoIds[] — hand-curated YouTube video IDs (up to 2 per
+  //      lesson). Embedded via youtube-nocookie.com.
+  //   2. VIDEOS[activityId] — pre-curated search query (set up for every
+  //      lesson already). Embedded via YouTube's listType=search player so
+  //      kids see topic-matched videos in an iframe — they pick & watch
+  //      without ever landing on youtube.com's recommendation feed.
+  // iv_load_policy=3 hides video annotations; rel=0 hides related videos;
+  // modestbranding=1 removes the YouTube logo.
   const vidIds = (quiz && quiz.activity && Array.isArray(quiz.activity.videoIds))
                    ? quiz.activity.videoIds.filter(Boolean) : [];
+  const searchQuery = (typeof VIDEOS!=='undefined') ? VIDEOS[quiz.activityId] : null;
+  const makeVideoIframe = (src, title)=>{
+    const wrap = h('div',{class:'lesson-video-wrap'});
+    const iframe = document.createElement('iframe');
+    iframe.src = src;
+    iframe.title = title || 'Lesson video';
+    iframe.loading = 'lazy';
+    iframe.allow = 'encrypted-media; picture-in-picture; fullscreen';
+    iframe.referrerPolicy = 'strict-origin-when-cross-origin';
+    wrap.appendChild(iframe);
+    return wrap;
+  };
   if(vidIds.length){
     const box = h('div',{class:'lesson-videos'});
-    const label = h('div',{class:'lesson-videos-title'}, '▶ Watch & learn');
-    card.appendChild(label);
+    card.appendChild(h('div',{class:'lesson-videos-title'}, '▶ Watch & learn'));
     vidIds.slice(0,2).forEach(id=>{
-      const wrap = h('div',{class:'lesson-video-wrap'});
-      const iframe = document.createElement('iframe');
-      iframe.src = 'https://www.youtube-nocookie.com/embed/'+encodeURIComponent(id)+'?rel=0&modestbranding=1&iv_load_policy=3';
-      iframe.title = L.title || 'Lesson video';
-      iframe.loading = 'lazy';
-      iframe.allow = 'encrypted-media; picture-in-picture; fullscreen';
-      iframe.referrerPolicy = 'strict-origin-when-cross-origin';
-      wrap.appendChild(iframe);
-      box.appendChild(wrap);
+      box.appendChild(makeVideoIframe(
+        'https://www.youtube-nocookie.com/embed/'+encodeURIComponent(id)+'?rel=0&modestbranding=1&iv_load_policy=3',
+        L.title || 'Lesson video'));
     });
+    card.appendChild(box);
+  } else if(searchQuery){
+    const box = h('div',{class:'lesson-videos'});
+    card.appendChild(h('div',{class:'lesson-videos-title'}, '▶ Watch & learn'));
+    box.appendChild(makeVideoIframe(
+      'https://www.youtube.com/embed?listType=search&list='+encodeURIComponent(searchQuery)+'&rel=0&modestbranding=1&iv_load_policy=3',
+      (L.title||'Lesson')+' videos'));
     card.appendChild(box);
   }
   quiz.locked=false;
@@ -4833,9 +5011,13 @@ function renderLesson(card,q){
 
 /* ---- MCQ ---- */
 function renderMCQ(card,q){
-  const short=q.choices.every(c=>Array.from(String(c)).length<=3);
-  const box=h('div',{class:'choices'+(short?' choices-big':'')});
-  q.choices.forEach((c,i)=>{
+  // Auto-prefix each choice with a topical emoji when it doesn't already
+  // start with one. Uses the EMOJI_KEYWORDS map + autoEmojiPrefix helper.
+  // Hand-curated choices that already have an emoji are left alone.
+  const displayChoices = q.choices.map(c => autoEmojiPrefix(c));
+  const short = displayChoices.every(c => Array.from(String(c)).length <= 3);
+  const box = h('div',{class:'choices'+(short?' choices-big':'')});
+  displayChoices.forEach((c,i)=>{
     box.appendChild(h('button',{class:'choice'+(short?' choice-big':''),onclick:e=>handleMCQ(e,i,q.answer)},String(c)));
   });
   card.appendChild(box);
