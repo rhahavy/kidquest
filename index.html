@@ -5208,11 +5208,18 @@ function finishActivity(){
               : 'Nice effort!';
   $('#rwEmoji').textContent=emoji;$('#rwTitle').textContent=title;$('#rwMsg').textContent=msg;
   $('#rwStars').textContent='+'+stars;$('#rwCoins').textContent='+'+coins;$('#rwScore').textContent=correct+'/'+scorable;
-  // Change button labels based on pass/fail — failing means MUST retry.
+  // At the end of every quiz — pass or fail — the PRIMARY button takes
+  // the student back to this subject's list of levels. The SECONDARY
+  // button offers a quick retry of the same activity. Pass label:
+  // 'Back to Levels →'. Fail label includes 'try again' urgency but
+  // still routes to levels (they'll see the unpassed level and pick it).
   const nextBtn = $('#rwNext');
   const againBtn = $('#rwAgain');
-  if(nextBtn){ nextBtn.textContent = passed ? 'Continue →' : '🔁 Try Again'; nextBtn.dataset.mustRetry = passed ? '' : '1'; }
-  if(againBtn){ againBtn.style.display = passed ? '' : 'none'; } // hide 2nd retry button when already forced
+  if(nextBtn){ nextBtn.textContent = passed ? 'Back to Levels →' : 'Back to Levels →'; nextBtn.dataset.mustRetry = ''; }
+  if(againBtn){
+    againBtn.style.display = '';
+    againBtn.textContent = passed ? '🔁 Play Again' : '🔁 Try Again';
+  }
   $('#reward').classList.add('show');
   if(pct>=.5)confettiBurst(pct===1?100:50);
 }
@@ -5898,19 +5905,13 @@ try {
     else go(currentUser?'dashboard':'home');
   });
   const rwNextEl = $('#rwNext');
-  if(rwNextEl) rwNextEl.addEventListener('click',(e)=>{
+  if(rwNextEl) rwNextEl.addEventListener('click',()=>{
+    // Always route to the subject's levels list after a quiz — pass or fail.
+    // The student sees their progress, picks what's next, or re-picks the
+    // same level if they want to try it again.
     closeReward();
-    // If the student scored below the pass threshold, the Next button was
-    // flipped to "🔁 Try Again" — restart the SAME activity instead of
-    // advancing. Gating the next level behind actually passing this one.
-    const mustRetry = e.currentTarget.dataset.mustRetry === '1';
-    if(mustRetry && quiz && quiz.activityId){
-      go('activity',{activityId:quiz.activityId,subject:quiz.subject});
-    } else if(quiz && quiz.subject){
-      go('week',{subject:quiz.subject});
-    } else {
-      go(currentUser?'dashboard':'home');
-    }
+    if(quiz && quiz.subject) go('week',{subject:quiz.subject});
+    else go(currentUser?'dashboard':'home');
   });
 } catch(e) { console.warn('[KidQuest] Button wiring failed:',e); }
 
