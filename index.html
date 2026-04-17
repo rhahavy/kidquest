@@ -937,8 +937,15 @@ img{max-width:100%}
 .store-head .coin-pill{display:inline-flex;align-items:center;gap:8px;padding:10px 18px;border-radius:999px;background:linear-gradient(135deg,#ffe58a,#fdcb6e);color:#7a4a00;font-weight:800;font-size:15px;box-shadow:inset 0 -2px 0 rgba(0,0,0,.08),var(--shadow);border:2px solid #fff0b8}
 .store-head .coin-pill .coin-emoji{font-size:18px;animation:coinSpin 4s ease-in-out infinite}
 .store-sub{font-size:14px;color:var(--ink3);font-weight:600;margin-top:4px}
-.store-tabs{margin-top:16px;display:flex;gap:8px;flex-wrap:wrap}
-.store-tab{padding:8px 16px;border-radius:999px;background:rgba(108,92,231,.08);color:var(--ink2);font-weight:800;font-size:13px;cursor:pointer;transition:all .25s var(--spring);border:2px solid transparent;display:inline-flex;align-items:center;gap:6px}
+/* Category tabs — single horizontal scroll strip so they never wrap into
+   ragged zig-zag rows that let the background blobs bleed through. On mobile
+   the user swipes sideways; on desktop a thin scrollbar appears on hover.
+   The right-edge mask hints that more tabs are available when clipped. */
+.store-tabs{margin-top:16px;display:flex;gap:8px;overflow-x:auto;overflow-y:hidden;padding:4px 24px 10px 2px;-webkit-overflow-scrolling:touch;scrollbar-width:thin;scrollbar-color:rgba(108,92,231,.3) transparent;mask-image:linear-gradient(to right,#000 0,#000 calc(100% - 24px),transparent 100%);-webkit-mask-image:linear-gradient(to right,#000 0,#000 calc(100% - 24px),transparent 100%)}
+.store-tabs::-webkit-scrollbar{height:6px}
+.store-tabs::-webkit-scrollbar-track{background:transparent}
+.store-tabs::-webkit-scrollbar-thumb{background:rgba(108,92,231,.25);border-radius:3px}
+.store-tab{padding:8px 16px;border-radius:999px;background:rgba(108,92,231,.08);color:var(--ink2);font-weight:800;font-size:13px;cursor:pointer;transition:all .25s var(--spring);border:2px solid transparent;display:inline-flex;align-items:center;gap:6px;flex-shrink:0;white-space:nowrap}
 .store-tab:hover{background:rgba(108,92,231,.15);transform:translateY(-1px)}
 .store-tab.active{background:linear-gradient(135deg,var(--primary),#8b7bff);color:#fff;box-shadow:0 6px 14px rgba(108,92,231,.35);border-color:#fff}
 .store-grid{margin-top:16px;display:grid;gap:16px;grid-template-columns:repeat(auto-fill,minmax(230px,1fr))}
@@ -959,7 +966,15 @@ img{max-width:100%}
 .store-item .si-req.no{background:rgba(225,112,85,.12);color:#b54a2f}
 .store-item.special{background:linear-gradient(135deg,#fff8f0,#fff0f6);border:2px solid #ffd166}
 .store-item.special::after{content:'✨';position:absolute;top:10px;right:12px;font-size:22px;animation:pulse 2s ease-in-out infinite;pointer-events:none}
-.store-item.locked{opacity:.6;cursor:not-allowed}
+/* Locked state — previously used opacity:.6 on the whole card, which made
+   the card background translucent and let the page's floating blobs bleed
+   through every locked tile (the store shows mostly locked items for a new
+   kid, so this looked like a glitchy background smear). Now we keep the
+   card background solid and dim only the CONTENT via per-child opacity +
+   a light grayscale on the thumbnail. */
+.store-item.locked{cursor:not-allowed;background:#faf9fd}
+.store-item.locked > :not(.si-lock):not(.wish-btn):not(.wish-ribbon){opacity:.62}
+.store-item.locked .si-thumb{filter:grayscale(.35)}
 .store-item.locked:hover{transform:none;box-shadow:var(--shadow)}
 .store-item .si-lock{position:absolute;bottom:14px;right:14px;width:30px;height:30px;border-radius:50%;background:rgba(0,0,0,.55);color:#fff;display:grid;place-items:center;font-size:14px;backdrop-filter:blur(4px);z-index:2;box-shadow:0 4px 10px rgba(0,0,0,.2)}
 .store-item.locked.special::after{content:''}
@@ -1136,6 +1151,43 @@ img{max-width:100%}
 .mg-tile.math .mg-ico{background:linear-gradient(135deg,#91c4f5,#0984e3);color:#fff}
 .mg-tile.odd .mg-ico{background:linear-gradient(135deg,#ffe28a,#f39c12);color:#fff}
 .mg-tile.simon .mg-ico{background:linear-gradient(135deg,#ff9ff3,#e84393);color:#fff}
+.mg-tile.dropsum::before{background:linear-gradient(180deg,#81ECEC,#00cec9)}
+.mg-tile.dropsum .mg-ico{background:linear-gradient(135deg,#81ECEC,#00B894);color:#fff}
+
+/* ---------- DROP SUM — drop digits, clear any stack that adds to 10 ----------
+   The grid is COLS×ROWS with a click-to-pick-a-column flow. Tiles stack from
+   the bottom up inside a column. After every drop we scan each column for
+   vertically-adjacent runs whose digits sum to exactly 10 — those clear and
+   the tiles above settle. Chains bump a combo multiplier. Game over when a
+   column is full and the student can't fit the next tile. */
+.ds-wrap{max-width:420px;margin:0 auto;position:relative}
+.ds-next{display:flex;align-items:center;justify-content:center;gap:12px;margin:8px 0 14px;font-weight:800;color:var(--ink3);font-size:13px;text-transform:uppercase;letter-spacing:.05em}
+.ds-next-tile{width:56px;height:56px;border-radius:14px;display:grid;place-items:center;font-size:26px;font-weight:900;color:#fff;box-shadow:0 6px 14px rgba(0,206,201,.35);border:2px solid #fff;animation:dsPulse 1.6s ease-in-out infinite}
+@keyframes dsPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
+.ds-target{background:rgba(108,92,231,.08);border-radius:999px;padding:6px 14px;font-size:12px;font-weight:800;color:var(--primary);letter-spacing:.04em}
+.ds-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;padding:10px;background:rgba(108,92,231,.07);border-radius:20px;border:2px solid rgba(108,92,231,.15);position:relative}
+.ds-col{display:flex;flex-direction:column-reverse;gap:5px;min-height:calc(6 * 52px + 6 * 5px);cursor:pointer;border-radius:12px;padding:5px;transition:background .15s}
+.ds-col:hover:not(.disabled){background:rgba(108,92,231,.12)}
+.ds-col.disabled{cursor:not-allowed}
+.ds-col.full{background:rgba(225,112,85,.15);animation:shake .4s}
+.ds-cell{aspect-ratio:1/1;width:100%;min-height:42px}
+.ds-tile{width:100%;height:100%;display:grid;place-items:center;font-size:clamp(16px,4vw,22px);font-weight:900;color:#fff;border-radius:10px;box-shadow:inset 0 -3px 0 rgba(0,0,0,.15),0 3px 6px rgba(26,16,53,.15);animation:dsDrop .35s var(--spring);border:1.5px solid rgba(255,255,255,.4)}
+.ds-tile.t1{background:linear-gradient(135deg,#ffb8c9,#ff7b9c)}
+.ds-tile.t2{background:linear-gradient(135deg,#ffd68a,#ff9f43)}
+.ds-tile.t3{background:linear-gradient(135deg,#ffee8a,#f7d046)}
+.ds-tile.t4{background:linear-gradient(135deg,#c8f5a5,#7ed957)}
+.ds-tile.t5{background:linear-gradient(135deg,#a5f0e3,#00cec9)}
+.ds-tile.t6{background:linear-gradient(135deg,#a5d7ff,#5aa3ff)}
+.ds-tile.t7{background:linear-gradient(135deg,#c0a7ff,#8b6eff)}
+.ds-tile.t8{background:linear-gradient(135deg,#ebadff,#c94ce6)}
+.ds-tile.t9{background:linear-gradient(135deg,#ffb3e0,#ff6cc8)}
+.ds-tile.clearing{animation:dsClear .5s forwards}
+@keyframes dsDrop{from{transform:translateY(-40px) scale(.6);opacity:0}to{transform:translateY(0) scale(1);opacity:1}}
+@keyframes dsClear{0%{transform:scale(1)}35%{transform:scale(1.25);box-shadow:inset 0 -3px 0 rgba(0,0,0,.15),0 0 24px rgba(0,206,201,.7)}100%{transform:scale(0);opacity:0}}
+.ds-combo-pop{position:absolute;top:35%;left:50%;transform:translate(-50%,-50%);font-family:var(--font-display);font-size:clamp(28px,6vw,42px);font-weight:900;color:#00CEC9;text-shadow:0 3px 0 #fff,0 4px 8px rgba(0,206,201,.5);pointer-events:none;animation:dsComboFly .9s forwards;z-index:5}
+@keyframes dsComboFly{0%{opacity:0;transform:translate(-50%,-50%) scale(.4)}25%{opacity:1;transform:translate(-50%,-50%) scale(1.3)}100%{opacity:0;transform:translate(-50%,-140%) scale(1.1)}}
+.ds-hint{font-size:12.5px;color:var(--ink3);text-align:center;margin-top:10px;font-weight:600;line-height:1.4}
+.ds-intro{display:flex;flex-direction:column;align-items:center;gap:14px;margin:18px 0;text-align:center}
 
 /* Odd One Out game board */
 .oo-prompt{margin:18px auto 6px;max-width:540px;text-align:center;font-family:var(--font-display);font-size:clamp(20px,3vw,26px);font-weight:800;color:var(--ink);background:linear-gradient(135deg,#fff8e1,#fff);border:2px dashed #f39c12;border-radius:var(--r);padding:14px 18px}
@@ -5393,12 +5445,17 @@ const STORE_ITEMS = [
    --------------------------------------------------------------------------
    ▸ EDIT DIFFICULTY: add/remove questions from each array.
    ▸ PASS RULE: students must get ≥2 out of 3 correct (see CHALLENGE_PASS_MIN).
-   ▸ BONUS: small coin reward on pass (CHALLENGE_BONUS_COINS) to make the
-     challenge itself feel rewarding, not punishing.
+   ▸ COINS: kids earn coins ONLY for questions they answered correctly —
+     CHALLENGE_COINS_PER_CORRECT × (# correct). No flat participation bonus,
+     no reward for pressing "Finish" on a failed attempt. This matches the
+     activity-quiz rule (also per-correct) and prevents click-through farming.
    ========================================================================== */
 const CHALLENGE_QUESTIONS_PER_CHALLENGE = 3;
 const CHALLENGE_PASS_MIN = 2;
-const CHALLENGE_BONUS_COINS = 5;
+const CHALLENGE_COINS_PER_CORRECT = 2;
+// Legacy alias — kept so any older reference still resolves. New code should
+// compute `correct * CHALLENGE_COINS_PER_CORRECT` instead of using a flat bonus.
+const CHALLENGE_BONUS_COINS = CHALLENGE_COINS_PER_CORRECT;
 
 const CHALLENGE_BANK = {
   easy: [
@@ -6751,6 +6808,7 @@ function go(screen,opts={}){
     else if(screen==='game-math') renderQuickMath(root, opts);
     else if(screen==='game-odd') renderOddOneOut(root, opts);
     else if(screen==='game-simon') renderSimonSays(root, opts);
+    else if(screen==='game-dropsum') renderDropSum(root, opts);
     else if(screen==='store') renderStore(root);
     else if(screen==='orders') renderOrders(root);
     else if(screen==='teacher') renderTeacher(root);
@@ -8775,17 +8833,29 @@ function openChallenge(item){
 
   const finishChallenge = ()=>{
     const passed = correct >= CHALLENGE_PASS_MIN;
+    // Kids earn coins ONLY for questions they got right. No flat bonus for
+    // pressing Finish, no participation reward for a failed run — the coin
+    // total equals exactly (correct × per-correct rate). This keeps the
+    // economy honest: a kid who clicks randomly through a challenge and
+    // gets 0/3 earns 0 coins, even if they press Finish at the end.
+    const earnedCoins = correct * CHALLENGE_COINS_PER_CORRECT;
+    if(earnedCoins > 0){
+      state.coins = (state.coins||0) + earnedCoins;
+      saveState();
+    }
     panel.innerHTML='';
     panel.appendChild(h('button',{class:'sm-close',onclick:()=>closeStoreModal()},'✕'));
     const result = h('div',{class:'ch-result'});
     if(passed){
-      // Reward effort even before purchase
-      state.coins = (state.coins||0) + CHALLENGE_BONUS_COINS;
-      saveState();
       result.appendChild(h('div',{class:'ch-emoji'},'🎉'));
       result.appendChild(h('div',{class:'ch-msg'},'You unlocked this reward!'));
       result.appendChild(h('div',{class:'ch-sub2'},'Great job! You got '+correct+' out of '+questions.length+' correct.'));
-      result.appendChild(h('div',{class:'ch-bonus'},[h('span',{},'💰'),h('span',{},'+'+CHALLENGE_BONUS_COINS+' bonus coins!')]));
+      if(earnedCoins > 0){
+        result.appendChild(h('div',{class:'ch-bonus'},[
+          h('span',{},'💰'),
+          h('span',{},'+'+earnedCoins+' coins ('+correct+' × '+CHALLENGE_COINS_PER_CORRECT+' per correct answer)'),
+        ]));
+      }
       const actions = h('div',{class:'sm-actions'});
       actions.appendChild(h('button',{class:'sm-btn-ghost',onclick:()=>closeStoreModal()},'Cancel'));
       actions.appendChild(h('button',{class:'sm-btn-primary',onclick:()=>{
@@ -8804,6 +8874,19 @@ function openChallenge(item){
       result.appendChild(h('div',{class:'ch-emoji'},'💡'));
       result.appendChild(h('div',{class:'ch-msg'},'Almost! Complete a quick challenge to unlock your reward'));
       result.appendChild(h('div',{class:'ch-sub2'},'You got '+correct+' out of '+questions.length+'. Try again — you\'ve got this!'));
+      if(earnedCoins > 0){
+        // Even on a fail we show what they earned so the per-correct rule is
+        // transparent — you always get paid for what you got right.
+        result.appendChild(h('div',{class:'ch-bonus'},[
+          h('span',{},'💰'),
+          h('span',{},'+'+earnedCoins+' coins for the '+correct+' you got right'),
+        ]));
+      } else {
+        result.appendChild(h('div',{class:'ch-bonus',style:'background:#fff3e0;color:#9a5a00'},[
+          h('span',{},'ℹ️'),
+          h('span',{},'No coins this round — coins are only given for correct answers.'),
+        ]));
+      }
       const actions = h('div',{class:'sm-actions'});
       actions.appendChild(h('button',{class:'sm-btn-ghost',onclick:()=>closeStoreModal()},'Maybe later'));
       actions.appendChild(h('button',{class:'sm-btn-primary',onclick:()=>{ closeStoreModal(); openChallenge(item); }},'🔁 Try Again'));
@@ -8958,11 +9041,12 @@ const MINI_GAME_COIN_CAP = 10; // max coins per day awarded from mini-games
 function ensureMiniGameStats(){
   if(!state) return;
   if(!state.miniGameStats){
-    state.miniGameStats = { date:'', coinsToday:0, bestMemoryEasy:null, bestMemoryHard:null, bestMathScore:0, bestOddScore:0, bestSimonLevel:0 };
+    state.miniGameStats = { date:'', coinsToday:0, bestMemoryEasy:null, bestMemoryHard:null, bestMathScore:0, bestOddScore:0, bestSimonLevel:0, bestDropSumScore:0 };
   }
   // Backfill new best-score fields for saves that predate them.
-  if(state.miniGameStats.bestOddScore   === undefined) state.miniGameStats.bestOddScore   = 0;
-  if(state.miniGameStats.bestSimonLevel === undefined) state.miniGameStats.bestSimonLevel = 0;
+  if(state.miniGameStats.bestOddScore     === undefined) state.miniGameStats.bestOddScore     = 0;
+  if(state.miniGameStats.bestSimonLevel   === undefined) state.miniGameStats.bestSimonLevel   = 0;
+  if(state.miniGameStats.bestDropSumScore === undefined) state.miniGameStats.bestDropSumScore = 0;
 }
 
 /* ==========================================================================
@@ -8984,10 +9068,11 @@ function ensureMiniGameStats(){
    floating "⏹ Autoplay" chip or the Home topbar.
    ========================================================================== */
 const AUTOPLAY_BREAK_GAMES = [
-  { screen:'game-memory', opts:null },
-  { screen:'game-math',   opts:{ level:'easy' } },
-  { screen:'game-odd',    opts:{ level:'medium' } },
-  { screen:'game-simon',  opts:null },
+  { screen:'game-memory',  opts:null },
+  { screen:'game-math',    opts:{ level:'easy' } },
+  { screen:'game-odd',     opts:{ level:'medium' } },
+  { screen:'game-simon',   opts:null },
+  { screen:'game-dropsum', opts:null },
 ];
 function ensureAutoplay(){
   if(!state) return;
@@ -9186,6 +9271,17 @@ function renderMiniHub(root){
       h('div',{class:'mg-name'},'Copycat'),
       h('div',{class:'mg-desc'},'Watch the pattern. Tap it back.'),
       h('div',{class:'mg-best'}, simBestTxt),
+    ]),
+    h('div',{class:'mg-arrow'},'→'),
+  ]));
+  const bestDS  = state.miniGameStats.bestDropSumScore || 0;
+  const dsBestTxt = bestDS ? ('Best: ' + bestDS + ' cleared') : 'Play to set a record!';
+  grid.appendChild(h('button',{class:'mg-tile dropsum',onclick:()=>go('game-dropsum')},[
+    h('div',{class:'mg-ico'},'🧮'),
+    h('div',{class:'mg-info'},[
+      h('div',{class:'mg-name'},'Drop Sum'),
+      h('div',{class:'mg-desc'},'Drop digits. Make 10. Clear the board.'),
+      h('div',{class:'mg-best'}, dsBestTxt),
     ]),
     h('div',{class:'mg-arrow'},'→'),
   ]));
@@ -9772,6 +9868,216 @@ function renderSimonSays(root, opts){
   }
 }
 
+/* ----- DROP SUM -----
+   A 5×6 grid tile-dropper. Kid taps any column to drop the "next" digit into
+   it; tiles stack from the bottom. After every drop we scan each column for
+   vertically-adjacent runs that sum to 10 — both tiles clear and the stack
+   falls. Cascade-clears bump a combo counter. Game ends when every column is
+   full to the top.
+
+   Why it works as a brain-break:
+   • Pure arithmetic: the kid is constantly thinking "what adds to 10?"
+   • Spatial planning: which column to feed a 3 into depends on what's there
+   • Fast feedback: a single good move can trigger a satisfying chain
+   The clear math covers 1+9, 2+8, 3+7, 4+6, 5+5 — the bedrock facts every
+   first-grader needs automatic. */
+function renderDropSum(root, opts){
+  if(!currentUser || !state){ go('home'); return; }
+  ensureMiniGameStats();
+
+  root.appendChild(h('div',{class:'week-head'},[
+    h('h2',{},[h('span',{style:'font-size:24px;margin-right:8px'},'🧮'),h('span',{},'Drop Sum')]),
+    h('button',{class:'back-btn',onclick:()=>go('mini-hub')},'← Back'),
+  ]));
+
+  const COLS = 5, ROWS = 6;
+  // grid[c] = array of digits, index 0 = bottom of stack. column-reverse in
+  // CSS flips the visual order so index 0 appears at the visual bottom.
+  let grid = Array(COLS).fill(null).map(()=>[]);
+  let score = 0;          // total tiles cleared (also drives the "best" stat)
+  let maxCombo = 0;       // longest cascade chain in this run
+  let nextTile = rollTile();
+  let gameActive = false;
+  let busy = false;       // lock input while a cascade animates
+
+  function rollTile(){
+    // Slight bias toward middle digits so the kid isn't stuck placing 9s
+    // into a sparse board. The bias also makes 5+5 and 4+6 show up a lot.
+    const weights = {1:10, 2:12, 3:13, 4:13, 5:14, 6:13, 7:12, 8:10, 9:7};
+    let total = 0;
+    for(const d in weights) total += weights[d];
+    let r = Math.random() * total;
+    for(let d=1; d<=9; d++){
+      r -= weights[d];
+      if(r <= 0) return d;
+    }
+    return 5;
+  }
+
+  const intro = h('div',{class:'ds-intro'},[
+    createMascot({ tone:'magic', size:90, message:'Make 10 and watch them pop!' }),
+    h('p',{style:'max-width:360px;margin:0 auto;font-size:13.5px;color:var(--ink3);font-weight:600;line-height:1.5'},
+      'Tap any column to drop the next number. When two numbers stacked on top of each other add to 10 (like 4+6 or 3+7), they BOTH disappear and the tiles above fall down. Chain clears for combos!'),
+    h('button',{class:'btn btn-primary qm-start-btn',onclick:startGame}, '▶️ Start!'),
+  ]);
+  root.appendChild(intro);
+
+  const area = h('div',{class:'qm-area',style:'display:none'});
+  root.appendChild(area);
+  const scoreDisp = h('span',{class:'mg-val'},'0');
+  const comboDisp = h('span',{class:'mg-val'},'×1');
+  area.appendChild(h('div',{class:'qm-status'},[
+    h('div',{class:'qm-stat'},[h('span',{class:'mg-label'},'Cleared'), scoreDisp]),
+    h('div',{class:'qm-stat'},[h('span',{class:'mg-label'},'Combo'),   comboDisp]),
+  ]));
+
+  const wrap = h('div',{class:'ds-wrap'});
+  const nextLabel  = h('span',{}, 'Next:');
+  const nextTileEl = h('div',{class:'ds-next-tile t'+nextTile}, String(nextTile));
+  const target     = h('span',{class:'ds-target'}, '🎯 make 10');
+  wrap.appendChild(h('div',{class:'ds-next'}, [nextLabel, nextTileEl, target]));
+
+  const gridEl = h('div',{class:'ds-grid'});
+  const colEls = [];
+  for(let c=0; c<COLS; c++){
+    const colEl = h('div',{class:'ds-col'});
+    colEl.addEventListener('click', ()=>drop(c));
+    // Pre-populate 6 empty cells so the column always takes full board height
+    for(let r=0; r<ROWS; r++) colEl.appendChild(h('div',{class:'ds-cell'}));
+    colEls.push(colEl);
+    gridEl.appendChild(colEl);
+  }
+  wrap.appendChild(gridEl);
+  wrap.appendChild(h('div',{class:'ds-hint'}, 'Pairs that make 10: 1+9 · 2+8 · 3+7 · 4+6 · 5+5'));
+  area.appendChild(wrap);
+
+  // Re-render the whole grid. `clearing` is {"c,r": true} for cells that are
+  // animating out — we keep them on screen during the animation window.
+  function renderGrid(clearing){
+    clearing = clearing || {};
+    for(let c=0; c<COLS; c++){
+      const colEl = colEls[c];
+      colEl.innerHTML = '';
+      const stack = grid[c];
+      for(let r=0; r<ROWS; r++){
+        const cell = h('div',{class:'ds-cell'});
+        if(r < stack.length){
+          const d = stack[r];
+          const key = c+','+r;
+          const cls = 'ds-tile t'+d + (clearing[key] ? ' clearing' : '');
+          cell.appendChild(h('div',{class:cls}, String(d)));
+        }
+        colEl.appendChild(cell);
+      }
+      colEl.classList.toggle('full', stack.length >= ROWS);
+      colEl.classList.toggle('disabled', !gameActive || busy || stack.length >= ROWS);
+    }
+  }
+
+  function pickNextTile(){
+    nextTile = rollTile();
+    nextTileEl.textContent = String(nextTile);
+    nextTileEl.className = 'ds-next-tile t'+nextTile;
+  }
+
+  function allColumnsFull(){ return grid.every(col => col.length >= ROWS); }
+
+  // Vertically-adjacent pairs summing to 10. When three-in-a-row all sum
+  // pairwise (e.g. 5-5-5 or 1-9-1) every tile in the run gets marked.
+  function findClears(){
+    const toClear = new Set();
+    for(let c=0; c<COLS; c++){
+      const stack = grid[c];
+      for(let r=0; r<stack.length-1; r++){
+        if(stack[r] + stack[r+1] === 10){
+          toClear.add(c+','+r);
+          toClear.add(c+','+(r+1));
+        }
+      }
+    }
+    return Array.from(toClear).map(k => k.split(',').map(Number));
+  }
+
+  function sleep(ms){ return new Promise(res => setTimeout(res, ms)); }
+
+  async function drop(c){
+    if(!gameActive || busy) return;
+    if(grid[c].length >= ROWS) return; // silently ignore full column
+    grid[c].push(nextTile);
+    pickNextTile();
+    renderGrid();
+
+    // Cascade loop — find clears, animate them out, apply gravity, repeat
+    // until no more pairs are adjacent. Each pass is one combo step.
+    busy = true;
+    let combo = 0;
+    while(true){
+      const toClear = findClears();
+      if(!toClear.length) break;
+      combo++;
+      if(combo > maxCombo) maxCombo = combo;
+      const clearingMap = {};
+      toClear.forEach(([cc,rr]) => { clearingMap[cc+','+rr] = true; });
+      renderGrid(clearingMap);
+      if(combo >= 2){
+        const pop = h('div',{class:'ds-combo-pop'}, '×'+combo+' COMBO!');
+        wrap.appendChild(pop);
+        setTimeout(()=>pop.remove(), 900);
+      }
+      await sleep(420);
+      // Remove the cleared cells. Group by column and splice highest-row
+      // first so earlier splices don't invalidate later indices.
+      const byCol = {};
+      toClear.forEach(([cc,rr])=>{ (byCol[cc] = byCol[cc] || []).push(rr); });
+      for(const cc in byCol){
+        byCol[cc].sort((a,b)=>b-a).forEach(rr => grid[+cc].splice(rr, 1));
+      }
+      score += toClear.length;
+      scoreDisp.textContent = String(score);
+      comboDisp.textContent = '×' + combo;
+      renderGrid();
+      await sleep(140);
+    }
+    // Brief delay before resetting combo display so it stays visible
+    setTimeout(()=>{ if(!busy) comboDisp.textContent = '×1'; }, 600);
+    busy = false;
+    renderGrid();
+
+    if(allColumnsFull()){
+      gameActive = false;
+      onEnd();
+    }
+  }
+
+  function startGame(){
+    gameActive = true;
+    intro.style.display = 'none';
+    area.style.display  = '';
+    renderGrid();
+  }
+
+  function onEnd(){
+    // Rating on tiles cleared. 30+ is a strong run with 2+ cascades; 15
+    // is mostly single-pair clears; 6 is minimum engagement.
+    const rating = score >= 30 ? 3 : score >= 15 ? 2 : score >= 6 ? 1 : 0;
+    const prevBest = state.miniGameStats.bestDropSumScore || 0;
+    const isNewBest = score > prevBest;
+    if(isNewBest) state.miniGameStats.bestDropSumScore = score;
+    const coins = miniGameAward(rating);
+    saveState();
+    showMiniGameWin({
+      title: score > 0 ? 'Board full!' : 'Good try!',
+      rating, coins, isNewBest,
+      stats: [
+        { lbl:'Cleared',    val: String(score) },
+        { lbl:'Best Combo', val: '×' + maxCombo },
+      ],
+      onReplay: () => go('game-dropsum'),
+      onHome:   () => go('dashboard'),
+    });
+  }
+}
+
 /* ========== BADGES ========== */
 function renderBadges(root){
   if(!currentUser||!state){go('home');return}
@@ -9893,10 +10199,91 @@ function renderTeacher(root){
   // Student password manager — see + reset each student's emoji password.
   try { dash.appendChild(renderTeacherPasswords()); }
   catch(e){ console.warn('[KidQuest] password panel failed:',e); }
+  // Coin adjustment — lets the tutor fix balances when a bug or click-through
+  // farming gave a kid more coins than they earned. Password-gated.
+  try { dash.appendChild(renderCoinAdjuster()); }
+  catch(e){ console.warn('[KidQuest] coin adjuster failed:',e); }
   // Reset controls — granular password-gated resets (per subject, per student, all).
   try { dash.appendChild(renderResetControls()); }
   catch(e){ console.warn('[KidQuest] reset controls failed:',e); }
   root.appendChild(dash);
+}
+
+/* Coin adjuster — per-student +/- coin control for the teacher dashboard.
+   We added this after a kid (Axel) ended up with an inflated balance from
+   the old challenge-coin rule (flat bonus on Finish). The tutor needed a
+   way to correct balances without editing JSON by hand. Every write goes
+   through confirmTeacherPassword so nobody browsing the dashboard can
+   silently mint or burn coins. */
+function renderCoinAdjuster(){
+  const wrap = h('div',{class:'t-pw-block'});
+  wrap.appendChild(h('div',{class:'t-pw-head'},[
+    h('h3',{},'💰 Coin Balance Adjuster'),
+    h('p',{class:'t-pw-sub'}, 'Set or nudge any student\'s coin total. Use this to correct inflated balances (e.g. from Finish-button farming) or to grant bonus coins for off-app work. Every change is password-gated.'),
+  ]));
+  const rowsWrap = h('div',{style:'display:flex;flex-direction:column;gap:10px;margin-top:12px'});
+  STUDENTS.forEach(s=>{
+    const ud = allData.users[s.id] || defaultUser();
+    const current = Number(ud.coins||0);
+    const row = h('div',{style:'display:flex;align-items:center;gap:10px;padding:10px 12px;background:#fafaff;border:1px solid var(--line);border-radius:12px;flex-wrap:wrap'});
+    const token = getStudentAvatarDisplay(s.id).value;
+    row.appendChild(h('div',{style:'font-size:20px'}, token));
+    row.appendChild(h('div',{style:'flex:1;min-width:120px'},[
+      h('div',{style:'font-weight:800;font-size:14px'}, s.name),
+      h('div',{style:'font-size:12px;color:var(--ink3)'}, s.grade+' · '+current+' coins now'),
+    ]));
+    // Delta input — positive adds, negative subtracts
+    const deltaInput = h('input',{
+      type:'number', step:'1', placeholder:'±coins',
+      style:'width:100px;padding:8px 10px;border-radius:10px;border:1px solid var(--line);font-weight:700;font-size:14px',
+    });
+    row.appendChild(deltaInput);
+    row.appendChild(h('button',{
+      class:'btn btn-ghost',
+      style:'padding:8px 12px;font-size:13px',
+      onclick:()=>{
+        const delta = parseInt(deltaInput.value, 10);
+        if(!Number.isFinite(delta) || delta === 0){
+          alert('Enter a positive or negative number to add or subtract.');
+          return;
+        }
+        const after = Math.max(0, current + delta);
+        if(!confirm(s.name+': '+current+' → '+after+' coins ('+(delta>0?'+':'')+delta+')?\n\nApply change?')) return;
+        if(!confirmTeacherPassword('adjust '+s.name+'\'s coins by '+(delta>0?'+':'')+delta)) return;
+        const u = allData.users[s.id];
+        if(!u) return;
+        u.coins = after;
+        saveState();
+        alert(s.name+'\'s coins set to '+after+'.');
+        try { renderTeacher(document.getElementById('screen')); } catch(e){}
+      },
+    }, 'Apply Δ'));
+    row.appendChild(h('button',{
+      class:'btn btn-ghost',
+      style:'padding:8px 12px;font-size:13px',
+      onclick:()=>{
+        const raw = prompt('Set '+s.name+'\'s coin balance to exactly which number?\n\nCurrent: '+current, String(current));
+        if(raw === null) return;
+        const next = parseInt(raw, 10);
+        if(!Number.isFinite(next) || next < 0){
+          alert('Please enter a non-negative whole number.');
+          return;
+        }
+        if(next === current){ alert('Already at '+current+' — no change.'); return; }
+        if(!confirm(s.name+': '+current+' → '+next+' coins?\n\nApply change?')) return;
+        if(!confirmTeacherPassword('set '+s.name+'\'s coins to '+next)) return;
+        const u = allData.users[s.id];
+        if(!u) return;
+        u.coins = next;
+        saveState();
+        alert(s.name+'\'s coins set to '+next+'.');
+        try { renderTeacher(document.getElementById('screen')); } catch(e){}
+      },
+    }, 'Set exact…'));
+    rowsWrap.appendChild(row);
+  });
+  wrap.appendChild(rowsWrap);
+  return wrap;
 }
 
 /* Student password manager — lets the teacher see every student's
