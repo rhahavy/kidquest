@@ -357,7 +357,7 @@ img{max-width:100%}
 .q-card{background:linear-gradient(180deg,#faf9ff,#fff);border:1px solid var(--line);border-radius:var(--r);padding:clamp(20px,3vw,32px);text-align:center}
 .q-text{font-size:clamp(18px,2.5vw,24px);font-weight:700;line-height:1.3;max-width:640px;margin:0 auto}
 .q-visual{margin:16px 0 8px;font-size:clamp(48px,8vw,72px);letter-spacing:4px;line-height:1}
-.q-passage{margin:12px auto;max-width:600px;background:#fff;padding:16px 20px;border-radius:var(--r);font-size:15px;color:var(--ink2);line-height:1.6;text-align:left;border-left:4px solid var(--sky);box-shadow:var(--shadow)}
+.q-passage{margin:16px auto;max-width:640px;background:#fff;padding:22px 26px;border-radius:var(--r);font-size:clamp(18px,2.4vw,22px);color:var(--ink);line-height:1.55;text-align:left;border-left:4px solid var(--sky);box-shadow:var(--shadow);font-weight:500}
 .choices{margin-top:18px;display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));max-width:640px;margin-left:auto;margin-right:auto}
 .choice{background:#fff;border:2px solid var(--line);border-radius:var(--r);padding:16px;font-size:16px;font-weight:700;transition:all .25s var(--spring);word-break:break-word;min-height:56px}
 .choice:hover:not(.locked){transform:translateY(-2px);border-color:var(--primary);box-shadow:0 6px 16px rgba(108,92,231,.2)}
@@ -518,10 +518,10 @@ img{max-width:100%}
    videos, no YouTube branding). Kids stay IN the app, don't get sent to
    YouTube's recommendation feed. Use videoIds[] on an activity to curate
    1-2 specific videos per lesson. */
-.lesson-videos{margin-top:14px;display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+.lesson-videos{margin:0 0 4px;display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
 .lesson-video-wrap{position:relative;padding-top:56.25%;border-radius:14px;overflow:hidden;background:#000;box-shadow:0 8px 20px rgba(26,16,53,.18)}
 .lesson-video-wrap iframe{position:absolute;inset:0;width:100%;height:100%;border:0;display:block}
-.lesson-videos-title{font-size:12px;font-weight:800;color:var(--primary);letter-spacing:.06em;text-transform:uppercase;margin:0 0 6px}
+.lesson-videos-title{font-size:12px;font-weight:800;color:var(--primary);letter-spacing:.06em;text-transform:uppercase;margin:14px 0 6px}
 
 /* ---- REWARD OVERLAY ---- */
 .reward-overlay{position:fixed;inset:0;z-index:100;background:rgba(26,16,53,.45);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;padding:24px}
@@ -1225,7 +1225,7 @@ const WEEKS = { 1: {
 /* ---- NISHAN (Senior Kindergarten) ---- */
 nishan: {
   reading: [
-    { id:'w1-nishan-r1', title:'The Cat', emoji:'🐱',
+    { id:'w1-nishan-r1', title:'The Cat', emoji:'🐱', videoIds:['BELlZKpi1Zs'],
       lesson:{title:'Reading a Story',intro:'Read each sentence carefully. Think about what is happening!',example:'The cat sat on a mat.',hint:'Picture it in your mind.'},
       questions:[
         {type:'passage',passage:'The cat sat on a red mat. The cat is big. The sun is hot. The cat is happy.',q:'Where did the cat sit?',choices:['On a mat','On a bed','On a rock','In a box'],answer:0},
@@ -1234,7 +1234,7 @@ nishan: {
         {type:'mcq',q:'What is hot?',choices:['The mat','The cat','The sun','The water'],answer:2},
         {type:'mcq',q:'The cat is...',choices:['Small','Big','Tiny','Thin'],answer:1},
       ]},
-    { id:'w1-nishan-r2', title:'I See a Dog', emoji:'🐶',
+    { id:'w1-nishan-r2', title:'I See a Dog', emoji:'🐶', videoIds:['_UR-l3QI2nE'],
       lesson:{title:'Looking at Details',intro:'Good readers notice small details in a story.',example:'"The dog runs to the ball" — we know the dog likes balls!',hint:'Read each word carefully.'},
       questions:[
         {type:'passage',passage:'I see a dog. The dog can run. I see a ball. The dog runs to the ball. Good dog!',q:'What can the dog do?',choices:['Fly','Run','Swim','Sleep'],answer:1},
@@ -1243,7 +1243,7 @@ nishan: {
         {type:'mcq',q:'Is the dog good or bad?',choices:['Good','Bad','Silly','Angry'],answer:0},
         {type:'mcq',q:'What could the dog do with the ball?',choices:['Eat it','Play with it','Sleep on it','Read it'],answer:1},
       ]},
-    { id:'w1-nishan-r3', title:'I Like Food', emoji:'🍎',
+    { id:'w1-nishan-r3', title:'I Like Food', emoji:'🍎', videoIds:['hq3yfQnllfQ'],
       lesson:{title:'Words We Know',intro:'Some words we see ALL the time: I, like, the, a, is.',example:'"I like apples" — the word "like" tells us a favorite!',hint:'Look for the word "like" in each sentence.'},
       questions:[
         {type:'passage',passage:'I like apples. I like bananas. I like milk. I like bread. Yum!',q:'Which is a food from the story?',choices:['Apples','Cars','Shoes','Books'],answer:0},
@@ -1253,26 +1253,26 @@ nishan: {
         {type:'mcq',q:'The word "Yum" means food tastes...',choices:['Bad','Good','Sour','Cold'],answer:1},
       ]},
     { id:'w1-nishan-r4', title:'Big or Small', emoji:'🔍',
-      lesson:{title:'Comparing Things',intro:'Big means large. Small means tiny. We can compare!',example:'An elephant is big. An ant is small.',hint:'Think about size when you read.'},
+      lesson:{title:'Comparing Things',intro:'Words like BIG, SMALL, TALL, SHORT, FAST, SLOW help us compare. Good readers notice these compare words.',example:'"The blue ball is BIGGER than the red ball." — the word BIGGER compares two balls.',hint:'Look for "-er" words like bigger, smaller, taller — they compare!'},
       questions:[
-        {type:'passage',passage:'The ball is big. The bug is small. The tree is big. The ant is small.',q:'What is BIG?',choices:['The bug','The ant','The tree','The key'],answer:2},
-        {type:'mcq',q:'What is SMALL?',choices:['The ball','The tree','The house','The ant'],answer:3},
-        {type:'mcq',q:'A bus is probably...',choices:['Big','Small'],answer:0},
-        {type:'mcq',q:'A ladybug is probably...',choices:['Big','Small'],answer:1},
-        {type:'compare',q:'Which is BIGGER?',a:'🐘 Elephant',b:'🐁 Mouse',answer:'a'},
+        {type:'passage',passage:'Max has a big red ball. Sam has a small blue ball. The red ball bounces HIGHER than the blue ball. But the blue ball rolls FASTER. Which ball do you want?',q:'Whose ball is BIGGER?',choices:['Max\'s','Sam\'s','The same','Nobody\'s'],answer:0},
+        {type:'mcq',q:'Which ball bounces higher?',choices:['Blue','Red','Both same','Neither'],answer:1},
+        {type:'mcq',q:'Which ball rolls FASTER?',choices:['Red','Blue','Both same','Neither'],answer:1},
+        {type:'mcq',q:'What color is Sam\'s ball?',choices:['Red','Blue','Green','Yellow'],answer:1},
+        {type:'compare',q:'Which is TALLER?',a:'🌲 Tree',b:'🌷 Flower',answer:'a'},
       ]},
     { id:'w1-nishan-r5', title:'At the Park', emoji:'🌳',
-      lesson:{title:'Understanding Places',intro:'Stories happen in places. A park, a school, a home.',example:'"We go to the park" — the park is the PLACE.',hint:'Ask: Where does this happen?'},
+      lesson:{title:'Understanding Stories',intro:'Stories have a PLACE (where), CHARACTERS (who), and a PROBLEM or EVENT (what happens).',example:'"We go to the park" — WHERE: park. WHO: we. WHAT: going.',hint:'Ask: Where? Who? What happens?'},
       questions:[
-        {type:'passage',passage:'We go to the park. We see a slide. We see swings. I go on the slide. It is fun!',q:'Where did we go?',choices:['School','Park','Store','Home'],answer:1},
-        {type:'mcq',q:'What did we see at the park?',choices:['A car','A slide','A bed','A book'],answer:1},
-        {type:'mcq',q:'Was the slide fun?',choices:['Yes','No'],answer:0},
-        {type:'mcq',q:'What else was at the park?',choices:['Swings','A TV','A fridge','Homework'],answer:0},
-        {type:'mcq',q:'A park is a place to...',choices:['Sleep','Cook','Play','Study'],answer:2},
+        {type:'passage',passage:'Mia and her little brother Leo went to the park. Mia wanted to go on the swings, but Leo was too small. Mia pushed Leo gently on the baby swings first. Then SHE took a turn on the big swings. They both laughed!',q:'Who are the TWO characters?',choices:['Mia and Mom','Mia and Leo','Leo and Dad','Mia alone'],answer:1},
+        {type:'mcq',q:'Why couldn\'t Leo go on the big swings?',choices:['It was closed','He was too small','He was scared','It was raining'],answer:1},
+        {type:'mcq',q:'What did Mia do FIRST?',choices:['The big swings','The slide','Push Leo on baby swings','Leave'],answer:2},
+        {type:'mcq',q:'How did the story END?',choices:['They cried','They both laughed','They went home sad','They fought'],answer:1},
+        {type:'mcq',q:'What does the story teach us about Mia?',choices:['She is mean','She is kind to Leo','She is scared','She is lazy'],answer:1},
       ]},
   ],
   writing: [
-    { id:'w1-nishan-w1', title:'First Letters', emoji:'🔤',
+    { id:'w1-nishan-w1', title:'First Letters', emoji:'🔤', videoIds:['saF3-f0XWAY'],
       lesson:{title:'Starting Sounds',intro:'Every word starts with a letter. Say the word and listen to the first sound!',example:'🐱 = Cat → starts with C',hint:'Whisper the word — listen to the VERY first sound.'},
       questions:[
         {type:'mcq',q:'What letter does this start with?',visual:'🍎',choices:['B','A','D','P'],answer:1},
@@ -1281,7 +1281,7 @@ nishan: {
         {type:'mcq',q:'What letter does this start with?',visual:'🌳',choices:['R','T','L','D'],answer:1},
         {type:'mcq',q:'What letter does this start with?',visual:'🌙',choices:['N','M','S','L'],answer:1},
       ]},
-    { id:'w1-nishan-w2', title:'Spell It!', emoji:'📝',
+    { id:'w1-nishan-w2', title:'Spell It!', emoji:'📝', videoIds:['75p-N9YKqNo'],
       lesson:{title:'Picking the Right Spelling',intro:'Some words LOOK right but are spelled wrong. Pick the correct one!',example:'DOG is correct. DOGG is not.',hint:'Sound out each letter slowly.'},
       questions:[
         {type:'mcq',q:'How do you spell this?',visual:'🐱',choices:['CAT','KAT','CATT','KET'],answer:0},
@@ -1291,123 +1291,126 @@ nishan: {
         {type:'mcq',q:'How do you spell this?',visual:'🐖',choices:['PEG','PIG','PIGG','PIC'],answer:1},
       ]},
     { id:'w1-nishan-w3', title:'Missing Letter', emoji:'🧩',
-      lesson:{title:'Middle Sounds',intro:'Words have a beginning, middle, and end. The middle is often a vowel: A, E, I, O, U.',example:'C_T → the middle is A → CAT',hint:'Say the word slowly to hear the middle sound.'},
+      lesson:{title:'Missing Sounds',intro:'Find missing letters anywhere in a word — beginning, middle, or end! Vowels (A, E, I, O, U) are often in the middle.',example:'C_T → middle is A → CAT. _OG → beginning is D → DOG.',hint:'Say the word slowly. Which sound is missing?'},
       questions:[
-        {type:'mcq',q:'C _ T = ?',visual:'🐱',choices:['A','O','I','E'],answer:0},
-        {type:'mcq',q:'D _ G = ?',visual:'🐶',choices:['I','O','U','E'],answer:1},
-        {type:'mcq',q:'S _ N = ?',visual:'☀️',choices:['I','E','U','A'],answer:2},
-        {type:'mcq',q:'B _ S = ?',visual:'🚌',choices:['U','I','A','O'],answer:0},
-        {type:'mcq',q:'P _ G = ?',visual:'🐖',choices:['A','O','I','U'],answer:2},
+        {type:'mcq',q:'Fill the MIDDLE: F _ SH',visual:'🐟',choices:['A','I','U','O'],answer:1},
+        {type:'mcq',q:'Fill the BEGINNING: _ OOK',visual:'📖',choices:['L','B','T','R'],answer:1},
+        {type:'mcq',q:'Fill the END: CU _',visual:'☕',choices:['T','B','P','D'],answer:2},
+        {type:'mcq',q:'Fill the MIDDLE: FR _ G',visual:'🐸',choices:['I','O','U','E'],answer:1},
+        {type:'mcq',q:'Fill the MIDDLE: TR _ E',visual:'🌳',choices:['A','E','I','U'],answer:1},
       ]},
     { id:'w1-nishan-w4', title:'Match Big & Small', emoji:'🔡',
-      lesson:{title:'Uppercase & Lowercase',intro:'Every letter has a BIG form (A) and small form (a). They sound the same!',example:'A ↔ a, B ↔ b, M ↔ m',hint:'Look at the shape — some change a lot!'},
+      lesson:{title:'Uppercase & Lowercase',intro:'Every letter has a BIG form (A) and small form (a). BIG letters start sentences and names. Small letters fill in the rest!',example:'My name is Sam. → BIG M, small y, small n, BIG S, small a, small m.',hint:'BIG letters go at the START of sentences and names!'},
       questions:[
-        {type:'match',q:'Match each big letter to its small letter.',pairs:[['A','a'],['B','b'],['D','d'],['M','m']]},
-        {type:'match',q:'Match more letters!',pairs:[['G','g'],['R','r'],['S','s'],['T','t']]},
+        {type:'match',q:'Match each BIG letter to its small letter.',pairs:[['A','a'],['B','b'],['D','d'],['M','m']]},
+        {type:'match',q:'Match the trickier ones!',pairs:[['G','g'],['R','r'],['E','e'],['Q','q']]},
+        {type:'mcq',q:'Which should be a BIG letter?',choices:['The first letter of a name','The middle of a word','The end of a word','None'],answer:0},
+        {type:'mcq',q:'In "my dog Rex" — which letter MUST be big?',choices:['m','d','R','x'],answer:2},
       ]},
     { id:'w1-nishan-w5', title:'My Writing!', emoji:'✍️',
-      lesson:{title:'Writing Your Own Words!',intro:'Now YOU get to write! Type your own answer. Use your best words!',example:'If the prompt says "Tell me about your pet" → "I have a cat. She is soft."',hint:'Try to write at least 3 words. Start with a capital letter!'},
+      lesson:{title:'Writing Your Own Sentences!',intro:'A full sentence starts with a BIG letter and ends with a dot (.) or ! or ?. Try writing TWO sentences!',example:'"I have a cat. She is soft." — two sentences, both start BIG and end with dots.',hint:'Aim for at least 6 words. Use a capital letter to start!'},
       questions:[
-        {type:'write',q:'Write about your favorite animal.',prompt:'🐾 What is your favorite animal? Write about it!',placeholder:'I like cats because...',minWords:3,goodWords:6,keywords:['cat','dog','fish','bird','rabbit','bear','lion','horse','turtle','hamster']},
-        {type:'write',q:'What do you like to eat?',prompt:'🍎 What is your favorite food? Tell me about it!',placeholder:'My favorite food is...',minWords:3,goodWords:6,keywords:['pizza','apple','banana','ice cream','cookies','cake','rice','chicken','pasta','milk']},
-        {type:'write',q:'Tell me about your family.',prompt:'👨‍👩‍👧‍👦 Who is in your family? Write about them!',placeholder:'My family has...',minWords:3,goodWords:8,keywords:['mom','dad','brother','sister','baby','grandma','grandpa','family','love']},
-        {type:'mcq',q:'"I see a ___ in the sky."',choices:['fish','cloud','rug','book'],answer:1},
-        {type:'mcq',q:'"Birds can ___."',choices:['drive','fly','read','cook'],answer:1},
+        {type:'write',q:'Write about your favorite animal.',prompt:'🐾 What is your favorite animal? Write 2 sentences.',placeholder:'I like cats. They are soft and...',minWords:6,goodWords:10,keywords:['cat','dog','fish','bird','rabbit','bear','lion','horse','turtle','hamster']},
+        {type:'write',q:'What do you like to eat?',prompt:'🍎 What is your favorite food and WHY? Tell me.',placeholder:'My favorite food is pizza because...',minWords:6,goodWords:10,keywords:['pizza','apple','banana','ice cream','cookies','cake','rice','chicken','pasta','milk','because']},
+        {type:'write',q:'Tell me about your family.',prompt:'👨‍👩‍👧‍👦 Who is in your family? Say what they DO.',placeholder:'My family has a mom and...',minWords:6,goodWords:12,keywords:['mom','dad','brother','sister','baby','grandma','grandpa','family','love','plays','helps']},
+        {type:'mcq',q:'Which sentence is CORRECT?',choices:['i see a dog','I see a dog.','I see a dog','i see a dog.'],answer:1},
+        {type:'mcq',q:'"We went to the park___" — what should end this?',choices:['.','a','the','and'],answer:0},
       ]},
   ],
   math: [
-    { id:'w1-nishan-m1', title:'Count Them!', emoji:'🔢',
-      lesson:{title:'Counting Objects',intro:'Point to each thing and say the number: 1, 2, 3, 4, 5...',example:'🍎🍎🍎 = 3 apples!',hint:'Point and count out loud.'},
+    { id:'w1-nishan-m1', title:'Count Them!', emoji:'🔢', videoIds:['bMpeUL43ONg'],
+      lesson:{title:'Counting Objects',intro:'Point to each thing and say the number: 1, 2, 3, 4, 5... We can count past 10 too!',example:'🍎🍎🍎🍎🍎🍎🍎🍎🍎🍎🍎 = 11 apples!',hint:'Count carefully — don\'t skip any!'},
       questions:[
-        {type:'mcq',q:'How many?',visual:'🍎🍎🍎',choices:['2','3','4','5'],answer:1},
-        {type:'mcq',q:'How many?',visual:'⭐⭐⭐⭐⭐',choices:['3','4','5','6'],answer:2},
-        {type:'mcq',q:'How many?',visual:'🎈🎈🎈🎈🎈🎈',choices:['5','6','7','4'],answer:1},
-        {type:'mcq',q:'How many?',visual:'🐟🐟',choices:['1','2','3','4'],answer:1},
-        {type:'mcq',q:'How many?',visual:'❤️❤️❤️❤️❤️❤️❤️',choices:['6','7','8','9'],answer:1},
+        {type:'mcq',q:'How many?',visual:'⭐⭐⭐⭐⭐⭐⭐⭐',choices:['6','7','8','9'],answer:2},
+        {type:'mcq',q:'How many?',visual:'🎈🎈🎈🎈🎈🎈🎈🎈🎈🎈',choices:['8','9','10','11'],answer:2},
+        {type:'mcq',q:'How many?',visual:'🐟🐟🐟🐟🐟🐟🐟🐟🐟🐟🐟🐟',choices:['10','11','12','13'],answer:2},
+        {type:'mcq',q:'How many?',visual:'❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️',choices:['13','14','15','16'],answer:2},
+        {type:'mcq',q:'Count by 2s: 2, 4, 6, 8, ?',choices:['9','10','11','12'],answer:1},
       ]},
-    { id:'w1-nishan-m2', title:'Number Names', emoji:'🔤',
-      lesson:{title:'Numbers Have Names',intro:'Each number has a name: 1 = one, 2 = two, 3 = three...',example:'SEVEN = 7, FIVE = 5',hint:'Practice counting and naming!'},
+    { id:'w1-nishan-m2', title:'Number Names', emoji:'🔤', videoIds:['DR-cfDsHCGA'],
+      lesson:{title:'Numbers Have Names',intro:'Each number has a name. After TEN come the TEENS: eleven, twelve, thirteen... Ordinal numbers tell POSITION: 1st, 2nd, 3rd.',example:'SEVEN = 7, FIFTEEN = 15, 1st = first, 2nd = second',hint:'Practice counting past 10 and naming positions!'},
       questions:[
-        {type:'mcq',q:'Which number is SEVEN?',choices:['1','7','4','9'],answer:1},
-        {type:'mcq',q:'Which number is FIVE?',choices:['2','8','5','3'],answer:2},
-        {type:'mcq',q:'Which number is TEN?',choices:['1','10','100','0'],answer:1},
-        {type:'mcq',q:'Which number comes AFTER 8?',choices:['7','10','9','6'],answer:2},
-        {type:'mcq',q:'Which number comes BEFORE 5?',choices:['4','6','3','7'],answer:0},
+        {type:'mcq',q:'Which number is ELEVEN?',choices:['1','10','11','12'],answer:2},
+        {type:'mcq',q:'Which number is FIFTEEN?',choices:['5','15','50','14'],answer:1},
+        {type:'mcq',q:'Which number comes AFTER 14?',choices:['13','15','16','40'],answer:1},
+        {type:'mcq',q:'If you are 3rd in line, how many people are in FRONT of you?',choices:['0','2','3','4'],answer:1},
+        {type:'mcq',q:'Put in order: 13, 11, 15, 14. Which comes FIRST?',choices:['13','11','15','14'],answer:1},
       ]},
     { id:'w1-nishan-m3', title:'Compare Numbers', emoji:'⚖️',
-      lesson:{title:'Bigger and Smaller',intro:'Numbers get bigger as you count up. 8 is bigger than 3.',example:'7 > 4 (seven is bigger than four)',hint:'Which number comes LATER when counting?'},
+      lesson:{title:'Bigger and Smaller',intro:'Numbers get bigger as you count up. Two-digit numbers like 15 and 18 can be compared too — look at the tens first!',example:'7 > 4 (seven is bigger than four). 18 > 15 (both have one ten, but 8 ones is more than 5 ones).',hint:'Which number comes LATER when counting?'},
       questions:[
-        {type:'compare',q:'Which is BIGGER?',a:'3',b:'8',answer:'b'},
-        {type:'compare',q:'Which is BIGGER?',a:'12',b:'7',answer:'a'},
-        {type:'compare',q:'Which is SMALLER?',a:'9',b:'4',answer:'b'},
-        {type:'mcq',q:'What is 1 MORE than 6?',choices:['5','6','7','8'],answer:2},
-        {type:'mcq',q:'What is 1 LESS than 10?',choices:['8','9','11','7'],answer:1},
+        {type:'compare',q:'Which is BIGGER?',a:'15',b:'18',answer:'b'},
+        {type:'compare',q:'Which is BIGGER?',a:'12',b:'20',answer:'b'},
+        {type:'compare',q:'Which is SMALLER?',a:'14',b:'9',answer:'b'},
+        {type:'mcq',q:'What is 1 MORE than 19?',choices:['18','20','21','29'],answer:1},
+        {type:'mcq',q:'What is 10 MORE than 5?',choices:['6','10','15','50'],answer:2},
       ]},
-    { id:'w1-nishan-m4', title:'Shape Finder', emoji:'🔺',
-      lesson:{title:'Shapes Around Us',intro:'Shapes have names: circle (round), triangle (3 sides), square (4 equal sides).',example:'A ball is a circle. A door is a rectangle.',hint:'Count the sides to identify shapes!'},
+    { id:'w1-nishan-m4', title:'Shape Finder', emoji:'🔺', videoIds:['QaF84YHNQNg'],
+      lesson:{title:'Shapes Around Us',intro:'Shapes have names: circle (round), triangle (3 sides), square (4 EQUAL sides), rectangle (4 sides but longer), hexagon (6 sides like a honeycomb).',example:'A ball is a circle. A door is a rectangle. A stop sign has 8 sides (octagon).',hint:'Count the sides AND corners!'},
       questions:[
-        {type:'mcq',q:'How many sides does a TRIANGLE have?',choices:['2','3','4','5'],answer:1},
-        {type:'mcq',q:'How many sides does a SQUARE have?',choices:['3','4','5','6'],answer:1},
-        {type:'mcq',q:'A ball is shaped like a...',choices:['Triangle','Square','Circle','Star'],answer:2},
-        {type:'mcq',q:'Which shape has NO sides?',choices:['Square','Triangle','Circle','Rectangle'],answer:2},
-        {type:'mcq',q:'A clock face is usually a...',choices:['Square','Triangle','Circle','Star'],answer:2},
+        {type:'mcq',q:'How many CORNERS does a triangle have?',choices:['2','3','4','5'],answer:1},
+        {type:'mcq',q:'How many sides does a HEXAGON have?',choices:['4','5','6','8'],answer:2},
+        {type:'mcq',q:'What\'s the difference between a SQUARE and a RECTANGLE?',choices:['Nothing','Square has equal sides','Rectangle has 3 sides','Square is round'],answer:1},
+        {type:'mcq',q:'Which shape rolls?',choices:['Square','Triangle','Circle','Rectangle'],answer:2},
+        {type:'mcq',q:'A STOP sign has how many sides?',choices:['4','6','8','10'],answer:2},
       ]},
-    { id:'w1-nishan-m5', title:'First Adding', emoji:'➕',
-      lesson:{title:'Adding Together',intro:'Adding (+) means putting numbers together. The answer gets BIGGER!',stack:{op:'+',top:'3',bottom:'2',answer:'5',note:'Three plus two equals five.'},hint:'Count up from the first number.'},
+    { id:'w1-nishan-m5', title:'First Adding & Subtracting', emoji:'➕',
+      lesson:{title:'Adding AND Taking Away',intro:'Adding (+) puts numbers TOGETHER — the answer gets bigger. Subtracting (−) TAKES AWAY — the answer gets smaller!',stack:{op:'+',top:'7',bottom:'6',answer:'13',note:'Seven plus six. Count up: 7... 8, 9, 10, 11, 12, 13.'},hint:'For +, count UP. For −, count DOWN.'},
       questions:[
-        {type:'mcq',q:'2 + 1 = ?',choices:['2','3','4','5'],answer:1},
-        {type:'mcq',q:'3 + 2 = ?',choices:['4','5','6','7'],answer:1},
-        {type:'mcq',q:'4 + 3 = ?',choices:['5','6','7','8'],answer:2},
-        {type:'mcq',q:'5 + 5 = ?',choices:['8','9','10','11'],answer:2},
-        {type:'mcq',q:'1 + 1 + 1 = ?',choices:['2','3','4','5'],answer:1},
+        {type:'mcq',q:'6 + 3 = ?',choices:['7','8','9','10'],answer:2},
+        {type:'mcq',q:'7 + 5 = ?',choices:['10','11','12','13'],answer:2},
+        {type:'mcq',q:'8 + 6 = ?',choices:['12','13','14','15'],answer:2},
+        {type:'mcq',q:'5 − 2 = ?',choices:['2','3','4','7'],answer:1},
+        {type:'mcq',q:'You have 10 stickers. You give 4 away. How many left?',choices:['4','5','6','14'],answer:2},
       ]},
   ],
   logic: [
     { id:'w1-nishan-l1', title:'What Goes Together?', emoji:'🤝',
-      lesson:{title:'Matching Pairs',intro:'Some things belong together — like a sock and a shoe.',example:'🔑 goes with 🔒 — key and lock!',hint:'Think: what do you USE this with?'},
+      lesson:{title:'Matching Pairs',intro:'Some things go together because we USE them together. Others go together because they are both the SAME KIND of thing.',example:'🔑 goes with 🔒 — we use a key to open a lock!',hint:'Think: Do I use them together? Or are they the same kind of thing?'},
       questions:[
-        {type:'match',q:'Match things that go together!',pairs:[['🔑 Key','🔒 Lock'],['🧦 Sock','👟 Shoe'],['✏️ Pencil','📄 Paper'],['🍞 Bread','🧈 Butter']]},
-        {type:'match',q:'Match these pairs too!',pairs:[['☂️ Umbrella','🌧️ Rain'],['🪥 Brush','🦷 Teeth'],['🛏️ Bed','😴 Sleep'],['📖 Book','📚 Read']]},
+        {type:'match',q:'Match things we USE together!',pairs:[['🔑 Key','🔒 Lock'],['🧦 Sock','👟 Shoe'],['✏️ Pencil','📄 Paper'],['🍞 Bread','🧈 Butter']]},
+        {type:'match',q:'Match tools to their jobs!',pairs:[['☂️ Umbrella','🌧️ Rain'],['🪥 Brush','🦷 Teeth'],['🔨 Hammer','🧲 Nail'],['✂️ Scissors','📃 Paper']]},
+        {type:'mcq',q:'Which goes BEST with 🧤 gloves?',choices:['🍦 Ice cream','☀️ Hot sun','❄️ Cold snow','🏊 Pool'],answer:2},
       ]},
     { id:'w1-nishan-l2', title:'Odd One Out', emoji:'❌',
-      lesson:{title:'Finding the Different One',intro:'Three things are alike. One is NOT. Find the one that does not belong.',example:'🍎🍌🍇🚗 — the car does not belong with fruits!',hint:'Ask: What do MOST of these have in common?'},
+      lesson:{title:'Finding the Different One',intro:'Three things share something. One is DIFFERENT. Look for what makes the group — animals? tools? things that FLY? things that are COLD?',example:'🍎🍌🍇🚗 — three fruits and a car. Car doesn\'t belong!',hint:'Try to name the GROUP in one word.'},
       questions:[
-        {type:'mcq',q:'Which does NOT belong?',choices:['🐱 Cat','🐶 Dog','🐰 Rabbit','🚗 Car'],answer:3},
-        {type:'mcq',q:'Which does NOT belong?',choices:['🍎 Apple','🍌 Banana','🥕 Carrot','🍇 Grapes'],answer:2},
-        {type:'mcq',q:'Which does NOT belong?',choices:['✏️ Pencil','📏 Ruler','🎒 Backpack','🍕 Pizza'],answer:3},
-        {type:'mcq',q:'Which does NOT fly?',choices:['🦅 Eagle','🦋 Butterfly','🐢 Turtle','🐝 Bee'],answer:2},
-        {type:'mcq',q:'Which is NOT round?',choices:['⚽ Ball','🍎 Apple','📦 Box','🍊 Orange'],answer:2},
+        {type:'mcq',q:'Which does NOT belong? (Think: pets)',choices:['🐱 Cat','🐶 Dog','🐰 Rabbit','🦒 Giraffe'],answer:3},
+        {type:'mcq',q:'Which does NOT belong with vegetables?',choices:['🥕 Carrot','🥦 Broccoli','🍌 Banana','🥔 Potato'],answer:2},
+        {type:'mcq',q:'Which does NOT live in water?',choices:['🐟 Fish','🐙 Octopus','🐢 Turtle','🦌 Deer'],answer:3},
+        {type:'mcq',q:'Which is NOT a tool for writing?',choices:['✏️ Pencil','🖊️ Pen','🖍️ Crayon','🔨 Hammer'],answer:3},
+        {type:'mcq',q:'Which is NOT cold?',choices:['❄️ Snow','🧊 Ice','🔥 Fire','🍦 Ice cream'],answer:2},
       ]},
     { id:'w1-nishan-l3', title:'What Comes Next?', emoji:'🔁',
-      lesson:{title:'Finding Patterns',intro:'A pattern repeats. Look at what happened before to guess what comes next.',example:'🔴🔵🔴🔵🔴 ? → next is 🔵!',hint:'Say the pattern out loud!'},
+      lesson:{title:'Finding Patterns',intro:'Patterns REPEAT. A simple AB pattern goes 🔴🔵🔴🔵. An ABC pattern goes 🔴🔵🟡🔴🔵🟡. Find the rule first!',example:'🔴🔵🟡🔴🔵🟡🔴? → next is 🔵!',hint:'Say the pattern out loud — find the group that repeats.'},
       questions:[
-        {type:'mcq',q:'What comes next?',visual:'🔴 🔵 🔴 🔵 🔴 ?',choices:['🔴','🔵','🟢','🟡'],answer:1},
-        {type:'mcq',q:'What comes next?',visual:'⭐ 🌙 ⭐ 🌙 ⭐ ?',choices:['⭐','🌙','☀️','🌍'],answer:1},
-        {type:'mcq',q:'What comes next?',visual:'1 2 3 4 ?',choices:['4','5','6','3'],answer:1},
-        {type:'mcq',q:'What comes next?',visual:'🍎 🍎 🍌 🍎 🍎 ?',choices:['🍎','🍌','🍇','🍓'],answer:1},
-        {type:'mcq',q:'What is MISSING?',visual:'A B ? D E',choices:['B','C','F','G'],answer:1},
+        {type:'mcq',q:'What comes next? (ABC pattern)',visual:'🔴 🔵 🟡 🔴 🔵 🟡 🔴 ?',choices:['🔴','🔵','🟢','🟡'],answer:1},
+        {type:'mcq',q:'What comes next? (ABBA pattern)',visual:'⭐ 🌙 🌙 ⭐ ⭐ 🌙 🌙 ?',choices:['⭐','🌙','☀️','🌍'],answer:0},
+        {type:'mcq',q:'Count by 5s: 5, 10, 15, 20, ?',choices:['21','25','30','35'],answer:1},
+        {type:'mcq',q:'What is MISSING?',visual:'🍎 🍌 🍎 ? 🍎 🍌',choices:['🍎','🍌','🍇','🍓'],answer:1},
+        {type:'mcq',q:'What 2 letters are MISSING?',visual:'A B ? D ? F',choices:['A, E','C, E','E, G','B, C'],answer:1},
       ]},
     { id:'w1-nishan-l4', title:'Sort by Size', emoji:'📏',
-      lesson:{title:'Small to Big',intro:'Put things in order from the smallest to the biggest!',example:'🐜 → 🐁 → 🐈 → 🐘',hint:'Picture them standing next to each other.'},
+      lesson:{title:'Small to Big',intro:'We can order things by size — but also by weight, by age, or by how fast they go!',example:'🐜 → 🐁 → 🐈 → 🐘 (smallest to biggest)',hint:'Picture them lined up next to each other.'},
       questions:[
-        {type:'order',q:'Put in order: smallest to biggest!',items:['🐜 Ant','🐁 Mouse','🐈 Cat','🐘 Elephant'],correctOrder:[0,1,2,3]},
-        {type:'order',q:'Smallest to biggest!',items:['🥜 Nut','🍎 Apple','🎃 Pumpkin','🌳 Tree'],correctOrder:[0,1,2,3]},
-        {type:'mcq',q:'Which is the BIGGEST?',choices:['🐁 Mouse','🐈 Cat','🐘 Elephant','🐜 Ant'],answer:2},
-        {type:'mcq',q:'Which is the SMALLEST?',choices:['🌳 Tree','🌷 Flower','🍎 Apple','🎃 Pumpkin'],answer:1},
-        {type:'compare',q:'Which is BIGGER?',a:'🏠 House',b:'📱 Phone',answer:'a'},
+        {type:'order',q:'SMALLEST to BIGGEST!',items:['🐜 Ant','🐁 Mouse','🐈 Cat','🐕 Dog','🐘 Elephant'],correctOrder:[0,1,2,3,4]},
+        {type:'order',q:'LIGHTEST to HEAVIEST!',items:['🪶 Feather','🍎 Apple','📚 Book','🐕 Dog'],correctOrder:[0,1,2,3]},
+        {type:'mcq',q:'Which is TALLEST?',choices:['🌷 Flower','🌲 Tree','🌱 Seedling','🍄 Mushroom'],answer:1},
+        {type:'mcq',q:'Which is FASTEST?',choices:['🐢 Turtle','🐌 Snail','🐆 Cheetah','🐜 Ant'],answer:2},
+        {type:'compare',q:'Which is HEAVIER?',a:'🐘 Elephant',b:'🐁 Mouse',answer:'a'},
       ]},
     { id:'w1-nishan-l5', title:'Same or Different', emoji:'👀',
-      lesson:{title:'Looking Closely',intro:'Count carefully and compare. Which has more? Which has fewer?',example:'🍎🍎🍎🍎🍎 has MORE than 🍎🍎🍎',hint:'Count slowly with your finger!'},
+      lesson:{title:'Looking Closely',intro:'Count carefully and compare. "How many MORE" means subtract. "DOUBLE" means twice as many.',example:'🍎🍎🍎🍎🍎 has 2 MORE than 🍎🍎🍎 (5 − 3 = 2)',hint:'Count slowly with your finger, then compare!'},
       questions:[
-        {type:'mcq',q:'Which group has MORE?',choices:['🍎🍎🍎','🍎🍎🍎🍎🍎','🍎🍎','🍎'],answer:1},
-        {type:'mcq',q:'Which group has FEWER?',choices:['⭐⭐⭐⭐⭐','⭐⭐','⭐⭐⭐','⭐⭐⭐⭐'],answer:1},
-        {type:'mcq',q:'Which shows DOUBLE of 🐥🐥?',choices:['🐥','🐥🐥','🐥🐥🐥','🐥🐥🐥🐥'],answer:3},
-        {type:'mcq',q:'3 animals live on a farm. Which does NOT?',choices:['🐄 Cow','🐖 Pig','🐓 Chicken','🦁 Lion'],answer:3},
-        {type:'mcq',q:'Which group has the SAME number as ⭐⭐⭐?',choices:['🍎🍎','🍎🍎🍎','🍎🍎🍎🍎','🍎'],answer:1},
+        {type:'mcq',q:'🍎🍎🍎🍎🍎🍎 vs 🍎🍎🍎. How many MORE on the left?',choices:['1','2','3','6'],answer:2},
+        {type:'mcq',q:'Which group has FEWER? ⭐⭐⭐⭐⭐⭐ or ⭐⭐⭐⭐?',choices:['Left','Right','Same'],answer:1},
+        {type:'mcq',q:'DOUBLE of 🐥🐥🐥 is...',choices:['🐥🐥','🐥🐥🐥','🐥🐥🐥🐥','🐥🐥🐥🐥🐥🐥'],answer:3},
+        {type:'mcq',q:'HALF of 🎈🎈🎈🎈🎈🎈 is...',choices:['🎈','🎈🎈','🎈🎈🎈','🎈🎈🎈🎈'],answer:2},
+        {type:'mcq',q:'Which group has the SAME number as 7 stars?',choices:['🍎🍎🍎🍎🍎','🍎🍎🍎🍎🍎🍎','🍎🍎🍎🍎🍎🍎🍎','🍎🍎🍎🍎🍎🍎🍎🍎'],answer:2},
       ]},
   ],
   french: [
-    { id:'w1-nishan-f1', title:'Bonjour!', emoji:'👋',
+    { id:'w1-nishan-f1', title:'Bonjour!', emoji:'👋', videoIds:['9BgyvEXTZbk'],
       lesson:{title:'First French Words',intro:'French is a fun language! Learn five super-friendly words: hello, thank you, yes, no, and goodbye. Tap a card to hear it!',audioLang:'fr-FR',pictures:[
         {emoji:'👋', word:'Bonjour', label:'Hello'},
         {emoji:'🙏', word:'Merci', label:'Thank you'},
@@ -1422,7 +1425,7 @@ nishan: {
         {type:'mcq',q:'What does "Non" mean?',choices:['Yes','No','Sorry','Hi'],answer:1},
         {type:'mcq',q:'What does "Au revoir" mean?',choices:['Hello','Goodbye','Good night','Thanks'],answer:1},
       ]},
-    { id:'w1-nishan-f2', title:'Les Couleurs', emoji:'🎨',
+    { id:'w1-nishan-f2', title:'Les Couleurs', emoji:'🎨', videoIds:['fZR66TjjrDc'],
       lesson:{title:'Colors in French',intro:'Colors in French sound different, but they\'re still the same colors you know! Tap to hear each one.',audioLang:'fr-FR',pictures:[
         {emoji:'🔴', word:'rouge', label:'red'},
         {emoji:'🔵', word:'bleu', label:'blue'},
@@ -1436,7 +1439,7 @@ nishan: {
         {type:'mcq',q:'What is "vert"?',choices:['🔴 Red','🟢 Green','🔵 Blue','⚫ Black'],answer:1},
         {type:'match',q:'Match each color to its French name!',pairs:[['🔴','rouge'],['🔵','bleu'],['🟡','jaune'],['🟢','vert']]},
       ]},
-    { id:'w1-nishan-f3', title:'Les Nombres 1-5', emoji:'🔢',
+    { id:'w1-nishan-f3', title:'Les Nombres 1-5', emoji:'🔢', videoIds:['lsc3qLMaCu8'],
       lesson:{title:'Counting in French',intro:'French numbers sound different but count the same: 1, 2, 3, 4, 5. Tap each card to hear the pronunciation!',audioLang:'fr-FR',pictures:[
         {emoji:'1️⃣', word:'un', label:'one'},
         {emoji:'2️⃣', word:'deux', label:'two'},
@@ -1481,140 +1484,146 @@ nishan: {
       ]},
   ],
   science: [
-    { id:'w1-nishan-s1', title:'Living or Not?', emoji:'🌱',
-      lesson:{title:'Living vs. Non-Living',intro:'Living things GROW, EAT, BREATHE, and MOVE. Non-living things do not.',pictures:[
+    { id:'w1-nishan-s1', title:'Living or Not?', emoji:'🌱', videoIds:['Gy60BqCnTG4'],
+      lesson:{title:'Living vs. Non-Living',intro:'Living things GROW, EAT, BREATHE, MAKE BABIES, and REACT. Non-living things do NOT do all these things — even if they MOVE (like a car).',pictures:[
         {emoji:'🐶', word:'Dog', label:'living'},
         {emoji:'🌸', word:'Flower', label:'living'},
         {emoji:'🪨', word:'Rock', label:'non-living'},
         {emoji:'🪑', word:'Chair', label:'non-living'},
-      ],hint:'If it grows and eats, it\'s living!'},
+      ],hint:'Ask: Does it GROW? Does it EAT or need water? Then it\'s living!'},
       questions:[
         {type:'mcq',q:'Which is a LIVING thing?',choices:['🪨 Rock','🌳 Tree','🚗 Car','🪑 Chair'],answer:1},
-        {type:'mcq',q:'Which is NOT living?',choices:['🐱 Cat','🦋 Butterfly','🪑 Chair','🌼 Flower'],answer:2},
-        {type:'mcq',q:'What do living things do?',choices:['Grow','Sleep only','Stay still','Turn off'],answer:0},
-        {type:'mcq',q:'🐟 A fish is...',choices:['Living','Non-living'],answer:0},
-        {type:'mcq',q:'☁️ A cloud is...',choices:['Living','Non-living'],answer:1},
+        {type:'mcq',q:'A car MOVES but is NOT living. Why?',choices:['It is too big','It doesn\'t grow or eat','It has wheels','It is red'],answer:1},
+        {type:'mcq',q:'Which of these is LIVING?',choices:['☀️ Sun','☁️ Cloud','🦋 Butterfly','🏠 House'],answer:2},
+        {type:'mcq',q:'🌱 A seed is...',choices:['Living — it can grow','Non-living','Both','Neither'],answer:0},
+        {type:'mcq',q:'What do ALL living things need?',choices:['Water','Cell phones','Toys','Shoes'],answer:0},
       ]},
     { id:'w1-nishan-s2', title:'My Five Senses', emoji:'👁️',
-      lesson:{title:'The Five Senses',intro:'We have 5 senses: SEE with eyes, HEAR with ears, SMELL with nose, TASTE with tongue, TOUCH with hands.',pictures:[
+      lesson:{title:'The Five Senses',intro:'We have 5 senses: SEE (eyes), HEAR (ears), SMELL (nose), TASTE (tongue), TOUCH (skin). Each sense gives us DIFFERENT information about the world!',pictures:[
         {emoji:'👁️', word:'See', label:'eyes'},
         {emoji:'👂', word:'Hear', label:'ears'},
         {emoji:'👃', word:'Smell', label:'nose'},
         {emoji:'👅', word:'Taste', label:'tongue'},
         {emoji:'✋', word:'Touch', label:'hands'},
-      ],hint:'Each body part does a different sense!'},
+      ],hint:'Think about what sense you use for each thing!'},
       questions:[
-        {type:'mcq',q:'What do you HEAR with?',choices:['👁️ Eyes','👂 Ears','👃 Nose','👅 Tongue'],answer:1},
-        {type:'mcq',q:'You use your NOSE to...',choices:['See','Hear','Smell','Touch'],answer:2},
-        {type:'mcq',q:'To taste food you use your...',choices:['Ears','Eyes','Tongue','Hands'],answer:2},
-        {type:'mcq',q:'How many senses do we have?',choices:['3','4','5','6'],answer:2},
-        {type:'mcq',q:'What do you TOUCH with?',choices:['Hands','Mouth','Feet only','Hair'],answer:0},
+        {type:'mcq',q:'Which sense tells you if milk is COLD?',choices:['See','Hear','Touch','Smell'],answer:2},
+        {type:'mcq',q:'Which sense helps you cross the street SAFELY?',choices:['Only sight','Only hearing','Sight AND hearing','Taste'],answer:2},
+        {type:'mcq',q:'You smell smoke. Which sense warned you?',choices:['👅 Taste','👃 Smell','👂 Hear','👁️ See'],answer:1},
+        {type:'mcq',q:'Which sense CAN\'T you use with your eyes closed?',choices:['Hearing','Smell','Touch','Sight'],answer:3},
+        {type:'match',q:'Match each sense to the body part!',pairs:[['See','Eyes'],['Hear','Ears'],['Smell','Nose'],['Taste','Tongue']]},
       ]},
-    { id:'w1-nishan-s3', title:'Weather Watch', emoji:'🌤️',
-      lesson:{title:'Kinds of Weather',intro:'The weather changes each day. Sunny, cloudy, rainy, snowy, and windy are kinds of weather.',pictures:[
-        {emoji:'☀️', word:'Sunny'},{emoji:'☁️', word:'Cloudy'},{emoji:'🌧️', word:'Rainy'},{emoji:'❄️', word:'Snowy'},{emoji:'💨', word:'Windy'},
-      ],hint:'Look outside — what is the weather today?'},
+    { id:'w1-nishan-s3', title:'Weather & Seasons', emoji:'🌤️',
+      lesson:{title:'Weather and the Four Seasons',intro:'Weather changes daily. Seasons are LONGER: SPRING (warm, rainy), SUMMER (hot, sunny), FALL (cool, windy), WINTER (cold, snowy).',pictures:[
+        {emoji:'🌱', word:'Spring'},{emoji:'☀️', word:'Summer'},{emoji:'🍂', word:'Fall'},{emoji:'❄️', word:'Winter'},
+      ],hint:'Think: What clothes do you wear in each season?'},
       questions:[
-        {type:'mcq',q:'What weather is ☀️?',choices:['Rainy','Sunny','Snowy','Windy'],answer:1},
-        {type:'mcq',q:'What do you wear when it is 🌧️ rainy?',choices:['Sunhat','Raincoat','Swimsuit','Mittens'],answer:1},
-        {type:'mcq',q:'❄️ snow falls when it is...',choices:['Very hot','Very cold','Just right','Windy'],answer:1},
-        {type:'mcq',q:'Which weather makes flags wave?',choices:['Sunny','Windy','Snowy','Foggy'],answer:1},
-        {type:'mcq',q:'Clouds can bring...',choices:['Rain','Sunshine','Stars','Music'],answer:0},
+        {type:'mcq',q:'In WINTER, what falls from the sky?',choices:['Rain','Snow','Leaves','Flowers'],answer:1},
+        {type:'mcq',q:'What season is HOT and sunny?',choices:['Winter','Spring','Summer','Fall'],answer:2},
+        {type:'mcq',q:'Leaves turn red and fall in...',choices:['Spring','Summer','Fall','Winter'],answer:2},
+        {type:'mcq',q:'Which weather needs an umbrella AND a coat?',choices:['Sunny','Cold rain','Dry heat','Snow'],answer:1},
+        {type:'mcq',q:'Flowers BLOOM in which season?',choices:['Winter','Fall','Spring','Night'],answer:2},
       ]},
     { id:'w1-nishan-s4', title:'Animal Babies', emoji:'🐾',
-      lesson:{title:'Baby Animal Names',intro:'Every animal has a special name for their baby!',heroImage:IMG.puppy,pictures:[
+      lesson:{title:'Baby Animal Names',intro:'Every animal has a special name for their baby. Some are easy (puppy, kitten), some are tricky (joey for kangaroo, cub for bear)!',heroImage:IMG.puppy,pictures:[
         {emoji:'🐱', word:'Cat', label:'baby = kitten', image:IMG.cat},
         {emoji:'🐶', word:'Dog', label:'baby = puppy', image:IMG.dog},
-        {emoji:'🐈', word:'Kitten', label:'baby cat', image:IMG.kitten},
-        {emoji:'🐕', word:'Puppy', label:'baby dog', image:IMG.puppy},
-      ],hint:'A baby cat is a KITTEN. A baby dog is a PUPPY.'},
+        {emoji:'🐻', word:'Bear', label:'baby = cub'},
+        {emoji:'🦘', word:'Kangaroo', label:'baby = joey'},
+        {emoji:'🐴', word:'Horse', label:'baby = foal'},
+      ],hint:'Cub = bear/lion. Joey = kangaroo. Foal = horse.'},
       questions:[
-        {type:'mcq',q:'A baby cat is called a...',choices:['Puppy','Calf','Kitten','Lamb'],answer:2},
-        {type:'mcq',q:'A baby dog is called a...',choices:['Kitten','Puppy','Chick','Foal'],answer:1},
-        {type:'mcq',q:'A baby cow is called a...',choices:['Calf','Lamb','Piglet','Kit'],answer:0},
-        {type:'mcq',q:'A baby sheep is called a...',choices:['Calf','Chick','Lamb','Cub'],answer:2},
+        {type:'mcq',q:'A baby BEAR is called a...',choices:['Pup','Cub','Calf','Chick'],answer:1},
+        {type:'mcq',q:'A baby KANGAROO is called a...',choices:['Joey','Chick','Calf','Cub'],answer:0},
+        {type:'mcq',q:'A baby HORSE is called a...',choices:['Foal','Lamb','Kit','Pup'],answer:0},
+        {type:'match',q:'Match each animal to its baby name!',pairs:[['Cat','Kitten'],['Dog','Puppy'],['Cow','Calf'],['Sheep','Lamb']]},
         {type:'mcq',q:'A baby chicken is called a...',choices:['Pup','Chick','Kit','Joey'],answer:1},
       ]},
     { id:'w1-nishan-s5', title:'Parts of a Plant', emoji:'🌻',
-      lesson:{title:'What Makes a Plant',intro:'A plant has ROOTS (in the ground), a STEM (holds it up), LEAVES (catch sunlight), and sometimes a FLOWER.',heroImage:IMG.sunflower,pictures:[
+      lesson:{title:'What Makes a Plant',intro:'Each plant part has a JOB. ROOTS drink water. STEM carries water up. LEAVES use sunlight to make food (this is called "photosynthesis"!). FLOWERS make seeds.',heroImage:IMG.sunflower,pictures:[
         {emoji:'🌱', word:'Roots', label:'drink water', image:IMG.seedling},
         {emoji:'🌾', word:'Stem', label:'holds plant up'},
         {emoji:'🍃', word:'Leaves', label:'catch sunlight', image:IMG.tree},
-        {emoji:'🌸', word:'Flower', label:'pretty bloom', image:IMG.sunflower},
-      ],hint:'Roots go DOWN, leaves reach UP!'},
+        {emoji:'🌸', word:'Flower', label:'makes seeds', image:IMG.sunflower},
+      ],hint:'Roots go DOWN, leaves reach UP to the sun!'},
       questions:[
-        {type:'mcq',q:'What part of a plant is UNDER the ground?',choices:['Leaves','Roots','Flower','Stem'],answer:1},
-        {type:'mcq',q:'What part catches sunlight?',choices:['Roots','Stem','Leaves','Dirt'],answer:2},
-        {type:'mcq',q:'What holds the plant up?',choices:['Roots','Stem','Cloud','Sun'],answer:1},
-        {type:'mcq',q:'🌸 A flower is usually...',choices:['Colorful','Grey','Invisible','Square'],answer:0},
-        {type:'mcq',q:'What do plants need to grow?',choices:['Water + sun','Only rocks','Darkness','Nothing'],answer:0},
+        {type:'mcq',q:'Which plant part DRINKS water from the soil?',choices:['Leaves','Roots','Flower','Stem'],answer:1},
+        {type:'mcq',q:'Leaves use what to make food?',choices:['Rocks','Sunlight','Ice','Darkness'],answer:1},
+        {type:'mcq',q:'Which part makes NEW SEEDS?',choices:['Roots','Stem','Flower','Dirt'],answer:2},
+        {type:'mcq',q:'A plant in a DARK closet will...',choices:['Grow faster','Die or get weak','Turn blue','Make music'],answer:1},
+        {type:'mcq',q:'What 3 things do plants MOST need?',choices:['Water, sun, soil','Toys, music, love','Coins, paper, glue','Snow, shade, sand'],answer:0},
       ]},
   ],
   social: [
     { id:'w1-nishan-c1', title:'I Live in Canada 🍁', emoji:'🍁',
-      lesson:{title:'My Country: Canada',intro:'We live in CANADA. Canada\'s symbol is the red maple leaf 🍁. Our flag is red and white!',heroImage:IMG.canadaFlag,pictures:[
+      lesson:{title:'My Country: Canada',intro:'Canada is a big country in North America. Its capital city is OTTAWA. Canada has 10 PROVINCES and 3 TERRITORIES. Our flag has a red maple leaf.',heroImage:IMG.canadaFlag,pictures:[
         {emoji:'🍁', word:'Maple Leaf', label:'Canada\'s symbol', image:IMG.mapleLeaf},
         {emoji:'🇨🇦', word:'Flag', label:'red and white', image:IMG.canadaFlag},
         {emoji:'🦫', word:'Beaver', label:'national animal', image:IMG.beaver},
-      ],hint:'The maple leaf is on our flag!'},
+        {emoji:'🏛️', word:'Ottawa', label:'capital city'},
+      ],hint:'Ottawa is where our leaders work. Provinces are like big parts of Canada.'},
       questions:[
-        {type:'mcq',q:'What country do we live in?',choices:['USA','Canada','France','Mexico'],answer:1},
-        {type:'mcq',q:'What is on Canada\'s flag?',choices:['A star','A maple leaf','A bear','A tree'],answer:1},
+        {type:'mcq',q:'What is the CAPITAL of Canada?',choices:['Toronto','Ottawa','Montreal','Vancouver'],answer:1},
+        {type:'mcq',q:'Canada is in which continent?',choices:['Europe','Asia','North America','Africa'],answer:2},
         {type:'mcq',q:'What colors is the Canadian flag?',choices:['Blue & white','Red & white','Green & yellow','Black & red'],answer:1},
         {type:'mcq',q:'Canada\'s national animal is the...',choices:['🐻 Bear','🦫 Beaver','🦊 Fox','🐺 Wolf'],answer:1},
-        {type:'mcq',q:'A leaf of which tree is Canada\'s symbol?',choices:['Oak','Pine','Maple','Palm'],answer:2},
+        {type:'mcq',q:'Canada has how many PROVINCES?',choices:['5','10','20','50'],answer:1},
       ]},
     { id:'w1-nishan-c2', title:'My Family', emoji:'👨‍👩‍👧‍👦',
-      lesson:{title:'People in a Family',intro:'Families come in all shapes. A family can have parents, siblings, grandparents, aunts, uncles, and cousins.',pictures:[
-        {emoji:'👩', word:'Mom'},{emoji:'👨', word:'Dad'},{emoji:'👧', word:'Sister'},{emoji:'👦', word:'Brother'},{emoji:'👵', word:'Grandma'},{emoji:'👴', word:'Grandpa'},
-      ],hint:'Families love and help each other!'},
+      lesson:{title:'People in a Family',intro:'A FAMILY TREE shows how people are related. Parents → children. Siblings are brothers and sisters. Your parents\' parents are your GRANDPARENTS. Your parents\' siblings are your AUNTS and UNCLES. Their children are your COUSINS!',pictures:[
+        {emoji:'👩', word:'Mom'},{emoji:'👨', word:'Dad'},{emoji:'👧', word:'Sister'},{emoji:'👦', word:'Brother'},{emoji:'👵', word:'Grandma'},{emoji:'👴', word:'Grandpa'},{emoji:'👩‍🦱', word:'Aunt'},{emoji:'👨‍🦱', word:'Uncle'},
+      ],hint:'Aunt/uncle are your parent\'s sister/brother. Cousins are their kids!'},
       questions:[
         {type:'mcq',q:'Your mother\'s mother is your...',choices:['Sister','Cousin','Grandma','Aunt'],answer:2},
-        {type:'mcq',q:'A brother and sister have the same...',choices:['Friends','Parents','Teachers','Bed'],answer:1},
+        {type:'mcq',q:'Your aunt\'s daughter is your...',choices:['Sister','Cousin','Niece','Grandma'],answer:1},
         {type:'mcq',q:'Your father\'s brother is your...',choices:['Uncle','Cousin','Grandpa','Nephew'],answer:0},
-        {type:'mcq',q:'Families usually...',choices:['Never talk','Love each other','Live alone','Are enemies'],answer:1},
-        {type:'mcq',q:'Who is usually OLDER — a grandma or a baby?',choices:['Grandma','Baby','Same age','Can\'t tell'],answer:0},
+        {type:'mcq',q:'Dad + Mom + Brother + You = how many people?',choices:['2','3','4','5'],answer:2},
+        {type:'mcq',q:'Your grandpa is your dad\'s...',choices:['Brother','Father','Son','Friend'],answer:1},
       ]},
-    { id:'w1-nishan-c3', title:'Community Helpers', emoji:'🚑',
-      lesson:{title:'People Who Help Us',intro:'Lots of people in our community help keep us safe, healthy, and happy!',pictures:[
+    { id:'w1-nishan-c3', title:'Community Helpers', emoji:'🚑', videoIds:['BOv4EnaeM9w'],
+      lesson:{title:'People Who Help Us',intro:'Lots of people in our community help keep us safe, healthy, and happy. Some help in EMERGENCIES (911). Others help EVERY DAY (teachers, dentists, garbage collectors).',pictures:[
         {emoji:'👮', word:'Police', label:'keeps us safe'},
         {emoji:'🚒', word:'Firefighter', label:'fights fires'},
         {emoji:'👩‍⚕️', word:'Doctor', label:'helps us when sick'},
+        {emoji:'🦷', word:'Dentist', label:'cares for teeth'},
         {emoji:'👩‍🏫', word:'Teacher', label:'helps us learn'},
-        {emoji:'📮', word:'Mail Carrier', label:'delivers mail'},
-      ],hint:'Community helpers work to help everyone!'},
+        {emoji:'🚛', word:'Garbage Truck', label:'keeps the city clean'},
+      ],hint:'In an EMERGENCY (big problem), call 9-1-1!'},
       questions:[
-        {type:'mcq',q:'Who helps you when you are sick?',choices:['Firefighter','Doctor','Mail carrier','Chef'],answer:1},
-        {type:'mcq',q:'Who fights fires?',choices:['Teacher','Police','Firefighter','Nurse'],answer:2},
-        {type:'mcq',q:'Who helps you LEARN?',choices:['Chef','Teacher','Pilot','Singer'],answer:1},
-        {type:'mcq',q:'Who keeps the community SAFE?',choices:['Baker','Police officer','Singer','Gardener'],answer:1},
-        {type:'mcq',q:'Who brings letters and packages to your house?',choices:['Doctor','Mail carrier','Chef','Teacher'],answer:1},
+        {type:'mcq',q:'What number do you call in an emergency?',choices:['123','911','411','999'],answer:1},
+        {type:'mcq',q:'Who helps you when your TOOTH hurts?',choices:['Teacher','Dentist','Baker','Mail carrier'],answer:1},
+        {type:'mcq',q:'Who helps fix a broken LEG?',choices:['Chef','Teacher','Doctor','Singer'],answer:2},
+        {type:'mcq',q:'Who keeps the community CLEAN?',choices:['Pilot','Garbage collector','Singer','Chef'],answer:1},
+        {type:'mcq',q:'Your cat is stuck in a tree. Who might help?',choices:['Firefighter','Dentist','Mail carrier','Chef'],answer:0},
       ]},
     { id:'w1-nishan-c4', title:'Canada\'s Symbols', emoji:'🍁',
-      lesson:{title:'Canadian Symbols',intro:'Canada has special things that are symbols of our country.',heroImage:IMG.canadaFlag,pictures:[
+      lesson:{title:'Canadian Symbols',intro:'Canada has special SYMBOLS that represent our country. Symbols appear on money, flags, and buildings. Some symbols: maple leaf, beaver, "O Canada" anthem, the loonie ($1 coin with a loon bird).',heroImage:IMG.canadaFlag,pictures:[
         {emoji:'🍁', word:'Maple Leaf', image:IMG.mapleLeaf},
         {emoji:'🦫', word:'Beaver', image:IMG.beaver},
         {emoji:'🇨🇦', word:'Red & White Flag', image:IMG.canadaFlag},
         {emoji:'🎵', word:'O Canada', label:'our anthem'},
-      ],hint:'"O Canada" is the song we sing for our country!'},
+        {emoji:'🪙', word:'Loonie', label:'$1 coin w/ a loon'},
+      ],hint:'"O Canada" is the song we sing at school and hockey games!'},
       questions:[
-        {type:'mcq',q:'What is Canada\'s national song called?',choices:['Happy','O Canada','The ABCs','Home Sweet Home'],answer:1},
-        {type:'mcq',q:'Canada\'s flag is...',choices:['Blue and green','Red and white','Purple and gold','Orange and black'],answer:1},
+        {type:'mcq',q:'Our national anthem is called...',choices:['Happy','O Canada','The ABCs','Home Sweet Home'],answer:1},
+        {type:'mcq',q:'What is a LOONIE?',choices:['A bird','A $1 coin','A song','A flag'],answer:1},
         {type:'mcq',q:'Which animal represents Canada?',choices:['Eagle','Beaver','Lion','Kangaroo'],answer:1},
-        {type:'mcq',q:'On the flag we see a _____ leaf.',choices:['Oak','Maple','Palm','Birch'],answer:1},
-        {type:'mcq',q:'"O Canada" is our...',choices:['Cheer','Anthem','Game','Food'],answer:1},
+        {type:'mcq',q:'The maple leaf on the flag is what color?',choices:['Green','Red','Blue','Gold'],answer:1},
+        {type:'mcq',q:'When do we STAND for "O Canada"?',choices:['To show respect','Because we\'re tired','To exercise','We don\'t stand'],answer:0},
       ]},
     { id:'w1-nishan-c5', title:'Day and Night', emoji:'🌞',
-      lesson:{title:'Day & Night',intro:'During the DAY the sun shines. At NIGHT, the moon and stars come out.',pictures:[
-        {emoji:'☀️', word:'Day', label:'sun shines'},
+      lesson:{title:'Day, Night & Time',intro:'Day and night happen because the Earth SPINS. One full spin = one day (24 hours). We have MORNING (wake up), AFTERNOON (lunch), EVENING (dinner), and NIGHT (sleep).',pictures:[
+        {emoji:'🌅', word:'Morning', label:'sun rises'},
+        {emoji:'☀️', word:'Noon', label:'sun highest'},
+        {emoji:'🌇', word:'Evening', label:'sun sets'},
         {emoji:'🌙', word:'Night', label:'moon & stars'},
-      ],hint:'We sleep at night and play during the day!'},
+      ],hint:'Sunrise = morning. Sunset = evening. Moon = night.'},
       questions:[
-        {type:'mcq',q:'During the DAY we see the...',choices:['Moon','Sun','Stars','Nothing'],answer:1},
-        {type:'mcq',q:'At NIGHT we see the...',choices:['Sun','Moon & stars','Rainbow','Clouds only'],answer:1},
-        {type:'mcq',q:'When do we usually sleep?',choices:['Day','Night','Noon','Morning'],answer:1},
-        {type:'mcq',q:'When do you eat breakfast?',choices:['Late night','In the morning','Midnight','Never'],answer:1},
-        {type:'mcq',q:'The moon comes out...',choices:['During the day','At night','At lunch','Never'],answer:1},
+        {type:'mcq',q:'Why does day turn to night?',choices:['Earth spins','Sun hides','Moon jumps','Clouds cover'],answer:0},
+        {type:'mcq',q:'How many HOURS in one day?',choices:['12','24','60','100'],answer:1},
+        {type:'mcq',q:'You eat LUNCH in the...',choices:['Morning','Afternoon','Night','Midnight'],answer:1},
+        {type:'mcq',q:'The sun RISES in the...',choices:['Morning','Night','Midnight','Never'],answer:0},
+        {type:'mcq',q:'At night we can see...',choices:['Only the sun','Stars and moon','A rainbow','Nothing at all'],answer:1},
       ]},
   ],
 },
@@ -1669,7 +1678,7 @@ akaran: {
       ]},
   ],
   writing: [
-    { id:'w1-akaran-w1', title:'Capitalization Rules', emoji:'🔠',
+    { id:'w1-akaran-w1', title:'Capitalization Rules', emoji:'🔠', videoIds:['0Wrv_ZviMEc'],
       lesson:{title:'Capital Letter Rules',intro:'Capitalize: first word of sentences, names of people and places, the word "I", and days/months.',example:'"On Monday, I went to Maple Park with Sarah." — all caps are correct!',hint:'Names, places, days, and sentence starts ALL need capitals.'},
       questions:[
         {type:'mcq',q:'Which is capitalized correctly?',choices:['my friend sam lives in toronto.','My friend Sam lives in Toronto.','my Friend sam lives in toronto.','My friend sam Lives in toronto.'],answer:1},
@@ -1678,7 +1687,7 @@ akaran: {
         {type:'mcq',q:'Which sentence has ALL the right capitals?',choices:['i like Math class.','I like math class.','i like math Class.','I Like Math class.'],answer:1},
         {type:'mcq',q:'How many words need capitals? "on tuesday, i visited dr. lee."',choices:['2','3','4','5'],answer:2},
       ]},
-    { id:'w1-akaran-w2', title:'Punctuation Mix', emoji:'❗',
+    { id:'w1-akaran-w2', title:'Punctuation Mix', emoji:'❗', videoIds:['LdCOswMeXFQ'],
       lesson:{title:'Periods, Questions, Exclamations, Commas',intro:'Period (.) for statements. Question mark (?) for questions. Exclamation (!) for strong feelings. Comma (,) to separate items.',example:'"I like apples, bananas, and grapes." uses commas in a list.',hint:'Read aloud — your voice tells you which punctuation fits!'},
       questions:[
         {type:'mcq',q:'Which is punctuated correctly?',choices:['I like red blue and green.','I like red, blue, and green.','I like red blue, and green.','I, like red blue and green.'],answer:1},
@@ -1687,7 +1696,7 @@ akaran: {
         {type:'mcq',q:'Which sentence is correct?',choices:['Do you like pizza.','Do you like pizza?','Do you like pizza!','do you like pizza?'],answer:1},
         {type:'mcq',q:'Which uses a comma correctly?',choices:['Yes I will come.','Yes, I will come.','Yes I, will come.','Yes I will, come.'],answer:1},
       ]},
-    { id:'w1-akaran-w3', title:'Tricky Spelling', emoji:'📝',
+    { id:'w1-akaran-w3', title:'Tricky Spelling', emoji:'📝', videoIds:['9S7DY2lgJlU'],
       lesson:{title:'Spelling Harder Words',intro:'Some common words have tricky spellings. Practice the ones that trip people up!',example:'"Because" not "becuz". "Friend" not "frend". "People" not "pepul".',hint:'Break hard words into chunks: be-cause, to-geth-er, beau-ti-ful.'},
       questions:[
         {type:'mcq',q:'Which is spelled correctly?',choices:['becuz','because','becuase','becaus'],answer:1},
@@ -1716,7 +1725,7 @@ akaran: {
       ]},
   ],
   math: [
-    { id:'w1-akaran-m1', title:'Counting to 50', emoji:'🔢',
+    { id:'w1-akaran-m1', title:'Counting to 50', emoji:'🔢', videoIds:['W8CEOlAOGas'],
       lesson:{title:'Numbers to 50',intro:'After 20, numbers follow a pattern: 21, 22, 23... After 29 comes 30. After 39 comes 40. After 49 comes 50!',example:'Count by tens: 10, 20, 30, 40, 50.',hint:'The tens digit goes up by 1 every 10 numbers.'},
       questions:[
         {type:'mcq',q:'What comes after 29?',choices:['28','30','31','39'],answer:1},
@@ -1811,7 +1820,7 @@ akaran: {
   ],
   french: [
     // Akaran's French content — swapped from Akshayan per teacher request.
-    { id:'w1-akaran-f1', title:'Polite Phrases', emoji:'🤝',
+    { id:'w1-akaran-f1', title:'Polite Phrases', emoji:'🤝', videoIds:['9BgyvEXTZbk'],
       lesson:{title:'Formal French',intro:'French has TWO ways to address people: casual (tu) and formal (vous). Adults use formal with strangers and people they respect. Here are the polite phrases you need.',example:'Greetings: Bonjour = Good morning · Bonsoir = Good evening · Au revoir = Goodbye · À bientôt = See you soon. Polite words: Excusez-moi = Excuse me · S\'il vous plaît = Please (formal) · Je vous en prie = You\'re welcome (formal). Asking: "Comment allez-vous?" (formal) · "Ça va?" (casual).',hint:'Use "vous" with teachers, strangers, and adults. "Tu" with friends and family.'},
       questions:[
         {type:'mcq',q:'"Comment allez-vous?" is used when speaking to...',choices:['A friend','A teacher or adult','A baby','Yourself'],answer:1},
@@ -1820,7 +1829,7 @@ akaran: {
         {type:'mcq',q:'What does "Je vous en prie" mean?',choices:['Please','You\'re welcome (formal)','Excuse me','Bye'],answer:1},
         {type:'match',q:'Match formal phrases!',pairs:[['Bonjour','Good morning'],['Bonsoir','Good evening'],['Au revoir','Goodbye'],['Excusez-moi','Excuse me']]},
       ]},
-    { id:'w1-akaran-f2', title:'Nombres 1-100', emoji:'💯',
+    { id:'w1-akaran-f2', title:'Nombres 1-100', emoji:'💯', videoIds:['dhj9SqrIZqI'],
       lesson:{title:'Counting to 100',intro:'French tens: vingt (20), trente (30), quarante (40), cinquante (50), soixante (60). Numbers 21, 31, etc. use "et un" (and one).',example:'21 = vingt-et-un, 35 = trente-cinq, 50 = cinquante, 100 = cent',hint:'Numbers 70-99 get tricky in French — 70 is "soixante-dix" (60+10)!'},
       questions:[
         {type:'mcq',q:'What is "trente"?',choices:['13','30','33','300'],answer:1},
@@ -1858,7 +1867,7 @@ akaran: {
       ]},
   ],
   science: [
-    { id:'w1-akaran-s1', title:'Living Things', emoji:'🌿',
+    { id:'w1-akaran-s1', title:'Living Things', emoji:'🌿', videoIds:['Gy60BqCnTG4'],
       lesson:{title:'Living vs. Non-Living',intro:'Living things GROW, EAT, DRINK, and BREATHE. Non-living things do not. Living things also make more of themselves (babies, seeds!).',pictures:[
         {emoji:'🌳', word:'Tree', label:'living'},{emoji:'🐢', word:'Turtle', label:'living'},{emoji:'🪨', word:'Rock', label:'non-living'},{emoji:'☁️', word:'Cloud', label:'non-living'},
       ],hint:'If it needs water and food, it\'s living!'},
@@ -1869,7 +1878,7 @@ akaran: {
         {type:'mcq',q:'Non-living things CAN\'T...',choices:['Be broken','Grow or eat','Be carried','Be colored'],answer:1},
         {type:'mcq',q:'🌻 A sunflower is...',choices:['Non-living','Living','A rock','Made of plastic'],answer:1},
       ]},
-    { id:'w1-akaran-s2', title:'Four Seasons', emoji:'🌸',
+    { id:'w1-akaran-s2', title:'Four Seasons', emoji:'🌸', videoIds:['MReufjGIz8s'],
       lesson:{title:'The Four Seasons',intro:'A year has 4 seasons: SPRING (flowers bloom), SUMMER (hot & sunny), FALL (leaves change), WINTER (cold & snowy).',pictures:[
         {emoji:'🌷', word:'Spring', label:'flowers'},{emoji:'☀️', word:'Summer', label:'hot'},{emoji:'🍂', word:'Fall', label:'leaves'},{emoji:'❄️', word:'Winter', label:'snow'},
       ],hint:'What season is it outside right now?'},
@@ -1910,7 +1919,7 @@ akaran: {
         {type:'mcq',q:'After it rains, where does water go?',choices:['Disappears','Into rivers, lakes, oceans','Only in the ground','Nowhere'],answer:1},
         {type:'mcq',q:'The water cycle...',choices:['Stops in winter','Never stops','Only happens once','Is invisible'],answer:1},
       ]},
-    { id:'w1-akaran-s5', title:'Materials', emoji:'🧱',
+    { id:'w1-akaran-s5', title:'Materials', emoji:'🧱', videoIds:['wyRy8kowyM8'],
       lesson:{title:'What Things Are Made Of',intro:'Objects are made of different materials: WOOD, METAL, PLASTIC, GLASS, FABRIC. Each has different properties.',pictures:[
         {emoji:'🪵', word:'Wood'},{emoji:'🔩', word:'Metal'},{emoji:'🧴', word:'Plastic'},{emoji:'🥛', word:'Glass'},{emoji:'🧵', word:'Fabric'},
       ],hint:'Look around — what are objects near you made of?'},
@@ -1996,7 +2005,7 @@ akaran: {
 /* ---- RUSHAN (Grade 2) ---- */
 rushan: {
   reading: [
-    { id:'w1-rushan-r1', title:'The Turtle', emoji:'🐢',
+    { id:'w1-rushan-r1', title:'The Turtle', emoji:'🐢', videoIds:['PkWU-lMdnJg'],
       lesson:{title:'Reading Comprehension',intro:'After reading, you should be able to answer questions about it. Read carefully!',example:'If Maya fed her turtle lettuce — you know Maya has a turtle.',hint:'Read the whole passage before answering.'},
       questions:[
         {type:'passage',passage:'Maya found a small turtle in her backyard. She gave it some lettuce and water. The turtle hid in its shell at first, but soon it started eating the leaves happily.',q:'What did Maya give the turtle?',choices:['Bread and milk','Lettuce and water','Worms and seeds','Only water'],answer:1},
@@ -2018,7 +2027,7 @@ rushan: {
         {type:'mcq',q:'Leo is wearing a jacket because...',choices:['It is hot','It is cold','It is his favorite','He is going to school'],answer:1},
         {type:'mcq',q:'What is Leo probably feeling?',choices:['Sad','Bored','Excited','Angry'],answer:2},
       ]},
-    { id:'w1-rushan-r3', title:'The Library', emoji:'📚',
+    { id:'w1-rushan-r3', title:'The Library', emoji:'📚', videoIds:['ML2oX207Mwc'],
       lesson:{title:'Story Details',intro:'Good readers remember the little details: names, places, actions.',example:'Note the character names, where they go, what they do.',hint:'Who? What? Where? When?'},
       questions:[
         {type:'passage',passage:'Every Saturday, Ben goes to the library with his dad. He picks two books each time. Last week he chose a book about dinosaurs and one about space. The librarian, Ms. Chen, helped him find them.',q:'When does Ben go to the library?',choices:['Monday','Every day','Saturday','Sunday'],answer:2},
@@ -2046,7 +2055,7 @@ rushan: {
       ]},
   ],
   writing: [
-    { id:'w1-rushan-w1', title:'Punctuation Power', emoji:'❗',
+    { id:'w1-rushan-w1', title:'Punctuation Power', emoji:'❗', videoIds:['LdCOswMeXFQ'],
       lesson:{title:'Punctuation Marks',intro:'Period (.) stops. Question mark (?) asks. Exclamation (!) shows excitement. Comma (,) separates.',example:'"How are you?" vs "I am fine." vs "Wow!"',hint:'Is it asking, telling, or shouting?'},
       questions:[
         {type:'mcq',q:'What goes at the end? — "How old are you"',choices:['.','?','!',','],answer:1},
@@ -2055,7 +2064,7 @@ rushan: {
         {type:'mcq',q:'Where does the comma go?',choices:['Yes, I will help.','Yes I, will help.','Yes I will, help.','No comma needed'],answer:0},
         {type:'mcq',q:'Which uses quotation marks correctly?',choices:['Mom said come home.','Mom said, "Come home."','"Mom said come home."','Mom "said come home."'],answer:1},
       ]},
-    { id:'w1-rushan-w2', title:'Spelling Bee', emoji:'🐝',
+    { id:'w1-rushan-w2', title:'Spelling Bee', emoji:'🐝', videoIds:['9S7DY2lgJlU'],
       lesson:{title:'Tricky Spellings',intro:'Some words are spelled in surprising ways. Watch for sneaky ones!',example:'"Friend" has "i" before "e". "Because" has "cause" inside it.',hint:'If it looks weird, it probably is — memorize it!'},
       questions:[
         {type:'mcq',q:'Which is spelled correctly?',choices:['frend','friend','freind','frennd'],answer:1},
@@ -2064,7 +2073,7 @@ rushan: {
         {type:'mcq',q:'Which is spelled correctly?',choices:['school','scool','shool','skool'],answer:0},
         {type:'mcq',q:'Which is spelled correctly?',choices:['pepul','peple','people','peepol'],answer:2},
       ]},
-    { id:'w1-rushan-w3', title:'Build Sentences', emoji:'🏗️',
+    { id:'w1-rushan-w3', title:'Build Sentences', emoji:'🏗️', videoIds:['0Wrv_ZviMEc'],
       lesson:{title:'Building Longer Sentences',intro:'Good sentences have a subject (who), verb (action), and details.',example:'"The fluffy cat slept on the warm pillow."',hint:'"Running fast." is NOT complete — WHO is running?'},
       questions:[
         {type:'order',q:'Unscramble this sentence.',items:['The','tired','puppy','curled','up','on','the','pillow'],correctOrder:[0,1,2,3,4,5,6,7]},
@@ -2196,7 +2205,7 @@ rushan: {
       ]},
   ],
   french: [
-    { id:'w1-rushan-f1', title:'Conversation Basics', emoji:'💬',
+    { id:'w1-rushan-f1', title:'Conversation Basics', emoji:'💬', videoIds:['9BgyvEXTZbk'],
       lesson:{title:'Everyday Conversation',intro:'Putting words together makes real conversation! Here are five phrases you\'ll use every day.',example:'"Comment ça va?" = How are you? · "Ça va bien" = I\'m doing well · "Enchanté" = Nice to meet you · "Je m\'appelle..." = My name is... · "De rien" = You\'re welcome / No problem',hint:'Introduce yourself: "Je m\'appelle [your name]." Say "De rien" when someone thanks you.'},
       questions:[
         {type:'mcq',q:'"Comment ça va?" means...',choices:['What is this?','How are you?','Who are you?','Where is it?'],answer:1},
@@ -2205,7 +2214,7 @@ rushan: {
         {type:'mcq',q:'What does "Je m\'appelle..." mean?',choices:['My name is...','I am going...','I like...','I am tired'],answer:0},
         {type:'mcq',q:'What does "De rien" mean?',choices:['Please','No problem / You\'re welcome','Sorry','Goodnight'],answer:1},
       ]},
-    { id:'w1-rushan-f2', title:'Nombres 11-30', emoji:'🔢',
+    { id:'w1-rushan-f2', title:'Nombres 11-30', emoji:'🔢', videoIds:['dhj9SqrIZqI'],
       lesson:{title:'Bigger Numbers',intro:'After 10, French gets creative! 11-16 have unique names. Then 17-19 = "ten-seven", etc.',example:'onze (11), douze (12), treize (13), quatorze (14), quinze (15), seize (16), dix-sept (17 = 10+7)',hint:'After 20, combine: vingt-et-un (21), vingt-deux (22)...'},
       questions:[
         {type:'mcq',q:'What number is "onze"?',choices:['9','10','11','12'],answer:2},
@@ -2243,7 +2252,7 @@ rushan: {
       ]},
   ],
   science: [
-    { id:'w1-rushan-s1', title:'Life Cycles', emoji:'🐛',
+    { id:'w1-rushan-s1', title:'Life Cycles', emoji:'🐛', videoIds:['CZhE2p46vJk'],
       lesson:{title:'The Butterfly Life Cycle',intro:'A LIFE CYCLE shows how an animal grows. A butterfly goes through 4 amazing stages!',heroImage:IMG.butterfly,pictures:[
         {emoji:'🥚', word:'1. Egg'},
         {emoji:'🐛', word:'2. Caterpillar', image:IMG.caterpillar},
@@ -2374,7 +2383,7 @@ rushan: {
 /* ---- AKSHAYAN (Grade 3) ---- */
 akshayan: {
   reading: [
-    { id:'w1-akshayan-r1', title:'The Explorer', emoji:'🧭',
+    { id:'w1-akshayan-r1', title:'The Explorer', emoji:'🧭', videoIds:['XjR2B3YJH9U'],
       lesson:{title:'Reading Longer Passages',intro:'Longer stories have more details. Read carefully and remember the key points.',example:'Who are the characters? What happened? Why?',steps:[
         '<b>Read slowly.</b> If a sentence is tricky, read it again.',
         '<b>Ask WHO</b> is in the story (the characters).',
@@ -2389,7 +2398,7 @@ akshayan: {
         {type:'mcq',q:'Jake probably feels...',choices:['😴 Bored','🧘 Curious and peaceful','😡 Angry','😨 Scared'],answer:1},
         {type:'mcq',q:'The word "narrow" means...',choices:['↔️ Very wide','📏 Not very wide','➡️ Very long','⬇️ Very deep'],answer:1},
       ]},
-    { id:'w1-akshayan-r2', title:'Weather & Seasons', emoji:'🌦️',
+    { id:'w1-akshayan-r2', title:'Weather & Seasons', emoji:'🌦️', videoIds:['WrUX6j9MwUY'],
       lesson:{title:'Vocabulary in Context',intro:'When you see a new word, look at the sentences around it for clues about what it means.',example:'"The chilly wind made us shiver" — chilly must mean cold!',hint:'Context clues = words around the unknown word.'},
       questions:[
         {type:'passage',passage:'As autumn arrived, the leaves turned brilliant shades of red, orange, and gold. The air became crisp and chilly. Birds started their long migration south. Emma loved collecting the colorful leaves for her scrapbook.',visual:'🍂',q:'What does "chilly" probably mean?',choices:['🔥 Hot','❄️ Cold','💨 Windy','🌧️ Rainy'],answer:1},
@@ -2398,7 +2407,7 @@ akshayan: {
         {type:'mcq',q:'What are the birds doing?',choices:['🪺 Building nests','🦅 Migrating south','😴 Sleeping','🌾 Eating seeds'],answer:1},
         {type:'mcq',q:'What does Emma collect?',choices:['🪨 Rocks','🐛 Bugs','🍁 Colorful leaves','🥢 Sticks'],answer:2},
       ]},
-    { id:'w1-akshayan-r3', title:'The Inventor', emoji:'💡',
+    { id:'w1-akshayan-r3', title:'The Inventor', emoji:'💡', videoIds:['PkWU-lMdnJg'],
       lesson:{title:'Understanding Characters',intro:'Characters in stories have feelings, goals, and actions. Pay attention to what they DO and WHY.',example:'If a character "frowned and crossed her arms" — she\'s probably upset.',hint:'Actions reveal feelings.'},
       questions:[
         {type:'passage',passage:'Priya wanted to build a birdhouse for the sparrows in her garden. She gathered wood scraps, nails, and paint from the garage. Her first attempt fell apart. She studied her mistake, redesigned it, and tried again. This time it was sturdy. She hung it on the oak tree with a big smile.',q:'Why did Priya build a birdhouse?',choices:['For homework','For the sparrows','To sell','For her room'],answer:1},
@@ -2407,7 +2416,7 @@ akshayan: {
         {type:'mcq',q:'The word "sturdy" means...',choices:['Weak','Strong and solid','Beautiful','Tiny'],answer:1},
         {type:'mcq',q:'Priya is someone who...',choices:['Gives up easily','Is lazy','Is determined and keeps trying','Doesn\'t like birds'],answer:2},
       ]},
-    { id:'w1-akshayan-r4', title:'Main Idea', emoji:'🎯',
+    { id:'w1-akshayan-r4', title:'Main Idea', emoji:'🎯', videoIds:['ML2oX207Mwc'],
       lesson:{title:'Finding the Main Point',intro:'The main idea is what a passage is MOSTLY about. Details support it.',example:'A paragraph about bees making honey → main idea: "Bees are important."',hint:'Sum it up in ONE sentence — that\'s the main idea.'},
       questions:[
         {type:'passage',passage:'Honeybees are amazing insects. They live in colonies and work together to make honey. They also pollinate flowers, helping plants grow. Without bees, many of the fruits and vegetables we eat would disappear.',q:'What is the main idea?',choices:['Honey tastes good','Bees can sting','Bees are important to nature and food','Bees live in hives'],answer:2},
@@ -2426,7 +2435,7 @@ akshayan: {
       ]},
   ],
   writing: [
-    { id:'w1-akshayan-w1', title:'Punctuation Pro', emoji:'❗',
+    { id:'w1-akshayan-w1', title:'Punctuation Pro', emoji:'❗', videoIds:['LdCOswMeXFQ'],
       lesson:{title:'Advanced Punctuation',intro:'Commas separate list items and set off extra info. Quotation marks show speech.',example:'"I bought apples, oranges, and pears." — commas between items.',hint:'Read aloud — commas go where you naturally pause.'},
       questions:[
         {type:'mcq',q:'Which uses commas correctly?',choices:['I bought apples oranges and pears.','I bought apples, oranges, and pears.','I, bought apples oranges and pears.','I bought, apples oranges and pears.'],answer:1},
@@ -2477,7 +2486,7 @@ akshayan: {
       ]},
   ],
   math: [
-    { id:'w1-akshayan-m1', title:'Regrouping Addition', emoji:'➕',
+    { id:'w1-akshayan-m1', title:'Regrouping Addition', emoji:'➕', videoIds:['T5Qf0qSSJFI'],
       lesson:{title:'Adding Big Numbers',intro:'Line up the numbers. Add from right to left. If a column adds to 10 or more, carry the 1 to the next column.',stack:{op:'+',top:'148',bottom:'275',carries:[1,1,''],answer:'423',steps:[
         '<b>Ones:</b> 8 + 5 = <b>13</b>. Write <b>3</b>, carry <b>1</b>.',
         '<b>Tens:</b> 4 + 7 + 1 = <b>12</b>. Write <b>2</b>, carry <b>1</b>.',
@@ -2506,7 +2515,7 @@ akshayan: {
         {type:'mcq',q:'800 − 456 = ?',choices:['244','334','344','444'],answer:2},
         {type:'mcq',q:'705 − 389 = ?',choices:['306','316','326','416'],answer:1},
       ]},
-    { id:'w1-akshayan-m3', title:'Early Multiplication', emoji:'✖️',
+    { id:'w1-akshayan-m3', title:'Early Multiplication', emoji:'✖️', videoIds:['FJ5qLWP3Fqo'],
       lesson:{title:'Groups and Times',intro:'Multiplication is adding the same number many times. 3 × 4 = 3+3+3+3 = 12.',example:'3 × 4 = 12. Think: 3 groups of 4!',hint:'3 × 4 = 4 × 3 — order doesn\'t matter!'},
       questions:[
         {type:'mcq',q:'3 × 4 = ?',choices:['7','10','12','14'],answer:2},
@@ -2583,7 +2592,7 @@ akshayan: {
   ],
   french: [
     // Akshayan's French content — swapped from Akaran per teacher request.
-    { id:'w1-akshayan-f1', title:'Greetings & Politeness', emoji:'🙋',
+    { id:'w1-akshayan-f1', title:'Greetings & Politeness', emoji:'🙋', videoIds:['9BgyvEXTZbk'],
       lesson:{title:'Being Polite in French',intro:'French culture values politeness. Learn the words for hello, thanks, please, sorry — plus casual "hi" and "good evening". Tap each card to hear it.',audioLang:'fr-FR',pictures:[
         {emoji:'🌅', word:'Bonjour', label:'Hello / Good day'},
         {emoji:'👋', word:'Salut', label:'Hi (casual)'},
@@ -2599,7 +2608,7 @@ akshayan: {
         {type:'mcq',q:'How do you say "good evening"?',choices:['Bonjour','Bonsoir','Bonne nuit','Bonbon'],answer:1},
         {type:'match',q:'Match these polite words!',pairs:[['Bonjour','Hello'],['Merci','Thank you'],['Pardon','Sorry'],['S\'il te plaît','Please']]},
       ]},
-    { id:'w1-akshayan-f2', title:'Les Couleurs', emoji:'🎨',
+    { id:'w1-akshayan-f2', title:'Les Couleurs', emoji:'🎨', videoIds:['-4kNeFGBAcw'],
       lesson:{title:'More Colors',intro:'Now you can learn even more colors in French! Tap to hear each one.',audioLang:'fr-FR',pictures:[
         {emoji:'🔴', word:'rouge', label:'red'},
         {emoji:'🔵', word:'bleu', label:'blue'},
@@ -2662,7 +2671,7 @@ akshayan: {
       ]},
   ],
   science: [
-    { id:'w1-akshayan-s1', title:'Animal Groups', emoji:'🦓',
+    { id:'w1-akshayan-s1', title:'Animal Groups', emoji:'🦓', videoIds:['CZhE2p46vJk'],
       lesson:{title:'Classifying Animals',intro:'Animals are grouped by what they share. MAMMALS have fur/hair and feed babies milk. BIRDS have feathers. REPTILES have scales. FISH live in water with gills. AMPHIBIANS (like frogs) live in water AND land.',pictures:[
         {emoji:'🐘', word:'Mammals', label:'fur, milk'},{emoji:'🦜', word:'Birds', label:'feathers'},{emoji:'🐍', word:'Reptiles', label:'scales'},{emoji:'🐟', word:'Fish', label:'gills'},{emoji:'🐸', word:'Amphibians', label:'water + land'},
       ],hint:'Humans are mammals too!'},
@@ -2673,7 +2682,7 @@ akshayan: {
         {type:'mcq',q:'A frog is a(n)...',choices:['Reptile','Amphibian','Mammal','Bird'],answer:1},
         {type:'mcq',q:'Reptiles have...',choices:['Feathers','Fur','Scales','Slime'],answer:2},
       ]},
-    { id:'w1-akshayan-s2', title:'Forces & Motion', emoji:'🏃',
+    { id:'w1-akshayan-s2', title:'Forces & Motion', emoji:'🏃', videoIds:['wyRy8kowyM8'],
       lesson:{title:'Push and Pull',intro:'A FORCE is a push or a pull. Forces can make things start moving, stop moving, or change direction. GRAVITY is a force that pulls things down toward Earth. FRICTION slows things down when they rub together.',pictures:[
         {emoji:'➡️', word:'Push'},{emoji:'⬅️', word:'Pull'},{emoji:'⬇️', word:'Gravity'},{emoji:'🛑', word:'Friction'},
       ],hint:'When you kick a ball, you PUSH it with force!'},
@@ -2684,7 +2693,7 @@ akshayan: {
         {type:'mcq',q:'Throwing a ball uses a...',choices:['Push','Pull','Float','Sink'],answer:0},
         {type:'mcq',q:'Opening a drawer uses a...',choices:['Push','Pull','Spin','Hop'],answer:1},
       ]},
-    { id:'w1-akshayan-s3', title:'Circuits & Electricity', emoji:'💡',
+    { id:'w1-akshayan-s3', title:'Circuits & Electricity', emoji:'💡', videoIds:['z5G4NCwWUxY'],
       lesson:{title:'How Electricity Flows',intro:'Electricity flows in a CIRCUIT — a loop from a battery, through wires, to a bulb or motor, and back. CONDUCTORS (metals) let electricity pass. INSULATORS (plastic, wood) block it.',pictures:[
         {emoji:'🔋', word:'Battery', label:'power'},{emoji:'🔌', word:'Wire'},{emoji:'💡', word:'Bulb'},{emoji:'🧲', word:'Metal', label:'conductor'},{emoji:'🪵', word:'Wood', label:'insulator'},
       ],hint:'Metal wires carry electricity — rubber coatings keep you safe!'},
@@ -2716,7 +2725,7 @@ akshayan: {
         {type:'mcq',q:'Plants get water from...',choices:['Clouds','Roots','Sunlight','Air'],answer:1},
         {type:'mcq',q:'The food plants make is mostly...',choices:['Meat','Sugar','Salt','Oil'],answer:1},
       ]},
-    { id:'w1-akshayan-s5', title:'Ecosystems', emoji:'🌳',
+    { id:'w1-akshayan-s5', title:'Ecosystems', emoji:'🌳', videoIds:['qDcMq1SjR_I'],
       lesson:{title:'Living Together',intro:'An ECOSYSTEM is a community of living things + their environment. A FOOD CHAIN shows who eats whom: plants → insects → small animals → big animals.',pictures:[
         {emoji:'🌳', word:'Plants'},{emoji:'🐛', word:'Insects'},{emoji:'🐦', word:'Birds'},{emoji:'🦊', word:'Predators'},
       ],hint:'If one part of the chain disappears, the others get hurt!'},
@@ -2802,7 +2811,7 @@ akshayan: {
    Levels 1-2: solid G4 foundation · Level 3-4: mid/top G4 · Level 5: G5 stretch. */
 isaiah: {
   reading: [
-    { id:'w1-isaiah-r1', title:'Main Idea & Details', emoji:'📚',
+    { id:'w1-isaiah-r1', title:'Main Idea & Details', emoji:'📚', videoIds:['XjR2B3YJH9U'],
       lesson:{title:'Finding the Main Idea',visual:'🐘 🌳',intro:'The MAIN IDEA is what a passage is MOSTLY about. Supporting DETAILS are smaller facts that help explain the main idea.',example:'If a passage is mostly about how elephants find food — that\'s the main idea. Details = WHAT they eat, WHERE they find it, HOW.',steps:[
         '<b>Read the whole passage</b> once, no stopping.',
         '<b>Ask yourself:</b> "What is this mostly about?" Try to answer in one sentence.',
@@ -2816,7 +2825,7 @@ isaiah: {
         {type:'mcq',q:'A supporting detail is a...',choices:['💡 Big idea in the passage','📎 Fact that helps explain the main idea','❓ Question about the text','📝 Title'],answer:1},
         {type:'mcq',q:'If a story is mostly about a lost puppy finding home, the main idea is about...',choices:['🐕 The puppy\'s journey home','☁️ The weather','🏠 A house','🦴 Dog food'],answer:0},
       ]},
-    { id:'w1-isaiah-r2', title:'Cause & Effect', emoji:'🔗',
+    { id:'w1-isaiah-r2', title:'Cause & Effect', emoji:'🔗', videoIds:['QVw521JjRjA'],
       lesson:{title:'Cause → Effect',visual:'🌧️ ➡️ ☂️',intro:'A CAUSE is WHY something happens. An EFFECT is WHAT happens because of it. They are linked by words like "because", "so", "since", "as a result".',example:'CAUSE: It rained all night. EFFECT: The soccer game was cancelled. ("It rained, SO the game was cancelled.")',hint:'Ask: "What made this happen?" = cause. "What happened because of that?" = effect.'},
       questions:[
         {type:'mcq',q:'"Ella forgot her umbrella, so she got soaked." What is the CAUSE?',choices:['💦 She got soaked','☂️ She forgot her umbrella','🌧️ It was raining','🚶 She was walking'],answer:1},
@@ -2825,7 +2834,7 @@ isaiah: {
         {type:'mcq',q:'Which word signals a CAUSE-EFFECT relationship?',choices:['❓ Maybe','➡️ Because','⚡ Suddenly','♾️ Always'],answer:1},
         {type:'mcq',q:'"The leaves turned orange since it was autumn." What happened BECAUSE of autumn?',choices:['🍂 The leaves turned orange','🌳 The trees grew','☁️ The sky changed','🐻 Animals hibernated'],answer:0},
       ]},
-    { id:'w1-isaiah-r3', title:'Reading Between the Lines', emoji:'🔍',
+    { id:'w1-isaiah-r3', title:'Reading Between the Lines', emoji:'🔍', videoIds:['WrUX6j9MwUY'],
       lesson:{title:'Making Inferences',visual:'🔍 💭',intro:'An INFERENCE is a smart guess based on clues in the text — things the author doesn\'t say directly. You combine the clues with what you already know.',example:'TEXT: "Maya walked in with muddy boots and dripping clothes." CLUES → muddy + dripping. INFERENCE: It\'s raining outside (even though the text never says "rain").',steps:[
         '<b>Read carefully</b> and notice small details (what characters do, say, wear, feel).',
         '<b>List the clues</b> in your head — what facts is the author showing you?',
@@ -2840,7 +2849,7 @@ isaiah: {
         {type:'passage',passage:'The dog\'s tail wouldn\'t stop wagging. He spun in circles by the door, grabbing his leash in his mouth.',visual:'🐕',q:'What does the dog want?',choices:['🦴 Food','🛁 A bath','🚶 To go for a walk','💤 To sleep'],answer:2},
         {type:'mcq',q:'To make an inference, you...',choices:['🎲 Guess randomly','📖 Read the title only','🕵️ Use text clues + what you know','⏭️ Skip ahead'],answer:2},
       ]},
-    { id:'w1-isaiah-r4', title:'Author\'s Purpose', emoji:'✍️',
+    { id:'w1-isaiah-r4', title:'Author\'s Purpose', emoji:'✍️', videoIds:['klu7TNy-7qw'],
       lesson:{title:'Why Did the Author Write It?',visual:'✍️ 💡',intro:'Every piece of writing has a PURPOSE. Remember PIE: Persuade, Inform, or Entertain.',example:'PERSUADE: a letter trying to convince you to eat veggies · INFORM: an encyclopedia page about volcanoes · ENTERTAIN: a funny story about a talking cat.',hint:'Ask: Is the author trying to convince me, teach me, or make me enjoy a story?'},
       questions:[
         {type:'mcq',q:'What is the MAIN purpose of a news article?',choices:['🎭 Entertain','📰 Inform','🗣️ Persuade','😵 Confuse'],answer:1},
@@ -2850,7 +2859,7 @@ isaiah: {
         {type:'mcq',q:'Which is MOST likely meant to inform?',choices:['😂 A joke book','🧸 A poster selling toys','🪐 An article about how planets orbit the sun','🧚 A fairy tale'],answer:2},
       ]},
     // ★ LEVEL 5 STRETCH — Grade 5 content
-    { id:'w1-isaiah-r5', title:'Summarizing (G5 Stretch!)', emoji:'🌟',
+    { id:'w1-isaiah-r5', title:'Summarizing (G5 Stretch!)', emoji:'🌟', videoIds:['ML2oX207Mwc'],
       lesson:{title:'Summarizing Longer Passages',visual:'📖 ✂️',intro:'A SUMMARY is a short version of a passage in your OWN words. Include the main idea + the most important details, but leave out small facts.',example:'Don\'t rewrite every sentence. Pick 2-3 key ideas. A good summary of a long story should fit in 1-2 sentences.',steps:[
         '<b>Read</b> the whole passage once, without stopping.',
         '<b>Find the main idea</b> — what is this mostly about?',
@@ -2867,7 +2876,7 @@ isaiah: {
       ]},
   ],
   writing: [
-    { id:'w1-isaiah-w1', title:'Topic Sentences', emoji:'🎯',
+    { id:'w1-isaiah-w1', title:'Topic Sentences', emoji:'🎯', videoIds:['LdCOswMeXFQ'],
       lesson:{title:'The Topic Sentence',visual:'📝 🎯',intro:'Every paragraph needs a TOPIC SENTENCE — the first (or main) sentence that tells the reader what the paragraph is about.',example:'Topic: My dog Max loves swimming. → The rest of the paragraph can then give examples: "He jumps in the pool, chases toys in the water, and splashes everywhere."',steps:[
         '<b>Decide your subject</b> — what is this paragraph about in ONE word or phrase?',
         '<b>Write ONE sentence</b> that tells the reader that subject clearly.',
@@ -2931,7 +2940,7 @@ isaiah: {
       ]},
   ],
   math: [
-    { id:'w1-isaiah-m1', title:'Multi-Digit +/- with Regrouping', emoji:'➕',
+    { id:'w1-isaiah-m1', title:'Multi-Digit +/- with Regrouping', emoji:'➕', videoIds:['T5Qf0qSSJFI'],
       lesson:{title:'Adding and Subtracting Big Numbers',intro:'When adding/subtracting numbers with 3+ digits, line them up by place value (ones, tens, hundreds) and work right to left. REGROUP (carry or borrow) when needed.',stack:[
         {op:'+',top:'345',bottom:'278',carries:[1,1,''],answer:'623',steps:[
           '<b>Ones:</b> 5 + 8 = <b>13</b>. Write <b>3</b>, carry the <b>1</b> to the tens.',
@@ -2968,7 +2977,7 @@ isaiah: {
         {type:'mcq',q:'47 × 3 = ?',choices:['121','131','141','151'],answer:2},
       ]},
     { id:'w1-isaiah-m3', title:'Division with Remainders', emoji:'➗', videoIds:['LGqBQrUYua4'], // Math Antics - Long Division
-      lesson:{title:'Division — Sharing Equally',visual:'🍪 ➗ 👦👧👦',intro:'Division splits a number into equal groups. Sometimes there\'s a bit left over — that\'s the REMAINDER.',example:'14 ÷ 3: How many 3s fit in 14? Four (because 4 × 3 = 12). 14 - 12 = 2 left over. Answer: 4 remainder 2.',hint:'Think: "How many times does the small number fit into the big one?" Then subtract to find what\'s left.'},
+      lesson:{title:'Division — Sharing Equally',visual:'14 🍪  ➗  3 👧',intro:'Division splits a number into equal groups. Sometimes there\'s a bit left over — that\'s the REMAINDER.',example:'14 ÷ 3: How many 3s fit in 14? Four (because 4 × 3 = 12). 14 − 12 = 2 left over. Answer: 4 remainder 2.',hint:'Think: "How many times does the small number fit into the big one?" Then subtract to find what\'s left.'},
       questions:[
         {type:'mcq',q:'20 ÷ 4 = ?',choices:['4','5','6','8'],answer:1},
         {type:'mcq',q:'17 ÷ 5 = ?',choices:['3 remainder 2','4 remainder 1','2 remainder 7','5 remainder 0'],answer:0},
@@ -2986,7 +2995,7 @@ isaiah: {
         {type:'mcq',q:'The numerator is on the...',choices:['Bottom','Top','Side','Nowhere'],answer:1},
       ]},
     // ★ LEVEL 5 STRETCH — Grade 5 multi-step + decimals
-    { id:'w1-isaiah-m5', title:'Multi-Step & Decimals (G5 Stretch!)', emoji:'🌟',
+    { id:'w1-isaiah-m5', title:'Multi-Step & Decimals (G5 Stretch!)', emoji:'🌟', videoIds:['KG6ILNOiMgM','dAgfnK528RA'],
       lesson:{title:'Multi-Step Word Problems',intro:'In multi-step problems, you often need TWO or MORE operations to find the answer. Read carefully, underline the question, and plan your steps.',example:'"Maya has $20. She buys 3 books at $4 each. How much change?" Step 1: 3 × $4 = $12. Step 2: $20 - $12 = $8.',hint:'Ask: What is the question asking? What information do I have? What steps do I need?'},
       questions:[
         {type:'mcq',q:'A pizza costs $12.50. If Jay buys 2 pizzas and pays with $30, how much change?',choices:['$3.00','$4.50','$5.00','$7.50'],answer:2},
@@ -3125,7 +3134,7 @@ isaiah: {
       ]},
   ],
   science: [
-    { id:'w1-isaiah-s1', title:'Human Body Systems', emoji:'🫀',
+    { id:'w1-isaiah-s1', title:'Human Body Systems', emoji:'🫀', videoIds:['EwY6p-r_hyU'],
       lesson:{title:'Body Systems Working Together',intro:'The human body is made of SYSTEMS that each do a job. CIRCULATORY (heart + blood) moves oxygen. DIGESTIVE (mouth → stomach → intestines) breaks down food. RESPIRATORY (lungs) takes in air. SKELETAL (bones) holds us up.',heroImage:IMG.skeleton,pictures:[
         {emoji:'🫀', word:'Circulatory', label:'heart + blood', image:IMG.heart},
         {emoji:'🫁', word:'Respiratory', label:'lungs'},
@@ -3139,7 +3148,7 @@ isaiah: {
         {type:'mcq',q:'Bones are part of the ___ system.',choices:['Digestive','Skeletal','Circulatory','Respiratory'],answer:1},
         {type:'mcq',q:'What pumps blood throughout your body?',choices:['Lungs','Stomach','Heart','Liver'],answer:2},
       ]},
-    { id:'w1-isaiah-s2', title:'Properties of Matter', emoji:'🧪',
+    { id:'w1-isaiah-s2', title:'Properties of Matter', emoji:'🧪', videoIds:['wyRy8kowyM8'],
       lesson:{title:'How We Describe Matter',intro:'MATTER has properties we can measure: MASS (how much stuff), VOLUME (how much space), STATE (solid/liquid/gas), DENSITY (mass per volume — why some things float), and MAGNETISM (only some metals).',pictures:[
         {emoji:'⚖️', word:'Mass', label:'grams'},
         {emoji:'🥤', word:'Volume', label:'mL or L'},
@@ -3153,7 +3162,7 @@ isaiah: {
         {type:'mcq',q:'Which metal is magnetic?',choices:['Gold','Iron','Aluminum','Silver'],answer:1},
         {type:'mcq',q:'Volume measures...',choices:['Weight','How much space something takes up','Loudness only','Color'],answer:1},
       ]},
-    { id:'w1-isaiah-s3', title:'Energy & Circuits', emoji:'⚡',
+    { id:'w1-isaiah-s3', title:'Energy & Circuits', emoji:'⚡', videoIds:['qDcMq1SjR_I'],
       lesson:{title:'Kinds of Energy',intro:'ENERGY makes things happen. Kinds: ELECTRICAL (wires, batteries), LIGHT (sun, bulbs), HEAT (fire, sun), SOUND (vibrations), KINETIC (motion), POTENTIAL (stored — like a stretched rubber band).',pictures:[
         {emoji:'⚡', word:'Electrical'},{emoji:'💡', word:'Light'},{emoji:'🔥', word:'Heat'},{emoji:'🔊', word:'Sound'},{emoji:'🏃', word:'Kinetic', label:'motion'},{emoji:'🏹', word:'Potential', label:'stored'},
       ],hint:'Energy can CHANGE forms — electrical → light in a bulb!'},
@@ -3164,7 +3173,7 @@ isaiah: {
         {type:'mcq',q:'The sun is a source of...',choices:['Light and heat','Only sound','Only sound and magnetism','No energy'],answer:0},
         {type:'mcq',q:'A guitar playing makes ____ energy.',choices:['Only heat','Only cold','Sound','Electrical only'],answer:2},
       ]},
-    { id:'w1-isaiah-s4', title:'Food Chains & Ecosystems', emoji:'🌿',
+    { id:'w1-isaiah-s4', title:'Food Chains & Ecosystems', emoji:'🌿', videoIds:['Td_A9H69eE8'],
       lesson:{title:'Who Eats Whom',intro:'In every ECOSYSTEM, energy flows through a FOOD CHAIN. Each link has a job.',heroImage:IMG.tree,steps:[
         '<b>Step 1 — Start at the Sun:</b> All energy in a food chain begins with sunlight.',
         '<b>Step 2 — Producers (plants):</b> Plants capture sunlight and make food (photosynthesis). They\'re the first level of every food chain.',
@@ -4890,6 +4899,30 @@ function renderLesson(card,q){
     }
   }
   if(L.title) card.appendChild(h('div',{class:'lesson-title'},L.title));
+  // Inline embedded videos — kid-safe, kids NEVER leave the app.
+  // Rendered HIGH on the lesson card (right after the title) so kids
+  // see the "watch" option before any text. ONLY shows when
+  // activity.videoIds[] is set with real YouTube video IDs (up to 2).
+  // youtube-nocookie.com + rel=0 + modestbranding=1 + iv_load_policy=3
+  // kills the related-video feed, YouTube branding, and annotations.
+  const vidIds = (quiz && quiz.activity && Array.isArray(quiz.activity.videoIds))
+                   ? quiz.activity.videoIds.filter(Boolean) : [];
+  if(vidIds.length){
+    const vbox = h('div',{class:'lesson-videos'});
+    card.appendChild(h('div',{class:'lesson-videos-title'}, '▶ Watch & learn'));
+    vidIds.slice(0,2).forEach(id=>{
+      const wrap = h('div',{class:'lesson-video-wrap'});
+      const iframe = document.createElement('iframe');
+      iframe.src = 'https://www.youtube-nocookie.com/embed/'+encodeURIComponent(id)+'?rel=0&modestbranding=1&iv_load_policy=3';
+      iframe.title = L.title || 'Lesson video';
+      iframe.loading = 'lazy';
+      iframe.allow = 'encrypted-media; picture-in-picture; fullscreen';
+      iframe.referrerPolicy = 'strict-origin-when-cross-origin';
+      wrap.appendChild(iframe);
+      vbox.appendChild(wrap);
+    });
+    card.appendChild(vbox);
+  }
   if(L.intro) card.appendChild(h('p',{class:'lesson-intro'},L.intro));
   // If the lesson provides a stack spec OR array of specs, render those as
   // visual columns INSTEAD of (or in addition to) the text example.
@@ -4965,32 +4998,6 @@ function renderLesson(card,q){
     card.appendChild(panel);
   }
   if(L.hint) card.appendChild(h('div',{class:'lesson-hint'},['💡 ',L.hint]));
-  // Inline embedded videos — kid-safe, kids NEVER leave the app.
-  // ONLY shows when activity.videoIds[] is set with real YouTube video IDs
-  // (up to 2 per lesson). Embedded via youtube-nocookie.com with rel=0,
-  // modestbranding=1, iv_load_policy=3 so there's no related-video feed,
-  // no YouTube branding, and no annotations.
-  // Note: we do NOT use YouTube's listType=search embed — Google deprecated
-  // it and it now shows "This video is unavailable". No video block is
-  // rendered when videoIds isn't set — cleaner than a broken iframe.
-  const vidIds = (quiz && quiz.activity && Array.isArray(quiz.activity.videoIds))
-                   ? quiz.activity.videoIds.filter(Boolean) : [];
-  if(vidIds.length){
-    const box = h('div',{class:'lesson-videos'});
-    card.appendChild(h('div',{class:'lesson-videos-title'}, '▶ Watch & learn'));
-    vidIds.slice(0,2).forEach(id=>{
-      const wrap = h('div',{class:'lesson-video-wrap'});
-      const iframe = document.createElement('iframe');
-      iframe.src = 'https://www.youtube-nocookie.com/embed/'+encodeURIComponent(id)+'?rel=0&modestbranding=1&iv_load_policy=3';
-      iframe.title = L.title || 'Lesson video';
-      iframe.loading = 'lazy';
-      iframe.allow = 'encrypted-media; picture-in-picture; fullscreen';
-      iframe.referrerPolicy = 'strict-origin-when-cross-origin';
-      wrap.appendChild(iframe);
-      box.appendChild(wrap);
-    });
-    card.appendChild(box);
-  }
   quiz.locked=false;
   setTimeout(()=>{const b=$('#nextBtn');if(b){b.style.display='inline-flex';b.textContent="Let's practice! →"}},0);
 }
