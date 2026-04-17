@@ -292,6 +292,52 @@ img{max-width:100%}
 .pin-msg.ok{color:#00b894}
 .pin-msg.no{color:var(--coral)}
 .pin-back{margin-top:18px;color:var(--ink3);font-weight:700;font-size:14px;text-decoration:underline}
+/* First-time password setup */
+.pin-setup{text-align:center;max-width:480px;margin:28px auto 0;padding:0 16px}
+.pin-setup h2{font-family:var(--font-display);font-size:26px;font-weight:800;margin:10px 0 6px}
+.pin-setup .ps-sub{font-size:14px;color:var(--ink2);font-weight:600;margin:0 auto 22px;line-height:1.45;max-width:380px}
+.pin-setup .ps-step{font-size:11px;font-weight:800;color:var(--primary);letter-spacing:.12em;text-transform:uppercase;margin:20px 0 8px}
+.pin-setup .ps-picked{display:inline-flex;align-items:center;gap:10px;padding:10px 18px;border-radius:999px;background:linear-gradient(135deg,rgba(108,92,231,.12),rgba(162,155,254,.08));border:1.5px solid rgba(108,92,231,.28);font-weight:700;color:var(--ink);margin:6px auto 8px}
+.pin-setup .ps-picked-em{font-size:26px;line-height:1}
+.pin-setup .ps-hint-field{width:100%;max-width:340px;padding:12px 14px;border-radius:12px;border:2px solid var(--line);font-size:15px;font-family:inherit;background:#fff;text-align:center;margin-top:6px}
+.pin-setup .ps-hint-field:focus{outline:none;border-color:var(--primary)}
+.pin-setup .ps-hint-note{font-size:12px;color:var(--ink3);margin-top:6px;line-height:1.45;max-width:340px;margin-left:auto;margin-right:auto}
+.pin-setup .ps-actions{margin-top:22px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.pin-setup .ps-msg{min-height:22px;margin-top:14px;font-weight:700;font-size:14px;color:var(--ink2)}
+.pin-setup .ps-msg.ok{color:#0b8c56}
+.pin-setup .ps-msg.no{color:var(--coral)}
+.emoji-btn.picked{border-color:var(--primary);background:linear-gradient(135deg,rgba(108,92,231,.14),rgba(162,155,254,.08));transform:scale(1.08);box-shadow:0 6px 16px rgba(108,92,231,.25)}
+/* Tries-remaining chip shown on wrong pin */
+.pin-tries{display:inline-block;margin-top:10px;padding:4px 12px;border-radius:999px;font-size:12px;font-weight:800;background:rgba(231,76,60,.14);color:var(--coral);letter-spacing:.02em}
+/* Lockout screen */
+.pin-lockout{text-align:center;max-width:440px;margin:60px auto 0;padding:34px 26px;background:var(--card);border:1.5px solid rgba(231,76,60,.3);border-radius:var(--r-lg);box-shadow:var(--shadow)}
+.pin-lockout .pl-ico{font-size:56px;margin-bottom:8px;line-height:1}
+.pin-lockout h2{font-family:var(--font-display);font-size:22px;font-weight:800;margin:4px 0 10px;color:var(--coral)}
+.pin-lockout .pl-msg{font-size:15px;color:var(--ink);font-weight:600;line-height:1.5;margin:0 auto 20px;max-width:340px}
+.pin-lockout .pl-back{background:none;border:none;color:var(--ink2);font-weight:700;font-size:14px;cursor:pointer;padding:8px 14px;border-radius:999px;font-family:inherit;transition:all .25s ease}
+.pin-lockout .pl-back:hover{background:rgba(108,92,231,.08);color:var(--primary)}
+/* Teacher password management panel */
+.t-pw-block{margin-top:28px;padding:20px 22px;background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow)}
+.t-pw-block .t-pw-head{margin-bottom:14px}
+.t-pw-block h3{font-family:var(--font-display);font-size:18px;font-weight:800;margin:0 0 4px}
+.t-pw-block .t-pw-sub{font-size:13px;color:var(--ink3);font-weight:600;line-height:1.45}
+.t-pw-row{display:grid;grid-template-columns:minmax(120px,1.3fr) 60px minmax(120px,2fr) auto auto;gap:12px;align-items:center;padding:12px 6px;border-bottom:1px solid var(--line);font-size:14px}
+.t-pw-row:last-child{border-bottom:none}
+.t-pw-row .pw-name{font-weight:800;color:var(--ink)}
+.t-pw-row .pw-emoji{font-size:26px;text-align:center;line-height:1}
+.t-pw-row .pw-emoji.none{font-size:11px;font-weight:700;color:var(--ink3);font-style:italic}
+.t-pw-row .pw-hint{color:var(--ink2);word-break:break-word;font-size:13px}
+.t-pw-row .pw-hint.none{color:var(--ink3);font-weight:600;font-style:italic;opacity:.7}
+.t-pw-row .pw-status{font-size:11px;font-weight:800;padding:3px 10px;border-radius:999px;letter-spacing:.04em;text-transform:uppercase;text-align:center;white-space:nowrap}
+.t-pw-row .pw-status.ok{background:rgba(0,184,148,.14);color:#00805a}
+.t-pw-row .pw-status.lock{background:rgba(231,76,60,.16);color:var(--coral)}
+.t-pw-row .pw-status.new{background:rgba(108,92,231,.12);color:var(--primary)}
+.t-pw-row .pw-reset{padding:6px 12px;font-size:12px;white-space:nowrap}
+@media(max-width:640px){
+  .t-pw-row{grid-template-columns:1fr 50px auto;gap:8px 10px}
+  .t-pw-row .pw-hint{grid-column:1/-1;margin-top:-4px}
+  .t-pw-row .pw-reset{grid-column:1/-1;justify-self:start;margin-top:4px}
+}
 
 /* ---- TEACHER LOGIN ---- */
 .teacher-form{margin-top:28px;max-width:380px;margin-left:auto;margin-right:auto;text-align:center}
@@ -4208,6 +4254,15 @@ const defaultUser = () => ({
   // 'they' (inclusive / safe until the teacher picks). Valid values:
   // 'they' | 'he' | 'she'. Teacher sets this on the dashboard.
   pronouns: 'they',
+  // Student-chosen password (the EMOJI_KEYPAD emoji they picked on first
+  // login) + their own hint string. Null customPin triggers the first-time
+  // setup screen. loginAttempts tracks consecutive failed attempts and is
+  // zeroed on success. locked=true after 4 fails — only the teacher can
+  // clear it via the Student Passwords panel on the dashboard.
+  customPin: null,
+  customHint: '',
+  loginAttempts: 0,
+  locked: false,
   // Brain-break mini-games — daily coin cap + personal bests.
   // Kept separate from academic progress so it can't replace real practice.
   miniGameStats: {
@@ -4319,6 +4374,10 @@ function saveState(){
 function loginAs(uid){
   currentUser=uid; isTeacher=false;
   state=allData.users[uid];
+  // Any successful login clears failed-attempt counters — belt-and-braces
+  // in case a path other than renderPinEntry reached here (e.g. import
+  // restore or a future dev-shortcut).
+  if(state){ state.loginAttempts = 0; state.locked = false; }
   // Streak logic
   const today=new Date().toDateString();
   if(state.lastActiveDate){
@@ -5496,26 +5555,157 @@ function enterDemoAs(demoId){
   loginAs(demoId);  // routes to dashboard
 }
 
-/* ========== EMOJI PIN ========== */
-function renderPin(root,sid){
-  const s=getStudentInfo(sid); if(!s){go('profiles');return}
-  const wrap=h('div',{class:'pin-screen'});
+/* ========== EMOJI PIN ==========
+   Three screens behind the "pin" route, chosen based on per-user state:
+     • No customPin set  → first-time setup (pick emoji + write a hint)
+     • locked === true   → lockout card ("ask Ms. Rhahavy")
+     • otherwise         → regular entry, tracks attempts, locks on 4th fail
+   allData.users[sid] is mutated directly (not through `state`) because the
+   student hasn't logged in yet — `state` is still null here. */
+const MAX_LOGIN_ATTEMPTS = 4;
+function renderPin(root, sid){
+  const s = getStudentInfo(sid); if(!s){ go('profiles'); return; }
+  // Ensure a user record exists so we can read/write custom password state
+  // even if this is the first-ever login. defaultUser() supplies the new
+  // fields. Demo users never hit this path (enterDemoAs bypasses it).
+  if(!allData.users[sid]) allData.users[sid] = defaultUser();
+  const ud = allData.users[sid];
+  if(ud.locked){ renderPinLockout(root, sid, s); return; }
+  if(!ud.customPin){ renderPinSetup(root, sid, s); return; }
+  renderPinEntry(root, sid, s, ud);
+}
+
+/* First-time password setup — student picks their emoji + writes a hint.
+   No prior credentials to check. Saves straight into allData.users[sid]
+   and logs them in. */
+function renderPinSetup(root, sid, s){
+  const wrap = h('div',{class:'pin-setup'});
+  wrap.appendChild(h('div',{class:'who',style:'justify-content:center'},[
+    h('div',{class:'av c-'+sid,style:'background:linear-gradient(135deg,'+s.color+','+s.color+')'},s.initial),
+  ]));
+  wrap.appendChild(h('h2',{}, 'Welcome, '+s.name+'!'));
+  wrap.appendChild(h('p',{class:'ps-sub'}, 'Let\'s set up your secret password. Pick one emoji and make up a hint only YOU would know.'));
+
+  wrap.appendChild(h('div',{class:'ps-step'}, 'Step 1 · Pick your secret emoji'));
+  let picked = null;
+  const pickedChip = h('div',{class:'ps-picked',style:'display:none'},[
+    h('span',{},'Picked:'),
+    h('span',{class:'ps-picked-em'}, ''),
+  ]);
+  const pad = h('div',{class:'emoji-pad stagger'});
+  EMOJI_KEYPAD.forEach(em=>{
+    const btn = h('button',{class:'emoji-btn',type:'button',onclick:(e)=>{
+      picked = em;
+      pad.querySelectorAll('.emoji-btn').forEach(b=>b.classList.remove('picked'));
+      e.currentTarget.classList.add('picked');
+      pickedChip.style.display = 'inline-flex';
+      pickedChip.querySelector('.ps-picked-em').textContent = em;
+    }}, em);
+    pad.appendChild(btn);
+  });
+  wrap.appendChild(pad);
+  wrap.appendChild(pickedChip);
+
+  wrap.appendChild(h('div',{class:'ps-step'}, 'Step 2 · Write a hint (optional)'));
+  const hintInput = document.createElement('input');
+  hintInput.type = 'text';
+  hintInput.className = 'ps-hint-field';
+  hintInput.placeholder = 'e.g. "my favorite animal"';
+  hintInput.maxLength = 60;
+  hintInput.autocomplete = 'off';
+  hintInput.spellcheck = false;
+  wrap.appendChild(hintInput);
+  wrap.appendChild(h('div',{class:'ps-hint-note'}, 'The hint shows every time you log in, so don\'t put the actual emoji in it! You can leave this empty.'));
+
+  const msg = h('div',{class:'ps-msg'}, '');
+  wrap.appendChild(msg);
+
+  const save = ()=>{
+    if(!picked){ msg.textContent = 'Pick an emoji first!'; msg.className = 'ps-msg no'; return; }
+    const ud2 = allData.users[sid];
+    ud2.customPin = picked;
+    ud2.customHint = String(hintInput.value || '').trim().slice(0, 60);
+    ud2.loginAttempts = 0;
+    ud2.locked = false;
+    try{ saveState(); }catch(e){ console.warn('[KidQuest] password setup saveState failed:',e); }
+    msg.textContent = 'Password saved! Logging in…';
+    msg.className = 'ps-msg ok';
+    setTimeout(()=>loginAs(sid), 700);
+  };
+
+  const actions = h('div',{class:'ps-actions'},[
+    h('button',{class:'btn btn-primary',type:'button',onclick:save}, '💾 Save & Continue'),
+    h('button',{class:'btn btn-ghost',type:'button',onclick:()=>go('profiles')}, '← Back'),
+  ]);
+  wrap.appendChild(actions);
+  root.appendChild(wrap);
+}
+
+/* Regular login entry. Counts consecutive wrong taps on ud.loginAttempts,
+   flips ud.locked=true on the MAX_LOGIN_ATTEMPTS-th wrong, and shows a
+   "X tries left" chip after each miss. */
+function renderPinEntry(root, sid, s, ud){
+  const wrap = h('div',{class:'pin-screen'});
+  const hintText = ud.customHint ? ud.customHint : null;
   wrap.appendChild(h('div',{class:'who'},[
     h('div',{class:'av c-'+sid,style:'background:linear-gradient(135deg,'+s.color+','+s.color+')'},s.initial),
-    h('div',{},[h('h2',{},'Hi, '+s.name+'!'),h('p',{class:'pin-hint'},['Tap your secret emoji: ',h('code',{},s.hint)])])
+    h('div',{},[
+      h('h2',{},'Hi, '+s.name+'!'),
+      hintText
+        ? h('p',{class:'pin-hint'},['Hint: ', h('code',{}, hintText)])
+        : h('p',{class:'pin-hint'},'Tap your secret emoji.'),
+    ]),
   ]));
-  const msg=h('div',{class:'pin-msg',id:'pinMsg'},'');
-  const pad=h('div',{class:'emoji-pad stagger'});
+  const msg = h('div',{class:'pin-msg',id:'pinMsg'},'');
+  const triesChip = h('div',{class:'pin-tries',style:'display:none'}, '');
+  const pad = h('div',{class:'emoji-pad stagger'});
   EMOJI_KEYPAD.forEach(em=>{
-    pad.appendChild(h('button',{class:'emoji-btn',onclick:e=>{
-      if(em===s.pin){msg.textContent='Welcome back, '+s.name+'! 🎉';msg.className='pin-msg ok';setTimeout(()=>loginAs(sid),600)}
-      else{msg.textContent='Oops! Try again 😊';msg.className='pin-msg no';e.currentTarget.classList.add('wrong');setTimeout(()=>e.currentTarget.classList.remove('wrong'),500)}
-    }},em));
+    pad.appendChild(h('button',{class:'emoji-btn',type:'button',onclick:e=>{
+      if(em === ud.customPin){
+        ud.loginAttempts = 0;
+        try{ saveState(); }catch(err){}
+        msg.textContent = 'Welcome back, '+s.name+'! 🎉';
+        msg.className = 'pin-msg ok';
+        triesChip.style.display = 'none';
+        setTimeout(()=>loginAs(sid), 600);
+        return;
+      }
+      // Wrong tap — increment, flash the button, maybe lock the account.
+      ud.loginAttempts = (ud.loginAttempts || 0) + 1;
+      e.currentTarget.classList.add('wrong');
+      setTimeout(()=>e.currentTarget.classList.remove('wrong'), 500);
+      if(ud.loginAttempts >= MAX_LOGIN_ATTEMPTS){
+        ud.locked = true;
+        try{ saveState(); }catch(err){}
+        // Re-render into the lockout screen
+        root.innerHTML = '';
+        renderPinLockout(root, sid, s);
+        return;
+      }
+      try{ saveState(); }catch(err){}
+      const left = MAX_LOGIN_ATTEMPTS - ud.loginAttempts;
+      msg.textContent = 'Oops! Try again 😊';
+      msg.className = 'pin-msg no';
+      triesChip.textContent = left + (left === 1 ? ' try left' : ' tries left');
+      triesChip.style.display = 'inline-block';
+    }}, em));
   });
   wrap.appendChild(pad);
   wrap.appendChild(msg);
-  wrap.appendChild(h('button',{class:'pin-back',onclick:()=>go('profiles')},'← Pick someone else'));
+  wrap.appendChild(triesChip);
+  wrap.appendChild(h('button',{class:'pin-back',type:'button',onclick:()=>go('profiles')}, '← Pick someone else'));
   root.appendChild(wrap);
+}
+
+/* Locked out — no emoji grid, no way to retry. Teacher must reset it
+   from the dashboard Student Passwords panel. */
+function renderPinLockout(root, sid, s){
+  const card = h('div',{class:'pin-lockout'});
+  card.appendChild(h('div',{class:'pl-ico'}, '🔒'));
+  card.appendChild(h('h2',{}, 'Account locked'));
+  card.appendChild(h('p',{class:'pl-msg'}, 'Ask your parent to ask Ms. Rhahavy for your password.'));
+  card.appendChild(h('button',{class:'pl-back',type:'button',onclick:()=>go('profiles')}, '← Back to profiles'));
+  root.appendChild(card);
 }
 
 /* ========== TEACHER LOGIN ========== */
@@ -8318,10 +8508,61 @@ function renderTeacher(root){
     }},'🧹 Clear Orders'),
   ]);
   dash.appendChild(ctrl);
+  // Student password manager — see + reset each student's emoji password.
+  try { dash.appendChild(renderTeacherPasswords()); }
+  catch(e){ console.warn('[KidQuest] password panel failed:',e); }
   // Reset controls — granular password-gated resets (per subject, per student, all).
   try { dash.appendChild(renderResetControls()); }
   catch(e){ console.warn('[KidQuest] reset controls failed:',e); }
   root.appendChild(dash);
+}
+
+/* Student password manager — lets the teacher see every student's
+   self-chosen emoji password + hint and reset any of them when a kid
+   forgets or gets locked out. Reset clears customPin/customHint,
+   unlocks the account, and forces the student through first-time setup
+   on their next login. Password-gated per reset (same password as the
+   teacher login) so a momentary dashboard glance can't nuke credentials. */
+function renderTeacherPasswords(){
+  const wrap = h('div',{class:'t-pw-block'});
+  wrap.appendChild(h('div',{class:'t-pw-head'},[
+    h('h3',{},'🔐 Student Passwords'),
+    h('p',{class:'t-pw-sub'}, 'Each student chose their own secret emoji + hint on first login. Reset clears their password so they pick a new one next time they sign in. Use this when a student forgets theirs or is locked out after 4 wrong tries.'),
+  ]));
+  STUDENTS.forEach(s=>{
+    const ud = allData.users[s.id] || defaultUser();
+    const hasPin = !!ud.customPin;
+    const isLocked = !!ud.locked;
+    const statusCls = isLocked ? 'lock' : (hasPin ? 'ok' : 'new');
+    const statusText = isLocked ? 'Locked' : (hasPin ? 'Active' : 'Not set');
+    const emojiCell = hasPin
+      ? h('div',{class:'pw-emoji'}, ud.customPin)
+      : h('div',{class:'pw-emoji none'}, '—');
+    const hintCell = ud.customHint
+      ? h('div',{class:'pw-hint'}, '"' + ud.customHint + '"')
+      : h('div',{class:'pw-hint none'}, hasPin ? '(no hint)' : '(not set yet)');
+    const row = h('div',{class:'t-pw-row'},[
+      h('div',{class:'pw-name'}, s.name),
+      emojiCell,
+      hintCell,
+      h('div',{class:'pw-status '+statusCls}, statusText),
+      h('button',{class:'btn btn-ghost pw-reset',type:'button',onclick:()=>{
+        if(!confirm('Reset '+s.name+'\'s password?\n\nThis clears their chosen emoji + hint. Next time they log in, they\'ll pick a new one.')) return;
+        if(!confirmTeacherPassword('reset '+s.name+'\'s password')) return;
+        const u = allData.users[s.id] || defaultUser();
+        u.customPin = null;
+        u.customHint = '';
+        u.loginAttempts = 0;
+        u.locked = false;
+        allData.users[s.id] = u;
+        saveState();
+        alert('✓ '+s.name+'\'s password has been reset. They\'ll set a new one at next login.');
+        go('teacher');
+      }}, 'Reset'),
+    ]);
+    wrap.appendChild(row);
+  });
+  return wrap;
 }
 
 /* ==========================================================================
