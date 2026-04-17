@@ -1161,14 +1161,18 @@ img{max-width:100%}
 .autoplay-chip .ap-stop:hover{background:rgba(255,255,255,.32)}
 
 /* ---- BRAIN BREAK — mini-game dashboard entry + hub + boards ---- */
-/* Dashboard single-bar entry — one full-width button into the mini-games hub.
-   Using a plain block (not a grid) so the bar is unambiguously one row even
-   if the markup ever changes. */
-.brain-break-row{margin-top:14px;margin-bottom:4px}
+/* Dashboard two-button row — one tap into the mini-games hub, one tap
+   straight into Drop Sum (a math-skill drill game that reinforces the
+   1+9 / 2+8 / 3+7 / 4+6 / 5+5 facts every student benefits from). The
+   grid collapses to a single column on narrow screens so each button
+   keeps its full width on phones. */
+.brain-break-row{margin-top:14px;margin-bottom:4px;display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:520px){.brain-break-row{grid-template-columns:1fr}}
 .brain-break-btn{width:100%;padding:16px 18px;border-radius:18px;border:none;cursor:pointer;font-weight:800;font-size:15px;display:flex;align-items:center;gap:10px;transition:all .3s var(--spring);box-shadow:var(--shadow);color:#fff;text-align:left;font-family:inherit}
 .brain-break-btn.memory{background:linear-gradient(135deg,#a29bfe,#6c5ce7)}
 .brain-break-btn.math{background:linear-gradient(135deg,#74b9ff,#0984e3)}
 .brain-break-btn.hub{background:linear-gradient(135deg,#fd79a8,#e84393)}
+.brain-break-btn.dropsum{background:linear-gradient(135deg,#81ECEC,#00B894)}
 .brain-break-btn:hover{transform:translateY(-3px) scale(1.02);box-shadow:var(--shadow-lg)}
 .brain-break-btn .bb-emoji{font-size:22px}
 .brain-break-btn .bb-text{flex:1;display:flex;flex-direction:column;line-height:1.15}
@@ -8216,10 +8220,20 @@ function renderDashboard(root){
     const today = new Date().toISOString().slice(0,10);
     const coinsToday = (state.miniGameStats && state.miniGameStats.date === today) ? (state.miniGameStats.coinsToday||0) : 0;
     const capTxt = coinsToday >= MINI_GAME_COIN_CAP ? 'Come back tomorrow for more coins!' : ('Earn up to '+(MINI_GAME_COIN_CAP-coinsToday)+' more coins today');
+    // Drop Sum gets its own dashboard shortcut because it's the one game
+    // that doubles as a math drill (the make-10 pairs are foundational
+    // first-grade facts). Everything else is grouped behind "Brain Break"
+    // so the dashboard doesn't turn into an arcade.
+    const bestDS = (state.miniGameStats && state.miniGameStats.bestDropSumScore) || 0;
+    const dsSub = bestDS ? ('Best: '+bestDS+' cleared') : 'Make 10 — clear the board';
     root.appendChild(h('div',{class:'brain-break-row'},[
       h('button',{class:'brain-break-btn hub',onclick:()=>go('mini-hub')},[
         h('span',{class:'bb-emoji'},'🧩'),
         h('span',{class:'bb-text'},[h('span',{},'Brain Break'),h('span',{class:'bb-sub'}, capTxt)]),
+      ]),
+      h('button',{class:'brain-break-btn dropsum',onclick:()=>go('game-dropsum')},[
+        h('span',{class:'bb-emoji'},'🧮'),
+        h('span',{class:'bb-text'},[h('span',{},'Drop Sum'),h('span',{class:'bb-sub'}, dsSub)]),
       ]),
     ]));
   } catch(e){ console.warn('[KidQuest] renderBrainBreak failed:', e); }
