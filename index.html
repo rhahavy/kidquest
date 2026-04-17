@@ -905,6 +905,40 @@ img{max-width:100%}
 .t-subj-bar .t-bar i{display:block;height:100%;border-radius:99px;transition:width .5s}
 .t-controls{margin-top:20px;display:flex;gap:10px;flex-wrap:wrap}
 
+/* ---- TEACHER DASHBOARD ACCORDION ----
+   Collapsible sections — tap a header to expand its content. Students
+   Overview opens by default so the dashboard still has a useful first
+   impression; everything else is collapsed so the tutor isn't greeted
+   with a 10,000px scroll wall. Open/closed state persists across
+   re-renders (see `teacherTabOpen` in JS) so sub-actions like the coin
+   adjuster don't slam every panel shut after each save. */
+.t-accordion{display:flex;flex-direction:column;gap:10px;margin-top:8px}
+.t-acc-section{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden}
+.t-acc-head{width:100%;display:flex;align-items:center;gap:12px;padding:14px 18px;background:transparent;border:0;cursor:pointer;font-family:inherit;font-weight:800;font-size:15px;color:var(--ink);text-align:left;transition:background .2s}
+.t-acc-head:hover{background:rgba(108,92,231,.05)}
+.t-acc-head:focus-visible{outline:2px solid var(--primary);outline-offset:-2px}
+.t-acc-head .t-acc-icon{font-size:20px;flex-shrink:0;line-height:1}
+.t-acc-head .t-acc-title{flex:1;min-width:0}
+.t-acc-head .t-acc-badge{min-width:22px;height:22px;padding:0 7px;border-radius:999px;background:#ff3b30;color:#fff;font-size:11px;font-weight:800;display:grid;place-items:center;box-shadow:0 2px 6px rgba(255,59,48,.3);flex-shrink:0}
+.t-acc-head .t-acc-chevron{font-size:14px;color:var(--ink3);transition:transform .25s ease;flex-shrink:0}
+.t-acc-section.open > .t-acc-head .t-acc-chevron{transform:rotate(180deg)}
+.t-acc-section.open > .t-acc-head{background:rgba(108,92,231,.04);border-bottom:1px solid var(--line)}
+.t-acc-body{display:none;padding:16px 18px 18px}
+.t-acc-section.open > .t-acc-body{display:block;animation:tAccOpen .22s ease}
+@keyframes tAccOpen{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+/* Strip the large top-margins that rendered panels normally add when they
+   sit on the main dashboard — inside an accordion body they double-space
+   below the section header unnecessarily. */
+.t-acc-body > *:first-child{margin-top:0}
+.t-acc-body .t-pw-block,
+.t-acc-body .t-messages,
+.t-acc-body .report-card{margin-top:0}
+.t-acc-body .report-card + .report-card{margin-top:20px}
+@media(max-width:480px){
+  .t-acc-head{padding:12px 14px;font-size:14px;gap:10px}
+  .t-acc-body{padding:14px 14px 16px}
+}
+
 /* ---- REPORT CARD ---- */
 .report-card{margin-top:28px;background:var(--card);border:1px solid var(--line);border-radius:var(--r-lg);padding:clamp(18px,3vw,28px);box-shadow:var(--shadow);position:relative;overflow:hidden}
 .report-card::before{content:'';position:absolute;top:0;left:0;right:0;height:6px;background:linear-gradient(90deg,#6c5ce7,#0984e3,#00b894,#fdcb6e,#e84393);background-size:200% 100%;animation:shimmer 4s ease-in-out infinite}
@@ -11159,102 +11193,100 @@ function renderBadges(root){
 }
 
 /* ========== TEACHER DASHBOARD ========== */
+// Which teacher-dashboard accordion sections are currently open. Lives at
+// module scope so the open/closed state survives re-renders — sub-actions
+// like the coin adjuster and reset buttons call renderTeacher() to refresh
+// after each save, and the tutor would lose their place on every click if
+// we stored this locally. Keys are section ids; `true` means open.
+// Students Overview defaults to open so the page still has a useful first
+// impression when a teacher lands here fresh.
+let teacherTabOpen = { students: true };
+
 function renderTeacher(root){
-  const dash=h('div',{class:'t-dash'});
+  const dash = h('div',{class:'t-dash'});
   dash.appendChild(h('h2',{},'📊 Teacher Dashboard'));
-  const grid=h('div',{class:'t-grid stagger'});
-  STUDENTS.forEach(s=>{
-    const ud=getStudentData(s.id);
-    const td=Object.keys(ud.completedActivities).length;
-    const totalActs=SUBJECTS.reduce((sum,sub)=>sum+getWeekActivities(s.id,sub.id).length,0);
-    const pct=totalActs?Math.round(td/totalActs*100):0;
-    // Aggregate attempts + TRUE accuracy across ALL subjects so the tutor
-    // gets a one-glance "did this kid keep trying? did they actually get
-    // the questions right?" read on the header row. Re-uses the same
-    // per-subject computeSubjectStats so numbers stay consistent between
-    // the header and the per-subject breakdown below.
-    let allAttempts = 0, allCorrect = 0, allScorable = 0, allTouched = 0, allDone = 0;
-    SUBJECTS.forEach(sub=>{
-      const stt = computeSubjectStats(s.id, sub.id);
-      allAttempts += stt.totalAttempts || 0;
-      allCorrect  += stt.totalCorrect  || 0;
-      allScorable += stt.totalScorable || 0;
-      allTouched  += stt.touched       || 0;
-      allDone     += stt.done          || 0;
+
+  // Total unread messages across all students — drives the red badge on
+  // the Messages tab header so the tutor sees "someone's waiting for a
+  // reply" at a glance without having to open the panel.
+  let unreadTotal = 0;
+  try {
+    STUDENTS.forEach(s => { unreadTotal += (countUnread(s.id, 'teacher') || 0); });
+  } catch(e){ /* chat may not be loaded yet */ }
+
+  // --- Section-content builders. Each returns a DOM node that fills the
+  //     accordion body for that section. Declared inline so they close
+  //     over the local helpers without polluting the module namespace.
+  //     Where an existing renderX() already returns a ready-made panel,
+  //     we just pass it through directly. ---
+
+  // Students Overview — the original top-of-page grid of student cards
+  // with stars/coins/streak, attempts + accuracy, and per-subject bars.
+  const buildOverviewGrid = () => {
+    const grid = h('div',{class:'t-grid stagger'});
+    STUDENTS.forEach(s=>{
+      const ud = getStudentData(s.id);
+      const td = Object.keys(ud.completedActivities).length;
+      const totalActs = SUBJECTS.reduce((sum,sub)=>sum+getWeekActivities(s.id,sub.id).length,0);
+      const pct = totalActs ? Math.round(td/totalActs*100) : 0;
+      let allAttempts = 0, allCorrect = 0, allScorable = 0, allTouched = 0, allDone = 0;
+      SUBJECTS.forEach(sub=>{
+        const stt = computeSubjectStats(s.id, sub.id);
+        allAttempts += stt.totalAttempts || 0;
+        allCorrect  += stt.totalCorrect  || 0;
+        allScorable += stt.totalScorable || 0;
+        allTouched  += stt.touched       || 0;
+        allDone     += stt.done          || 0;
+      });
+      const overallAccuracy = allScorable ? Math.round(allCorrect/allScorable*100) : 0;
+      const effortRead = allAttempts>0
+        ? interpretEffort(s.name, allAttempts, allTouched, allDone, allCorrect, allScorable)
+        : null;
+      const tToken = getStudentAvatarDisplay(s.id).value;
+      const card = h('div',{class:'t-student'},[
+        h('h3',{},[h('span',{style:'font-size:22px;margin-right:6px'},tToken),h('span',{},s.name)]),
+        h('div',{class:'t-grade'},s.grade),
+        h('div',{class:'t-stats'},[
+          h('span',{},'⭐ '+ud.totalStars),h('span',{},'💰 '+ud.coins),
+          h('span',{},'🔥 '+ud.streak),h('span',{},'📊 '+pct+'%'),
+        ]),
+        h('div',{class:'t-stats t-stats-extra'},[
+          h('span',{title:'Total attempts across every activity (sum of retries)'},'🎯 '+allAttempts+' attempts'),
+          h('span',{title:'Correct answers ÷ total scored questions, on attempted activities'},'✅ '+overallAccuracy+'% accuracy'),
+        ]),
+        ...(effortRead ? [h('div',{class:'t-effort-read', title:effortRead.detail}, effortRead.headline)] : []),
+      ]);
+      const bars = h('div',{class:'t-subj-bars'});
+      SUBJECTS.forEach(sub=>{
+        const done = countDone(s.id,sub.id);
+        const total = getWeekActivities(s.id,sub.id).length;
+        const p = total ? Math.round(done/total*100) : 0;
+        const colors = {reading:'#0984e3',writing:'#6c5ce7',math:'#e17055',logic:'#00b894'};
+        bars.appendChild(h('div',{class:'t-subj-bar'},[
+          h('div',{class:'t-bar-label'},[h('span',{},sub.emoji+' '+sub.name),h('span',{},done+'/'+total)]),
+          h('div',{class:'t-bar'},[h('i',{style:'width:'+p+'%;background:'+colors[sub.id]})]),
+        ]));
+      });
+      card.appendChild(bars);
+      grid.appendChild(card);
     });
-    const overallAccuracy = allScorable ? Math.round(allCorrect/allScorable*100) : 0;
-    // One-line tutor interpretation of those numbers — shown as the third
-    // row on the card. Empty string when the kid hasn't started yet, so
-    // new students don't show a meaningless "0 attempts" comment.
-    const effortRead = allAttempts>0
-      ? interpretEffort(s.name, allAttempts, allTouched, allDone, allCorrect, allScorable)
-      : null;
-    // Header token = chosen avatar emoji if set, otherwise the student's
-    // initial. Replaces the old decorative decoEmoji for a cleaner look
-    // that matches the student's own profile identity.
-    const tToken=getStudentAvatarDisplay(s.id).value;
-    const card=h('div',{class:'t-student'},[
-      h('h3',{},[h('span',{style:'font-size:22px;margin-right:6px'},tToken),h('span',{},s.name)]),
-      h('div',{class:'t-grade'},s.grade),
-      h('div',{class:'t-stats'},[
-        h('span',{},'⭐ '+ud.totalStars),h('span',{},'💰 '+ud.coins),
-        h('span',{},'🔥 '+ud.streak),h('span',{},'📊 '+pct+'%'),
-      ]),
-      // Second stats row — attempts + accuracy. Distinct row so the top
-      // row keeps its familiar "stars/coins/streak/progress" shape while
-      // the tutor-focused "how hard did they work, how accurate were
-      // they?" numbers sit right under it.
-      h('div',{class:'t-stats t-stats-extra'},[
-        h('span',{title:'Total attempts across every activity (sum of retries)'},'🎯 '+allAttempts+' attempts'),
-        h('span',{title:'Correct answers ÷ total scored questions, on attempted activities'},'✅ '+overallAccuracy+'% accuracy'),
-      ]),
-      // Tutor read — natural-language interpretation of the numbers above.
-      // Hover reveals the full paragraph of detail. Skipped for students
-      // who haven't started anything yet.
-      ...(effortRead ? [h('div',{class:'t-effort-read', title:effortRead.detail}, effortRead.headline)] : []),
-    ]);
-    const bars=h('div',{class:'t-subj-bars'});
-    SUBJECTS.forEach(sub=>{
-      const done=countDone(s.id,sub.id);
-      const total=getWeekActivities(s.id,sub.id).length;
-      const p=total?Math.round(done/total*100):0;
-      const colors={reading:'#0984e3',writing:'#6c5ce7',math:'#e17055',logic:'#00b894'};
-      bars.appendChild(h('div',{class:'t-subj-bar'},[
-        h('div',{class:'t-bar-label'},[h('span',{},sub.emoji+' '+sub.name),h('span',{},done+'/'+total)]),
-        h('div',{class:'t-bar'},[h('i',{style:'width:'+p+'%;background:'+colors[sub.id]})]),
-      ]));
+    return grid;
+  };
+
+  // Detailed Report Cards — per-student rich cards from renderReportCard.
+  const buildReportCardsPanel = () => {
+    const wrap = h('div',{});
+    wrap.appendChild(h('p',{style:'font-size:13px;color:var(--ink3);font-weight:600;margin:0 0 14px'},
+      'Performance level, accuracy, and auto-generated comments per student.'));
+    STUDENTS.forEach(s=>{
+      try { wrap.appendChild(renderReportCard(s.id, true)); }
+      catch(e){ console.warn('[KidQuest] teacher report card failed:',e); }
     });
-    card.appendChild(bars);
-    grid.appendChild(card);
-  });
-  dash.appendChild(grid);
-  // Messages panel — placed near the TOP of the dashboard (right after the
-  // overview grid) so teacher sees unread student questions immediately,
-  // ahead of report cards / store / maintenance. Unread badges at the
-  // section heading make "someone needs help" glanceable.
-  try { dash.appendChild(renderTeacherMessages()); }
-  catch(e){ console.warn('[KidQuest] teacher messages panel failed:',e); }
-  // Per-student detailed Report Cards (teacher view)
-  const rcHead=h('div',{style:'margin-top:32px;margin-bottom:-6px'},[
-    h('h2',{style:'font-size:20px;font-weight:800'},'📊 Detailed Report Cards'),
-    h('p',{style:'font-size:13px;color:var(--ink3);font-weight:600;margin-top:4px'},'Performance level, accuracy, and auto-generated comments per student.'),
-  ]);
-  dash.appendChild(rcHead);
-  STUDENTS.forEach(s=>{
-    try { dash.appendChild(renderReportCard(s.id, true)); }
-    catch(e){ console.warn('[KidQuest] teacher report card failed:',e); }
-  });
-  // Parent email + weekly progress report
-  try { dash.appendChild(renderParentReports()); }
-  catch(e){ console.warn('[KidQuest] parent reports UI failed:',e); }
-  // Store management: reward requests + catalog editor + stats
-  try { dash.appendChild(renderTeacherStore()); }
-  catch(e){ console.warn('[KidQuest] teacher store failed:',e); }
-  // Maintenance mode toggle
-  try { dash.appendChild(renderMaintenanceControls()); }
-  catch(e){ console.warn('[KidQuest] maintenance controls failed:',e); }
-  // Controls — export/import/reset
-  const ctrl=h('div',{class:'t-controls'},[
+    return wrap;
+  };
+
+  // Backup & Data — the old export/import/clear-orders control row.
+  const buildBackupControls = () => h('div',{class:'t-controls',style:'margin-top:0'},[
     h('button',{class:'btn btn-ghost',onclick:()=>{
       // 📋 Export: copies ALL app state (students, progress, orders, catalog)
       // to the clipboard as a JSON backup. Paste into a text file to save.
@@ -11265,8 +11297,6 @@ function renderTeacher(root){
     }},'📋 Export JSON'),
     h('button',{class:'btn btn-ghost',onclick:()=>{
       // 📥 Import: paste a previously-exported JSON backup to restore state.
-      // Defensive — validates shape before overwriting. Leaves progress intact
-      // if the paste is malformed.
       const raw = prompt('Paste a KidQuest JSON backup here to RESTORE.\n\n' +
         'Tip: export a backup first with "📋 Export JSON" before trying this.');
       if(!raw) return;
@@ -11274,19 +11304,14 @@ function renderTeacher(root){
         const d = JSON.parse(raw);
         if(!d || typeof d!=='object' || !d.users) throw new Error('Missing "users" object — not a valid KidQuest backup.');
         if(!confirm('This will OVERWRITE all current student progress, orders, and catalog overrides with the backup. Continue?')) return;
-        // Merge into allData preserving known student ids
         STUDENTS.forEach(s=>{ allData.users[s.id] = Object.assign(defaultUser(), d.users[s.id]||{}); });
         allData.orders = Array.isArray(d.orders) ? d.orders : [];
         allData.catalogOverrides = (d.catalogOverrides && typeof d.catalogOverrides==='object') ? d.catalogOverrides : {};
         allData.videoOverrides   = (d.videoOverrides   && typeof d.videoOverrides  ==='object') ? d.videoOverrides   : {};
-        // Restore chat threads — tolerate legacy backups that predate chat
-        // by falling back to empty thread arrays for each known student.
         if(d.messages && typeof d.messages==='object'){
           allData.messages = {};
           STUDENTS.forEach(s=>{ allData.messages[s.id] = Array.isArray(d.messages[s.id]) ? d.messages[s.id] : []; });
         }
-        // Mirror restored overrides into the dedicated local key so they
-        // survive future cloud pulls that lack the field.
         try { saveLocalVideoOverrides(allData.videoOverrides); } catch(e){}
         allData.teacher = (d.teacher && typeof d.teacher==='object') ? d.teacher : allData.teacher;
         allData.updatedAt = Date.now();
@@ -11303,17 +11328,66 @@ function renderTeacher(root){
       allData.orders=[]; saveState(); go('teacher');
     }},'🧹 Clear Orders'),
   ]);
-  dash.appendChild(ctrl);
-  // Student password manager — see + reset each student's emoji password.
-  try { dash.appendChild(renderTeacherPasswords()); }
-  catch(e){ console.warn('[KidQuest] password panel failed:',e); }
-  // Coin adjustment — lets the tutor fix balances when a bug or click-through
-  // farming gave a kid more coins than they earned. Password-gated.
-  try { dash.appendChild(renderCoinAdjuster()); }
-  catch(e){ console.warn('[KidQuest] coin adjuster failed:',e); }
-  // Reset controls — granular password-gated resets (per subject, per student, all).
-  try { dash.appendChild(renderResetControls()); }
-  catch(e){ console.warn('[KidQuest] reset controls failed:',e); }
+
+  // Section manifest — order matches the old linear layout so tutors who
+  // had muscle memory for "scroll down to find X" still find X in roughly
+  // the same place.
+  const sections = [
+    { id:'students',    icon:'👥', title:'Students Overview',     build: buildOverviewGrid },
+    { id:'messages',    icon:'💬', title:'Messages',              badge: unreadTotal, build: renderTeacherMessages },
+    { id:'reports',     icon:'📊', title:'Detailed Report Cards', build: buildReportCardsPanel },
+    { id:'parents',     icon:'📧', title:'Parent Reports',        build: renderParentReports },
+    { id:'store',       icon:'🛍️', title:'Store Management',      build: renderTeacherStore },
+    { id:'maintenance', icon:'🔧', title:'Maintenance',           build: renderMaintenanceControls },
+    { id:'backup',      icon:'💾', title:'Backup & Data',         build: buildBackupControls },
+    { id:'passwords',   icon:'🔑', title:'Passwords',             build: renderTeacherPasswords },
+    { id:'coins',       icon:'💰', title:'Coin Adjuster',         build: renderCoinAdjuster },
+    { id:'resets',      icon:'🔄', title:'Resets',                build: renderResetControls },
+  ];
+
+  const acc = h('div',{class:'t-accordion'});
+  sections.forEach(sec => {
+    const isOpen = teacherTabOpen[sec.id] === true;
+    const section = h('div',{class:'t-acc-section'+(isOpen?' open':'')});
+    const headChildren = [
+      h('span',{class:'t-acc-icon','aria-hidden':'true'}, sec.icon),
+      h('span',{class:'t-acc-title'}, sec.title),
+    ];
+    if(sec.badge && sec.badge > 0){
+      headChildren.push(h('span',{class:'t-acc-badge', 'aria-label': sec.badge+' unread'}, String(sec.badge)));
+    }
+    headChildren.push(h('span',{class:'t-acc-chevron','aria-hidden':'true'}, '▾'));
+    const head = h('button',{
+      class:'t-acc-head',
+      type:'button',
+      'aria-expanded': String(isOpen),
+      onclick: () => {
+        const nowOpen = !section.classList.contains('open');
+        section.classList.toggle('open', nowOpen);
+        head.setAttribute('aria-expanded', String(nowOpen));
+        teacherTabOpen[sec.id] = nowOpen;
+      },
+    }, headChildren);
+    const body = h('div',{class:'t-acc-body'});
+    // Lazy-build the content when the section opens for the first time.
+    // Saves work on page load when most sections are collapsed — crucial
+    // for heavy builders like renderParentReports and renderTeacherStore.
+    let built = false;
+    const ensureBuilt = () => {
+      if(built) return;
+      built = true;
+      try {
+        const content = sec.build();
+        if(content) body.appendChild(content);
+      } catch(e){ console.warn('[KidQuest] teacher section '+sec.id+' failed:', e); }
+    };
+    if(isOpen) ensureBuilt();
+    head.addEventListener('click', ensureBuilt);
+    section.appendChild(head);
+    section.appendChild(body);
+    acc.appendChild(section);
+  });
+  dash.appendChild(acc);
   root.appendChild(dash);
 }
 
