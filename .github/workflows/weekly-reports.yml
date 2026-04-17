@@ -51,13 +51,17 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Set up Node 20
+      - name: Set up Node 24
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '24'
 
       - name: Send reports
         env:
+          # Silence the "Node 20 actions deprecated" annotation by opting the
+          # GitHub-provided JS actions into their Node 24 runtime. Becomes a
+          # no-op once GitHub makes Node 24 the default (June 2026).
+          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
           # Scheduled runs always send for real. Manual dispatch respects the
           # dry_run input (defaults true). The script also force-dry-runs if
           # RESEND_API_KEY is missing, so this is belt-and-braces.
