@@ -1971,13 +1971,16 @@ nishan: {
         {type:'mcq',q:'A STOP sign has how many sides?',choices:['4','6','8','10'],answer:2},
       ]},
     { id:'w1-nishan-m5', title:'First Adding & Subtracting', emoji:'➕',
-      lesson:{title:'Adding AND Taking Away',intro:'Adding (+) puts numbers TOGETHER — the answer gets bigger. Subtracting (−) TAKES AWAY — the answer gets smaller!',stack:{op:'+',top:'7',bottom:'6',answer:'13',note:'Seven plus six. Count up: 7... 8, 9, 10, 11, 12, 13.'},hint:'For +, count UP. For −, count DOWN.'},
+      // Kept to sums and subtractions WITHIN 10 so a kindergartener can use
+      // fingers / counters without running out. Previously went to 14 which
+      // required crossing 10 — that's a Grade 1 skill, not SK.
+      lesson:{title:'Adding AND Taking Away',intro:'Adding (+) puts numbers TOGETHER — the answer gets bigger. Subtracting (−) TAKES AWAY — the answer gets smaller! Use your fingers to count.',stack:{op:'+',top:'3',bottom:'2',answer:'5',note:'Three plus two. Count up with fingers: 3... 4, 5.'},hint:'For +, count UP. For −, count DOWN. Fingers help!'},
       questions:[
-        {type:'mcq',q:'6 + 3 = ?',choices:['7','8','9','10'],answer:2},
-        {type:'mcq',q:'7 + 5 = ?',choices:['10','11','12','13'],answer:2},
-        {type:'mcq',q:'8 + 6 = ?',choices:['12','13','14','15'],answer:2},
+        {type:'mcq',q:'2 + 3 = ?',choices:['4','5','6','7'],answer:1},
+        {type:'mcq',q:'4 + 3 = ?',choices:['6','7','8','9'],answer:1},
+        {type:'mcq',q:'5 + 4 = ?',choices:['7','8','9','10'],answer:2},
         {type:'mcq',q:'5 − 2 = ?',choices:['2','3','4','7'],answer:1},
-        {type:'mcq',q:'You have 10 stickers. You give 4 away. How many left?',choices:['4','5','6','14'],answer:2},
+        {type:'mcq',q:'You have 7 stickers. You give 3 away. How many left?',choices:['3','4','5','10'],answer:1},
       ]},
   ],
   logic: [
@@ -2350,14 +2353,18 @@ akaran: {
         {type:'mcq',q:'Count by 10s: 10, 20, 30, ?',choices:['31','35','40','50'],answer:2},
         {type:'order',q:'Put in order: smallest to biggest!',items:['18','34','7','42','25'],correctOrder:[2,0,4,1,3]},
       ]},
-    { id:'w1-akaran-m2', title:'Adding to 20', emoji:'➕',
-      lesson:{title:'Bigger Addition',intro:'When adding bigger numbers, you can break them apart. 8 + 7: think "8 + 2 = 10, then 5 more = 15".',stack:{op:'+',top:'9',bottom:'6',answer:'15',note:'Make a ten: 9+1=10, then 5 more.'},hint:'Make a 10 first, then add the rest!'},
+    { id:'w1-akaran-m2', title:'Adding to 15', emoji:'➕',
+      // Previously "Adding to 20" with make-a-ten strategy. For a Grade 1
+      // student still building fluency, sums-to-15 with counting up is a
+      // more reachable target. Kids can use fingers or a number line —
+      // no mental regrouping required.
+      lesson:{title:'Bigger Addition',intro:'To add bigger numbers, start at the bigger number and COUNT UP by the smaller one. 8 + 3? Start at 8: 9, 10, 11!',stack:{op:'+',top:'8',bottom:'3',answer:'11',note:'Start at 8, count up 3: 9, 10, 11.'},hint:'Start at the BIGGER number and count up.'},
       questions:[
-        {type:'mcq',q:'8 + 5 = ?',choices:['11','12','13','14'],answer:2},
-        {type:'mcq',q:'7 + 6 = ?',choices:['12','13','14','15'],answer:1},
-        {type:'mcq',q:'9 + 7 = ?',choices:['14','15','16','17'],answer:2},
-        {type:'mcq',q:'6 + 8 = ?',choices:['12','13','14','15'],answer:2},
-        {type:'mcq',q:'7 + 7 = ?',choices:['12','13','14','15'],answer:2},
+        {type:'mcq',q:'6 + 3 = ?',choices:['8','9','10','11'],answer:1},
+        {type:'mcq',q:'8 + 4 = ?',choices:['10','11','12','13'],answer:2},
+        {type:'mcq',q:'5 + 5 = ?',choices:['9','10','11','12'],answer:1},
+        {type:'mcq',q:'7 + 3 = ?',choices:['9','10','11','12'],answer:1},
+        {type:'mcq',q:'9 + 4 = ?',choices:['11','12','13','14'],answer:2},
       ]},
     { id:'w1-akaran-m3', title:'Subtracting from 20', emoji:'➖',
       lesson:{title:'Bigger Subtraction',intro:'For harder subtraction, count back or think about what adds up to the number.',stack:{op:'−',top:'15',bottom:'7',answer:'8',note:'Think: 7 + ? = 15.'},hint:'You can also count backwards from 15: 14, 13, 12, 11, 10, 9, 8.'},
@@ -2378,11 +2385,14 @@ akaran: {
         {type:'mcq',q:'What is 10 more than 35?',choices:['25','36','40','45'],answer:3},
       ]},
     { id:'w1-akaran-m5', title:'Story Problems', emoji:'📖',
-      lesson:{title:'Multi-Part Word Problems',intro:'Some word problems need TWO steps. Read carefully, figure out BOTH parts.',example:'"You have 8 stickers. Get 5 more, then give 3 away." → 8+5=13, 13−3=10.',hint:'Underline the numbers. Decide: add or subtract for each step.'},
+      // Simplified to ONE-STEP word problems only. Multi-step stories made
+      // kids lose track of what to do — better to master the single-operation
+      // "more = add, left = subtract" pattern first.
+      lesson:{title:'One-Step Word Problems',intro:'Read the story. Find the numbers. Pick ADD or SUBTRACT — then do it!',example:'"Lily has 6 crayons. She gets 4 more." → 6 + 4 = 10.',hint:'"More / got / added" → ADD. "Left / gave / took away" → SUBTRACT.'},
       questions:[
-        {type:'mcq',q:'Lily has 12 crayons. She gets 6 more from her friend. How many now?',choices:['15','16','17','18'],answer:3},
+        {type:'mcq',q:'Lily has 12 crayons. She gets 6 more. How many now?',choices:['15','16','17','18'],answer:3},
         {type:'mcq',q:'A jar has 15 marbles. 7 are taken out. How many are left?',choices:['7','8','9','10'],answer:1},
-        {type:'mcq',q:'Ben has 9 cards. He gets 4 more, then gives 3 away. How many does he have?',choices:['8','9','10','11'],answer:2},
+        {type:'mcq',q:'Ben has 9 cards. He gets 5 more. How many does he have?',choices:['12','13','14','15'],answer:1},
         {type:'mcq',q:'There are 6 red apples and 8 green apples. How many in all?',choices:['12','13','14','15'],answer:2},
         {type:'mcq',q:'A bus has 20 seats. 13 people are sitting. How many seats are empty?',choices:['5','6','7','8'],answer:2},
       ]},
@@ -2759,11 +2769,14 @@ rushan: {
         {type:'mcq',q:'71 − 28 = ?',choices:['43','47','53','59'],answer:0},
       ]},
     { id:'w1-rushan-m3', title:'Word Problems', emoji:'📖',
-      lesson:{title:'Math in Stories',intro:'Read carefully. Underline the numbers and look for clue words.',example:'"Sam had 25, lost 8, found 4" → 25−8+4=21',hint:'"More/got/added" = add. "Left/gave/lost" = subtract.'},
+      // Pulled back from mixed multi-step problems. Each question is now a
+      // single operation so Rushan can focus on the "add or subtract?" choice
+      // without juggling two steps in his head.
+      lesson:{title:'Math in Stories',intro:'Read carefully. Find the numbers. Decide: add or subtract?',example:'"Sam had 25 marbles, lost 8." → 25 − 8 = 17.',hint:'"More / got / added" = ADD. "Left / gave / lost" = SUBTRACT.'},
       questions:[
         {type:'mcq',q:'Sam had 25 marbles. He lost 8. How many left?',choices:['15','17','19','33'],answer:1},
         {type:'mcq',q:'A box has 36 cookies. 12 are eaten. How many left?',choices:['18','22','24','28'],answer:2},
-        {type:'mcq',q:'18 birds on a wire. 7 fly away, 3 more join. How many now?',choices:['12','14','16','18'],answer:1},
+        {type:'mcq',q:'18 birds on a wire. 7 fly away. How many now?',choices:['9','10','11','12'],answer:2},
         {type:'mcq',q:'Leo reads 8 pages Monday, 12 Tuesday. How many total?',choices:['16','18','20','22'],answer:2},
         {type:'mcq',q:'You have $10. Buy something for $4. How much change?',choices:['$4','$5','$6','$7'],answer:2},
       ]},
@@ -3136,33 +3149,36 @@ akshayan: {
   ],
   math: [
     { id:'w1-akshayan-m1', title:'Regrouping Addition', emoji:'➕', videoIds:['T5Qf0qSSJFI'],
-      lesson:{title:'Adding Big Numbers',intro:'Line up the numbers. Add from right to left. If a column adds to 10 or more, carry the 1 to the next column.',stack:{op:'+',top:'148',bottom:'275',carries:[1,1,''],answer:'423',steps:[
-        '<b>Ones:</b> 8 + 5 = <b>13</b>. Write <b>3</b>, carry <b>1</b>.',
-        '<b>Tens:</b> 4 + 7 + 1 = <b>12</b>. Write <b>2</b>, carry <b>1</b>.',
-        '<b>Hundreds:</b> 1 + 2 + 1 = <b>4</b>. Write <b>4</b>.',
-        'Answer: <b>423</b>.'
+      // Dropped from double-carry 3-digit (148+275) down to SINGLE-carry problems.
+      // Kids master one carry at a time — double-carries confused the step-by-step.
+      lesson:{title:'Adding with One Carry',intro:'Line up the numbers. Add from right to left. If a column adds to 10 or more, carry the 1 to the next column.',stack:{op:'+',top:'45',bottom:'38',carries:[1,''],answer:'83',steps:[
+        '<b>Ones:</b> 5 + 8 = <b>13</b>. Write <b>3</b>, carry <b>1</b>.',
+        '<b>Tens:</b> 4 + 3 + 1 = <b>8</b>. Write <b>8</b>.',
+        'Answer: <b>83</b>.'
       ]},hint:'Always start from the ones (right side) and work left!'},
       questions:[
-        {type:'mcq',q:'148 + 275 = ?',choices:['413','423','433','523'],answer:1},
-        {type:'mcq',q:'267 + 158 = ?',choices:['325','415','425','435'],answer:2},
-        {type:'mcq',q:'394 + 128 = ?',choices:['422','512','522','532'],answer:2},
-        {type:'mcq',q:'456 + 287 = ?',choices:['633','643','733','743'],answer:3},
-        {type:'mcq',q:'189 + 356 = ?',choices:['445','535','545','555'],answer:2},
+        {type:'mcq',q:'45 + 38 = ?',choices:['73','83','93','103'],answer:1},
+        {type:'mcq',q:'27 + 16 = ?',choices:['33','43','53','63'],answer:1},
+        {type:'mcq',q:'56 + 29 = ?',choices:['75','85','95','105'],answer:1},
+        {type:'mcq',q:'34 + 47 = ?',choices:['71','81','91','101'],answer:1},
+        {type:'mcq',q:'Maya has 28 stickers. She gets 15 more. How many total?',choices:['33','43','53','63'],answer:1},
       ]},
     { id:'w1-akshayan-m2', title:'Regrouping Subtraction', emoji:'➖',
-      lesson:{title:'Subtracting Big Numbers',intro:'Line up the numbers. Subtract from right to left. If the top number is smaller, borrow from the column to the left.',stack:{op:'−',top:'403',bottom:'187',carries:[3,9,13],mode:'borrow',answer:'216',steps:[
-        '<b>Ones:</b> we need 3 − 7, but 3 is too small — so we need to borrow.',
-        'The tens is 0, so first borrow from the hundreds: <b>4</b> becomes <b>3</b>, and tens becomes <b>10</b>.',
-        'Now borrow from the tens: <b>10</b> becomes <b>9</b>, and ones becomes <b>13</b>.',
-        '<b>Ones:</b> 13 − 7 = <b>6</b>. <b>Tens:</b> 9 − 8 = <b>1</b>. <b>Hundreds:</b> 3 − 1 = <b>2</b>.',
-        'Answer: <b>216</b>.'
-      ]},hint:'If there\'s a zero on top, borrow from the next column over.'},
+      // Simplified from 3-digit with borrow-across-zero (403−187) to straight
+      // 2-digit with ONE borrow. That's the core regrouping skill — cross-zero
+      // borrowing can come later once this is automatic.
+      lesson:{title:'Subtracting with Borrowing',intro:'Line up the numbers. Subtract from right to left. If the top number is smaller, borrow 1 from the column to the left.',stack:{op:'−',top:'52',bottom:'27',carries:[4,12],mode:'borrow',answer:'25',steps:[
+        '<b>Ones:</b> we need 2 − 7, but 2 is too small — so we borrow.',
+        'Borrow from the tens: <b>5</b> becomes <b>4</b>, and ones becomes <b>12</b>.',
+        '<b>Ones:</b> 12 − 7 = <b>5</b>. <b>Tens:</b> 4 − 2 = <b>2</b>.',
+        'Answer: <b>25</b>.'
+      ]},hint:'Borrow when the top number is smaller than the bottom.'},
       questions:[
-        {type:'mcq',q:'403 − 187 = ?',choices:['206','216','226','316'],answer:1},
-        {type:'mcq',q:'500 − 175 = ?',choices:['225','275','325','335'],answer:2},
-        {type:'mcq',q:'612 − 348 = ?',choices:['254','264','274','364'],answer:1},
-        {type:'mcq',q:'800 − 456 = ?',choices:['244','334','344','444'],answer:2},
-        {type:'mcq',q:'705 − 389 = ?',choices:['306','316','326','416'],answer:1},
+        {type:'mcq',q:'52 − 27 = ?',choices:['15','25','35','45'],answer:1},
+        {type:'mcq',q:'81 − 36 = ?',choices:['35','45','55','65'],answer:1},
+        {type:'mcq',q:'63 − 29 = ?',choices:['24','34','44','54'],answer:1},
+        {type:'mcq',q:'74 − 48 = ?',choices:['16','26','36','46'],answer:1},
+        {type:'mcq',q:'A box had 60 cookies. 27 got eaten. How many left?',choices:['23','33','43','53'],answer:1},
       ]},
     { id:'w1-akshayan-m3', title:'Early Multiplication', emoji:'✖️', videoIds:['FJ5qLWP3Fqo'],
       lesson:{title:'Groups and Times',intro:'Multiplication is adding the same number many times. 3 × 4 = 3+3+3+3 = 12.',example:'3 × 4 = 12. Think: 3 groups of 4!',hint:'3 × 4 = 4 × 3 — order doesn\'t matter!'},
@@ -3173,14 +3189,16 @@ akshayan: {
         {type:'mcq',q:'4 × 5 = ?',choices:['15','18','20','25'],answer:2},
         {type:'mcq',q:'A spider has 8 legs. How many legs on 3 spiders?',choices:['16','20','24','28'],answer:2},
       ]},
-    { id:'w1-akshayan-m4', title:'Multi-Step Problems', emoji:'🎯',
-      lesson:{title:'Problems with Multiple Steps',intro:'Some problems need more than one step. Solve step 1 first, then use that answer for step 2.',example:'"3 packs of 8, gave 5 away" → 3×8=24, 24−5=19',hint:'Write each step. Don\'t skip ahead!'},
+    { id:'w1-akshayan-m4', title:'Word Problems', emoji:'🎯',
+      // Renamed from "Multi-Step" — we pulled all questions down to SINGLE-step.
+      // Multi-step problems belong in a later lesson once one-step is automatic.
+      lesson:{title:'One-Step Word Problems',intro:'Read the story. Find the numbers. Pick an operation — add, subtract, or multiply — and solve.',example:'"Sam had 24 stickers. He gave 8 away." → 24 − 8 = 16.',hint:'"Gave / sold / lost / ate" → subtract. "Got / bought / total" → add. "Groups of / each" → multiply.'},
       questions:[
-        {type:'mcq',q:'Sam bought 3 packs of 8 stickers. He gave 5 to his sister. How many left?',choices:['11','17','19','21'],answer:2},
-        {type:'mcq',q:'A store had 50 apples. Sold 22 in morning and 18 in afternoon. How many left?',choices:['8','10','12','15'],answer:1},
-        {type:'mcq',q:'Lisa has $15. She buys 3 books for $4 each. How much money left?',choices:['$1','$2','$3','$4'],answer:2},
-        {type:'mcq',q:'4 teams of 6 kids. 2 kids absent. How many playing?',choices:['18','20','22','24'],answer:2},
-        {type:'mcq',q:'A baker makes 5 trays of 6 muffins. Burns 4. How many good?',choices:['24','26','28','30'],answer:1},
+        {type:'mcq',q:'Sam has 24 stickers. He gives 8 to his sister. How many left?',choices:['14','16','18','20'],answer:1},
+        {type:'mcq',q:'A store had 48 apples. They sold 22. How many left?',choices:['22','26','28','32'],answer:1},
+        {type:'mcq',q:'Lisa has $15. She buys a book for $4. How much money left?',choices:['$9','$11','$13','$19'],answer:1},
+        {type:'mcq',q:'4 teams of 6 kids. How many kids in all?',choices:['10','18','22','24'],answer:3},
+        {type:'mcq',q:'A baker makes 30 muffins. She sells 18. How many left?',choices:['8','10','12','14'],answer:2},
       ]},
     { id:'w1-akshayan-m5', title:'Fractions Intro', emoji:'🍕', videoIds:['5juto2ze8Lg'], // Math Antics - Adding and Subtracting Fractions (simplified intro)
       lesson:{title:'Parts of a Whole',intro:'A fraction shows PART of something. 1/2 = half. 1/4 = a quarter.',example:'Pizza cut in 4 slices — one slice is 1/4 of the pizza.',hint:'Bottom number = total parts. Top number = parts you have.'},
@@ -3589,88 +3607,98 @@ isaiah: {
       ]},
   ],
   math: [
-    { id:'w1-isaiah-m1', title:'Multi-Digit +/- with Regrouping', emoji:'➕', videoIds:['T5Qf0qSSJFI'],
-      lesson:{title:'Adding and Subtracting Big Numbers',intro:'When adding/subtracting numbers with 3+ digits, line them up by place value (ones, tens, hundreds) and work right to left. REGROUP (carry or borrow) when needed.',stack:[
-        {op:'+',top:'345',bottom:'278',carries:[1,1,''],answer:'623',steps:[
-          '<b>Ones:</b> 5 + 8 = <b>13</b>. Write <b>3</b>, carry the <b>1</b> to the tens.',
-          '<b>Tens:</b> 4 + 7 + 1 = <b>12</b>. Write <b>2</b>, carry the <b>1</b> to the hundreds.',
-          '<b>Hundreds:</b> 3 + 2 + 1 = <b>6</b>. Write <b>6</b>.',
-          'Answer: <b>623</b>.'
+    // DIFFICULTY NOTE — Isaiah's math was originally built around Grade 4/5
+    // skills (3-digit regrouping → 2-digit multiplication → long division
+    // with remainders → fraction comparison → multi-step decimals). In
+    // practice that jumped too far above where Isaiah actually is, and he
+    // couldn't get traction. We pulled the whole ladder back one grade-band
+    // so every level starts from a skill he can reliably do, then stretches
+    // by one concept per level. Progression is now:
+    //   m1: 2-digit +/- (with carry/borrow) — the foundation
+    //   m2: Basic times tables (single-digit only, no carrying)
+    //   m3: Simple division facts (clean splits, one remainder example)
+    //   m4: Fraction basics (what it is, visual halves/quarters)
+    //   m5: One-step word problems (add OR subtract, not both)
+    // When Isaiah consistently passes these, raise them back toward Gr 4.
+    { id:'w1-isaiah-m1', title:'Two-Digit Addition & Subtraction', emoji:'➕', videoIds:['T5Qf0qSSJFI'],
+      lesson:{title:'Adding and Subtracting Two-Digit Numbers',intro:'Line up the TENS under the TENS and the ONES under the ONES. Start at the ONES column on the right. If the ones add up to 10 or more, CARRY 1 to the tens. If you can\'t subtract (top is smaller), BORROW 1 from the tens.',stack:[
+        {op:'+',top:'28',bottom:'17',carries:[1,''],answer:'45',steps:[
+          '<b>Ones:</b> 8 + 7 = <b>15</b>. Write <b>5</b>, carry the <b>1</b> to the tens.',
+          '<b>Tens:</b> 2 + 1 + 1 (carried) = <b>4</b>. Write <b>4</b>.',
+          'Answer: <b>45</b>.'
         ]},
-        {op:'−',top:'800',bottom:'345',carries:[7,9,10],mode:'borrow',answer:'455',steps:[
-          '<b>Ones:</b> we need 0 − 5, but 0 is too small — so we borrow.',
-          'There\'s nothing in the tens (it\'s 0), so borrow from the hundreds first: 8 becomes <b>7</b>, tens becomes <b>10</b>.',
-          'Now borrow from the tens for the ones: tens <b>10</b> becomes <b>9</b>, and ones become <b>10</b>.',
-          '<b>Ones:</b> 10 − 5 = <b>5</b>. <b>Tens:</b> 9 − 4 = <b>5</b>. <b>Hundreds:</b> 7 − 3 = <b>4</b>.',
-          'Answer: <b>455</b>.'
+        {op:'−',top:'42',bottom:'15',carries:[3,12],mode:'borrow',answer:'27',steps:[
+          '<b>Ones:</b> we need 2 − 5, but 2 is too small. <b>Borrow</b> 1 from the tens.',
+          'Tens 4 becomes <b>3</b>. Ones 2 becomes <b>12</b>.',
+          '<b>Ones:</b> 12 − 5 = <b>7</b>. <b>Tens:</b> 3 − 1 = <b>2</b>.',
+          'Answer: <b>27</b>.'
         ]}
-      ],hint:'Line them up neatly! Keep ones under ones, tens under tens, hundreds under hundreds.'},
+      ],hint:'Keep the numbers neat and lined up. Work from right (ones) to left (tens).'},
       questions:[
-        {type:'mcq',q:'456 + 327 = ?',choices:['773','783','793','873'],answer:1},
-        {type:'mcq',q:'800 - 345 = ?',choices:['445','455','465','555'],answer:1},
-        {type:'mcq',q:'1,234 + 567 = ?',choices:['1,791','1,801','1,811','1,890'],answer:1},
-        {type:'mcq',q:'When you add 67 + 25, the ones digits 7 + 5 = 12. What do you do?',choices:['Write 12','Write 2, carry 1 to tens','Carry 2','Start over'],answer:1},
-        {type:'mcq',q:'5,000 - 2,678 = ?',choices:['2,322','2,312','2,422','2,432'],answer:0},
+        {type:'mcq',q:'24 + 13 = ?',choices:['27','37','47','34'],answer:1},
+        {type:'mcq',q:'56 + 27 = ?',choices:['73','82','83','93'],answer:2},
+        {type:'mcq',q:'45 − 12 = ?',choices:['23','33','43','53'],answer:1},
+        {type:'mcq',q:'When you add 38 + 45, the ones are 8 + 5 = 13. What do you do?',choices:['Write 13 in the ones','Write 3, carry 1 to the tens','Carry 3','Start over'],answer:1},
+        {type:'mcq',q:'62 − 28 = ?',choices:['24','34','44','40'],answer:1},
       ]},
-    { id:'w1-isaiah-m2', title:'Multiplication', emoji:'✖️', videoIds:['FJ5qLWP3Fqo'], // Math Antics - Multi-Digit Multiplication Pt 1
-      lesson:{title:'Multiplying Bigger Numbers',intro:'Multiplication = repeated addition. Master your times tables, then practice 2-digit × 1-digit. Stack the numbers, multiply each digit, and carry when needed.',stack:{op:'×',top:'47',bottom:' 3',carries:[2,''],answer:'141',steps:[
-        '<b>Ones:</b> 3 × 7 = <b>21</b>. Write <b>1</b>, carry <b>2</b> to the tens.',
-        '<b>Tens:</b> 3 × 4 = <b>12</b>. Add the carried <b>2</b>: 12 + 2 = <b>14</b>. Write <b>14</b>.',
-        'Answer: <b>141</b>.'
-      ]},hint:'Know your times tables! 6×7=42, 7×8=56, 8×9=72. Practice until they\'re automatic.'},
+    { id:'w1-isaiah-m2', title:'Times Tables', emoji:'✖️', videoIds:['FJ5qLWP3Fqo'],
+      lesson:{title:'Multiplication Facts',intro:'Multiplication is a shortcut for adding the same number many times. 3 × 4 means "3 groups of 4" — which is 4 + 4 + 4 = 12. Learn your times tables up to 10 and they\'ll come back to you in one second.',example:'3 × 4 = 12 (three groups of four). 5 × 6 = 30 (five groups of six).',steps:[
+        '<b>Think in groups.</b> 4 × 5 = 4 groups of 5. Count by 5s: 5, 10, 15, <b>20</b>.',
+        '<b>Use doubles.</b> 2 × anything = double it. 2 × 7 = 14.',
+        '<b>Use your fives.</b> Counting by 5s is easy: 5, 10, 15, 20, 25, 30…',
+        '<b>Tens are easiest.</b> 10 × anything just adds a 0 at the end. 10 × 6 = <b>60</b>.',
+        '<b>Tricky ones to memorize:</b> 6 × 7 = 42, 7 × 8 = 56, 8 × 9 = 72.'
+      ],hint:'Skip-count to check! 4 × 3? Count by 3s four times: 3, 6, 9, 12.'},
       questions:[
-        {type:'mcq',q:'6 × 7 = ?',choices:['36','42','48','49'],answer:1},
-        {type:'mcq',q:'23 × 4 = ?',choices:['82','92','93','104'],answer:1},
-        {type:'mcq',q:'9 × 8 = ?',choices:['64','70','72','81'],answer:2},
-        {type:'mcq',q:'Sam has 5 boxes. Each box has 12 markers. How many markers total?',choices:['17','50','55','60'],answer:3},
-        {type:'mcq',q:'47 × 3 = ?',choices:['121','131','141','151'],answer:2},
+        {type:'mcq',q:'3 × 4 = ?',choices:['7','10','12','16'],answer:2},
+        {type:'mcq',q:'5 × 6 = ?',choices:['11','25','30','35'],answer:2},
+        {type:'mcq',q:'If you have 4 bags and each bag holds 5 apples, how many apples total?',choices:['9','15','20','25'],answer:2},
+        {type:'mcq',q:'2 × 8 = ?',choices:['10','14','16','18'],answer:2},
+        {type:'mcq',q:'10 × 7 = ?',choices:['17','70','17','107'],answer:1},
       ]},
-    { id:'w1-isaiah-m3', title:'Division with Remainders', emoji:'➗', videoIds:['LGqBQrUYua4'], // Math Antics - Long Division
-      lesson:{title:'Division — Sharing Equally',visual:'14 🍪  ➗  3 👧',intro:'Division splits a number into equal groups. Sometimes there\'s a bit left over — that\'s the REMAINDER.',example:'14 ÷ 3 = 4 remainder 2. (Four full groups of 3, with 2 left over.)',steps:[
-        '<b>Read the problem</b>: 14 ÷ 3 means "share 14 into groups of 3".',
-        '<b>Ask: how many 3s fit in 14?</b> Count by 3s: 3, 6, 9, 12. That\'s <b>four 3s</b>.',
-        '<b>Multiply to check:</b> 4 × 3 = <b>12</b>.',
-        '<b>Subtract to find the leftover:</b> 14 − 12 = <b>2</b>.',
-        '<b>Write the answer:</b> 4 remainder 2 (or "4 R 2").'
-      ],hint:'Think: "How many times does the small number fit into the big one?" Then subtract to find what\'s left.'},
+    { id:'w1-isaiah-m3', title:'Simple Division', emoji:'➗', videoIds:['LGqBQrUYua4'],
+      lesson:{title:'Division — Sharing Into Equal Groups',visual:'12 🍪  ➗  3 👧  = 4 each',intro:'Division splits a number into equal groups. 12 ÷ 3 asks "If I share 12 things among 3 people, how many does each get?" Answer: 4 each.',example:'12 ÷ 3 = 4 (three friends share 12 cookies — 4 each). 20 ÷ 5 = 4 (twenty candies into 5 equal piles — 4 per pile).',steps:[
+        '<b>Read it as sharing.</b> 15 ÷ 3 = "split 15 into 3 equal piles — how many per pile?"',
+        '<b>Think times tables backward.</b> 15 ÷ 3? Ask "3 times what equals 15?" → 3 × <b>5</b> = 15. So 15 ÷ 3 = <b>5</b>.',
+        '<b>Check by multiplying.</b> If 20 ÷ 4 = 5, then 4 × 5 should equal 20. ✓',
+        '<b>Sometimes there\'s a leftover.</b> 10 ÷ 3 = 3 with <b>1 left over</b> (3 groups of 3 = 9, and 1 extra). That extra is the "remainder".'
+      ],hint:'Division and multiplication are opposites. 12 ÷ 3 = 4 because 3 × 4 = 12.'},
       questions:[
+        {type:'mcq',q:'12 ÷ 3 = ?',choices:['2','3','4','6'],answer:2},
         {type:'mcq',q:'20 ÷ 4 = ?',choices:['4','5','6','8'],answer:1},
-        {type:'mcq',q:'17 ÷ 5 = ?',choices:['3 remainder 2','4 remainder 1','2 remainder 7','5 remainder 0'],answer:0},
-        {type:'mcq',q:'42 ÷ 6 = ?',choices:['6','7','8','9'],answer:1},
-        {type:'mcq',q:'25 cookies split among 4 friends — how many each, and how many left over?',choices:['5 each, 5 left','6 each, 1 left','7 each, 0 left','4 each, 9 left'],answer:1},
-        {type:'mcq',q:'What does "remainder" mean?',choices:['The answer','Whatever is left after dividing','The starting number','A multiplication trick'],answer:1},
+        {type:'mcq',q:'15 cookies shared equally by 3 kids — how many each?',choices:['3','4','5','6'],answer:2},
+        {type:'mcq',q:'18 ÷ 2 = ?',choices:['6','8','9','10'],answer:2},
+        {type:'mcq',q:'10 ÷ 3 = 3 with a little left over. How much is left?',choices:['0','1','2','3'],answer:1},
       ]},
-    { id:'w1-isaiah-m4', title:'Fractions: Compare & Equivalent', emoji:'🍕', videoIds:['5juto2ze8Lg','4lkq3DgvmJo'], // Math Antics - Adding/Subtracting Fractions + Dividing Fractions
-      lesson:{title:'Fractions',intro:'A FRACTION shows a part of a whole. TOP = numerator (parts you have). BOTTOM = denominator (total parts). EQUIVALENT fractions look different but equal the same amount (1/2 = 2/4 = 4/8).',example:'1/2 of a pizza = 2/4 of the same pizza = 4/8. Also: 3/4 is bigger than 1/2.',steps:[
-        '<b>Read the fraction</b> as "top over bottom". Example: <b>3/4</b> = 3 parts out of 4.',
-        '<b>Same bottom? Compare the tops.</b> 3/4 vs 1/4 — same 4 on the bottom, so bigger top wins: 3/4.',
-        '<b>Different bottoms? Find equivalents.</b> Multiply top AND bottom by the same number. 1/2 × 2/2 = <b>2/4</b>.',
-        '<b>Compare equivalents.</b> 2/6 vs 2/4? Convert 2/6 to 4/12 and 2/4 to 6/12. Now 6/12 &gt; 4/12, so 2/4 is bigger.',
-        '<b>Check with a picture</b> in your head: would half a pizza be more than a third? Yes!'
-      ],hint:'Same denominator? Bigger top = bigger fraction. Different denominators? Think about the pizza picture.'},
+    { id:'w1-isaiah-m4', title:'Fractions Basics', emoji:'🍕', videoIds:['5juto2ze8Lg'],
+      lesson:{title:'What is a Fraction?',intro:'A FRACTION shows PART of a WHOLE thing. The TOP number (numerator) tells how many pieces you have. The BOTTOM number (denominator) tells how many equal pieces make up the whole.',example:'1/2 of a pizza = one of two equal slices. 1/4 = one of four equal slices. 3/4 = three out of four slices.',steps:[
+        '<b>Picture a pizza.</b> Cut it into 4 equal slices — each slice is 1/4 of the pizza.',
+        '<b>Top = how many you took.</b> If you took 3 slices out of 4, you have <b>3/4</b>.',
+        '<b>Bottom = total equal pieces.</b> A pizza cut into 8 slices has 8 on the bottom (eighths).',
+        '<b>Bigger bottom = smaller slice.</b> 1/8 is a smaller slice than 1/4 — more cuts = tinier pieces.',
+        '<b>Same bottom? Compare the tops.</b> 3/4 vs 1/4: same 4 on bottom, so 3/4 is bigger.'
+      ],hint:'When the bottoms are the same, the bigger top number = the bigger fraction.'},
       questions:[
+        {type:'mcq',q:'What fraction is one out of four equal slices?',choices:['1/2','1/3','1/4','4/1'],answer:2},
         {type:'mcq',q:'Which fraction is BIGGER: 3/4 or 1/4?',choices:['3/4','1/4','They are equal','Cannot tell'],answer:0},
-        {type:'mcq',q:'Which fraction is EQUIVALENT to 1/2?',choices:['1/3','2/4','3/5','1/4'],answer:1},
-        {type:'mcq',q:'You ate 2/6 of a pizza. Your friend ate 2/4 of the same pizza. Who ate more?',choices:['You','Your friend','Equal','Cannot tell'],answer:1},
-        {type:'mcq',q:'What is 4/8 equal to?',choices:['1/2','1/4','2/3','3/4'],answer:0},
-        {type:'mcq',q:'The numerator is on the...',choices:['Bottom','Top','Side','Nowhere'],answer:1},
+        {type:'mcq',q:'A pizza has 4 equal slices. You eat 2 of them. What fraction did you eat?',choices:['1/4','2/4','3/4','4/2'],answer:1},
+        {type:'mcq',q:'The number on TOP of a fraction is called the…',choices:['Denominator','Numerator','Remainder','Quotient'],answer:1},
+        {type:'mcq',q:'Which is the BIGGEST slice?',choices:['1/2','1/4','1/8','1/10'],answer:0},
       ]},
-    // ★ LEVEL 5 STRETCH — Grade 5 multi-step + decimals
-    { id:'w1-isaiah-m5', title:'Multi-Step & Decimals (G5 Stretch!)', emoji:'🌟', videoIds:['KG6ILNOiMgM','dAgfnK528RA'],
-      lesson:{title:'Multi-Step Word Problems',intro:'In multi-step problems, you often need TWO or MORE operations to find the answer. Read carefully, underline the question, and plan your steps.',example:'"Maya has $20. She buys 3 books at $4 each. How much change?" Step 1: 3 × $4 = $12. Step 2: $20 − $12 = $8.',steps:[
-        '<b>Read twice.</b> First time to get the story, second time to find the question.',
-        '<b>Circle the numbers</b> you\'ll need: 3 books, $4 each, $20 total.',
-        '<b>Pick operation 1.</b> 3 books × $4 each = how much spent? Multiplication → 3 × 4 = <b>$12</b>.',
-        '<b>Pick operation 2.</b> Start money − spent = change left. Subtraction → $20 − $12 = <b>$8</b>.',
-        '<b>Check it makes sense.</b> $8 is less than $20 and more than $0 — looks right.',
-        '<b>For decimals:</b> line up the dots. 0.5 + 0.25 → write 0.50 + 0.25 = 0.75. Keep the decimal in the SAME column.'
-      ],hint:'Ask: What is the question asking? What information do I have? What steps do I need?'},
+    { id:'w1-isaiah-m5', title:'One-Step Word Problems', emoji:'📖', videoIds:['KG6ILNOiMgM'],
+      lesson:{title:'Word Problems — One Step at a Time',intro:'A word problem is a math problem told as a little story. Read it twice. Figure out what it is asking. Pick one operation (add, subtract, multiply, or divide) and solve.',example:'"Sam has 8 apples. He eats 3. How many are left?" This is a subtraction: 8 − 3 = 5 apples.',steps:[
+        '<b>Read the whole problem twice.</b> First for the story, then for the question.',
+        '<b>Find the numbers.</b> 8 apples, 3 eaten.',
+        '<b>Pick the operation.</b> "How many are left" after eating some = take away = <b>subtract</b>.',
+        '<b>Solve.</b> 8 − 3 = <b>5</b>.',
+        '<b>Check it makes sense.</b> He started with 8, ate some, so he should have fewer than 8. ✓'
+      ],hint:'Keywords! "In all / total / altogether" = ADD. "Left / fewer / how many more" = SUBTRACT. "Groups of / each" = MULTIPLY. "Shared / split equally" = DIVIDE.'},
       questions:[
-        {type:'mcq',q:'A pizza costs $12.50. If Jay buys 2 pizzas and pays with $30, how much change?',choices:['$3.00','$4.50','$5.00','$7.50'],answer:2},
-        {type:'mcq',q:'There are 48 students in 4 equal teams. Each team wins 3 trophies. How many trophies in total?',choices:['12','36','48','60'],answer:0},
-        {type:'mcq',q:'0.5 + 0.25 = ?',choices:['0.55','0.75','0.7','1.0'],answer:1},
-        {type:'mcq',q:'Emma runs 2.5 km every day for 4 days. How far in total?',choices:['8 km','10 km','6.5 km','12.5 km'],answer:1},
-        {type:'mcq',q:'A snack box has 24 cookies. If 6 friends share them equally, then each friend eats 3, how many cookies are left per friend?',choices:['0','1','2','3'],answer:1},
+        {type:'mcq',q:'Sam has 8 apples. He eats 3. How many are left?',choices:['3','4','5','11'],answer:2},
+        {type:'mcq',q:'Mia has 4 bags. Each bag has 5 candies. How many candies total?',choices:['9','15','20','25'],answer:2},
+        {type:'mcq',q:'There are 12 pencils shared equally among 3 kids. How many does each get?',choices:['3','4','5','6'],answer:1},
+        {type:'mcq',q:'A book costs $4. Emma pays with $10. How much change does she get back?',choices:['$4','$5','$6','$14'],answer:2},
+        {type:'mcq',q:'The words "how many altogether" usually mean you should…',choices:['Subtract','Add','Divide','Start over'],answer:1},
       ]},
   ],
   logic: [
