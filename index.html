@@ -4562,6 +4562,8 @@ function todayKey(){
 // site. This function is purely about "can they open it right now".
 function isActivityUnlocked(userId, activityId){
   if(!activityId) return false;
+  // Parent demo — every activity is playable regardless of progress.
+  if(isDemoUser(userId)) return true;
   const unlockedBatch = maxUnlockedBatch(userId);
   for(const sub of SUBJECTS){
     const acts = getWeekActivities(userId, sub.id) || [];
@@ -5012,6 +5014,9 @@ function isActivityDone(sid,aid){return !!(getStudentData(sid).completedActiviti
    ========================================================================== */
 const BATCH_SIZE = 5;
 function maxUnlockedBatch(sid){
+  // Parent demo users get to see the FULL curriculum — no gates. Lets
+  // prospects evaluate every level without having to grind prereqs first.
+  if(isDemoUser(sid)) return 999;
   // The current tier = the MIN completed-batches across all subjects.
   // Batch N unlocks when everyone has done N-1 batches (BATCH_SIZE × (N-1) levels).
   const perSubject = SUBJECTS.map(sub=>{
@@ -5023,6 +5028,9 @@ function maxUnlockedBatch(sid){
 }
 function isBatchUnlocked(sid, batch){ return batch <= maxUnlockedBatch(sid); }
 function activitiesUntilNextBatch(sid){
+  // Demo users have no gate — report zero remaining so the "more levels
+  // coming soon" banner never shows for prospects browsing the curriculum.
+  if(isDemoUser(sid)) return {remaining:0, perSubject:[], currentBatch:999, nextBatch:1000};
   // For each subject, how many more levels needed in THIS batch to finish it?
   const currentBatch = maxUnlockedBatch(sid);          // 1-indexed
   const targetDone = currentBatch * BATCH_SIZE;        // total needed per subject to unlock next
@@ -5867,6 +5875,10 @@ function renderWeek(root,subId){
   //     upcoming batch but hasn't finished current batch in all subjects) ---
   const unlockedBatch = maxUnlockedBatch(currentUser);
   const gateInfo = activitiesUntilNextBatch(currentUser);
+  // Parent demo mode — every level is open so prospects can explore freely,
+  // bypassing both cross-subject batch gating AND the within-batch
+  // sequential unlock.
+  const demoMode = isDemoUser(currentUser);
 
   const list=h('div',{class:'levels stagger'});
   acts.forEach((a,i)=>{
@@ -5877,7 +5889,7 @@ function renderWeek(root,subId){
     // Sequential unlock WITHIN a batch: first of each batch is always open once batch unlocks
     const firstOfBatch = (i % BATCH_SIZE) === 0;
     const prevDone = firstOfBatch || isActivityDone(currentUser,acts[i-1].id);
-    const locked = batchLocked || (!done && !prevDone);
+    const locked = demoMode ? false : (batchLocked || (!done && !prevDone));
     const isCurrent = !done && !locked;
     const cls='level-card'+(done?' done':'')+(isCurrent?' current':'')+(locked?' locked':'');
     const numCls='l-num'+(done?' done':'')+(isCurrent?' current':'')+(locked?' locked':'');
