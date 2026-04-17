@@ -92,7 +92,8 @@ img{max-width:100%}
 /* ---- TOPBAR ---- */
 .topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 18px;background:rgba(255,255,255,.78);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border:1.5px solid rgba(255,255,255,.9);border-radius:var(--r-lg);box-shadow:var(--shadow);position:sticky;top:10px;z-index:40;flex-wrap:wrap}
 .brand{display:flex;align-items:center;gap:12px;font-weight:700;font-size:22px;letter-spacing:-.01em;font-family:var(--font-display)}
-.brand .logo{width:44px;height:44px;border-radius:14px;background:linear-gradient(135deg,var(--primary),var(--pink) 60%,var(--sun));display:grid;place-items:center;color:#fff;font-size:22px;font-weight:700;box-shadow:0 8px 18px rgba(108,92,231,.4),inset 0 -3px 0 rgba(0,0,0,.12);border:2px solid #fff;transition:transform .3s var(--spring)}
+.brand .logo{width:44px;height:44px;border-radius:14px;background:linear-gradient(135deg,var(--primary),var(--pink) 60%,var(--sun));display:grid;place-items:center;color:#fff;box-shadow:0 8px 18px rgba(108,92,231,.4),inset 0 -3px 0 rgba(0,0,0,.12);border:2px solid #fff;transition:transform .3s var(--spring)}
+.brand .logo svg{filter:drop-shadow(0 1px 1px rgba(0,0,0,.18))}
 .brand:hover .logo{transform:rotate(-6deg) scale(1.08)}
 .brand-text{background:linear-gradient(135deg,var(--primary),#4834d4);-webkit-background-clip:text;background-clip:text;color:transparent}
 .topbar nav{display:flex;gap:6px;flex-wrap:wrap}
@@ -830,7 +831,7 @@ img{max-width:100%}
 <div class="bg-mesh"></div>
 <div class="app">
   <header class="topbar">
-    <div class="brand"><span class="logo">K</span><span class="brand-text">KidQuest</span></div>
+    <div class="brand"><span class="logo" aria-label="KidQuest logo"><svg viewBox="0 0 24 24" width="26" height="26" fill="#fff" aria-hidden="true"><path d="m12 2.6 2.9 5.9 6.5.9-4.7 4.6 1.1 6.4L12 17.4l-5.8 3 1.1-6.4L2.6 9.4l6.5-.9Z"/></svg></span><span class="brand-text">KidQuest</span></div>
     <nav id="nav"></nav>
     <div class="pills" id="pills"></div>
   </header>
