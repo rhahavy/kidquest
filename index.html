@@ -3877,7 +3877,10 @@ isaiah: {
         {type:'mcq',q:'A library had 2,506 books. 1,278 were loaned out. How many left?',choices:['1,218','1,228','1,238','1,328'],answer:1},
       ]},
     { id:'w1-isaiah-m2', title:'Times Tables', emoji:'✖️', videoIds:['gzFbUZ8VjEg'], // NUMBEROCK — Equal Groups / Repeated Addition Using Arrays
-      lesson:{title:'Multiplication Facts',intro:'Multiplication is a shortcut for adding the same number many times. 3 × 4 means "3 groups of 4" — which is 4 + 4 + 4 = 12. Learn your times tables up to 10 and they\'ll come back to you in one second.',example:'3 × 4 = 12 (three groups of four). 5 × 6 = 30 (five groups of six).',steps:[
+      lesson:{title:'Multiplication Facts',intro:'Multiplication is a shortcut for adding the same number many times. 3 × 4 means "3 groups of 4" — which is 4 + 4 + 4 = 12. Learn your times tables up to 10 and they\'ll come back to you in one second.',stack:[
+        {op:'×',top:'3',bottom:'4',answer:'12',note:'Three groups of four: 4+4+4=12.'},
+        {op:'×',top:'5',bottom:'6',answer:'30',note:'Five groups of six. Count by 6s: 6, 12, 18, 24, 30.'},
+      ],steps:[
         '<b>Think in groups.</b> 4 × 5 = 4 groups of 5. Count by 5s: 5, 10, 15, <b>20</b>.',
         '<b>Use doubles.</b> 2 × anything = double it. 2 × 7 = 14.',
         '<b>Use your fives.</b> Counting by 5s is easy: 5, 10, 15, 20, 25, 30…',
