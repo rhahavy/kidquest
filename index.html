@@ -484,6 +484,11 @@ img{max-width:100%}
 .level-card .l-info{flex:1;min-width:0}
 .level-card .l-title{font-size:16px;font-weight:700}
 .level-card .l-status{font-size:12px;color:var(--ink3);font-weight:600;margin-top:2px}
+.level-card .l-stretch-hint{font-size:11px;font-weight:700;margin-top:3px;color:#a06200;display:inline-flex;align-items:center;gap:4px;background:linear-gradient(135deg,#fff3c4,#ffe28a);padding:3px 8px;border-radius:999px;border:1px solid rgba(230,170,40,.35)}
+/* Fast-track hint — level auto-unlocked because kid aced 2 levels back on
+   first try. Violet accent distinguishes it from the amber stretch hint. */
+.level-card .l-fasttrack-hint{font-size:11px;font-weight:700;margin-top:3px;color:#4b21c4;display:inline-flex;align-items:center;gap:4px;background:linear-gradient(135deg,#e8defc,#c8b5f7);padding:3px 8px;border-radius:999px;border:1px solid rgba(108,92,231,.35);animation:fasttrackPulse 2.2s ease-in-out infinite}
+@keyframes fasttrackPulse{0%,100%{box-shadow:0 0 0 0 rgba(108,92,231,.35)}50%{box-shadow:0 0 0 5px rgba(108,92,231,0)}}
 .level-card .l-emoji{font-size:28px;flex-shrink:0}
 
 /* ---- QUIZ ---- */
@@ -491,6 +496,15 @@ img{max-width:100%}
 .quiz-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
 .quiz-head .qt{font-size:18px;font-weight:800;display:flex;align-items:center;gap:10px}
 .quiz-head .qc{background:rgba(0,0,0,.05);padding:6px 12px;border-radius:999px;font-size:13px;font-weight:700;color:var(--ink2)}
+/* Stretch Mode banner — shown when a kid retries a perfected lesson and the
+   activity has a harder `stretchQuestions` pool. Makes the difficulty bump
+   VISIBLE so it doesn't feel like surprise-hard questions. */
+.stretch-banner{display:flex;align-items:center;gap:12px;margin:14px 0 0;padding:12px 16px;border-radius:16px;background:linear-gradient(135deg,#fff7d6,#ffe0a0);border:2px solid rgba(230,170,40,.35);box-shadow:0 4px 14px rgba(230,170,40,.18);animation:stretchPulse .6s var(--spring)}
+.stretch-banner .sb-star{font-size:26px;filter:drop-shadow(0 2px 4px rgba(230,170,40,.3));animation:starSpin 3s ease-in-out infinite}
+.stretch-banner .sb-text{font-size:14px;line-height:1.35;color:#7a4f00;font-weight:600}
+.stretch-banner .sb-text b{font-family:var(--font-display);font-size:15px;font-weight:800;color:#5a3900;display:block}
+@keyframes stretchPulse{from{transform:scale(.96);opacity:0}to{transform:scale(1);opacity:1}}
+@keyframes starSpin{0%,100%{transform:rotate(-6deg) scale(1)}50%{transform:rotate(6deg) scale(1.08)}}
 .q-progress{margin:14px 0 20px;height:10px;border-radius:99px;background:rgba(0,0,0,.06);overflow:hidden}
 .q-progress i{display:block;height:100%;background:linear-gradient(90deg,var(--primary),var(--mint),var(--sun));background-size:200%;border-radius:99px;transition:width .5s var(--spring);animation:shimmer 3s linear infinite}
 @keyframes shimmer{from{background-position:0}to{background-position:200%}}
@@ -874,6 +888,8 @@ img{max-width:100%}
    when scanning. */
 .t-student .t-stats-extra{margin-top:4px;font-size:12px;color:var(--ink3);font-weight:600}
 .t-student .t-stats-extra span{background:rgba(108,92,231,.06);padding:3px 10px;border-radius:999px}
+/* Natural-language effort read — sits under the attempts/accuracy pills. */
+.t-student .t-effort-read{margin-top:6px;font-size:12px;line-height:1.4;color:var(--ink2);font-weight:500;font-style:italic;background:rgba(255,193,7,.08);border-left:3px solid #ffc107;padding:6px 10px;border-radius:6px;cursor:help}
 .t-student .t-stats span{background:rgba(0,0,0,.05);padding:4px 10px;border-radius:999px}
 .t-subj-bars{margin-top:12px}
 .t-subj-bar{margin-top:6px}
@@ -920,6 +936,12 @@ img{max-width:100%}
 /* Report card: teacher-detailed extras */
 .rc-teacher{margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;font-size:11px;font-weight:700;color:var(--ink3)}
 .rc-teacher span{background:rgba(0,0,0,.05);padding:3px 8px;border-radius:999px}
+/* Natural-language "tutor read" of effort+accuracy — hover shows the full
+   paragraph as a tooltip via the title attribute. Sits right under the
+   teacher stats pills, so it reads as interpretation of those numbers. */
+.rc-effort{margin-top:8px;display:flex;gap:6px;align-items:flex-start;font-size:12px;line-height:1.4;color:var(--ink2);background:rgba(255,193,7,.08);border-left:3px solid #ffc107;padding:8px 10px;border-radius:8px}
+.rc-effort-label{font-weight:800;color:var(--ink);white-space:nowrap}
+.rc-effort-text{font-weight:500}
 
 /* Legend */
 .rc-legend{margin-top:16px;border:1px dashed var(--line);border-radius:14px;overflow:hidden;background:#fafaff}
@@ -1024,6 +1046,10 @@ img{max-width:100%}
 .ch-head{text-align:center;margin-bottom:14px}
 .ch-head .ch-title{font-size:22px;font-weight:800;display:flex;align-items:center;justify-content:center;gap:8px}
 .ch-head .ch-sub{font-size:13px;color:var(--ink3);font-weight:600;margin-top:4px}
+/* Shown only when the challenge auto-adapted up/down from the item's
+   nominal tier. Small pill so the kid knows the quiz isn't broken — it's
+   tuned to how they've been performing. */
+.ch-head .ch-adapt{display:inline-block;margin-top:6px;font-size:11px;font-weight:700;padding:3px 10px;border-radius:999px;background:linear-gradient(135deg,#fff0b3,#ffd6a5);color:#6b3a00}
 .ch-progress{display:flex;gap:6px;justify-content:center;margin:12px 0}
 .ch-dot{width:10px;height:10px;border-radius:50%;background:rgba(0,0,0,.1);transition:all .3s}
 .ch-dot.active{background:var(--primary);transform:scale(1.3)}
@@ -1235,6 +1261,9 @@ img{max-width:100%}
 
 /* In-game difficulty / level picker */
 .mg-diff-row{display:flex;gap:8px;margin:14px 0;flex-wrap:wrap}
+/* Small pill explaining why the difficulty auto-jumped — shown only when
+   suggestedMiniGameDifficulty() bumped the kid up from the default easy. */
+.mg-auto-note{margin:-4px 0 14px;font-size:12px;font-weight:700;padding:6px 12px;border-radius:999px;display:inline-block;background:linear-gradient(135deg,#fff0b3,#ffd6a5);color:#6b3a00}
 .mg-diff{padding:8px 16px;border-radius:99px;border:1.5px solid #e4defa;background:#fff;color:var(--ink2);font-weight:700;font-size:13px;cursor:pointer;transition:all .2s}
 .mg-diff:hover{border-color:var(--primary);color:var(--primary)}
 .mg-diff.active{background:linear-gradient(135deg,var(--primary2),var(--primary));color:#fff;border-color:var(--primary);box-shadow:0 6px 14px rgba(108,92,231,.3)}
@@ -1479,6 +1508,10 @@ img{max-width:100%}
     </div>
     <div class="controls">
       <button class="btn btn-ghost" id="rwAgain">🔁 Play Again</button>
+      <!-- Fast-track jump button — only shown when the kid aced on FIRST try
+           AND the activity two slots ahead exists. Tapping it opens the
+           next-next level (the middle level stays available from the list). -->
+      <button class="btn btn-primary" id="rwJumpAhead" style="display:none;background:linear-gradient(135deg,#6C5CE7,#a29bfe)">⚡ Jump Ahead</button>
       <button class="btn btn-primary" id="rwNext">Continue →</button>
     </div>
   </div>
@@ -2405,6 +2438,16 @@ akaran: {
         {type:'mcq',q:'42 + 16 = ?',choices:['48','56','58','68'],answer:2},
         {type:'mcq',q:'50 + 30 = ?',choices:['53','70','80','90'],answer:2},
         {type:'mcq',q:'What is 10 more than 35?',choices:['25','36','40','45'],answer:3},
+      ],
+      // Stretch: same lesson BUT ones column now overflows — kids need to
+      // try the "carry the 1" trick for the first time. A soft intro to
+      // Rushan's m1 curriculum.
+      stretchQuestions:[
+        {type:'mcq',q:'28 + 14 = ? (ones are 8+4=12 — what happens?)',choices:['32','42','52','142'],answer:1},
+        {type:'mcq',q:'35 + 17 = ?',choices:['42','52','62','412'],answer:1},
+        {type:'mcq',q:'46 + 28 = ?',choices:['64','74','84','614'],answer:1},
+        {type:'mcq',q:'When the ones add to 12, you write...',choices:['12 in the ones','2 in ones, carry 1 to tens','1 in ones, carry 2','Nothing'],answer:1},
+        {type:'mcq',q:'What is 25 + 19?',choices:['34','44','54','314'],answer:1},
       ]},
     { id:'w1-akaran-m5', title:'Story Problems', emoji:'📖',
       // Simplified to ONE-STEP word problems only. Multi-step stories made
@@ -2783,6 +2826,16 @@ rushan: {
         {type:'mcq',q:'28 + 17 = ?',choices:['35','45','44','55'],answer:1},
         {type:'mcq',q:'36 + 25 = ?',choices:['51','61','59','71'],answer:1},
         {type:'mcq',q:'47 + 28 = ?',choices:['65','73','75','85'],answer:2},
+      ],
+      // Stretch: double-carry problems (carry BOTH the ones AND the tens),
+      // plus a 3-digit add as a bridge toward next grade. Served only when
+      // the kid has already aced this lesson once — see renderActivity.
+      stretchQuestions:[
+        {type:'mcq',q:'58 + 67 = ? (ones AND tens both carry)',choices:['115','125','135','145'],answer:1},
+        {type:'mcq',q:'89 + 46 = ?',choices:['125','135','145','155'],answer:1},
+        {type:'mcq',q:'77 + 58 = ?',choices:['125','135','145','131'],answer:1},
+        {type:'mcq',q:'124 + 67 = ? (3-digit bridge)',choices:['181','191','201','211'],answer:1},
+        {type:'mcq',q:'Which sum requires carrying in BOTH the ones AND tens columns?',choices:['34 + 25','46 + 28','58 + 67','72 + 16'],answer:2},
       ]},
     { id:'w1-rushan-m2', title:'Two-Digit Subtraction', emoji:'➖',
       lesson:{title:'Subtracting with Borrowing',intro:'If the top digit is smaller than the bottom, borrow 1 from the column to the left.',stack:{op:'−',top:'42',bottom:'15',carries:[3,12],mode:'borrow',answer:'27',steps:[
@@ -2797,6 +2850,16 @@ rushan: {
         {type:'mcq',q:'80 − 34 = ?',choices:['36','44','46','56'],answer:2},
         {type:'mcq',q:'50 − 18 = ?',choices:['22','28','32','42'],answer:2},
         {type:'mcq',q:'71 − 28 = ?',choices:['43','47','53','59'],answer:0},
+      ],
+      // Stretch: step up to 3-digit subtraction with ONE borrow. Skips the
+      // across-zero case (Akshayan's stretch covers that) so Rushan can
+      // consolidate "bigger numbers, same borrowing rule".
+      stretchQuestions:[
+        {type:'mcq',q:'356 − 128 = ?',choices:['218','228','238','338'],answer:1},
+        {type:'mcq',q:'523 − 275 = ?',choices:['248','258','348','252'],answer:0},
+        {type:'mcq',q:'684 − 195 = ?',choices:['479','489','499','589'],answer:1},
+        {type:'mcq',q:'100 − 34 = ? (warm-up for across-zero)',choices:['56','64','66','76'],answer:2},
+        {type:'mcq',q:'A bakery had 245 buns. It sold 78. How many left?',choices:['157','167','177','187'],answer:1},
       ]},
     { id:'w1-rushan-m3', title:'Word Problems', emoji:'📖',
       // Pulled back from mixed multi-step problems. Each question is now a
@@ -3199,6 +3262,16 @@ akshayan: {
         {type:'mcq',q:'56 + 29 = ?',choices:['75','85','95','105'],answer:1},
         {type:'mcq',q:'34 + 47 = ?',choices:['71','81','91','101'],answer:1},
         {type:'mcq',q:'Maya has 28 stickers. She gets 15 more. How many total?',choices:['33','43','53','63'],answer:1},
+      ],
+      // Stretch: step up to 3-digit regrouping (matches the lesson Akshayan
+      // will hit at the next grade level). A mix of single-carry and
+      // double-carry, plus one word problem.
+      stretchQuestions:[
+        {type:'mcq',q:'148 + 275 = ? (carry the ones AND the tens)',choices:['413','423','433','523'],answer:1},
+        {type:'mcq',q:'367 + 158 = ?',choices:['515','525','425','535'],answer:1},
+        {type:'mcq',q:'489 + 236 = ?',choices:['625','715','725','735'],answer:2},
+        {type:'mcq',q:'A bus holds 148 people. A second bus holds 275. Total seats?',choices:['323','413','423','433'],answer:2},
+        {type:'mcq',q:'208 + 394 = ?',choices:['502','592','602','612'],answer:2},
       ]},
     { id:'w1-akshayan-m2', title:'Regrouping Subtraction', emoji:'➖',
       // Simplified from 3-digit with borrow-across-zero (403−187) to straight
@@ -3216,6 +3289,16 @@ akshayan: {
         {type:'mcq',q:'63 − 29 = ?',choices:['24','34','44','54'],answer:1},
         {type:'mcq',q:'74 − 48 = ?',choices:['16','26','36','46'],answer:1},
         {type:'mcq',q:'A box had 60 cookies. 27 got eaten. How many left?',choices:['23','33','43','53'],answer:1},
+      ],
+      // Stretch: 3-digit subtraction INCLUDING the dreaded borrow-across-zero,
+      // the single-hardest technique at this level. Prepares Akshayan for
+      // Isaiah-level subtraction.
+      stretchQuestions:[
+        {type:'mcq',q:'403 − 187 = ? (borrow across the zero!)',choices:['206','216','226','316'],answer:1},
+        {type:'mcq',q:'500 − 234 = ?',choices:['266','276','286','366'],answer:0},
+        {type:'mcq',q:'714 − 386 = ?',choices:['318','328','338','428'],answer:1},
+        {type:'mcq',q:'To solve 600 − 249 you must...',choices:['Subtract straight — no borrow','Borrow from tens only','Borrow across the zero in tens','Start from the left'],answer:2},
+        {type:'mcq',q:'A shop had 802 apples. It sold 567. How many left?',choices:['225','235','245','335'],answer:1},
       ]},
     { id:'w1-akshayan-m3', title:'Early Multiplication', emoji:'✖️', videoIds:['gzFbUZ8VjEg'], // NUMBEROCK — Equal Groups / Repeated Addition Using Arrays
       lesson:{title:'Groups and Times',intro:'Multiplication is adding the same number many times. 3 × 4 = 3+3+3+3 = 12.',example:'3 × 4 = 12. Think: 3 groups of 4!',hint:'3 × 4 = 4 × 3 — order doesn\'t matter!'},
@@ -3225,6 +3308,15 @@ akshayan: {
         {type:'mcq',q:'2 × 7 = ?',choices:['9','12','14','16'],answer:2},
         {type:'mcq',q:'4 × 5 = ?',choices:['15','18','20','25'],answer:2},
         {type:'mcq',q:'A spider has 8 legs. How many legs on 3 spiders?',choices:['16','20','24','28'],answer:2},
+      ],
+      // Stretch: the "tricky" multiplication facts (6s, 7s, 8s, 9s) that
+      // kids traditionally memorize last. Builds toward fluent times-tables.
+      stretchQuestions:[
+        {type:'mcq',q:'6 × 7 = ?',choices:['36','42','48','54'],answer:1},
+        {type:'mcq',q:'8 × 9 = ?',choices:['63','72','81','90'],answer:1},
+        {type:'mcq',q:'7 × 8 = ?',choices:['49','54','56','64'],answer:2},
+        {type:'mcq',q:'9 × 6 = ? (try: 9×6 = 9×5 + 9)',choices:['45','48','54','63'],answer:2},
+        {type:'mcq',q:'A classroom has 6 rows of 8 desks. How many desks total?',choices:['42','48','54','56'],answer:1},
       ]},
     { id:'w1-akshayan-m4', title:'Word Problems', emoji:'🎯',
       // Renamed from "Multi-Step" — we pulled all questions down to SINGLE-step.
@@ -3681,6 +3773,15 @@ isaiah: {
         {type:'mcq',q:'45 − 12 = ?',choices:['23','33','43','53'],answer:1},
         {type:'mcq',q:'When you add 38 + 45, the ones are 8 + 5 = 13. What do you do?',choices:['Write 13 in the ones','Write 3, carry 1 to the tens','Carry 3','Start over'],answer:1},
         {type:'mcq',q:'62 − 28 = ?',choices:['24','34','44','40'],answer:1},
+      ],
+      // Stretch: jump to 4-digit regrouping AND the dreaded "borrow across
+      // a zero" — Grade 4 territory. One word problem to close the set.
+      stretchQuestions:[
+        {type:'mcq',q:'1,248 + 3,675 = ?',choices:['4,823','4,913','4,923','5,923'],answer:2},
+        {type:'mcq',q:'800 − 345 = ? (borrow across the zeros)',choices:['445','455','465','555'],answer:1},
+        {type:'mcq',q:'3,002 − 1,587 = ?',choices:['1,415','1,425','1,515','2,415'],answer:0},
+        {type:'mcq',q:'Which subtraction needs you to borrow ACROSS a zero?',choices:['500 − 123','453 − 218','782 − 334','946 − 519'],answer:0},
+        {type:'mcq',q:'A library had 2,506 books. 1,278 were loaned out. How many left?',choices:['1,218','1,228','1,238','1,328'],answer:1},
       ]},
     { id:'w1-isaiah-m2', title:'Times Tables', emoji:'✖️', videoIds:['gzFbUZ8VjEg'], // NUMBEROCK — Equal Groups / Repeated Addition Using Arrays
       lesson:{title:'Multiplication Facts',intro:'Multiplication is a shortcut for adding the same number many times. 3 × 4 means "3 groups of 4" — which is 4 + 4 + 4 = 12. Learn your times tables up to 10 and they\'ll come back to you in one second.',example:'3 × 4 = 12 (three groups of four). 5 × 6 = 30 (five groups of six).',steps:[
@@ -3695,7 +3796,17 @@ isaiah: {
         {type:'mcq',q:'5 × 6 = ?',choices:['11','25','30','35'],answer:2},
         {type:'mcq',q:'If you have 4 bags and each bag holds 5 apples, how many apples total?',choices:['9','15','20','25'],answer:2},
         {type:'mcq',q:'2 × 8 = ?',choices:['10','14','16','18'],answer:2},
-        {type:'mcq',q:'10 × 7 = ?',choices:['17','70','17','107'],answer:1},
+        {type:'mcq',q:'10 × 7 = ?',choices:['17','70','77','107'],answer:1},
+      ],
+      // Stretch: 11s and 12s times tables (past the typical "up to 10" cap)
+      // plus mixed-order recall and a two-step word problem. Prepares Isaiah
+      // for Grade 4 multi-digit multiplication.
+      stretchQuestions:[
+        {type:'mcq',q:'11 × 8 = ?',choices:['77','88','99','108'],answer:1},
+        {type:'mcq',q:'12 × 7 = ?',choices:['72','78','84','96'],answer:2},
+        {type:'mcq',q:'6 × 12 = ?',choices:['60','66','72','78'],answer:2},
+        {type:'mcq',q:'Find the missing number: ? × 9 = 72',choices:['6','7','8','9'],answer:2},
+        {type:'mcq',q:'Each egg carton holds 12 eggs. How many eggs in 8 cartons?',choices:['84','88','92','96'],answer:3},
       ]},
     { id:'w1-isaiah-m3', title:'Simple Division', emoji:'➗', videoIds:['LGqBQrUYua4'],
       lesson:{title:'Division — Sharing Into Equal Groups',visual:'12 🍪  ➗  3 👧  = 4 each',intro:'Division splits a number into equal groups. 12 ÷ 3 asks "If I share 12 things among 3 people, how many does each get?" Answer: 4 each.',example:'12 ÷ 3 = 4 (three friends share 12 cookies — 4 each). 20 ÷ 5 = 4 (twenty candies into 5 equal piles — 4 per pile).',steps:[
@@ -4081,11 +4192,22 @@ isaiah: {
    Isaiah (G5): homophones, Greek/Latin roots, commonly misspelled words.
    ========================================================================== */
 (function addSpellingCurriculum(){
-  const SP = (id, title, emoji, intro, example, hint, qs) => ({
-    id, title, emoji,
-    lesson:{ title:title, intro:intro, example:example, hint:hint },
-    questions: qs.map(r => ({type:'mcq', q:r[0], choices:r[1], answer:r[2]})),
-  });
+  // Optional 8th arg `stretchQs` wires up stretch-mode content using the
+  // same [q, choices, answer] row format as the normal question pool.
+  // When set, a kid who retries a PERFECTED spelling activity sees this
+  // harder pool instead of re-doing the same 5 questions. See renderActivity
+  // for the detection logic.
+  const SP = (id, title, emoji, intro, example, hint, qs, stretchQs) => {
+    const out = {
+      id, title, emoji,
+      lesson:{ title:title, intro:intro, example:example, hint:hint },
+      questions: qs.map(r => ({type:'mcq', q:r[0], choices:r[1], answer:r[2]})),
+    };
+    if(Array.isArray(stretchQs) && stretchQs.length){
+      out.stretchQuestions = stretchQs.map(r => ({type:'mcq', q:r[0], choices:r[1], answer:r[2]}));
+    }
+    return out;
+  };
   const put = (sid, activities) => { if(WEEKS[1][sid]) WEEKS[1][sid].spelling = activities; };
 
   /* --- Nishan (SK) --- */
@@ -4261,6 +4383,13 @@ isaiah: {
       ['"preview" means...',['view again','view less','view before','big view'],2],
       ['"unlock" means...',['lock again','not locked','lock before','double-lock'],1],
       ['Prefix meaning "before":',['un-','re-','pre-','mis-'],2],
+    ],[
+      // Stretch: less-common prefixes (mis, dis, over, sub, super, anti).
+      ['"misbehave" means behave...',['again','badly','before','without'],1],
+      ['"disagree" means...',['agree strongly','not agree','agree again','almost agree'],1],
+      ['"overcook" means cook...',['too little','just right','too much','carefully'],2],
+      ['"submarine" — what does the prefix SUB mean?',['above','under','before','half'],1],
+      ['Which prefix means "against"?',['anti-','super-','pre-','trans-'],0],
     ]),
     SP('w1-akshayan-sp2','Suffixes: -ing, -ed, -er','➡️',
       'Suffixes are endings. -ING (doing now), -ED (did already), -ER (one who does).',
@@ -4271,6 +4400,13 @@ isaiah: {
       ['"teach" + er = ?',['teachr','teacher','techer','tacher'],1],
       ['"write" + ing = ? (drop silent E!)',['writing','writeing','writtng','writting'],0],
       ['"bake" + ed = ? (drop silent E!)',['baked','bakeed','bakd','backed'],0],
+    ],[
+      // Stretch: the Y→I rule + pluralization edge cases.
+      ['"cry" + ed = ? (Y changes to I)',['cryed','cried','cryd','cryied'],1],
+      ['"happy" + er = ?',['happyer','happer','happier','happiyer'],2],
+      ['"study" + ing = ? (Y STAYS before -ing)',['studing','studiing','studying','studieing'],2],
+      ['"baby" (plural) = ?',['babys','babies','babyes','babey'],1],
+      ['"try" + ed = ?',['tryed','tryied','tride','tried'],3],
     ]),
     SP('w1-akshayan-sp3','Silent Letters Advanced','🤫',
       'Silent letters in longer words: listen (silent T), island (silent S), sword (silent W).',
@@ -4394,6 +4530,14 @@ isaiah: {
       ['Which is correct?',['nessary','neccesary','necessary','necesary'],2],
       ['Which is correct?',['wensday','wednesday','wensdae','wednsday'],1],
       ['Which is correct?',['recieve','receive','recive','reciave'],1],
+    ],[
+      // Stretch: the classic "adult-level misspells" — words that stump
+      // most English speakers. Includes the double-letter tricksters.
+      ['Which is correct?',['accomodate','acommodate','accommodate','acomodate'],2],
+      ['Which is correct?',['rythm','rythym','rhythm','rhythem'],2],
+      ['Which is correct?',['occured','occurred','ocurred','occurrd'],1],
+      ['Which is correct?',['embarass','embarrass','embbarass','embaras'],1],
+      ['Which is correct?',['concious','consious','conscious','concsious'],2],
     ]),
     SP('w1-isaiah-sp4','Contractions & Apostrophes','🔗',
       'Contractions shorten two words with an apostrophe where letters are removed. Some are tricky because they sound like possessives: "it\'s" = "it is" (NOT the possessive "its"). "who\'s" = "who is" (NOT "whose").',
@@ -7268,6 +7412,7 @@ function computeSubjectStats(sid, subjId){
   let totalAttempts = 0;
   let totalCorrect = 0;
   let totalScorable = 0;
+  let touched = 0;
   acts.forEach(a=>{
     if(ud.completedActivities[a.id]) done++;
     if(ud.perfectActivities[a.id]) perfect++;
@@ -7280,6 +7425,7 @@ function computeSubjectStats(sid, subjId){
       const scorable = (a.questions || []).filter(q=>q.type!=='lesson').length || 1;
       totalCorrect += (prog.best || 0);
       totalScorable += scorable;
+      touched++;   // count activities this kid has attempted ≥1 time
     }
   });
   const completion = done/total;
@@ -7298,10 +7444,71 @@ function computeSubjectStats(sid, subjId){
     done, perfect, total, completion, accuracy, score, lv,
     pct: Math.round(completion*100),
     totalAttempts,
-    totalCorrect, totalScorable,
+    totalCorrect, totalScorable, touched,
     questionAccuracy,
     pctAccuracy: Math.round(questionAccuracy*100),
   };
+}
+
+// Turn raw effort+accuracy numbers into a plain-English interpretation.
+// Raw "27 attempts, 74% accuracy" is hard to read — what parents and tutors
+// actually want is: "what does that mean about my kid right now?"
+// Categorises on two axes:
+//   attemptIntensity — attempts ÷ activities touched  (1.0 = first try every time)
+//   accuracyTier     — <50 / 50-69 / 70-84 / 85+  (%  correct across scored Qs)
+// …so a kid with 1.1 attempts/activity at 95% gets "gets it first try and nails
+// the questions" while 3.2 attempts/activity at 45% gets "working hard but the
+// concept isn't clicking yet — worth a review".
+//
+// Params:
+//   name                 — student's first name
+//   totalAttempts        — sum of progress[aid].attempts across all activities
+//   activitiesTouched    — count of activities with attempts > 0
+//   activitiesDone       — count of activities that passed
+//   totalCorrect         — sum of best correct-counts across touched activities
+//   totalScorable        — sum of scorable-question counts across touched activities
+// Returns: { headline, detail }  — headline is a one-line summary; detail is
+//                                  the actionable paragraph for parents/tutors.
+function interpretEffort(name, totalAttempts, activitiesTouched, activitiesDone, totalCorrect, totalScorable){
+  const nm = name || 'your child';
+  if(totalAttempts <= 0){
+    return {
+      headline: `${nm} hasn't started any lessons yet this week.`,
+      detail: `No attempts logged — once ${nm} opens their first activity, we'll track effort and accuracy here.`
+    };
+  }
+  const accPct = totalScorable ? Math.round((totalCorrect/totalScorable)*100) : 0;
+  const intensity = activitiesTouched ? (totalAttempts/activitiesTouched) : 1;
+  // Buckets (chosen so they match real-world behaviour seen in the data):
+  //   intensity ≤ 1.3  — "mostly first try"    (occasionally reruns a lesson)
+  //   1.3 < i ≤ 2.0    — "needs some retries"  (typical learning pattern)
+  //   i > 2.0          — "persisting through"  (struggling or perfectionist)
+  // accPct tiers as above.
+  const accTier = accPct>=85 ? 'high' : accPct>=70 ? 'solid' : accPct>=50 ? 'shaky' : 'low';
+  const effortTier = intensity<=1.3 ? 'firstTry' : intensity<=2.0 ? 'normal' : 'persistent';
+  // 12 combos simplified into 4 meaningful archetypes — keeps the tone
+  // supportive without papering over real struggle.
+  let headline, detail;
+  if(accTier === 'high' && effortTier === 'firstTry'){
+    headline = `${nm} is getting it first try — confident and accurate.`;
+    detail = `${totalAttempts} attempts across ${activitiesTouched} activit${activitiesTouched===1?'y':'ies'}, answering ${totalCorrect}/${totalScorable} scored questions right (${accPct}%). That's about ${intensity.toFixed(1)} try per lesson — meaning ${nm} is usually nailing it on the first go. This is "ready for harder material" territory.`;
+  } else if(accTier === 'high' && effortTier !== 'firstTry'){
+    headline = `${nm} is working hard and getting there — ${accPct}% accuracy.`;
+    detail = `${totalAttempts} attempts across ${activitiesTouched} activit${activitiesTouched===1?'y':'ies'} — about ${intensity.toFixed(1)} tries per lesson, with ${totalCorrect}/${totalScorable} correct (${accPct}%). ${nm} is retrying until mastery and it's paying off. Excellent persistence.`;
+  } else if(accTier === 'solid'){
+    headline = `${nm} is making steady progress — ${accPct}% accuracy, ${intensity.toFixed(1)} tries per lesson.`;
+    detail = `${totalAttempts} attempts across ${activitiesTouched} activit${activitiesTouched===1?'y':'ies'}, answering ${totalCorrect}/${totalScorable} scored questions right (${accPct}%). Most concepts are clicking. A review pass on the spots where ${nm} retried would push them into the "confident" zone.`;
+  } else if(accTier === 'shaky'){
+    headline = `${nm} is putting in effort but the concepts are still cementing — ${accPct}% accuracy.`;
+    detail = `${totalAttempts} attempts across ${activitiesTouched} activit${activitiesTouched===1?'y':'ies'} (${intensity.toFixed(1)} per lesson), with ${totalCorrect}/${totalScorable} correct (${accPct}%). ${nm} is trying, but getting fewer than 7 out of 10 right — a short review of the wrong-answer topics before the next quiz would make a big difference.`;
+  } else {
+    // accTier === 'low'
+    headline = effortTier === 'persistent'
+      ? `${nm} is persisting, but the material may be too hard right now — ${accPct}% accuracy after ${totalAttempts} tries.`
+      : `${nm} is struggling — ${accPct}% accuracy means the concept hasn't landed yet.`;
+    detail = `${totalAttempts} attempts across ${activitiesTouched} activit${activitiesTouched===1?'y':'ies'} (${intensity.toFixed(1)} per lesson), but only ${totalCorrect}/${totalScorable} correct (${accPct}%). This is a signal to pause the "more practice" approach and try a different explanation — a different video, a hands-on example, or a short 1-on-1 walk-through of the trickiest questions. ${nm} is trying; the teaching approach is what needs to change.`;
+  }
+  return { headline, detail };
 }
 
 function generateSubjectComment(name, subjId, stats){
@@ -7404,6 +7611,16 @@ function renderReportCard(sid, isTeacher){
         h('span',{},'Attempts: '+st.totalAttempts),
         h('span',{},'Accuracy: '+st.pctAccuracy+'%'),
       ]));
+      // Natural-language read of those stats. Shows the tutor at a glance
+      // whether the kid is cruising (high accuracy, low attempts), grinding
+      // their way through, or stuck (lots of tries, low accuracy).
+      if(st.totalAttempts > 0){
+        const effort = interpretEffort(s.name, st.totalAttempts, st.touched, st.done, st.totalCorrect, st.totalScorable);
+        card.appendChild(h('div',{class:'rc-effort',title:effort.detail},[
+          h('span',{class:'rc-effort-label'},'💬 Tutor read:'),
+          h('span',{class:'rc-effort-text'}, effort.headline),
+        ]));
+      }
     }
     grid.appendChild(card);
   });
@@ -7598,28 +7815,65 @@ function renderWeek(root,subId){
   const demoMode = isDemoUser(currentUser);
 
   const list=h('div',{class:'levels stagger'});
+  // Helper: did they ace activity aid in a single attempt? Used to
+  // auto-unlock N+2 when N is first-try-perfect (fast-track).
+  const isFirstTryPerfect = (aid)=>{
+    const p = state && state.progress && state.progress[aid];
+    return !!(p && p.firstTryPerfect);
+  };
   acts.forEach((a,i)=>{
     const levelNum = i+1;                                  // 1-indexed level
     const actBatch = Math.floor(i / BATCH_SIZE) + 1;       // which batch (1, 2, 3...)
     const batchLocked = actBatch > unlockedBatch;           // entire batch gated by other subjects
     const done=isActivityDone(currentUser,a.id);
-    // Sequential unlock WITHIN a batch: first of each batch is always open once batch unlocks
+    // Sequential unlock WITHIN a batch: first of each batch is always open once batch unlocks.
+    // Fast-track rule: if the activity TWO slots back was first-try-perfect, this level also
+    // unlocks even if acts[i-1] isn't done yet — letting strong students skip ahead.
     const firstOfBatch = (i % BATCH_SIZE) === 0;
     const prevDone = firstOfBatch || isActivityDone(currentUser,acts[i-1].id);
-    const locked = demoMode ? false : (batchLocked || (!done && !prevDone));
+    const fastTrackUnlock = !firstOfBatch
+      && i >= 2
+      && !prevDone
+      && Math.floor((i-2)/BATCH_SIZE)+1 === actBatch   // fast-track stays within the batch
+      && isFirstTryPerfect(acts[i-2].id);
+    const locked = demoMode ? false : (batchLocked || (!done && !prevDone && !fastTrackUnlock));
     const isCurrent = !done && !locked;
     const cls='level-card'+(done?' done':'')+(isCurrent?' current':'')+(locked?' locked':'');
     const numCls='l-num'+(done?' done':'')+(isCurrent?' current':'')+(locked?' locked':'');
     const statusText = done ? 'Completed ✓'
                      : batchLocked ? '🔒 Finish Level '+(actBatch-1)*BATCH_SIZE+' in all subjects to unlock'
                      : locked ? '🔒 Locked'
+                     : fastTrackUnlock ? '⚡ Fast-track unlocked!'
                      : 'Ready to start!';
+    // Stretch hint — only when: lesson is PERFECTED (5/5, not just done) AND
+    // the activity has stretchQuestions authored. Tells the kid that replaying
+    // unlocks a harder pool without demoting their perfect score.
+    const hasStretch = done
+      && !!(state.perfectActivities && state.perfectActivities[a.id])
+      && Array.isArray(a.stretchQuestions)
+      && a.stretchQuestions.length > 0;
+    const infoChildren = [
+      h('div',{class:'l-title'},a.title),
+      h('div',{class:'l-status'}, statusText),
+    ];
+    if(hasStretch){
+      infoChildren.push(h('div',{
+        class:'l-stretch-hint',
+        title:'Replay for Stretch Mode — harder questions, your perfect score is safe.',
+      }, [h('span',{'aria-hidden':'true'},'🌟'), h('span',{},'Stretch mode unlocked')]));
+    }
+    // Fast-track hint — shown on levels auto-opened because the kid aced
+    // the level two slots back on first try. Explains WHY an otherwise
+    // locked-looking level is now open.
+    if(fastTrackUnlock && !done){
+      infoChildren.push(h('div',{
+        class:'l-fasttrack-hint',
+        title:'Auto-unlocked because you aced Level '+(i-1)+' on the first try. You can still go back to the middle level anytime.',
+      }, [h('span',{'aria-hidden':'true'},'⚡'), h('span',{},'Jump-ahead from Level '+(i-1))]));
+    }
     const levelBtn = h('button',{class:cls,onclick:()=>{if(!locked)go('activity',{activityId:a.id,subject:subId})}},[
       h('div',{class:numCls},done?'✓':String(levelNum)),
-      h('div',{class:'l-info'},[
-        h('div',{class:'l-title'},a.title),
-        h('div',{class:'l-status'}, statusText),
-      ]),
+      h('div',{class:'l-info'}, infoChildren),
       h('div',{class:'l-emoji'},a.emoji),
     ]);
     // Teacher-only gear on every level card — including LOCKED ones, so
@@ -7718,9 +7972,23 @@ function renderActivity(root,actId,subId){
   const acts=getWeekActivities(currentUser,subId);
   const activity=acts.find(a=>a.id===actId);
   if(!activity){go('dashboard');return}
-  // Build questions with lesson prepended
-  const qs = activity.lesson ? [{type:'lesson',lesson:activity.lesson},...activity.questions] : [...activity.questions];
-  quiz={activityId:actId, subject:subId, activity, questions:qs, idx:0, correct:0, locked:false};
+  // STRETCH MODE — when a kid retries a lesson they've already aced AND
+  // that lesson has `stretchQuestions` defined, swap in the harder pool.
+  // - Doesn't overwrite their normal `best`/`attempts`/`perfectActivities`
+  //   (tracked separately in state.stretchStats[actId]).
+  // - Coins still flow on correct answers so effort is rewarded.
+  // - A banner on the first question tells the kid why the quiz looks different.
+  const isRetryOfPerfect = !!(state.perfectActivities && state.perfectActivities[actId]);
+  const useStretch = isRetryOfPerfect
+    && Array.isArray(activity.stretchQuestions)
+    && activity.stretchQuestions.length > 0;
+  const baseQuestions = useStretch ? activity.stretchQuestions : activity.questions;
+  // Build questions with lesson prepended (only for the FIRST pass — on a
+  // stretch retry, skip re-showing the lesson since the kid already knows it).
+  const qs = (activity.lesson && !useStretch)
+    ? [{type:'lesson',lesson:activity.lesson}, ...baseQuestions]
+    : [...baseQuestions];
+  quiz={activityId:actId, subject:subId, activity, questions:qs, idx:0, correct:0, locked:false, stretchMode: useStretch};
   const wrap=h('div',{class:'quiz'});
   root.appendChild(wrap);
   renderQ(wrap);
@@ -7734,6 +8002,18 @@ function renderQ(wrap){
     h('div',{class:'qt'},[h('span',{style:'font-size:20px;margin-right:6px'},sub.emoji),h('span',{},a.title)]),
     h('div',{class:'qc'},(quiz.idx+1)+' of '+total),
   ]));
+  // Stretch Mode banner — visible explanation of the tougher question pool.
+  // Shown on every question of a stretch session so the kid always knows
+  // why this run looks harder than the lesson they aced.
+  if(quiz.stretchMode){
+    wrap.appendChild(h('div',{class:'stretch-banner'},[
+      h('span',{class:'sb-star','aria-hidden':'true'},'🌟'),
+      h('div',{class:'sb-text'},[
+        h('b',{},'Stretch Mode'),
+        h('span',{},'Harder questions — you aced this lesson, so we\u2019re leveling up. Your original score is safe!'),
+      ]),
+    ]));
+  }
   wrap.appendChild(h('div',{class:'q-progress'},[h('i',{style:'width:'+(quiz.idx/total*100)+'%'})]));
 
   // Timer bar (hidden during lessons)
@@ -8568,7 +8848,13 @@ const PASS_THRESHOLD = 0.6;
 
 function finishActivity(){
   const a=quiz.activity;
-  const scorable=a.questions.filter(q=>q.type!=='lesson').length||1; // 'write' type IS scorable (Level 3-4 = correct)
+  // In stretch mode, score against the stretch pool (different length than
+  // the normal questions); otherwise use the normal questions. Keeping the
+  // "real" scorable tied to the pool that was actually asked matters so
+  // 5/5 on a 5-Q stretch shows as 100% (not 5/8 because we mixed pools).
+  const isStretch = !!quiz.stretchMode;
+  const activePool = isStretch ? (a.stretchQuestions || []) : a.questions;
+  const scorable = activePool.filter(q=>q.type!=='lesson').length||1; // 'write' type IS scorable (Level 3-4 = correct)
   const correct=quiz.correct;
   const pct = correct/scorable;
   const passed = pct >= PASS_THRESHOLD;
@@ -8580,20 +8866,49 @@ function finishActivity(){
   // just for reaching the last question). Stars still give a small
   // effort floor (1 star minimum even on a zero score).
   const coins = correct * 2;
-  if(correct===scorable) state.perfectActivities[a.id]=true;
-  // Record the attempt regardless of pass/fail, so teacher sees progress.
-  state.progress[a.id]={
-    best:Math.max((state.progress[a.id]||{}).best||0, correct),
-    attempts:((state.progress[a.id]||{}).attempts||0)+1,
-    done: passed || ((state.progress[a.id]||{}).done === true),  // once passed, stays passed
-  };
-  // ONLY mark the activity as completed when they meet the pass threshold.
-  // This gates the level gating / badges / next-level unlock behind
-  // actually learning the material (not just clicking through).
-  if(passed){
-    state.completedActivities[a.id]=true;
-    // If this activity is part of today's Nova Daily Mission, check it off.
-    try { markDailyMissionProgress(a.id); } catch(e){ console.warn('[KidQuest] markDailyMissionProgress failed:', e); }
+  // ------------------------------------------------------------
+  // STRETCH MODE vs NORMAL MODE
+  // ------------------------------------------------------------
+  // In stretch mode the kid already aced the normal quiz. Their
+  // `perfectActivities[a.id]` is already true and their `progress[a.id].best`
+  // already reflects that 100% run. We DO NOT want to overwrite those with
+  // whatever they score on the harder stretch pool (which would reduce their
+  // apparent mastery in analytics). Instead we store stretch attempts and
+  // stretch-perfects in parallel fields, and still reward coins/stars for
+  // the effort.
+  if(isStretch){
+    if(!state.stretchStats) state.stretchStats = {};
+    const prev = state.stretchStats[a.id] || { best:0, attempts:0, perfect:false };
+    state.stretchStats[a.id] = {
+      best: Math.max(prev.best, correct),
+      attempts: (prev.attempts||0) + 1,
+      perfect: prev.perfect || (correct===scorable),
+    };
+    // Don't touch perfectActivities / completedActivities / progress.
+    // The kid stays "perfect" on the normal pool forever.
+  } else {
+    if(correct===scorable) state.perfectActivities[a.id]=true;
+    // Record the attempt regardless of pass/fail, so teacher sees progress.
+    const prevProg = state.progress[a.id] || {};
+    const isFirstAttempt = !(prevProg.attempts>0);
+    state.progress[a.id]={
+      best:Math.max(prevProg.best||0, correct),
+      attempts:(prevProg.attempts||0)+1,
+      done: passed || (prevProg.done === true),  // once passed, stays passed
+      // firstTryPerfect: aced it in ONE attempt, no prior tries. Used by the
+      // skip-ahead unlock logic in renderWeek — a kid who consistently aces
+      // on first try gets the NEXT-NEXT level auto-unlocked so they can
+      // bypass redundant practice.
+      firstTryPerfect: prevProg.firstTryPerfect || (isFirstAttempt && correct===scorable),
+    };
+    // ONLY mark the activity as completed when they meet the pass threshold.
+    // This gates the level gating / badges / next-level unlock behind
+    // actually learning the material (not just clicking through).
+    if(passed){
+      state.completedActivities[a.id]=true;
+      // If this activity is part of today's Nova Daily Mission, check it off.
+      try { markDailyMissionProgress(a.id); } catch(e){ console.warn('[KidQuest] markDailyMissionProgress failed:', e); }
+    }
   }
   state.totalStars+=stars;
   state.coins+=coins;
@@ -8652,6 +8967,29 @@ function finishActivity(){
     againBtn.style.display = '';
     againBtn.textContent = passed ? '🔁 Play Again' : '🔁 Try Again';
   }
+  // ⚡ Jump-ahead button: show ONLY when this was a normal (non-stretch) run,
+  // scored a first-try perfect, and there's a valid Level (i+2) in the SAME
+  // batch. Clicking it takes the kid directly to the higher level. The
+  // in-between level stays accessible from the levels list (fast-track is
+  // non-destructive — see renderWeek's `fastTrackUnlock` flag).
+  const jumpBtn = $('#rwJumpAhead');
+  if(jumpBtn){
+    jumpBtn.style.display = 'none';
+    const prog = state.progress[a.id];
+    if(!isStretch && passed && correct===scorable && prog && prog.attempts === 1 && quiz.subject){
+      try {
+        const acts = getWeekActivities(currentUser, quiz.subject);
+        const curIdx = acts.findIndex(x=>x.id===a.id);
+        const jumpIdx = curIdx + 2;
+        if(curIdx >= 0 && jumpIdx < acts.length && Math.floor(curIdx/BATCH_SIZE) === Math.floor(jumpIdx/BATCH_SIZE)){
+          jumpBtn.style.display = '';
+          jumpBtn.dataset.jumpTarget = acts[jumpIdx].id;
+          jumpBtn.dataset.jumpSubject = quiz.subject;
+          jumpBtn.textContent = '⚡ Jump to Level '+(jumpIdx+1);
+        }
+      } catch(e){ console.warn('[KidQuest] jump-ahead wiring failed:', e); }
+    }
+  }
   $('#reward').classList.add('show');
   if(pct>=.5)confettiBurst(pct===1?100:50);
 }
@@ -8674,6 +9012,52 @@ function closeReward(){$('#reward').classList.remove('show')}
 function pickChallengeQuestions(difficulty){
   const pool = CHALLENGE_BANK[difficulty] || CHALLENGE_BANK.easy;
   return shuffle(pool).slice(0, CHALLENGE_QUESTIONS_PER_CHALLENGE);
+}
+
+// ADAPTIVE CHALLENGE DIFFICULTY
+// ---------------------------------------------------------------------------
+// Each store item has a hardcoded `requirements.challenge` tier
+// (easy/medium/hard). On its own, that tier is static — a kid who's been
+// crushing their quizzes still gets the same "easy" challenge as one who's
+// struggling. That wastes the strong kid's time and is boring.
+//
+// This helper reads the kid's ACTUAL question-level accuracy across every
+// subject (populated by computeSubjectStats → totalCorrect/totalScorable)
+// and bumps or clamps the challenge tier accordingly:
+//   • ≥90% accuracy with ≥5 activities done → bump ONE tier up
+//   • <50% accuracy with ≥3 activities done → clamp DOWN one tier
+//   • otherwise → use the item's nominal tier
+// Requires a minimum activity count before adapting, so a kid with "1
+// perfect activity = 100% accuracy" doesn't instantly hit hard tier.
+//
+// Returns: { tier, reason, adapted } — reason is a short phrase we can
+// show in the challenge modal ("🔥 stretched up because you've been
+// crushing your quizzes!"); adapted is true if we changed the tier.
+function effectiveChallengeDifficulty(sid, nominalTier){
+  const tiers = ['easy','medium','hard'];
+  const idx = Math.max(0, tiers.indexOf(nominalTier || 'easy'));
+  const ud = allData.users[sid];
+  if(!ud) return { tier: tiers[idx], reason: '', adapted: false };
+  // Aggregate effort signals across all subjects — same numbers shown on
+  // the teacher dashboard, so kids/tutors never see "you got bumped but the
+  // stats say you shouldn't have been".
+  let correct = 0, scorable = 0, done = 0;
+  SUBJECTS.forEach(sub=>{
+    const st = computeSubjectStats(sid, sub.id);
+    correct  += st.totalCorrect  || 0;
+    scorable += st.totalScorable || 0;
+    done     += st.done          || 0;
+  });
+  const acc = scorable ? correct/scorable : 0;
+  // Bump UP: strong+seasoned kids get harder challenges.
+  if(acc >= 0.9 && done >= 5 && idx < 2){
+    return { tier: tiers[idx+1], reason: '🔥 Stretched up — you\u2019ve been acing your quizzes!', adapted: true };
+  }
+  // Clamp DOWN: struggling kids don't get punished by boss-tier gates.
+  if(acc < 0.5 && done >= 3 && idx > 0){
+    return { tier: tiers[idx-1], reason: '🌱 Easier set for now — build confidence first.', adapted: true };
+  }
+  return { tier: tiers[idx], reason: '', adapted: false };
 }
 
 let activeStoreCategory = 'all';
@@ -8887,7 +9271,12 @@ function openItemDetail(item){
 
 function openChallenge(item){
   closeStoreModal();
-  const difficulty = (item.requirements && item.requirements.challenge) || 'easy';
+  const nominal = (item.requirements && item.requirements.challenge) || 'easy';
+  // ADAPTIVE: read the kid's actual accuracy and bump/clamp the tier so a
+  // kid who's been acing quizzes gets a stretch challenge, while one
+  // who's struggling doesn't hit a wall at the store gate.
+  const eff = effectiveChallengeDifficulty(currentUser, nominal);
+  const difficulty = eff.tier;
   const questions = pickChallengeQuestions(difficulty);
   let idx = 0, correct = 0, locked = false;
   const results = []; // 'ok' | 'no'
@@ -8904,6 +9293,10 @@ function openChallenge(item){
     panel.appendChild(h('div',{class:'ch-head'},[
       h('div',{class:'ch-title'},[h('span',{},'🧠'),h('span',{},'Unlock Challenge')]),
       h('div',{class:'ch-sub'}, 'Get at least '+CHALLENGE_PASS_MIN+' out of '+questions.length+' correct'),
+      // When effectiveChallengeDifficulty bumped the tier away from the
+      // item's nominal, surface WHY so the kid doesn't feel blindsided
+      // ("wait, this is harder than the easy tier the card said…").
+      eff.adapted ? h('div',{class:'ch-adapt'}, eff.reason) : null,
     ]));
     const dots = h('div',{class:'ch-progress'});
     for(let i=0;i<questions.length;i++){
@@ -9142,6 +9535,49 @@ function renderAvatarPicker(root){
 const MINI_GAME_COIN_CAP = 10; // max coins per day awarded from mini-games
 
 // Ensure the stats container exists on older saves that predate this field.
+// SMART-DEFAULT MINI-GAME DIFFICULTY
+// ---------------------------------------------------------------------------
+// Before: every mini-game opened on 'easy' regardless of past performance,
+// so a kid who had beaten easy 20 times still had to manually click "hard"
+// each session. Frustrating, and most kids just replayed easy.
+//
+// Now: when the kid opens a mini-game WITHOUT an explicit tier (i.e. via
+// the hub, not via the "Play Again" button that re-passes the old tier),
+// we look at their best score and default to the tier that matches their
+// current skill. They can still click any tier to override.
+//
+// Returns the suggested default tier. Input `gameKey` is the stat-object
+// key (e.g. 'memory', 'math', 'odd') — we branch per game because each
+// has different scoring semantics.
+function suggestedMiniGameDifficulty(gameKey){
+  ensureMiniGameStats();
+  const st = state.miniGameStats || {};
+  if(gameKey === 'memory'){
+    // Memory: 6 pairs (easy) is "beaten" when moves ≤ 16 (near-optimal).
+    // Once a kid hits that, default to hard so they keep growing.
+    const be = st.bestMemoryEasy;
+    if(be && be.moves && be.moves <= 16) return 'hard';
+    return 'easy';
+  }
+  if(gameKey === 'math'){
+    // Math drill: 60s timed, 2 coins per correct. 15+ correct on ANY tier
+    // means they're fast — default to a higher tier next time.
+    const best = st.bestMathScore || 0;
+    if(best >= 22) return 'hard';
+    if(best >= 15) return 'medium';
+    return 'easy';
+  }
+  if(gameKey === 'odd'){
+    // Odd-One-Out: 12 rounds. 10+ correct = they get the logic pattern,
+    // default to medium; 11+ = default to hard.
+    const best = st.bestOddScore || 0;
+    if(best >= 11) return 'hard';
+    if(best >= 10) return 'medium';
+    return 'easy';
+  }
+  return 'easy';
+}
+
 function ensureMiniGameStats(){
   if(!state) return;
   if(!state.miniGameStats){
@@ -9406,7 +9842,13 @@ const MEMORY_EMOJI_POOL = [
 function renderMemoryMatch(root, opts){
   if(!currentUser||!state){go('home');return}
   ensureMiniGameStats();
-  const difficulty = (opts && opts.difficulty) || 'easy';
+  // ADAPTIVE DEFAULT: if the kid arrived here from the hub (no explicit
+  // opts.difficulty), pick the tier that matches their past performance
+  // instead of always starting them on easy. They can still click any
+  // tier button to override.
+  const autoTier = suggestedMiniGameDifficulty('memory');
+  const difficulty = (opts && opts.difficulty) || autoTier;
+  const autoApplied = !(opts && opts.difficulty) && autoTier !== 'easy';
   const pairs = difficulty === 'hard' ? 8 : 6;
   const cols = 4; // 4×3 easy, 4×4 hard
 
@@ -9418,6 +9860,7 @@ function renderMemoryMatch(root, opts){
     h('button',{class:'mg-diff'+(difficulty==='easy'?' active':''),onclick:()=>go('game-memory',{difficulty:'easy'})}, 'Easy · 6 pairs'),
     h('button',{class:'mg-diff'+(difficulty==='hard'?' active':''),onclick:()=>go('game-memory',{difficulty:'hard'})}, 'Hard · 8 pairs'),
   ]));
+  if(autoApplied) root.appendChild(h('div',{class:'mg-auto-note'},'✨ Auto-set to Hard — you\u2019ve mastered Easy!'));
 
   // Shuffled deck — pick N emoji, duplicate for pairs, shuffle positions.
   const chosen = MEMORY_EMOJI_POOL.slice().sort(()=>Math.random()-0.5).slice(0, pairs);
@@ -9516,7 +9959,10 @@ function renderMemoryMatch(root, opts){
 function renderQuickMath(root, opts){
   if(!currentUser||!state){go('home');return}
   ensureMiniGameStats();
-  const level = (opts && opts.level) || 'easy';
+  // ADAPTIVE DEFAULT: if no explicit tier, pick one based on bestMathScore.
+  const autoTier = suggestedMiniGameDifficulty('math');
+  const level = (opts && opts.level) || autoTier;
+  const autoApplied = !(opts && opts.level) && autoTier !== 'easy';
 
   root.appendChild(h('div',{class:'week-head'},[
     h('h2',{},[h('span',{style:'font-size:24px;margin-right:8px'},'⚡'),h('span',{},'Quick Math')]),
@@ -9527,6 +9973,7 @@ function renderQuickMath(root, opts){
     h('button',{class:'mg-diff'+(level==='medium'?' active':''),onclick:()=>go('game-math',{level:'medium'})}, 'Medium · to 20'),
     h('button',{class:'mg-diff'+(level==='hard'?' active':''),onclick:()=>go('game-math',{level:'hard'})}, 'Hard · +/−/×'),
   ]));
+  if(autoApplied) root.appendChild(h('div',{class:'mg-auto-note'},'✨ Auto-set to '+level.charAt(0).toUpperCase()+level.slice(1)+' — your best is '+(state.miniGameStats.bestMathScore||0)+' correct!'));
 
   let correct = 0; let wrong = 0; let timeLeft = 60; let gameActive = false;
   let timerId = null; let answerLocked = false;
@@ -9724,7 +10171,11 @@ const ODD_ONE_OUT_PUZZLES = {
 function renderOddOneOut(root, opts){
   if(!currentUser||!state){go('home');return}
   ensureMiniGameStats();
-  const level = (opts && opts.level) || 'medium';
+  // ADAPTIVE DEFAULT: promote the kid to the tier matching their bestOddScore
+  // when they arrive from the hub. Explicit tier buttons still override.
+  const autoTier = suggestedMiniGameDifficulty('odd');
+  const level = (opts && opts.level) || autoTier;
+  const autoApplied = !(opts && opts.level) && autoTier !== 'easy';
 
   root.appendChild(h('div',{class:'week-head'},[
     h('h2',{},[h('span',{style:'font-size:24px;margin-right:8px'},'🎯'),h('span',{},'Odd One Out')]),
@@ -9735,6 +10186,7 @@ function renderOddOneOut(root, opts){
     h('button',{class:'mg-diff'+(level==='medium'?' active':''),onclick:()=>go('game-odd',{level:'medium'})}, 'Medium · subtler'),
     h('button',{class:'mg-diff'+(level==='hard'  ?' active':''),onclick:()=>go('game-odd',{level:'hard'}  )}, 'Hard · think!'),
   ]));
+  if(autoApplied) root.appendChild(h('div',{class:'mg-auto-note'},'✨ Auto-set to '+level.charAt(0).toUpperCase()+level.slice(1)+' — your best is '+(state.miniGameStats.bestOddScore||0)+' correct!'));
 
   let correct = 0; let wrong = 0; let timeLeft = 60; let gameActive = false;
   let timerId = null; let answerLocked = false;
@@ -10214,14 +10666,22 @@ function renderTeacher(root){
     // the questions right?" read on the header row. Re-uses the same
     // per-subject computeSubjectStats so numbers stay consistent between
     // the header and the per-subject breakdown below.
-    let allAttempts = 0, allCorrect = 0, allScorable = 0;
+    let allAttempts = 0, allCorrect = 0, allScorable = 0, allTouched = 0, allDone = 0;
     SUBJECTS.forEach(sub=>{
       const stt = computeSubjectStats(s.id, sub.id);
       allAttempts += stt.totalAttempts || 0;
       allCorrect  += stt.totalCorrect  || 0;
       allScorable += stt.totalScorable || 0;
+      allTouched  += stt.touched       || 0;
+      allDone     += stt.done          || 0;
     });
     const overallAccuracy = allScorable ? Math.round(allCorrect/allScorable*100) : 0;
+    // One-line tutor interpretation of those numbers — shown as the third
+    // row on the card. Empty string when the kid hasn't started yet, so
+    // new students don't show a meaningless "0 attempts" comment.
+    const effortRead = allAttempts>0
+      ? interpretEffort(s.name, allAttempts, allTouched, allDone, allCorrect, allScorable)
+      : null;
     // Header token = chosen avatar emoji if set, otherwise the student's
     // initial. Replaces the old decorative decoEmoji for a cleaner look
     // that matches the student's own profile identity.
@@ -10241,6 +10701,10 @@ function renderTeacher(root){
         h('span',{title:'Total attempts across every activity (sum of retries)'},'🎯 '+allAttempts+' attempts'),
         h('span',{title:'Correct answers ÷ total scored questions, on attempted activities'},'✅ '+overallAccuracy+'% accuracy'),
       ]),
+      // Tutor read — natural-language interpretation of the numbers above.
+      // Hover reveals the full paragraph of detail. Skipped for students
+      // who haven't started anything yet.
+      ...(effortRead ? [h('div',{class:'t-effort-read', title:effortRead.detail}, effortRead.headline)] : []),
     ]);
     const bars=h('div',{class:'t-subj-bars'});
     SUBJECTS.forEach(sub=>{
@@ -10534,7 +10998,7 @@ function reportSubjectStats(sid){
     const acts = getWeekActivities(sid, sub.id) || [];
     const total = acts.length;
     let done=0, perfect=0;
-    let totalAttempts=0, totalCorrect=0, totalScorable=0;
+    let totalAttempts=0, totalCorrect=0, totalScorable=0, touched=0;
     const repeats = [];         // activities with >=2 attempts (kid had to retry)
     const perfectActs = [];     // activity titles where they nailed it
     const notDoneActs = [];     // activity titles not yet touched (complete)
@@ -10552,6 +11016,7 @@ function reportSubjectStats(sid){
       if(attempts > 0){
         totalCorrect  += best;
         totalScorable += scorable;
+        touched++;           // count of activities this kid has ATTEMPTED (≥1 try)
       }
       // Prefer the specific lesson concept title when available — reads more
       // naturally than the short activity label ("Finding the Main Idea" vs
@@ -10570,7 +11035,7 @@ function reportSubjectStats(sid){
       id: sub.id, name: sub.name, emoji: sub.emoji,
       total, done, perfect, repeats,
       perfectActs, notDoneActs, completedNotPerfect,
-      totalAttempts, totalCorrect, totalScorable,
+      totalAttempts, totalCorrect, totalScorable, touched,
       pctDone: total ? Math.round((done/total)*100) : 0,
       pctPerfect: total ? Math.round((perfect/total)*100) : 0,
       pctAccuracy,
@@ -10628,12 +11093,16 @@ function buildProgressReport(sid){
   lines.push(`Here is ${name}'s weekly KidQuest progress report (${today}).`);
   lines.push('');
   lines.push(`Overall: ${totalDone} of ${totalAvail} activities completed — ${totalPerfect} perfect scores. ⭐${ud.totalStars||0} stars / 💰${ud.coins||0} coins / 🔥${ud.streak||0}-day streak.`);
-  // Effort + precision line: tells the parent at a glance HOW HARD the kid
-  // worked (total attempts) and HOW ACCURATELY they answered (right answers
-  // ÷ scorable questions across attempted activities). Using ${totalCorrect}
-  // / ${totalScorable} makes the % feel concrete instead of abstract.
+  // Effort + precision paragraph. Parents didn't want "27 attempts, 74%
+  // accuracy" as a bare stat — they want the tutor's read on what those
+  // numbers MEAN. interpretEffort() turns the raw numbers into a headline
+  // ("getting it first try", "working hard and getting there", "struggling
+  // — the concept hasn't landed") + an actionable detail paragraph.
   if(totalAttempts>0){
-    lines.push(`Effort & accuracy: ${totalAttempts} total attempt${totalAttempts===1?'':'s'} across lessons, answering ${totalCorrect} of ${totalScorable} scored questions correctly (${overallAccuracy}% accuracy).`);
+    const activitiesTouched = stats.reduce((a,b)=>a+(b.touched||0),0);
+    const effort = interpretEffort(name, totalAttempts, activitiesTouched, totalDone, totalCorrect, totalScorable);
+    lines.push(effort.headline);
+    lines.push(effort.detail);
   }
   lines.push('');
 
@@ -11289,6 +11758,18 @@ try {
     // fail. The student sees their progress, picks what's next, or re-picks
     // the same level if they want to try it again.
     if(quiz && quiz.subject) go('week',{subject:quiz.subject});
+    else go(currentUser?'dashboard':'home');
+  });
+  // Jump-ahead — skips the next level and opens N+2. Wired from finishActivity
+  // via the button's data-jumpTarget attribute so the handler knows where to
+  // navigate. The skipped middle level remains accessible from the levels list.
+  const rwJumpEl = $('#rwJumpAhead');
+  if(rwJumpEl) rwJumpEl.addEventListener('click',()=>{
+    const nextId  = rwJumpEl.dataset.jumpTarget;
+    const subject = rwJumpEl.dataset.jumpSubject;
+    closeReward();
+    if(nextId && subject) go('activity',{activityId:nextId,subject:subject});
+    else if(quiz && quiz.subject) go('week',{subject:quiz.subject});
     else go(currentUser?'dashboard':'home');
   });
 } catch(e) { console.warn('[KidQuest] Button wiring failed:',e); }
