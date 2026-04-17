@@ -680,6 +680,12 @@ img{max-width:100%}
 .lesson-videos-empty{margin:10px 0 4px;padding:10px 14px;border-radius:12px;background:rgba(108,92,231,.04);border:1px dashed rgba(108,92,231,.22);font-size:12px;color:var(--ink3);display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .lesson-videos-empty .lv-gear{margin-left:auto;display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;font-size:12px;font-weight:700;color:#fff;background:linear-gradient(135deg,#6c5ce7,#a29bfe);border:none;cursor:pointer;transition:all .2s var(--spring)}
 .lesson-videos-empty .lv-gear:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(108,92,231,.35)}
+/* Bare variant: when there's no video, we hide the "No video" text and just
+   show a small discreet gear (teachers can still add one). No dashed box,
+   no error-looking row — kids just see a clean lesson card. */
+.lesson-videos-empty.is-bare{border:none;background:transparent;padding:0;margin:4px 0 0;justify-content:flex-end}
+.lesson-videos-empty.is-bare .lv-gear{margin-left:auto;padding:4px 10px;font-size:11px;opacity:.55}
+.lesson-videos-empty.is-bare .lv-gear:hover{opacity:1}
 /* Lesson video settings modal */
 .lvs-card{max-width:480px;text-align:left;max-height:calc(100vh - 48px);overflow-y:auto}
 .lvs-card .lvs-preview{background:linear-gradient(135deg,rgba(108,92,231,.05),rgba(162,155,254,.04));border:1px solid rgba(108,92,231,.18);border-radius:12px;padding:12px 14px;margin:6px 0 14px;max-height:240px;overflow-y:auto}
@@ -1936,12 +1942,15 @@ nishan: {
   math: [
     { id:'w1-nishan-m1', title:'Count Them!', emoji:'🔢', videoIds:['bMpeUL43ONg'],
       lesson:{title:'Counting Objects',intro:'Point to each thing and say the number: 1, 2, 3, 4, 5... We can count past 10 too!',example:'🍎🍎🍎🍎🍎🍎🍎🍎🍎🍎🍎 = 11 apples!',hint:'Count carefully — don\'t skip any!'},
+      // Warm opener: start small (3, 5) so kids feel the win on Q1/Q2. Each
+      // question adds just 1-2 more items. Skip-counting is a Grade 1 skill —
+      // moved OUT of the first lesson so Nishan isn't hit with it on day one.
       questions:[
-        {type:'mcq',q:'How many?',visual:'⭐⭐⭐⭐⭐⭐⭐⭐',choices:['6','7','8','9'],answer:2},
-        {type:'mcq',q:'How many?',visual:'🎈🎈🎈🎈🎈🎈🎈🎈🎈🎈',choices:['8','9','10','11'],answer:2},
-        {type:'mcq',q:'How many?',visual:'🐟🐟🐟🐟🐟🐟🐟🐟🐟🐟🐟🐟',choices:['10','11','12','13'],answer:2},
-        {type:'mcq',q:'How many?',visual:'❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️',choices:['13','14','15','16'],answer:2},
-        {type:'mcq',q:'Count by 2s: 2, 4, 6, 8, ?',choices:['9','10','11','12'],answer:1},
+        {type:'mcq',q:'How many?',visual:'⭐⭐⭐',choices:['2','3','4','5'],answer:1},
+        {type:'mcq',q:'How many?',visual:'🎈🎈🎈🎈🎈',choices:['3','4','5','6'],answer:2},
+        {type:'mcq',q:'How many?',visual:'🐟🐟🐟🐟🐟🐟🐟',choices:['5','6','7','8'],answer:2},
+        {type:'mcq',q:'How many?',visual:'⭐⭐⭐⭐⭐⭐⭐⭐',choices:['7','8','9','10'],answer:1},
+        {type:'mcq',q:'What comes AFTER 7?',choices:['6','7','8','9'],answer:2},
       ]},
     { id:'w1-nishan-m2', title:'Number Names', emoji:'🔤', videoIds:['DR-cfDsHCGA'],
       lesson:{title:'Numbers Have Names',intro:'Each number has a name. After TEN come the TEENS: eleven, twelve, thirteen... Ordinal numbers tell POSITION: 1st, 2nd, 3rd.',example:'SEVEN = 7, FIFTEEN = 15, 1st = first, 2nd = second',hint:'Practice counting past 10 and naming positions!'},
@@ -2298,13 +2307,16 @@ akaran: {
   ],
   writing: [
     { id:'w1-akaran-w1', title:'Capitalization Rules', emoji:'🔠', videoIds:['0Wrv_ZviMEc'],
+      // Softer opener: dropped the "count the capitals" Q5 — counting-and-
+      // finding all at once is a lot for a first lesson. Replaced with a
+      // direct "which WORD needs a capital" which reinforces the same rule.
       lesson:{title:'Capital Letter Rules',intro:'Capitalize: first word of sentences, names of people and places, the word "I", and days/months.',example:'"On Monday, I went to Maple Park with Sarah." — all caps are correct!',hint:'Names, places, days, and sentence starts ALL need capitals.'},
       questions:[
         {type:'mcq',q:'Which is capitalized correctly?',choices:['my friend sam lives in toronto.','My friend Sam lives in Toronto.','my Friend sam lives in toronto.','My friend sam Lives in toronto.'],answer:1},
         {type:'mcq',q:'Which is correct?',choices:['we went to the park on saturday.','We went to the park on Saturday.','We went to the Park on saturday.','we Went to the park on Saturday.'],answer:1},
         {type:'mcq',q:'Which day name is spelled and capitalized correctly?',choices:['wednesday','Wednesday','WEDNESDAY','wEDNESDAY'],answer:1},
         {type:'mcq',q:'Which sentence has ALL the right capitals?',choices:['i like Math class.','I like math class.','i like math Class.','I Like Math class.'],answer:1},
-        {type:'mcq',q:'How many words need capitals? "on tuesday, i visited dr. lee."',choices:['2','3','4','5'],answer:2},
+        {type:'mcq',q:'In "my name is sara" — which word should START with a capital?',choices:['my','name','is','both "my" AND "sara"'],answer:3},
       ]},
     { id:'w1-akaran-w2', title:'Punctuation Mix', emoji:'❗', videoIds:['LdCOswMeXFQ'],
       lesson:{title:'Periods, Questions, Exclamations, Commas',intro:'Period (.) for statements. Question mark (?) for questions. Exclamation (!) for strong feelings. Comma (,) to separate items.',example:'"I like apples, bananas, and grapes." uses commas in a list.',hint:'Read aloud — your voice tells you which punctuation fits!'},
@@ -2345,13 +2357,17 @@ akaran: {
   ],
   math: [
     { id:'w1-akaran-m1', title:'Counting to 50', emoji:'🔢', videoIds:['W8CEOlAOGas'],
+      // Softer opener: dropped the 5-item ordering exercise (heavy cognitive
+      // load for the first math lesson) in favor of a simple 2-number
+      // comparison that builds on the same "which comes later when counting"
+      // intuition without the juggling.
       lesson:{title:'Numbers to 50',intro:'After 20, numbers follow a pattern: 21, 22, 23... After 29 comes 30. After 39 comes 40. After 49 comes 50!',example:'Count by tens: 10, 20, 30, 40, 50.',hint:'The tens digit goes up by 1 every 10 numbers.'},
       questions:[
         {type:'mcq',q:'What comes after 29?',choices:['28','30','31','39'],answer:1},
         {type:'mcq',q:'What comes after 39?',choices:['30','38','40','41'],answer:2},
         {type:'mcq',q:'Which number is between 33 and 35?',choices:['32','34','36','31'],answer:1},
         {type:'mcq',q:'Count by 10s: 10, 20, 30, ?',choices:['31','35','40','50'],answer:2},
-        {type:'order',q:'Put in order: smallest to biggest!',items:['18','34','7','42','25'],correctOrder:[2,0,4,1,3]},
+        {type:'mcq',q:'Which number is BIGGER?',choices:['27','32','Same','Neither'],answer:1},
       ]},
     { id:'w1-akaran-m2', title:'Adding to 15', emoji:'➕',
       // Previously "Adding to 20" with make-a-ten strategy. For a Grade 1
@@ -2695,13 +2711,16 @@ rushan: {
   ],
   writing: [
     { id:'w1-rushan-w1', title:'Punctuation Power', emoji:'❗', videoIds:['LdCOswMeXFQ'],
+      // Softer opener: dropped the quotation-marks question (Grade 3+ skill)
+      // in favor of another period/question-mark pick which matches the
+      // lesson's stated scope (. / ? / ! / ,).
       lesson:{title:'Punctuation Marks',intro:'Period (.) stops. Question mark (?) asks. Exclamation (!) shows excitement. Comma (,) separates.',example:'"How are you?" vs "I am fine." vs "Wow!"',hint:'Is it asking, telling, or shouting?'},
       questions:[
         {type:'mcq',q:'What goes at the end? — "How old are you"',choices:['.','?','!',','],answer:1},
         {type:'mcq',q:'What goes at the end? — "Watch out for the car"',choices:['.','?','!',','],answer:2},
         {type:'mcq',q:'Which sentence is correct?',choices:['the cat is sleeping.','The cat is sleeping.','the Cat is sleeping','THE cat is sleeping.'],answer:1},
         {type:'mcq',q:'Where does the comma go?',choices:['Yes, I will help.','Yes I, will help.','Yes I will, help.','No comma needed'],answer:0},
-        {type:'mcq',q:'Which uses quotation marks correctly?',choices:['Mom said come home.','Mom said, "Come home."','"Mom said come home."','Mom "said come home."'],answer:1},
+        {type:'mcq',q:'What goes at the end? — "I love pizza"',choices:['.','?','!',','],answer:0},
       ]},
     { id:'w1-rushan-w2', title:'Spelling Bee', emoji:'🐝', videoIds:['9S7DY2lgJlU'],
       lesson:{title:'Tricky Spellings',intro:'Some words are spelled in surprising ways. Watch for sneaky ones!',example:'"Friend" has "i" before "e". "Because" has "cause" inside it.',hint:'If it looks weird, it probably is — memorize it!'},
@@ -2742,17 +2761,22 @@ rushan: {
   ],
   math: [
     { id:'w1-rushan-m1', title:'Two-Digit Addition', emoji:'➕',
-      lesson:{title:'Adding with Carrying',intro:'Add the ones column first. If the answer is 10 or more, carry the extra 1 over to the tens column.',stack:{op:'+',top:'28',bottom:'17',carries:[1,''],answer:'45',steps:[
-        '<b>Ones:</b> 8 + 7 = <b>15</b>. Write <b>5</b>, carry the <b>1</b> to the tens.',
+      // Softer on-ramp: Q1 and Q2 are now NO-CARRY 2-digit sums so Rushan
+      // gets the "line up the columns" mechanic down before the carrying
+      // kicks in at Q3. Previously all 5 questions required carrying on
+      // day one of two-digit addition — too steep.
+      lesson:{title:'Adding with Carrying',intro:'Add the ones column first. If the ones add to 10 or more, carry the extra 1 over to the tens column.',stack:{op:'+',top:'28',bottom:'17',carries:[1,''],answer:'45',steps:[
+        '<b>Warm-up (no carry):</b> 23 + 14 → ones 3+4=<b>7</b>, tens 2+1=<b>3</b> → <b>37</b>. Easy!',
+        '<b>With carry:</b> 28 + 17 → ones 8 + 7 = <b>15</b>. Write <b>5</b>, carry the <b>1</b> to the tens.',
         '<b>Tens:</b> 2 + 1 + 1 = <b>4</b>. Write <b>4</b>.',
         'Answer: <b>45</b>.'
-      ]},hint:'Line up ones under ones, tens under tens.'},
+      ]},hint:'Line up ones under ones, tens under tens. Check: do the ones add to 10 or more? If yes → carry.'},
       questions:[
+        {type:'mcq',q:'23 + 14 = ? (easy warm-up)',choices:['27','37','47','34'],answer:1},
+        {type:'mcq',q:'42 + 15 = ?',choices:['47','57','67','52'],answer:1},
         {type:'mcq',q:'28 + 17 = ?',choices:['35','45','44','55'],answer:1},
         {type:'mcq',q:'36 + 25 = ?',choices:['51','61','59','71'],answer:1},
         {type:'mcq',q:'47 + 28 = ?',choices:['65','73','75','85'],answer:2},
-        {type:'mcq',q:'55 + 37 = ?',choices:['82','92','91','102'],answer:1},
-        {type:'mcq',q:'69 + 14 = ?',choices:['73','82','83','93'],answer:2},
       ]},
     { id:'w1-rushan-m2', title:'Two-Digit Subtraction', emoji:'➖',
       lesson:{title:'Subtracting with Borrowing',intro:'If the top digit is smaller than the bottom, borrow 1 from the column to the left.',stack:{op:'−',top:'42',bottom:'15',carries:[3,12],mode:'borrow',answer:'27',steps:[
@@ -2801,12 +2825,16 @@ rushan: {
   ],
   logic: [
     { id:'w1-rushan-l1', title:'Number Patterns', emoji:'🔢',
-      lesson:{title:'Finding the Rule',intro:'Numbers form patterns. Some add, some double, some go backwards.',example:'3, 6, 9, 12 → adding 3 each time → next: 15!',hint:'Find the difference between each pair of numbers.'},
+      // Softer opener: swapped the geometric doubling pattern (1,2,4,8,?)
+      // for another arithmetic sequence. Doubling is a leap on a first
+      // logic lesson — kids are still learning "find the difference."
+      // Doubling patterns return in later logic levels.
+      lesson:{title:'Finding the Rule',intro:'Numbers form patterns. Each step changes by the SAME amount. Find how much it changes by!',example:'3, 6, 9, 12 → adding 3 each time → next: 15!',hint:'Find the difference between each pair of numbers — that\'s the rule.'},
       questions:[
         {type:'mcq',q:'What comes next? 3, 6, 9, 12, ?',choices:['13','14','15','18'],answer:2},
         {type:'mcq',q:'What comes next? 5, 10, 15, 20, ?',choices:['22','25','30','21'],answer:1},
         {type:'mcq',q:'What comes next? 20, 18, 16, 14, ?',choices:['10','11','12','13'],answer:2},
-        {type:'mcq',q:'What comes next? 1, 2, 4, 8, ?',choices:['10','12','16','32'],answer:2},
+        {type:'mcq',q:'What comes next? 2, 4, 6, 8, ?',choices:['9','10','11','12'],answer:1},
         {type:'mcq',q:'What is MISSING? 10, ?, 30, 40, 50',choices:['15','20','25','35'],answer:1},
       ]},
     { id:'w1-rushan-l2', title:'Sorting Challenge', emoji:'📦',
@@ -2988,8 +3016,11 @@ rushan: {
       lesson:{title:'Canada\'s Big Map',intro:'Canada has 10 PROVINCES (like Ontario, Quebec, BC) and 3 TERRITORIES (Yukon, Northwest Territories, Nunavut). Ontario has the most people!',heroImage:IMG.canadaMap,pictures:[
         {emoji:'🍁', word:'Ontario'},{emoji:'⚜️', word:'Quebec'},{emoji:'🏔️', word:'British Columbia', image:IMG.rockies},{emoji:'🌾', word:'Alberta'},{emoji:'❄️', word:'Yukon', label:'territory'},
       ],hint:'The 3 territories are in the far NORTH of Canada.'},
+      // Softer opener: Q1 used to ask for the TOTAL (10 + 3 = 13), which
+      // forced both memorization AND arithmetic on the first question.
+      // Replaced with a straight recall from the intro (10 provinces).
       questions:[
-        {type:'mcq',q:'How many provinces + territories total?',choices:['10','13','15','20'],answer:1},
+        {type:'mcq',q:'How many PROVINCES does Canada have?',choices:['5','10','13','20'],answer:1},
         {type:'mcq',q:'Which is a TERRITORY, not a province?',choices:['Ontario','Alberta','Yukon','Quebec'],answer:2},
         {type:'mcq',q:'The capital of Canada is...',choices:['Toronto','Ottawa','Montreal','Vancouver'],answer:1},
         {type:'mcq',q:'Which province is on the WEST coast?',choices:['Quebec','British Columbia','Ontario','Nova Scotia'],answer:1},
@@ -3211,8 +3242,12 @@ akshayan: {
       ]},
   ],
   logic: [
-    { id:'w1-akshayan-l1', title:'Advanced Patterns', emoji:'🔢',
-      lesson:{title:'Tricky Number Patterns',intro:'Some patterns add, some multiply, some have special rules.',example:'2, 4, 8, 16 → doubling each time → next: 32!',hint:'Try: add, subtract, multiply — find what connects each step.'},
+    { id:'w1-akshayan-l1', title:'Number Patterns', emoji:'🔢',
+      // Retitled from "Advanced Patterns" — calling the FIRST logic lesson
+      // "advanced" signals to the kid that it'll be hard before they even
+      // start. Content is unchanged (doubling, step patterns, etc. are
+      // reasonable Grade-3 entry patterns), just friendlier framing.
+      lesson:{title:'Number Patterns',intro:'Patterns follow a RULE. Some add, some multiply, some go backwards.',example:'2, 4, 8, 16 → doubling each time → next: 32!',hint:'Try: add, subtract, multiply — find what connects each step.'},
       questions:[
         {type:'mcq',q:'What comes next? 2, 4, 8, 16, ?',choices:['20','24','32','64'],answer:2},
         {type:'mcq',q:'What comes next? 100, 90, 80, 70, ?',choices:['50','60','65','75'],answer:1},
@@ -8214,11 +8249,12 @@ function renderLesson(card,q){
     });
     card.appendChild(vbox);
   } else if(activityId){
-    // No video set for this lesson — still surface the gear so the teacher
-    // can add one. Students aren't told about the gear; the subtle dashed
-    // row just reads "No video" from their perspective.
-    const empty = h('div',{class:'lesson-videos-empty'},[
-      h('span',{}, '▶ No lesson video set.'),
+    // No video set for this lesson — show JUST a discreet gear (no "No video"
+    // text). Teachers can still add one; kids aren't shown an error-looking
+    // "No lesson video set." row that reads like something is broken. The
+    // .is-bare modifier strips the dashed box so the gear sits quietly at
+    // the edge of the card.
+    const empty = h('div',{class:'lesson-videos-empty is-bare'},[
       gearBtn(),
     ]);
     card.appendChild(empty);
