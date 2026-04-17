@@ -1244,17 +1244,30 @@ img{max-width:100%}
    the tiles above settle. Chains bump a combo multiplier. Game over when a
    column is full and the student can't fit the next tile. */
 .ds-wrap{max-width:420px;margin:0 auto;position:relative}
-.ds-next{display:flex;align-items:center;justify-content:center;gap:12px;margin:8px 0 14px;font-weight:800;color:var(--ink3);font-size:13px;text-transform:uppercase;letter-spacing:.05em}
-.ds-next-tile{width:56px;height:56px;border-radius:14px;display:grid;place-items:center;font-size:26px;font-weight:900;color:#fff;box-shadow:0 6px 14px rgba(0,206,201,.35);border:2px solid #fff;animation:dsPulse 1.6s ease-in-out infinite}
-@keyframes dsPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
-.ds-target{background:rgba(108,92,231,.08);border-radius:999px;padding:6px 14px;font-size:12px;font-weight:800;color:var(--primary);letter-spacing:.04em}
+.ds-target{display:inline-block;background:rgba(108,92,231,.08);border-radius:999px;padding:6px 14px;font-size:12px;font-weight:800;color:var(--primary);letter-spacing:.04em}
+/* Pilot row — shows the next tile hovering above the column where it will
+   land. Arrow keys slide pilotCol left/right; Space/Down/Enter drops. The
+   row lives just above .ds-grid and mirrors its 5-col geometry so the tile
+   visually lines up with its target column. */
+.ds-board{max-width:420px;margin:0 auto;display:flex;flex-direction:column;gap:4px}
+.ds-pilot-row{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;padding:0 10px;margin-bottom:2px}
+.ds-pilot-cell{min-height:62px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:2px;transition:transform .18s var(--spring)}
+.ds-pilot-tile{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;font-size:22px;font-weight:900;color:#fff;border:2px solid #fff;box-shadow:0 6px 14px rgba(26,16,53,.22);animation:dsPilotFloat 1.4s ease-in-out infinite}
+.ds-pilot-arrow{font-size:14px;line-height:1;color:var(--primary);font-weight:900;animation:dsPilotBob 1s ease-in-out infinite}
+@keyframes dsPilotFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+@keyframes dsPilotBob{0%,100%{transform:translateY(0)}50%{transform:translateY(3px)}}
 .ds-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;padding:10px;background:rgba(108,92,231,.07);border-radius:20px;border:2px solid rgba(108,92,231,.15);position:relative}
-.ds-col{display:flex;flex-direction:column-reverse;gap:5px;min-height:calc(6 * 52px + 6 * 5px);cursor:pointer;border-radius:12px;padding:5px;transition:background .15s}
+.ds-col{display:flex;flex-direction:column-reverse;gap:5px;min-height:calc(6 * 52px + 6 * 5px);cursor:pointer;border-radius:12px;padding:5px;transition:background .15s,box-shadow .15s}
 .ds-col:hover:not(.disabled){background:rgba(108,92,231,.12)}
+.ds-col.target{background:rgba(108,92,231,.14);box-shadow:inset 0 0 0 2px rgba(108,92,231,.35)}
 .ds-col.disabled{cursor:not-allowed}
 .ds-col.full{background:rgba(225,112,85,.15);animation:shake .4s}
 .ds-cell{aspect-ratio:1/1;width:100%;min-height:42px}
-.ds-tile{width:100%;height:100%;display:grid;place-items:center;font-size:clamp(16px,4vw,22px);font-weight:900;color:#fff;border-radius:10px;box-shadow:inset 0 -3px 0 rgba(0,0,0,.15),0 3px 6px rgba(26,16,53,.15);animation:dsDrop .35s var(--spring);border:1.5px solid rgba(255,255,255,.4)}
+/* Base tile: NO default animation — tiles only animate when freshly dropped
+   (`.falling`) or clearing. Without this, every re-render during a cascade
+   would retrigger dsDrop on every tile in the column. */
+.ds-tile{width:100%;height:100%;display:grid;place-items:center;font-size:clamp(16px,4vw,22px);font-weight:900;color:#fff;border-radius:10px;box-shadow:inset 0 -3px 0 rgba(0,0,0,.15),0 3px 6px rgba(26,16,53,.15);border:1.5px solid rgba(255,255,255,.4)}
+.ds-tile.falling{animation:dsDrop .42s var(--spring)}
 .ds-tile.t1{background:linear-gradient(135deg,#ffb8c9,#ff7b9c)}
 .ds-tile.t2{background:linear-gradient(135deg,#ffd68a,#ff9f43)}
 .ds-tile.t3{background:linear-gradient(135deg,#ffee8a,#f7d046)}
@@ -1265,7 +1278,10 @@ img{max-width:100%}
 .ds-tile.t8{background:linear-gradient(135deg,#ebadff,#c94ce6)}
 .ds-tile.t9{background:linear-gradient(135deg,#ffb3e0,#ff6cc8)}
 .ds-tile.clearing{animation:dsClear .5s forwards}
-@keyframes dsDrop{from{transform:translateY(-40px) scale(.6);opacity:0}to{transform:translateY(0) scale(1);opacity:1}}
+/* Fall-in keyframe: start position is set per-tile via --fall-from so the
+   tile appears to come from the pilot row (right above the grid) and land
+   in its slot. A lower landing row means a longer fall. */
+@keyframes dsDrop{from{transform:translateY(var(--fall-from,-60px)) scale(.85);opacity:0}40%{opacity:1}to{transform:translateY(0) scale(1);opacity:1}}
 @keyframes dsClear{0%{transform:scale(1)}35%{transform:scale(1.25);box-shadow:inset 0 -3px 0 rgba(0,0,0,.15),0 0 24px rgba(0,206,201,.7)}100%{transform:scale(0);opacity:0}}
 .ds-combo-pop{position:absolute;top:35%;left:50%;transform:translate(-50%,-50%);font-family:var(--font-display);font-size:clamp(28px,6vw,42px);font-weight:900;color:#00CEC9;text-shadow:0 3px 0 #fff,0 4px 8px rgba(0,206,201,.5);pointer-events:none;animation:dsComboFly .9s forwards;z-index:5}
 @keyframes dsComboFly{0%{opacity:0;transform:translate(-50%,-50%) scale(.4)}25%{opacity:1;transform:translate(-50%,-50%) scale(1.3)}100%{opacity:0;transform:translate(-50%,-140%) scale(1.1)}}
@@ -1559,6 +1575,10 @@ img{max-width:100%}
   /* PIN emoji pad — gives each button more tap area on narrow phones. */
   .emoji-pad{max-width:300px;gap:8px}
   .emoji-btn{font-size:32px;padding:14px}
+  /* Drop Sum — compact pilot row so the board fits on short phone screens. */
+  .ds-pilot-cell{min-height:52px}
+  .ds-pilot-tile{width:38px;height:38px;font-size:20px;border-radius:10px}
+  .ds-pilot-arrow{font-size:12px}
 }
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
 
@@ -10984,18 +11004,20 @@ function renderDropSum(root, opts){
 
   root.appendChild(h('div',{class:'week-head'},[
     h('h2',{},[h('span',{style:'font-size:24px;margin-right:8px'},'🧮'),h('span',{},'Drop Sum')]),
-    h('button',{class:'back-btn',onclick:()=>go('mini-hub')},'← Back'),
+    h('button',{class:'back-btn',onclick:()=>{ teardown(); go('mini-hub'); }},'← Back'),
   ]));
 
   const COLS = 5, ROWS = 6;
   // grid[c] = array of digits, index 0 = bottom of stack. column-reverse in
   // CSS flips the visual order so index 0 appears at the visual bottom.
   let grid = Array(COLS).fill(null).map(()=>[]);
-  let score = 0;          // total tiles cleared (also drives the "best" stat)
+  let score = 0;          // points earned (10 per pair, × cascade-step multiplier)
   let maxCombo = 0;       // longest cascade chain in this run
   let nextTile = rollTile();
+  let pilotCol = Math.floor(COLS/2); // where the next tile will land; arrows shift it
   let gameActive = false;
   let busy = false;       // lock input while a cascade animates
+  let kbdHandler = null;  // captured reference so we can removeEventListener
 
   function rollTile(){
     // Slight bias toward middle digits so the kid isn't stuck placing 9s
@@ -11012,9 +11034,11 @@ function renderDropSum(root, opts){
   }
 
   const intro = h('div',{class:'ds-intro'},[
-    createMascot({ tone:'magic', size:90, message:'Make 10 and watch them pop!' }),
-    h('p',{style:'max-width:360px;margin:0 auto;font-size:13.5px;color:var(--ink3);font-weight:600;line-height:1.5'},
-      'Tap any column to drop the next number. When two numbers stacked on top of each other add to 10 (like 4+6 or 3+7), they BOTH disappear and the tiles above fall down. Chain clears for combos!'),
+    createMascot({ tone:'magic', size:90, message:'Pair numbers to make 10!' }),
+    h('p',{style:'max-width:380px;margin:0 auto;font-size:13.5px;color:var(--ink3);font-weight:600;line-height:1.5'},
+      'A new number appears at the top. Press ← → to move it, then ↓ or Space to drop. When two stacked numbers add to 10 (like 4+6 or 3+7), they BOTH pop and everything above falls down. Chain clears to earn combo bonuses!'),
+    h('p',{style:'max-width:380px;margin:2px auto 0;font-size:12px;color:var(--ink3);font-weight:700;line-height:1.5;opacity:.85'},
+      'Scoring: 10 points per pair. Cascade step 2 pays ×2, step 3 pays ×3 — keep the chain alive!'),
     h('button',{class:'btn btn-primary qm-start-btn',onclick:startGame}, '▶️ Start!'),
   ]);
   root.appendChild(intro);
@@ -11024,33 +11048,68 @@ function renderDropSum(root, opts){
   const scoreDisp = h('span',{class:'mg-val'},'0');
   const comboDisp = h('span',{class:'mg-val'},'×1');
   area.appendChild(h('div',{class:'qm-status'},[
-    h('div',{class:'qm-stat'},[h('span',{class:'mg-label'},'Cleared'), scoreDisp]),
-    h('div',{class:'qm-stat'},[h('span',{class:'mg-label'},'Combo'),   comboDisp]),
+    h('div',{class:'qm-stat'},[h('span',{class:'mg-label'},'Score'),  scoreDisp]),
+    h('div',{class:'qm-stat'},[h('span',{class:'mg-label'},'Combo'),  comboDisp]),
   ]));
 
   const wrap = h('div',{class:'ds-wrap'});
-  const nextLabel  = h('span',{}, 'Next:');
-  const nextTileEl = h('div',{class:'ds-next-tile t'+nextTile}, String(nextTile));
-  const target     = h('span',{class:'ds-target'}, '🎯 make 10');
-  wrap.appendChild(h('div',{class:'ds-next'}, [nextLabel, nextTileEl, target]));
+  wrap.appendChild(h('div',{style:'text-align:center;margin:4px 0 8px'},[
+    h('span',{class:'ds-target'}, '🎯 make 10'),
+  ]));
+
+  // Board = pilot row + playable grid, flex-stacked so the pilot tile always
+  // sits directly above its target column (matched grid-template-columns).
+  const board = h('div',{class:'ds-board'});
+  const pilotRow = h('div',{class:'ds-pilot-row'});
+  const pilotCells = [];
+  for(let c=0; c<COLS; c++){
+    const cell = h('div',{class:'ds-pilot-cell'});
+    pilotRow.appendChild(cell);
+    pilotCells.push(cell);
+  }
+  board.appendChild(pilotRow);
 
   const gridEl = h('div',{class:'ds-grid'});
   const colEls = [];
   for(let c=0; c<COLS; c++){
     const colEl = h('div',{class:'ds-col'});
-    colEl.addEventListener('click', ()=>drop(c));
-    // Pre-populate 6 empty cells so the column always takes full board height
+    // Tap a column → select AND drop in one gesture (mobile-friendly).
+    // Keyboard players use arrows + Space/Down, so this stays as a fallback.
+    colEl.addEventListener('click', ()=>{
+      if(!gameActive || busy) return;
+      pilotCol = c;
+      renderPilot();
+      drop(c);
+    });
     for(let r=0; r<ROWS; r++) colEl.appendChild(h('div',{class:'ds-cell'}));
     colEls.push(colEl);
     gridEl.appendChild(colEl);
   }
-  wrap.appendChild(gridEl);
+  board.appendChild(gridEl);
+  wrap.appendChild(board);
+
+  wrap.appendChild(h('div',{class:'ds-hint'},'← → move  •  ↓ or Space to drop  •  or tap a column'));
   wrap.appendChild(h('div',{class:'ds-hint'}, 'Pairs that make 10: 1+9 · 2+8 · 3+7 · 4+6 · 5+5'));
   area.appendChild(wrap);
 
+  function renderPilot(){
+    for(let c=0; c<COLS; c++){
+      const cell = pilotCells[c];
+      cell.innerHTML = '';
+      const isTarget = gameActive && !busy && c === pilotCol;
+      colEls[c].classList.toggle('target', isTarget);
+      if(isTarget){
+        cell.appendChild(h('div',{class:'ds-pilot-tile t'+nextTile}, String(nextTile)));
+        cell.appendChild(h('div',{class:'ds-pilot-arrow','aria-hidden':'true'},'▼'));
+      }
+    }
+  }
+
   // Re-render the whole grid. `clearing` is {"c,r": true} for cells that are
   // animating out — we keep them on screen during the animation window.
-  function renderGrid(clearing){
+  // `fresh` optionally identifies the just-landed tile so only it plays the
+  // dsDrop fall animation (everything else stays put).
+  function renderGrid(clearing, fresh){
     clearing = clearing || {};
     for(let c=0; c<COLS; c++){
       const colEl = colEls[c];
@@ -11061,20 +11120,39 @@ function renderDropSum(root, opts){
         if(r < stack.length){
           const d = stack[r];
           const key = c+','+r;
-          const cls = 'ds-tile t'+d + (clearing[key] ? ' clearing' : '');
-          cell.appendChild(h('div',{class:cls}, String(d)));
+          const isFresh    = fresh && fresh.c === c && fresh.r === r;
+          const isClearing = !!clearing[key];
+          const cls = 'ds-tile t'+d +
+            (isClearing ? ' clearing' : '') +
+            (isFresh    ? ' falling'  : '');
+          const tile = h('div',{class:cls}, String(d));
+          if(isFresh){
+            // Make the tile appear to fall from the pilot row down to its
+            // landing slot. ROWS-r = how many cell-heights it visually travels.
+            // 62px ≈ cell height + gap at the default layout; close enough
+            // that the motion reads as "fall from the top" without needing
+            // getBoundingClientRect.
+            const fallCells = (ROWS - r);
+            tile.style.setProperty('--fall-from', (-1 * fallCells * 62) + 'px');
+          }
+          cell.appendChild(tile);
         }
         colEl.appendChild(cell);
       }
       colEl.classList.toggle('full', stack.length >= ROWS);
       colEl.classList.toggle('disabled', !gameActive || busy || stack.length >= ROWS);
     }
+    // Keep pilot highlight in sync after every state change (cascade,
+    // column-full toggle, busy flip). Cheap — 5 class-toggles + a tile
+    // placement. Without this the "target" ring can get stale mid-turn.
+    renderPilot();
   }
 
   function pickNextTile(){
     nextTile = rollTile();
-    nextTileEl.textContent = String(nextTile);
-    nextTileEl.className = 'ds-next-tile t'+nextTile;
+    // Pilot tile background/color is tied to the current nextTile value, so
+    // re-render the pilot row to reflect the new digit.
+    renderPilot();
   }
 
   function allColumnsFull(){ return grid.every(col => col.length >= ROWS); }
@@ -11100,13 +11178,17 @@ function renderDropSum(root, opts){
   async function drop(c){
     if(!gameActive || busy) return;
     if(grid[c].length >= ROWS) return; // silently ignore full column
+    busy = true;
+    const landingRow = grid[c].length; // where the tile settles (stack index)
     grid[c].push(nextTile);
     pickNextTile();
-    renderGrid();
+    renderGrid(null, { c, r: landingRow });
+    // Let the fall animation (.42s) play before cascade bookkeeping starts,
+    // so the kid sees the tile settle before any clears kick in.
+    await sleep(430);
 
     // Cascade loop — find clears, animate them out, apply gravity, repeat
     // until no more pairs are adjacent. Each pass is one combo step.
-    busy = true;
     let combo = 0;
     while(true){
       const toClear = findClears();
@@ -11129,7 +11211,13 @@ function renderDropSum(root, opts){
       for(const cc in byCol){
         byCol[cc].sort((a,b)=>b-a).forEach(rr => grid[+cc].splice(rr, 1));
       }
-      score += toClear.length;
+      // Points: each cleared pair is worth 10 (= the sum that makes it valid).
+      // Cascade step N multiplies the reward, so keeping a chain alive pays
+      // off — 3 pairs at step 1 = 30, but 3 pairs across steps 1-2-3 pays
+      // 10 + 20 + 30 = 60. Encourages thinking a setup ahead.
+      const pairsCleared = toClear.length / 2;
+      const pts = Math.round(pairsCleared * 10 * combo);
+      score += pts;
       scoreDisp.textContent = String(score);
       comboDisp.textContent = '×' + combo;
       renderGrid();
@@ -11146,17 +11234,59 @@ function renderDropSum(root, opts){
     }
   }
 
+  // --- Keyboard pilot ---------------------------------------------------
+  // The kid steers the incoming tile along the top with the arrow keys and
+  // commits a drop with Space/Down/Enter. WASD is mirrored for kids who've
+  // picked up those habits from other games; the intent is "never require
+  // them to reach for a mouse while the block is hanging overhead."
+  function moveLeft(){
+    if(!gameActive || busy) return;
+    if(pilotCol > 0){ pilotCol--; renderPilot(); }
+  }
+  function moveRight(){
+    if(!gameActive || busy) return;
+    if(pilotCol < COLS-1){ pilotCol++; renderPilot(); }
+  }
+  function onKey(e){
+    // Self-cleanup: if our UI has been detached (user navigated away via
+    // some path other than the Back button), remove ourselves and bail.
+    if(!wrap.isConnected){ teardown(); return; }
+    if(!gameActive || busy) return;
+    const k = e.key;
+    if(k === 'ArrowLeft'  || k === 'a' || k === 'A'){ e.preventDefault(); moveLeft(); }
+    else if(k === 'ArrowRight' || k === 'd' || k === 'D'){ e.preventDefault(); moveRight(); }
+    else if(k === 'ArrowDown'  || k === ' ' || k === 'Enter' || k === 's' || k === 'S'){
+      e.preventDefault();
+      drop(pilotCol);
+    }
+  }
+  function teardown(){
+    gameActive = false;
+    if(kbdHandler){
+      window.removeEventListener('keydown', kbdHandler);
+      kbdHandler = null;
+    }
+  }
+
   function startGame(){
     gameActive = true;
     intro.style.display = 'none';
     area.style.display  = '';
     renderGrid();
+    renderPilot();
+    // Attach exactly one keydown listener for the life of the game; removed
+    // in teardown() on Back or game-over.
+    kbdHandler = onKey;
+    window.addEventListener('keydown', kbdHandler);
   }
 
   function onEnd(){
-    // Rating on tiles cleared. 30+ is a strong run with 2+ cascades; 15
-    // is mostly single-pair clears; 6 is minimum engagement.
-    const rating = score >= 30 ? 3 : score >= 15 ? 2 : score >= 6 ? 1 : 0;
+    teardown();
+    // Rating is now on POINTS, not tiles cleared. A single-pair-per-turn
+    // run tops out around 60 pts; triggering a 2-cascade now and then hits
+    // 120+; consistent cascaders clear 200+. Calibrated so a kid who puts
+    // in honest effort lands at 2 stars, and deliberate combo-chasing hits 3.
+    const rating = score >= 120 ? 3 : score >= 60 ? 2 : score >= 20 ? 1 : 0;
     const prevBest = state.miniGameStats.bestDropSumScore || 0;
     const isNewBest = score > prevBest;
     if(isNewBest) state.miniGameStats.bestDropSumScore = score;
@@ -11166,7 +11296,7 @@ function renderDropSum(root, opts){
       title: score > 0 ? 'Board full!' : 'Good try!',
       rating, coins, isNewBest,
       stats: [
-        { lbl:'Cleared',    val: String(score) },
+        { lbl:'Score',      val: String(score) },
         { lbl:'Best Combo', val: '×' + maxCombo },
       ],
       onReplay: () => go('game-dropsum'),
