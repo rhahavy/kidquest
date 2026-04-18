@@ -9215,6 +9215,12 @@ function logWrongAnswer(q, choseIdx, correctIdx){
     if(!Array.isArray(state.wrongAnswers)) state.wrongAnswers = [];
     const entry = {
       aid: quiz.activityId,
+      // Lesson/activity title — cached at log time so the weekly email can
+      // group wrong answers by concept name ("Regrouping Addition") without
+      // needing to re-look-up the WEEKS table. The teacher dashboard keeps
+      // using the full qText/choices for detailed review; parents only see
+      // this friendly title.
+      lessonTitle: (quiz.activity && quiz.activity.title) || '',
       subj: quiz.subject,
       qIdx: quiz.idx,
       qType: q && q.type || 'mcq',

@@ -217,39 +217,29 @@ function formatDate(ts){
   catch(e){ return new Date(ts).toISOString().slice(0,10); }
 }
 
-// Trim long strings to keep the email readable. Works in characters not
-// bytes — fine for English + French + emoji at this level.
-function truncate(s, max){
-  const str = String(s == null ? '' : s);
-  if(str.length <= max) return str;
-  return str.slice(0, max - 1).trimEnd() + '…';
-}
-
-// Max wrong-answer examples rendered per subject. More than this and the
-// email becomes a wall of text — the "+N more" suffix carries the rest.
-const MAX_WRONG_PER_SUBJECT = 3;
-
 /**
- * Extract human-readable pieces from a single wrongAnswers[] entry.
- * Returns { question, chose, correct, when } — any field can be blank
- * if the log entry is missing that data (older sessions didn't record
- * all fields).
+ * Group wrongAnswers[] entries by their lessonTitle (the friendly concept
+ * name cached at log time in index.html). Returns an array of
+ *   { title, count, lastAt }
+ * ordered by most-recent miss first. Parents only see the concept name and
+ * the count — the full question text + chosen/correct answers stay in the
+ * teacher dashboard (index.html → buildProgressReport) where they belong.
+ *
+ * Fallback: if an older entry is missing lessonTitle (logged before this
+ * field existed), we bucket it under a generic "Earlier practice" label so
+ * it still surfaces without leaking the raw question.
  */
-function formatWrongEntry(w){
-  const question = truncate(w.qText || '', 140);
-  const choices  = Array.isArray(w.choices) ? w.choices : [];
-  const choseIdx = (typeof w.choseIdx === 'number') ? w.choseIdx : -1;
-  const corrIdx  = (typeof w.correctIdx === 'number') ? w.correctIdx : -1;
-  const chose    = (choseIdx  >= 0 && choices[choseIdx] != null) ? truncate(String(choices[choseIdx]),  60) : '';
-  const correct  = (corrIdx   >= 0 && choices[corrIdx]  != null) ? truncate(String(choices[corrIdx]),   60) : '';
-  let when = '';
-  if(w.at){
-    const days = Math.floor((Date.now() - w.at) / (24*60*60*1000));
-    if(days <= 0)      when = 'today';
-    else if(days === 1) when = 'yesterday';
-    else                when = `${days}d ago`;
+function groupWrongsByLesson(arr){
+  const byTitle = new Map();
+  for(const w of arr){
+    const title = (w.lessonTitle && String(w.lessonTitle).trim())
+                  || 'Earlier practice';
+    const at = Number(w.at) || 0;
+    const prev = byTitle.get(title);
+    if(prev){ prev.count++; if(at > prev.lastAt) prev.lastAt = at; }
+    else   { byTitle.set(title, { title, count: 1, lastAt: at }); }
   }
-  return { question, chose, correct, when, qType: w.qType || 'mcq', aid: w.aid || '' };
+  return [...byTitle.values()].sort((a,b)=> b.lastAt - a.lastAt);
 }
 
 /**
@@ -287,10 +277,13 @@ function buildReportEmail(student, stats, periodStartTs, dashboardUrl){
     textLines.push('');
   }
   if(stats.wrongCount > 0){
-    textLines.push(`Concepts to practice this week (${stats.wrongCount} wrong-answer${stats.wrongCount===1?'':'s'} logged):`);
+    textLines.push(`Concepts to review this week:`);
     textLines.push('');
     // Walk subjects in the global subject order so the email reads
-    // consistently between sends. Unknown subjects fall to the end.
+    // consistently between sends. Unknown subjects fall to the end. Inside
+    // each subject we list the lessons that had misses, with a count —
+    // parents get the "what to revisit" picture without seeing the exact
+    // questions (that detail stays in the teacher dashboard).
     const sortedSubs = Object.keys(stats.wrongBySubj).sort((a,b)=>{
       const ai = SUBJECT_ORDER.indexOf(a); const bi = SUBJECT_ORDER.indexOf(b);
       return (ai<0?99:ai) - (bi<0?99:bi);
@@ -298,22 +291,18 @@ function buildReportEmail(student, stats, periodStartTs, dashboardUrl){
     for(const sub of sortedSubs){
       const arr  = stats.wrongBySubj[sub] || [];
       const meta = subjectMeta(sub);
-      textLines.push(`  ${meta.emoji} ${meta.name} — ${arr.length} to review`);
-      const shown = arr.slice(0, MAX_WRONG_PER_SUBJECT).map(formatWrongEntry);
-      shown.forEach((e, i) => {
-        const bullet = `    ${i+1}. `;
-        if(e.question) textLines.push(`${bullet}Q: ${e.question}`);
-        else           textLines.push(`${bullet}(question text unavailable)`);
-        if(e.chose)    textLines.push(`       chose:   ${e.chose}`);
-        if(e.correct)  textLines.push(`       correct: ${e.correct}`);
-        if(e.when)     textLines.push(`       (${e.when})`);
-      });
-      const extra = arr.length - shown.length;
-      if(extra > 0) textLines.push(`    …and ${extra} more in ${meta.name.toLowerCase()}`);
+      const lessons = groupWrongsByLesson(arr);
+      textLines.push(`  ${meta.emoji} ${meta.name}`);
+      for(const l of lessons){
+        const qTag = l.count === 1 ? '1 question' : `${l.count} questions`;
+        textLines.push(`    • ${l.title} — ${qTag} to revisit`);
+      }
       textLines.push('');
     }
+    textLines.push('Tip: open the dashboard below and have your child redo these lessons. Questions are randomized each run.');
+    textLines.push('');
   } else {
-    textLines.push('No wrong-answer entries logged this week — either a clean run or a quiet week.');
+    textLines.push('No concepts flagged for review this week — either a clean run or a quiet week.');
     textLines.push('');
   }
   textLines.push(`See the full dashboard at ${dashboardUrl}`);
@@ -330,10 +319,12 @@ function buildReportEmail(student, stats, periodStartTs, dashboardUrl){
       <td style="padding:8px 10px;border-bottom:1px solid #eee;text-align:right;color:#666">${s.attempts} attempts</td>
     </tr>`).join('');
 
-  // Wrong-answer section: per-subject cards, each listing up to
-  // MAX_WRONG_PER_SUBJECT actual questions the student got wrong, with
-  // their chosen answer and the correct one. Trimmed and escaped so a
-  // weird question string can't break the email layout.
+  // Wrong-answer section: per-subject cards listing which LESSONS the
+  // student missed questions on this week. We intentionally keep this
+  // high-level — parents see concept names + how many questions per lesson,
+  // but not the questions themselves. The full detail (question text, what
+  // they picked vs. correct answer) lives in the teacher dashboard's own
+  // progress-report view so the tutor can drill in before calling home.
   let wrongHtml;
   if(stats.wrongCount > 0){
     const sortedSubs = Object.keys(stats.wrongBySubj).sort((a,b)=>{
@@ -341,48 +332,29 @@ function buildReportEmail(student, stats, periodStartTs, dashboardUrl){
       return (ai<0?99:ai) - (bi<0?99:bi);
     });
     const subSections = sortedSubs.map(sub => {
-      const arr  = stats.wrongBySubj[sub] || [];
-      const meta = subjectMeta(sub);
-      const shown = arr.slice(0, MAX_WRONG_PER_SUBJECT).map(formatWrongEntry);
-      const extra = arr.length - shown.length;
-      const itemsHtml = shown.map(e => {
-        // Each wrong answer renders as a small "card": question on top,
-        // then a two-row mini-table of chose / correct. Empty fields are
-        // omitted so older log entries without full data don't render as
-        // blank rows.
-        const chose   = e.chose   ? `<div style="display:flex;gap:8px;align-items:baseline;margin-top:4px">
-          <span style="flex-shrink:0;min-width:62px;font-size:11px;font-weight:700;color:#d63031;letter-spacing:.04em;text-transform:uppercase">Chose</span>
-          <span style="color:#333">${escapeHtml(e.chose)}</span>
-        </div>` : '';
-        const correct = e.correct ? `<div style="display:flex;gap:8px;align-items:baseline;margin-top:2px">
-          <span style="flex-shrink:0;min-width:62px;font-size:11px;font-weight:700;color:#00b894;letter-spacing:.04em;text-transform:uppercase">Correct</span>
-          <span style="color:#333;font-weight:600">${escapeHtml(e.correct)}</span>
-        </div>` : '';
-        const when = e.when ? `<div style="font-size:11px;color:#999;margin-top:4px">${escapeHtml(e.when)}</div>` : '';
+      const arr     = stats.wrongBySubj[sub] || [];
+      const meta    = subjectMeta(sub);
+      const lessons = groupWrongsByLesson(arr);
+      const itemsHtml = lessons.map(l => {
+        const qTag = l.count === 1 ? '1 question' : `${l.count} questions`;
         return `
-          <div style="border-left:3px solid rgba(108,92,231,.3);padding:8px 0 8px 12px;margin-top:10px">
-            <div style="font-size:13px;color:#1a1035;font-weight:600;line-height:1.45">${escapeHtml(e.question) || '<span style="color:#999;font-style:italic">question text unavailable</span>'}</div>
-            ${chose}${correct}${when}
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 12px;margin-top:8px;background:#fff;border:1px solid rgba(108,92,231,.15);border-radius:10px">
+            <div style="font-size:13.5px;color:#1a1035;font-weight:600;line-height:1.35">📚 ${escapeHtml(l.title)}</div>
+            <div style="flex-shrink:0;font-size:11.5px;color:#6c5ce7;font-weight:700;background:rgba(108,92,231,.08);padding:3px 9px;border-radius:999px;white-space:nowrap">${qTag}</div>
           </div>`;
       }).join('');
-      const extraHtml = extra > 0
-        ? `<div style="margin-top:10px;font-size:12px;color:#666;font-style:italic">…and ${extra} more in ${escapeHtml(meta.name.toLowerCase())}</div>`
-        : '';
       return `
         <div style="background:rgba(108,92,231,.04);border:1px solid rgba(108,92,231,.12);border-radius:12px;padding:12px 14px;margin-bottom:12px">
-          <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
-            <div style="font-weight:800;font-size:14px">${meta.emoji} ${escapeHtml(meta.name)}</div>
-            <div style="font-size:11.5px;color:#6c5ce7;font-weight:700;background:rgba(108,92,231,.1);padding:3px 9px;border-radius:999px">${arr.length} to review</div>
-          </div>
-          ${itemsHtml}${extraHtml}
+          <div style="font-weight:800;font-size:14px;margin-bottom:2px">${meta.emoji} ${escapeHtml(meta.name)}</div>
+          ${itemsHtml}
         </div>`;
     }).join('');
     wrongHtml = `
-      <p style="margin:20px 0 10px;font-weight:700;font-size:14px">Concepts to practice this week</p>
-      <p style="margin:0 0 12px;font-size:12px;color:#666;line-height:1.5">Here are the exact questions ${escapeHtml(name)} missed. Revisiting them together is the single highest-leverage thing you can do between sessions.</p>
+      <p style="margin:20px 0 6px;font-weight:700;font-size:14px">Concepts to review this week</p>
+      <p style="margin:0 0 12px;font-size:12px;color:#666;line-height:1.5">These are the lessons ${escapeHtml(name)} had at least one miss on. Replaying them in the dashboard is the fastest way to firm them up — each run shuffles the questions.</p>
       ${subSections}`;
   } else {
-    wrongHtml = `<p style="margin:18px 0;font-size:13.5px;color:#666;font-style:italic">No wrong-answer entries logged this week — either a clean run or a quiet one.</p>`;
+    wrongHtml = `<p style="margin:18px 0;font-size:13.5px;color:#666;font-style:italic">No concepts flagged for review this week — either a clean run or a quiet one.</p>`;
   }
 
   const html = `<!DOCTYPE html>
@@ -506,20 +478,25 @@ async function main(){
       },
       totalCompleted: 10, totalPerfect: 7, totalAttempts: 52,
       totalStars: 42, coins: 120, streak: 5,
+      // Demo entries exercise the lessonTitle grouping path. Note each entry
+      // still carries qText/choices/choseIdx/correctIdx — those are written
+      // by logWrongAnswer in index.html but INTENTIONALLY not surfaced to
+      // parents in this email. They're kept on the blob for the teacher
+      // dashboard only.
       wrongBySubj: {
         math: [
-          { aid:'w1-isaiah-m1', subj:'math', qType:'mcq', qText:'56 + 27 = ?',
+          { aid:'w1-isaiah-m1', subj:'math', lessonTitle:'Regrouping Addition', qType:'mcq', qText:'56 + 27 = ?',
             choices:['73','82','83','93'], choseIdx:1, correctIdx:2, at:_dayAgo(2) },
-          { aid:'w1-isaiah-m1', subj:'math', qType:'mcq', qText:'When you add 38 + 45, the ones are 8 + 5 = 13. What do you do?',
+          { aid:'w1-isaiah-m1', subj:'math', lessonTitle:'Regrouping Addition', qType:'mcq', qText:'38 + 45 = ?',
             choices:['Write 13 in the ones','Write 3, carry 1 to the tens','Carry 3','Start over'],
             choseIdx:0, correctIdx:1, at:_dayAgo(3) },
-          { aid:'w1-isaiah-m2', subj:'math', qType:'mcq', qText:'5 × 6 = ?',
+          { aid:'w1-isaiah-m2', subj:'math', lessonTitle:'Multiplication Basics', qType:'mcq', qText:'5 × 6 = ?',
             choices:['11','25','30','35'], choseIdx:3, correctIdx:2, at:_dayAgo(5) },
-          { aid:'w1-isaiah-m2', subj:'math', qType:'mcq', qText:'10 × 7 = ?',
+          { aid:'w1-isaiah-m2', subj:'math', lessonTitle:'Multiplication Basics', qType:'mcq', qText:'10 × 7 = ?',
             choices:['17','70','77','107'], choseIdx:2, correctIdx:1, at:_dayAgo(6) },
         ],
         reading: [
-          { aid:'w1-isaiah-r1', subj:'reading', qType:'mcq', qText:'What is the MAIN idea of the story?',
+          { aid:'w1-isaiah-r1', subj:'reading', lessonTitle:'Finding the Main Idea', qType:'mcq', qText:'What is the MAIN idea of the story?',
             choices:['The dog ran fast','Friendship takes work','It rained a lot','The park was empty'],
             choseIdx:0, correctIdx:1, at:_dayAgo(1) },
         ],
