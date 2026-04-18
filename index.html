@@ -521,8 +521,14 @@ img{max-width:100%}
 .stretch-banner .sb-text b{font-family:var(--font-display);font-size:15px;font-weight:800;color:#5a3900;display:block}
 @keyframes stretchPulse{from{transform:scale(.96);opacity:0}to{transform:scale(1);opacity:1}}
 @keyframes starSpin{0%,100%{transform:rotate(-6deg) scale(1)}50%{transform:rotate(6deg) scale(1.08)}}
-.q-progress{margin:14px 0 20px;height:10px;border-radius:99px;background:rgba(0,0,0,.06);overflow:hidden}
-.q-progress i{display:block;height:100%;background:linear-gradient(90deg,var(--primary),var(--mint),var(--sun));background-size:200%;border-radius:99px;transition:width .5s var(--spring);animation:shimmer 3s linear infinite}
+/* Quiz progress bar — deliberately understated so the timer bar below
+   reads as the primary pace signal. Kids should be thinking about
+   "how much time do I have on this question" more than "how many
+   questions are left." Before: 10px + 3-color gradient + shimmer.
+   Now: 5px + 2-color gradient, no shimmer. Still functional, no longer
+   competes visually with the timer. */
+.q-progress{margin:12px 0 10px;height:5px;border-radius:99px;background:rgba(0,0,0,.05);overflow:hidden}
+.q-progress i{display:block;height:100%;background:linear-gradient(90deg,var(--primary),var(--mint));background-size:200%;border-radius:99px;transition:width .5s var(--spring);opacity:.75}
 @keyframes shimmer{from{background-position:0}to{background-position:200%}}
 .q-card{background:linear-gradient(180deg,#faf9ff,#fff);border:1px solid var(--line);border-radius:var(--r);padding:clamp(20px,3vw,32px);text-align:center}
 .q-text{font-size:clamp(18px,2.5vw,24px);font-weight:700;line-height:1.3;max-width:640px;margin:0 auto}
@@ -595,15 +601,30 @@ img{max-width:100%}
 .rubric-tag.pass{background:rgba(0,206,201,.15);color:#00855a}
 .rubric-tag.miss{background:rgba(255,118,117,.12);color:#c0392b}
 
-/* Timer */
-.timer-bar{position:relative;height:6px;border-radius:99px;background:rgba(0,0,0,.06);margin:0 0 16px;overflow:hidden}
-.timer-bar i{display:block;height:100%;border-radius:99px;background:var(--mint);transition:width .25s linear,background .3s}
-.timer-bar i.warn{background:var(--sun)}
-.timer-bar i.danger{background:var(--coral);animation:timerPulse .5s infinite}
-@keyframes timerPulse{50%{opacity:.6}}
-.timer-text{position:absolute;right:0;top:-20px;font-size:12px;font-weight:800;color:var(--ink3);font-variant-numeric:tabular-nums}
+/* Timer — the PRIMARY pace signal for the quiz. Promoted above the quiz
+   progress bar (which was fighting it visually before) so kids instantly
+   know "this clock is the thing to watch."
+   - Countdown text sits beside the bar (not floating above it) so it's
+     always readable regardless of fill width.
+   - Bar is 14px tall with a gradient + inset shadow — taller than the
+     progress bar (5px) by ~3×.
+   - Danger state pulses the bar AND the number for a clear "hurry up."
+   Markup (set in renderQ): div.timer-bar-wrap > [clock icon, timer-text, div.timer-bar > i#timerBar] */
+.timer-bar-wrap{display:flex;align-items:center;gap:10px;margin:6px 0 20px}
+.timer-bar-wrap .timer-icon{font-size:18px;line-height:1;flex-shrink:0;filter:drop-shadow(0 1px 1px rgba(0,0,0,.1))}
+.timer-text{font-size:15px;font-weight:800;color:var(--ink);font-variant-numeric:tabular-nums;min-width:44px;text-align:right;flex-shrink:0;letter-spacing:.02em;transition:color .3s,transform .25s}
 .timer-text.warn{color:#b8860b}
-.timer-text.danger{color:var(--coral)}
+.timer-text.danger{color:var(--coral);animation:timerPulse .5s infinite}
+.timer-bar{position:relative;height:14px;border-radius:99px;background:rgba(0,0,0,.08);overflow:hidden;flex:1;min-width:0;box-shadow:inset 0 1px 2px rgba(0,0,0,.12),inset 0 -1px 0 rgba(255,255,255,.5)}
+.timer-bar i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,#00b894,var(--mint));transition:width .25s linear,background .3s;box-shadow:0 0 8px rgba(0,184,148,.35),inset 0 1px 0 rgba(255,255,255,.25)}
+.timer-bar i.warn{background:linear-gradient(90deg,#e67e22,var(--sun));box-shadow:0 0 8px rgba(253,203,110,.5),inset 0 1px 0 rgba(255,255,255,.3)}
+.timer-bar i.danger{background:linear-gradient(90deg,#c0392b,var(--coral));box-shadow:0 0 10px rgba(255,118,117,.6),inset 0 1px 0 rgba(255,255,255,.3);animation:timerPulse .5s infinite}
+@keyframes timerPulse{50%{opacity:.6}}
+@media(max-width:480px){
+  .timer-bar{height:12px}
+  .timer-text{font-size:14px;min-width:40px}
+  .timer-bar-wrap .timer-icon{font-size:16px}
+}
 
 /* Lesson card */
 .lesson-card{background:linear-gradient(180deg,#faf9ff,#fff)!important;border:2px dashed rgba(253,203,110,.5)!important;text-align:left!important;padding:clamp(22px,3vw,32px)!important}
@@ -8662,10 +8683,32 @@ function renderWeek(root,subId){
 }
 
 /* ========== TIMER SYSTEM ==========
-   Age-appropriate seconds per question. Write questions get extra time.
-   Lesson screens have no timer. When time runs out, auto-advance. */
-const TIMER_SECS = { nishan:45, akaran:40, rushan:35, akshayan:30 };
+   Age-appropriate seconds per question. Bumped ~50% in April 2026 after
+   we watched students time-out on questions they knew the answer to —
+   the clock was pacing them, not assessing them. These numbers now reflect
+   "comfortable solving pace for this age" rather than "fast recall."
+   - Passage questions get 2× the base because kids have to re-read the
+     passage each time (measured during tutoring sessions: ~30-40s of read
+     time PLUS the actual thinking time).
+   - Write questions stay at a fixed 2min — long enough for a thoughtful
+     free-write, capped so the quiz doesn't stall indefinitely.
+   - Any activity can set `timer: null` to disable the timer entirely
+     (used for reflective writing and deep-reading activities where a
+     ticking clock undermines the task).
+   Lesson screens never show the timer. When time runs out, auto-advance. */
+const TIMER_SECS = { nishan:60, akaran:55, rushan:45, akshayan:40 };
 const WRITE_TIMER = 120; // 2 min for free-write
+const PASSAGE_TIMER_MULT = 2; // passages need re-reading time
+
+function secondsForQuestion(q){
+  // Returns null if the activity opts out of timing (`timer: null`).
+  // Lessons are handled separately and never hit this.
+  if(quiz && quiz.activity && quiz.activity.timer===null) return null;
+  if(q.type==='write') return WRITE_TIMER;
+  const base = TIMER_SECS[currentUser] || 45;
+  if(q.type==='passage') return Math.round(base * PASSAGE_TIMER_MULT);
+  return base;
+}
 let timerInterval = null;
 let timerLeft = 0;
 
@@ -8693,6 +8736,12 @@ function timeUp(){
   quiz.locked=true;
   // Mark wrong + show feedback
   const fb=$('#fb');if(fb){fb.className='feedback no';fb.textContent='⏰ Time\'s up!'}
+  // Log as a timeout (distinct from a wrong answer) so parent reports can
+  // show "ran out of time on X" separately from "got X wrong." This matters
+  // because timeouts often mean the kid knew it but was slow — a different
+  // signal for a tutor than a genuine misconception.
+  const q = quiz.questions[quiz.idx];
+  if(q && q.type!=='lesson') logWrongAnswer(q, null, null, {timedOut:true});
   // Lock all choices
   document.querySelectorAll('.choice,.emoji-btn,.write-submit,.order-chip,.match-item').forEach(el=>el.classList.add('locked'));
   showNext();
@@ -8750,10 +8799,18 @@ function renderQ(wrap){
   }
   wrap.appendChild(h('div',{class:'q-progress'},[h('i',{style:'width:'+(quiz.idx/total*100)+'%'})]));
 
-  // Timer bar (hidden during lessons)
-  const timerWrap=h('div',{class:'timer-bar',style:q.type==='lesson'?'display:none':''},[
+  // Timer bar — visually dominant pace signal (promoted above the quiz
+  // progress bar). Hidden during lessons, and also hidden when the
+  // activity has opted out of timing (`activity.timer === null`) — e.g.
+  // passage-reading comprehension and reflective writing where a ticking
+  // clock undermines the task.
+  const timerHidden = q.type==='lesson' || quiz.activity && quiz.activity.timer===null;
+  const timerWrap=h('div',{class:'timer-bar-wrap',style:timerHidden?'display:none':''},[
+    h('span',{class:'timer-icon','aria-hidden':'true'},'⏱'),
     h('span',{class:'timer-text',id:'timerTxt'},''),
-    h('i',{id:'timerBar',style:'width:100%'}),
+    h('div',{class:'timer-bar'},[
+      h('i',{id:'timerBar',style:'width:100%'}),
+    ]),
   ]);
   wrap.appendChild(timerWrap);
 
@@ -8761,9 +8818,12 @@ function renderQ(wrap){
 
   if(q.type==='lesson'){clearTimer();renderLesson(card,q);}
   else {
-    // Start timer for this question
-    const secs = q.type==='write' ? WRITE_TIMER : (TIMER_SECS[currentUser]||35);
-    setTimeout(()=>startTimer(secs),100);
+    // Start timer for this question (unless the activity opts out via
+    // `timer: null`, in which case secondsForQuestion returns null and we
+    // just don't start the countdown).
+    const secs = secondsForQuestion(q);
+    if(secs===null) clearTimer();
+    else setTimeout(()=>startTimer(secs),100);
     if(q.type==='passage'&&q.passage){
       const pBox = h('div',{class:'q-passage'});
       // Read-aloud button — French activities use fr-FR, everyone else en-US.
@@ -9405,7 +9465,7 @@ function renderLesson(card,q){
    Called by every question-type handler below when the student picks the
    wrong answer. Feeds the per-student `wrongAnswers` log used by the
    parent progress report. Cap at 200 most recent to keep storage bounded. */
-function logWrongAnswer(q, choseIdx, correctIdx){
+function logWrongAnswer(q, choseIdx, correctIdx, opts){
   try {
     if(!state || !quiz) return;
     if(!Array.isArray(state.wrongAnswers)) state.wrongAnswers = [];
@@ -9426,6 +9486,12 @@ function logWrongAnswer(q, choseIdx, correctIdx){
       choices: Array.isArray(q && q.choices) ? q.choices.slice(0,6) : null,
       at: Date.now()
     };
+    // `timedOut: true` means the clock ran out before the kid answered.
+    // Reports can surface these separately from genuine wrong answers —
+    // a timeout is "knew it but was slow," a wrong answer is "needs
+    // reteaching." Only set when true (absence = regular wrong answer)
+    // to keep the cloud-synced blob small and old entries shape-compatible.
+    if(opts && opts.timedOut) entry.timedOut = true;
     state.wrongAnswers.push(entry);
     if(state.wrongAnswers.length > WRONG_ANSWER_LOG_CAP){
       state.wrongAnswers = state.wrongAnswers.slice(-WRONG_ANSWER_LOG_CAP);
