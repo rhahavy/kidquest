@@ -492,6 +492,11 @@ img{max-width:100%}
 .dash-hero .info{flex:1;min-width:200px}
 .dash-hero h1{font-family:var(--font-display);font-size:clamp(26px,4vw,36px);font-weight:700;letter-spacing:-.01em}
 .dash-hero .grade-pill{display:inline-block;margin-top:6px;padding:5px 14px;border-radius:999px;font-size:13px;font-weight:700;background:linear-gradient(135deg,rgba(108,92,231,.12),rgba(253,121,168,.12));color:var(--primary);border:1.5px solid rgba(108,92,231,.15)}
+/* Education plan pill — shown next to grade-pill when the student is on
+   an IEP, gifted, ESL, or custom plan. Color + background come from the
+   PLAN_META entry so each plan type has its own accent. cursor:help
+   because hovering reveals the workingAt + notes tooltip. */
+.dash-hero .plan-pill{display:inline-block;margin-top:6px;margin-left:6px;padding:5px 12px;border-radius:999px;font-size:12px;font-weight:800;letter-spacing:.02em;border:1.5px solid;cursor:help;white-space:nowrap}
 .dash-stats{margin-top:20px;display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(130px,1fr))}
 .d-stat{background:var(--card);border:1.5px solid rgba(255,255,255,.9);border-radius:var(--r);padding:18px;text-align:center;box-shadow:var(--shadow);transition:all .35s var(--spring);position:relative;overflow:hidden}
 .d-stat::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:var(--r) var(--r) 0 0}
@@ -878,6 +883,24 @@ img{max-width:100%}
 .math-step .math-step-body{flex:1}
 .math-step .math-step-body b{color:var(--primary);font-weight:800}
 .lesson-hint{margin-top:12px;padding:10px 14px;background:rgba(0,206,201,.1);border-radius:var(--r);font-size:14px;color:#00855a;display:flex;align-items:center;gap:8px}
+/* Ontario curriculum chip — collapsible "Here's the school curriculum this
+   maps to" panel. Sits quietly at the bottom of the lesson. Parents + older
+   kids who care can tap to expand and see grade, strand, codes, notes,
+   and the official Ontario doc link. */
+.lesson-curriculum{margin-top:14px;border-radius:14px;background:linear-gradient(180deg,rgba(162,155,254,.08),rgba(162,155,254,.03));border:1.5px solid rgba(162,155,254,.25);overflow:hidden}
+.lesson-curriculum > summary{cursor:pointer;padding:10px 14px;font-size:13px;font-weight:800;color:var(--primary);display:flex;align-items:center;gap:8px;user-select:none;list-style:none}
+.lesson-curriculum > summary::-webkit-details-marker{display:none}
+.lesson-curriculum > summary::before{content:'▸';font-size:11px;color:var(--ink3);transition:transform .2s ease}
+.lesson-curriculum[open] > summary::before{transform:rotate(90deg)}
+.lesson-curriculum > summary .lc-chip-label{flex:1}
+.lesson-curriculum > summary .lc-chip-code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;font-weight:700;color:var(--ink2);background:rgba(108,92,231,.08);padding:2px 8px;border-radius:8px}
+.lesson-curriculum .lc-body{padding:0 14px 14px;font-size:13px;color:var(--ink2);line-height:1.5}
+.lesson-curriculum .lc-row{display:flex;gap:8px;margin-top:6px;flex-wrap:wrap}
+.lesson-curriculum .lc-row .lc-label{font-weight:800;color:var(--ink);min-width:70px}
+.lesson-curriculum .lc-codes{display:inline-flex;gap:6px;flex-wrap:wrap}
+.lesson-curriculum .lc-code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;font-weight:700;color:var(--primary);background:rgba(108,92,231,.1);padding:3px 8px;border-radius:8px;border:1px solid rgba(108,92,231,.2)}
+.lesson-curriculum .lc-link{display:inline-flex;align-items:center;gap:4px;margin-top:8px;font-size:12px;font-weight:700;color:var(--primary);text-decoration:none}
+.lesson-curriculum .lc-link:hover{text-decoration:underline}
 /* Inline YouTube embed — kid-safe (privacy-enhanced domain, no related
    videos, no YouTube branding). Kids stay IN the app, don't get sent to
    YouTube's recommendation feed. Use videoIds[] on an activity to curate
@@ -1001,6 +1024,32 @@ img{max-width:100%}
 .t-parents .t-parents-cc{font-size:12px;color:var(--ink3);font-weight:600;margin:10px 0 0;padding-top:10px;border-top:1px dashed var(--line)}
 .t-parents .t-parents-cc code{background:rgba(108,92,231,.08);padding:2px 6px;border-radius:6px;font-family:ui-monospace,SFMono-Regular,monospace;font-size:12px;color:var(--primary)}
 @media(max-width:540px){.t-parents .t-parent-row{flex-direction:column;align-items:stretch}.t-parents .t-parent-info{flex:0 0 auto}.t-parents .t-parent-actions{flex-direction:row}}
+
+/* Review workflow — rows that have crossed the 7-day mark without a
+   "Mark reviewed" tap get a red left-bar + pulsing chip. Green chip once
+   the teacher has acknowledged the report for the current cycle. */
+.t-parents .t-parent-row.awaiting-review{background:linear-gradient(180deg,rgba(255,59,48,.08),rgba(255,59,48,.02));border-left:4px solid #ff3b30;padding-left:10px;border-radius:8px}
+.t-parents .t-parent-chip.awaiting{background:#ff3b30;color:#fff;animation:reviewPulse 2.4s ease-in-out infinite}
+.t-parents .t-parent-chip.reviewable{background:#fff4d6;color:#b57100}
+.t-parents .t-parent-chip.reviewed{background:#d7f8e8;color:#0b8c56}
+@keyframes reviewPulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.06);opacity:.85}}
+.t-parents .t-parent-actions .btn-review{background:#ff3b30;color:#fff;border-color:#ff3b30}
+.t-parents .t-parent-actions .btn-review:hover{background:#e6342a;transform:translateY(-1px)}
+.t-parents .t-parent-actions .btn-reviewed{background:#d7f8e8;color:#0b8c56;border-color:#a8e6c1}
+
+/* Top-of-dashboard red banner — impossible-to-miss nudge when one or more
+   parent reports are day-of-or-past-due without a review. Sits above the
+   accordion; pulses gently; has an "Enable alerts" button that one-shot
+   requests desktop-notification permission. */
+.t-review-banner{margin:14px 0 18px;padding:14px 18px;background:linear-gradient(135deg,#ff3b30,#ff6b5a);color:#fff;border-radius:var(--r-lg);font-weight:800;font-size:15px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;box-shadow:0 6px 20px rgba(255,59,48,.3);animation:reviewBannerPulse 2.6s ease-in-out infinite}
+.t-review-banner .t-review-icon{font-size:22px;line-height:1}
+.t-review-banner .t-review-copy{flex:1;min-width:200px;line-height:1.4}
+.t-review-banner .t-review-copy small{display:block;font-weight:600;opacity:.9;font-size:12px;margin-top:3px}
+.t-review-banner .t-review-count{background:#fff;color:#c0392b;padding:4px 12px;border-radius:999px;font-size:14px;font-weight:900}
+.t-review-banner button{background:rgba(255,255,255,.22);color:#fff;border:1.5px solid rgba(255,255,255,.55);padding:8px 14px;border-radius:10px;font-weight:800;font-size:13px;cursor:pointer;transition:background .15s,transform .15s}
+.t-review-banner button:hover{background:rgba(255,255,255,.4);transform:translateY(-1px)}
+@keyframes reviewBannerPulse{0%,100%{box-shadow:0 6px 20px rgba(255,59,48,.3)}50%{box-shadow:0 6px 28px rgba(255,59,48,.55)}}
+@media(max-width:540px){.t-review-banner{flex-direction:column;align-items:flex-start}}
 
 /* ==========================================================================
    NOVA — the KidQuest alien mascot
@@ -1184,6 +1233,12 @@ img{max-width:100%}
 .pv-hero .pv-tag{display:inline-block;padding:3px 10px;border-radius:999px;background:rgba(0,0,0,.18);font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px}
 .pv-hero h1{font-family:var(--font-display);font-size:30px;font-weight:900;margin:0 0 4px;line-height:1.1}
 .pv-hero .pv-grade{font-size:13px;font-weight:700;opacity:.9}
+/* Parent-view education plan pill — sits in the hero under the grade.
+   Uses PLAN_META colors inline (set via style on the element) so each
+   plan type gets its own accent. Hover = notes tooltip (native title). */
+.pv-hero .pv-plan{display:inline-flex;align-items:center;margin-top:8px;padding:6px 14px;border-radius:999px;font-size:12px;font-weight:800;letter-spacing:.02em;border:1.5px solid;cursor:help;max-width:100%;white-space:normal;line-height:1.4}
+.pv-hero .pv-plan .pv-plan-label{font-weight:900}
+.pv-hero .pv-plan .pv-plan-working{font-weight:700;opacity:.92}
 .pv-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin-bottom:20px}
 .pv-stat{background:#fff;border-radius:14px;padding:16px;text-align:center;border:1.5px solid var(--line);box-shadow:var(--shadow)}
 .pv-stat .pvs-num{font-family:var(--font-display);font-size:26px;font-weight:900;color:var(--primary);line-height:1}
@@ -1199,6 +1254,7 @@ img{max-width:100%}
 .pv-subj .pvs-bar{height:8px;border-radius:999px;background:rgba(108,92,231,.12);overflow:hidden}
 .pv-subj .pvs-fill{height:100%;border-radius:999px;background:linear-gradient(90deg,#6C5CE7,#FD79A8);transition:width .6s var(--spring)}
 .pv-subj .pvs-meta{display:flex;justify-content:space-between;font-size:11px;color:var(--ink3);font-weight:700;margin-top:8px}
+.pv-subj .pvs-curric{margin-top:8px;padding:5px 10px;border-radius:8px;background:rgba(64,192,87,.1);color:#2b8a3e;font-size:10px;font-weight:800;letter-spacing:.03em;display:inline-flex;align-items:center;gap:4px;border:1px solid rgba(64,192,87,.25);cursor:help;white-space:nowrap;align-self:flex-start}
 .pv-foot{text-align:center;font-size:11px;color:var(--ink3);font-weight:600;padding:12px 0 20px}
 .pv-empty{text-align:center;padding:30px 20px;color:var(--ink3);font-weight:600;font-size:13px}
 .pv-err{background:#fff;border-radius:var(--r-lg);padding:36px 24px;text-align:center;max-width:460px;margin:60px auto;box-shadow:var(--shadow);border:1.5px solid var(--line)}
@@ -1298,6 +1354,46 @@ img{max-width:100%}
 .t-acc-body .t-messages,
 .t-acc-body .report-card{margin-top:0}
 .t-acc-body .report-card + .report-card{margin-top:20px}
+/* ========= STUDENT PLANS EDITOR ========= */
+.sp-wrap{display:flex;flex-direction:column;gap:10px}
+.sp-intro{color:var(--ink2);font-size:13px;line-height:1.55;margin:0 0 6px}
+.sp-row{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden}
+.sp-row[open]{border-color:rgba(108,92,231,.35)}
+.sp-summary{cursor:pointer;padding:12px 16px;display:flex;align-items:center;gap:12px;user-select:none;list-style:none}
+.sp-summary::-webkit-details-marker{display:none}
+.sp-av{width:36px;height:36px;border-radius:10px;display:inline-flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-family:var(--font-display);flex-shrink:0;font-size:16px}
+.sp-name-wrap{flex:1;min-width:0}
+.sp-name{font-weight:800;font-size:15px;color:var(--ink);line-height:1.2}
+.sp-grade{font-size:11px;color:var(--ink3);margin-top:2px;font-weight:600}
+.sp-badge-wrap{display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0}
+.sp-badge{font-weight:800;font-size:12px;padding:4px 10px;border-radius:999px;background:rgba(108,92,231,.08);white-space:nowrap}
+.sp-support-chip{font-weight:700;font-size:11px;padding:3px 9px;border-radius:999px;white-space:nowrap;border:1px solid}
+.sp-chev{color:var(--ink3);font-size:12px;transition:transform .2s ease;flex-shrink:0}
+.sp-support-box{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;background:rgba(9,132,227,.05);border:1px solid rgba(9,132,227,.2);border-radius:10px;margin-top:6px}
+.sp-support-box input[type=checkbox]{width:18px;height:18px;margin-top:2px;flex-shrink:0;accent-color:#0984e3;cursor:pointer}
+.sp-support-box label{display:block;cursor:pointer;flex:1;min-width:0}
+.sp-support-box .ssb-title{font-weight:800;color:var(--ink);font-size:13px;line-height:1.3}
+.sp-support-box .ssb-desc{font-size:11.5px;color:var(--ink2);margin-top:3px;line-height:1.45}
+.sp-row[open] .sp-chev{transform:rotate(180deg)}
+.sp-body{padding:4px 16px 18px;display:flex;flex-direction:column;gap:8px;border-top:1px dashed var(--line)}
+.sp-label{font-size:11px;font-weight:800;color:var(--ink3);letter-spacing:.04em;text-transform:uppercase;margin-top:10px}
+.sp-input{padding:10px 12px;border:1.5px solid var(--line);border-radius:10px;font-family:var(--font);font-size:14px;font-weight:600;color:var(--ink);background:#fff;width:100%;box-sizing:border-box}
+.sp-input:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(108,92,231,.15)}
+.sp-textarea{min-height:70px;resize:vertical;line-height:1.5;font-weight:500}
+/* Quick-fill chip row above the "Working at" input. Each chip drops a
+   ready-made string (e.g. "Grade 3 stretch") into the text field with one
+   tap — tutors don't have to remember the exact wording. The input + its
+   <datalist> still accept free text for edge cases. */
+.sp-chip-row{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 2px}
+.sp-chip{padding:5px 11px;border-radius:999px;border:1.5px solid var(--line);background:#fff;color:var(--ink2);font-family:var(--font);font-size:12px;font-weight:700;cursor:pointer;transition:all .15s ease;white-space:nowrap;line-height:1.2}
+.sp-chip:hover{border-color:var(--primary);color:var(--primary);background:rgba(108,92,231,.05);transform:translateY(-1px)}
+.sp-chip.is-active{background:var(--primary);color:#fff;border-color:var(--primary);box-shadow:0 2px 8px rgba(108,92,231,.25)}
+.sp-chip-hint{font-size:11px;color:var(--ink3);font-weight:600;margin-top:2px;line-height:1.4}
+.sp-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:12px}
+.sp-actions .btn-sm{padding:7px 14px;font-size:13px;font-weight:700;border-radius:8px}
+.sp-actions .btn-ghost{background:transparent;color:var(--ink3);border:1px solid var(--line)}
+.sp-actions .btn-ghost:hover{background:rgba(0,0,0,.04);color:var(--ink)}
+.sp-msg{font-size:13px;font-weight:700;margin-left:auto;min-width:80px;text-align:right}
 @media(max-width:480px){
   .t-acc-head{padding:12px 14px;font-size:14px;gap:10px}
   .t-acc-body{padding:14px 14px 16px}
@@ -1330,6 +1426,12 @@ img{max-width:100%}
 .curr-row .curr-title{font-weight:800;font-size:15px;color:var(--ink);line-height:1.2}
 .curr-row .curr-id{font-size:11px;color:var(--ink3);font-family:ui-monospace,Menlo,monospace;margin-top:2px}
 .curr-row.is-modified .curr-id{color:#c2185b;font-weight:700}
+/* Ontario curriculum alignment badge. Green = tagged with grade/codes,
+   amber-ish "Tag needed" = flagged for a tutor follow-up. Shown in the
+   row header so missing alignment is visible at a glance. */
+.curr-row .curr-curric-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:8px;font-size:11px;font-weight:800;letter-spacing:.02em;flex-shrink:0;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;white-space:nowrap;margin-top:4px}
+.curr-row .curr-curric-badge.has-tag{background:rgba(64,192,87,.14);color:#2b8a3e;border:1px solid rgba(64,192,87,.3)}
+.curr-row .curr-curric-badge.no-tag{background:rgba(253,126,20,.12);color:#d9480f;border:1px dashed rgba(253,126,20,.4)}
 .curr-row .btn-sm{padding:6px 12px;font-size:12px;font-weight:700;border-radius:8px;flex-shrink:0}
 .curr-row .btn-sm.btn-ghost{background:transparent;color:var(--ink3);border:1px solid var(--line)}
 .curr-row .btn-sm.btn-ghost:hover{background:rgba(0,0,0,.04);color:var(--ink)}
@@ -1338,6 +1440,64 @@ img{max-width:100%}
 .curr-details > summary:hover{color:var(--primary)}
 .curr-details[open] > summary{color:var(--primary);margin-bottom:8px}
 .curr-json{background:#1a1035;color:#f0e9ff;padding:14px;border-radius:10px;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;line-height:1.5;max-height:400px;overflow:auto;white-space:pre;margin:0}
+
+/* Human-readable lesson preview inside the curriculum editor accordion.
+   Replaces the raw JSON dump so tutors can scan what a lesson actually
+   contains (intro, example, steps, questions with the correct answer
+   highlighted) without reading code. */
+.curr-preview{background:linear-gradient(180deg,#faf8ff,#f3f0ff);border:1px solid rgba(108,92,231,.15);border-radius:12px;padding:16px 18px;margin:0;max-height:520px;overflow:auto;font-size:13.5px;line-height:1.55;color:var(--ink)}
+.curr-preview-section{margin:0 0 14px}
+.curr-preview-section:last-child{margin-bottom:0}
+.curr-preview-label{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:800;color:var(--primary);text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px}
+.curr-preview-visual{font-size:28px;line-height:1.1;margin:2px 0 6px}
+.curr-preview-title{font-family:var(--font-display);font-size:16px;font-weight:800;color:var(--ink);margin:0 0 4px}
+.curr-preview-text{color:var(--ink2);margin:0}
+.curr-preview-example{background:#fff;border-left:3px solid #fdcb6e;padding:9px 12px;border-radius:8px;color:var(--ink2)}
+.curr-preview-hint{background:rgba(253,203,110,.14);border:1px dashed rgba(253,126,20,.35);padding:9px 12px;border-radius:8px;color:#8a5a00}
+.curr-preview-steps{margin:4px 0 0;padding-left:22px;color:var(--ink2)}
+.curr-preview-steps li{margin:3px 0}
+.curr-preview-pics{display:flex;flex-wrap:wrap;gap:8px}
+.curr-preview-pic{display:inline-flex;align-items:center;gap:6px;background:#fff;border:1px solid var(--line);border-radius:999px;padding:5px 11px;font-size:12px;font-weight:600;color:var(--ink2)}
+.curr-preview-pic .pic-emoji{font-size:16px}
+.curr-preview-pic .pic-label{color:var(--ink3);font-weight:500;font-size:11px}
+.curr-preview-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.curr-preview-chip{display:inline-flex;align-items:center;gap:5px;background:#fff;border:1px solid var(--line);border-radius:8px;padding:3px 9px;font-size:11.5px;font-weight:600;color:var(--ink2)}
+.curr-preview-chip.is-video{border-color:rgba(255,99,71,.35);color:#c92a2a;background:rgba(255,99,71,.06)}
+.curr-preview-chip.is-curric{border-color:rgba(64,192,87,.35);color:#2b8a3e;background:rgba(64,192,87,.08);font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+.curr-preview-q{background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:0 0 8px}
+.curr-preview-q:last-child{margin-bottom:0}
+.curr-preview-q-num{font-size:10.5px;font-weight:800;color:var(--ink3);letter-spacing:.6px;text-transform:uppercase;margin-bottom:3px}
+.curr-preview-q-passage{background:rgba(108,92,231,.06);border-left:3px solid rgba(108,92,231,.45);padding:7px 11px;border-radius:6px;margin:0 0 6px;font-size:12.5px;color:var(--ink2);font-style:italic}
+.curr-preview-q-text{font-weight:700;color:var(--ink);margin:0 0 6px}
+.curr-preview-q-choices{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:3px}
+.curr-preview-q-choices li{padding:5px 9px;border-radius:7px;background:#fafaff;border:1px solid transparent;font-size:12.5px;color:var(--ink2)}
+.curr-preview-q-choices li.is-correct{background:rgba(64,192,87,.12);border-color:rgba(64,192,87,.35);color:#2b8a3e;font-weight:700}
+.curr-preview-q-choices li.is-correct::before{content:'✓ ';font-weight:900}
+.curr-preview-q-type-chip{display:inline-block;font-size:10px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--ink3);background:rgba(0,0,0,.04);padding:2px 7px;border-radius:6px;margin-left:6px;vertical-align:middle}
+.curr-preview-empty{color:var(--ink3);font-style:italic;text-align:center;padding:10px}
+.curr-preview-stack-wrap{background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px;display:inline-block;margin:4px 4px 0 0}
+.curr-preview .math-stack{font-size:16px}
+
+/* DEV SANDBOX banner — appears only on localhost/dev builds. Makes it
+   impossible to confuse a preview tab with the live site, so no one
+   accidentally thinks they're editing production. Safe-ignore on prod. */
+.dev-banner{position:fixed;top:0;left:0;right:0;z-index:9999;background:linear-gradient(90deg,#ff6b6b,#fd79a8);color:#fff;font-family:var(--font);font-weight:800;text-align:center;padding:5px 10px;font-size:12px;letter-spacing:.5px;box-shadow:0 2px 8px rgba(0,0,0,.15);pointer-events:none;animation:devBannerPulse 3s ease-in-out infinite}
+.dev-banner .env-label{text-transform:uppercase;background:rgba(0,0,0,.18);padding:1px 7px;border-radius:4px;margin-right:6px;font-size:10.5px;letter-spacing:.7px}
+.dev-banner .env-note{opacity:.9;font-weight:600;font-size:11px}
+@keyframes devBannerPulse{0%,100%{box-shadow:0 2px 8px rgba(0,0,0,.15)}50%{box-shadow:0 2px 14px rgba(255,107,107,.5)}}
+body.has-dev-banner{padding-top:26px}
+
+/* Snapshot restore panel — shows the 5 most-recent auto-snapshots so the
+   teacher can undo a bad reset/import with one click. Lives inside the
+   Backup & Data accordion section on the teacher dashboard. */
+.t-snap-list{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.t-snap-empty{color:var(--ink3);font-style:italic;font-size:13px;padding:10px;text-align:center}
+.t-snap-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.t-snap-row .t-snap-meta{flex:1;min-width:160px}
+.t-snap-row .t-snap-when{font-size:12px;color:var(--ink3);font-weight:700;letter-spacing:.3px;text-transform:uppercase}
+.t-snap-row .t-snap-reason{font-size:13px;color:var(--ink2);margin-top:2px}
+.t-snap-row .t-snap-stats{font-size:12px;color:var(--ink3);margin-top:3px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+.t-snap-row .t-snap-actions{display:flex;gap:6px;flex-shrink:0}
 
 /* Edit modal */
 .curr-modal{position:fixed;inset:0;background:rgba(20,20,35,.65);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);z-index:300;display:grid;place-items:center;padding:20px;animation:fadeIn .2s ease}
@@ -2356,12 +2516,34 @@ const STUDENTS = [
    * colorLight  — lighter accent hex (top-left of gradient, ribbon highlight)
    * colorDark   — darker accent hex (bottom-right of gradient, bold elements)
    */
-  { id:'isaiah',   name:'Isaiah',   grade:'Grade 5',               initial:'I', decoEmoji:'🚀', pin:'🦊', hint:'(f_x)',      colorLight:'#ffd793', colorDark:'#f39c12' },
+  { id:'isaiah',   name:'Isaiah',   grade:'Grade 5',               initial:'I', decoEmoji:'🚀', pin:'🦊', hint:'(f_x)',      colorLight:'#ffd793', colorDark:'#f39c12',
+    // Isaiah has severe ADHD — IEP (Individual Education Plan). Works at
+    // grade level cognitively, but needs ADHD-aware accommodations:
+    // short sessions, frequent brain breaks, chunked instructions,
+    // high-engagement activities, and praise for sustained attention
+    // (not just correctness). Tutor can refine via Student Plans editor.
+    plan:{ type:'iep', workingAt:'Grade 5 with ADHD accommodations', notes:'Severe ADHD. Keep sessions short (15-20 min max), use visual timers, and chunk multi-step instructions into one-at-a-time prompts. Avoid long text passages — prefer interactive formats. Celebrate focus effort, not just right answers.' },
+    // Supports = orthogonal speech-therapy / accessibility needs, separate
+    // from the academic plan. Articulation means the kid struggles with
+    // spoken pronunciation — we auto-enable TTS so they hear model
+    // pronunciation without being graded on their own spoken output.
+    supports: ['articulation'] },
   { id:'akshayan', name:'Akshayan', grade:'Grade 3',               initial:'A', decoEmoji:'🎮', pin:'🦁', hint:'(l__n)',     colorLight:'#ff9f9f', colorDark:'#d63031' },
   { id:'axel',     name:'Axel',     grade:'Grade 3',               initial:'X', decoEmoji:'🏎️', pin:'🚀', hint:'(r_ck_t)',   colorLight:'#d9b3ff', colorDark:'#8e44ad' },
-  { id:'rushan',   name:'Rushan',   grade:'Grade 2',               initial:'R', decoEmoji:'⚡', pin:'🐶', hint:'(d_g)',      colorLight:'#81ecec', colorDark:'#00b894' },
-  { id:'akaran',   name:'Akaran',   grade:'Grade 1',               initial:'A', decoEmoji:'🦖', pin:'⭐', hint:'(s_ar)',     colorLight:'#b6adff', colorDark:'#6c5ce7' },
-  { id:'nishan',   name:'Nishan',   grade:'Senior Kindergarten',   initial:'N', decoEmoji:'🎨', pin:'🌈', hint:'(r_inb_w)', colorLight:'#91c4f5', colorDark:'#0984e3' },
+  { id:'rushan',   name:'Rushan',   grade:'Grade 2',               initial:'R', decoEmoji:'⚡', pin:'🐶', hint:'(d_g)',      colorLight:'#81ecec', colorDark:'#00b894',
+    // Rushan is on-grade overall but slightly ahead in math — not a formal
+    // gifted designation, just a "push him harder in math" custom note.
+    // Use the stretchQuestions[] on math activities more aggressively for him.
+    plan:{ type:'custom', workingAt:'Grade 2 overall, Grade 2-3 math stretch', notes:'On-grade for his age overall. Math is slightly ahead — serve Grade 3 stretch questions once Grade 2 activities are solid. No formal plan needed; this is a "challenge him a bit more in math" nudge for the tutor.' },
+    supports: ['articulation'] },
+  { id:'akaran',   name:'Akaran',   grade:'Grade 1',               initial:'A', decoEmoji:'🦖', pin:'⭐', hint:'(s_ar)',     colorLight:'#b6adff', colorDark:'#6c5ce7',
+    // Akaran is a Grade 1 student who's mildly gifted — a strong reader for
+    // his age and ahead in math. Not a formal provincial gifted designation,
+    // but "show him Grade 2 stretch in reading + math" is the accurate read.
+    plan:{ type:'gifted', workingAt:'Grade 1 content with Grade 2 stretch in reading + math', notes:'Strong reader and mathematician for a Grade 1. Ready for Grade 2 stretch questions in reading and math once the Grade 1 activity is solid. Other subjects stay at grade for now.' },
+    supports: ['articulation'] },
+  { id:'nishan',   name:'Nishan',   grade:'Senior Kindergarten',   initial:'N', decoEmoji:'🎨', pin:'🌈', hint:'(r_inb_w)', colorLight:'#91c4f5', colorDark:'#0984e3',
+    supports: ['articulation'] },
   // Evan — Grade 7, ESL. Curriculum leans hardest on Writing (grammar) and
   // Reading, with G7-level math/logic/science/social and a French track. See
   // WEEKS[1].evan below. Palette = growth-green (distinct from rushan's bright
@@ -2371,7 +2553,13 @@ const STUDENTS = [
   // login (renderPinSetup triggers when allData.users.evan.customPin is null,
   // which it is by default from defaultUser()). The pin/hint fields on the
   // older students are legacy and not read by the auth flow.
-  { id:'evan',     name:'Evan',     grade:'Grade 7',               initial:'E', decoEmoji:'📘', colorLight:'#b8e994', colorDark:'#388e3c' },
+  { id:'evan',     name:'Evan',     grade:'Grade 7',               initial:'E', decoEmoji:'📘', colorLight:'#b8e994', colorDark:'#388e3c',
+    // Evan is ESL (English Language Learner) — struggles with English
+    // grammar, vocabulary, and sentence structure. Instructions need to be
+    // written in short, simple sentences with everyday vocabulary. Always
+    // offer read-aloud (TTS) on text-heavy questions.
+    plan:{ type:'esl', workingAt:'Grade 7 with Grade 4-5 English scaffolding', notes:'ESL — struggles with English grammar, vocabulary, and sentence structure. Write all instructions in short, simple sentences. Avoid idioms, phrasal verbs, and complex tense constructions. Always enable read-aloud for text-heavy questions. Model sentence patterns explicitly before asking for written production.' },
+    supports: ['articulation'] },
 ];
 // Back-compat: keep `color` populated as the dark hex so legacy code paths
 // that read `student.color` (e.g. dashboard avatar gradient style) still work.
@@ -2429,7 +2617,7 @@ const EMOJI_KEYPAD = ['🐶','🐱','🦁','🦊','🌈','⭐','🎈','🚀','�
 
 /* ========== TEACHER CREDENTIALS ==========
    Change teacher password here. */
-const TEACHER_CREDS = { password: 'Ryerye234' };
+const TEACHER_CREDS = { password: 'Chili2025' };
 
 /* ========== SUBJECTS ==========
    Images are set per-LESSON using `heroImage: IMG.xxx`, not at the subject
@@ -2596,6 +2784,139 @@ const IMG = {
   skeleton:     'https://upload.wikimedia.org/wikipedia/commons/thumb/1/11/Human_skeleton_front_en.svg/640px-Human_skeleton_front_en.svg.png',
 };
 
+/* =========================================================================
+   SHARED BEGINNER FRENCH CURRICULUM — per teacher request: "french should
+   start from the beginning for everybody." Every student (JK through G7)
+   starts on the same absolute-beginner French path: greetings → numbers →
+   colors → animals → family → foods → body → clothes → weather → days.
+   This avoids a G7 kid getting dropped into passé composé when they've
+   never said "bonjour." Advanced French can be added later via the
+   Curriculum Editor per-student.
+
+   IDs are per-student (w1-<sid>-f1..f10) so progress, stars, and completion
+   still track separately. The content inside is identical across kids.
+   ========================================================================= */
+function beginnerFrenchBase(sid){
+  const pre = 'w1-'+sid+'-';
+  return [
+    { id: pre+'f1', title:'Bonjour!', emoji:'👋', videoIds:['9BgyvEXTZbk'],
+      lesson:{title:'First French Words',intro:'French is a fun language! Learn five super-friendly words: hello, thank you, yes, no, and goodbye. Tap a card to hear it!',audioLang:'fr-FR',pictures:[
+        {emoji:'👋', word:'Bonjour', label:'Hello'},
+        {emoji:'🙏', word:'Merci', label:'Thank you'},
+        {emoji:'✅', word:'Oui', label:'Yes'},
+        {emoji:'❌', word:'Non', label:'No'},
+        {emoji:'👋', word:'Au revoir', label:'Goodbye'},
+      ],hint:'Say each word OUT LOUD — French loves sounds!'},
+      questions:[
+        {type:'mcq',q:'What does "Bonjour" mean?',choices:['Goodbye','Hello','Please','Sorry'],answer:1},
+        {type:'mcq',q:'What does "Merci" mean?',choices:['Please','Yes','Thank you','No'],answer:2},
+        {type:'mcq',q:'What does "Oui" mean?',choices:['No','Yes','Maybe','Hi'],answer:1},
+        {type:'mcq',q:'What does "Non" mean?',choices:['Yes','No','Sorry','Hi'],answer:1},
+        {type:'mcq',q:'What does "Au revoir" mean?',choices:['Hello','Goodbye','Good night','Thanks'],answer:1},
+      ]},
+    { id: pre+'f2', title:'Les Nombres 1-10', emoji:'🔢', videoIds:['lsc3qLMaCu8'],
+      lesson:{title:'Counting in French',intro:'Count from one to ten in French. The first five (un, deux, trois, quatre, cinq) are the most useful — practice them every day!',audioLang:'fr-FR',pictures:[
+        {emoji:'1️⃣', word:'un', label:'one'},
+        {emoji:'2️⃣', word:'deux', label:'two'},
+        {emoji:'3️⃣', word:'trois', label:'three'},
+        {emoji:'4️⃣', word:'quatre', label:'four'},
+        {emoji:'5️⃣', word:'cinq', label:'five'},
+        {emoji:'6️⃣', word:'six', label:'six'},
+        {emoji:'7️⃣', word:'sept', label:'seven'},
+        {emoji:'8️⃣', word:'huit', label:'eight'},
+        {emoji:'9️⃣', word:'neuf', label:'nine'},
+        {emoji:'🔟', word:'dix', label:'ten'},
+      ],hint:'Count your fingers in French each morning!'},
+      questions:[
+        {type:'mcq',q:'What number is "un"?',choices:['1','2','3','5'],answer:0},
+        {type:'mcq',q:'What number is "trois"?',choices:['2','3','4','5'],answer:1},
+        {type:'mcq',q:'What number is "sept"?',choices:['5','6','7','8'],answer:2},
+        {type:'mcq',q:'How do you say "10" in French?',choices:['huit','neuf','dix','vingt'],answer:2},
+        {type:'match',q:'Match the French number to the digit.',pairs:[['un','1'],['deux','2'],['cinq','5'],['dix','10']]},
+      ]},
+    { id: pre+'f3', title:'Les Couleurs', emoji:'🎨', videoIds:['fZR66TjjrDc'],
+      lesson:{title:'Colors in French',intro:'Colors in French sound different, but they\'re still the same colors you know! Tap to hear each one.',audioLang:'fr-FR',pictures:[
+        {emoji:'🔴', word:'rouge', label:'red'},
+        {emoji:'🔵', word:'bleu', label:'blue'},
+        {emoji:'🟡', word:'jaune', label:'yellow'},
+        {emoji:'🟢', word:'vert', label:'green'},
+        {emoji:'⚫', word:'noir', label:'black'},
+        {emoji:'⚪', word:'blanc', label:'white'},
+      ],hint:'Try pointing at things around you and naming their French color.'},
+      questions:[
+        {type:'mcq',q:'What is "rouge"?',choices:['🔵 Blue','🔴 Red','🟢 Green','🟡 Yellow'],answer:1},
+        {type:'mcq',q:'What is "bleu"?',choices:['🟡 Yellow','🔵 Blue','🟢 Green','🔴 Red'],answer:1},
+        {type:'mcq',q:'What is "jaune"?',choices:['🟡 Yellow','🟢 Green','🟣 Purple','🔴 Red'],answer:0},
+        {type:'mcq',q:'What is "noir"?',choices:['⚪ White','⚫ Black','🟢 Green','🔴 Red'],answer:1},
+        {type:'match',q:'Match each color to its French name!',pairs:[['🔴','rouge'],['🔵','bleu'],['🟡','jaune'],['🟢','vert']]},
+      ]},
+    { id: pre+'f4', title:'Les Animaux', emoji:'🐾',
+      lesson:{title:'French Animals',intro:'Cats, dogs, fish, birds — they all have French names too! Tap to hear them.',audioLang:'fr-FR',pictures:[
+        {emoji:'🐱', word:'le chat', label:'cat'},
+        {emoji:'🐶', word:'le chien', label:'dog'},
+        {emoji:'🐟', word:'le poisson', label:'fish'},
+        {emoji:'🐦', word:'l\'oiseau', label:'bird'},
+        {emoji:'🐰', word:'le lapin', label:'rabbit'},
+      ],hint:'"Le" and "la" both mean "the" in French.'},
+      questions:[
+        {type:'mcq',q:'What is "le chat"?',choices:['🐶 Dog','🐱 Cat','🐦 Bird','🐟 Fish'],answer:1},
+        {type:'mcq',q:'What is "le chien"?',choices:['🐱 Cat','🐶 Dog','🐰 Rabbit','🐸 Frog'],answer:1},
+        {type:'mcq',q:'What is "le poisson"?',choices:['🐟 Fish','🐸 Frog','🐢 Turtle','🐛 Bug'],answer:0},
+        {type:'mcq',q:'How do you say "dog" in French?',choices:['chat','chien','cheval','cochon'],answer:1},
+        {type:'match',q:'Match each animal to its French name!',pairs:[['🐱','chat'],['🐶','chien'],['🐟','poisson'],['🐦','oiseau']]},
+      ]},
+    { id: pre+'f5', title:'La Famille', emoji:'👨‍👩‍👧‍👦',
+      lesson:{title:'Family in French',intro:'Family words in French — some sound like English baby words! Tap to hear each.',audioLang:'fr-FR',pictures:[
+        {emoji:'👩', word:'Maman', label:'Mom'},
+        {emoji:'👨', word:'Papa', label:'Dad'},
+        {emoji:'👦', word:'le frère', label:'brother'},
+        {emoji:'👧', word:'la sœur', label:'sister'},
+        {emoji:'👶', word:'le bébé', label:'baby'},
+      ],hint:'Maman and Papa are easy — almost the same as English!'},
+      questions:[
+        {type:'mcq',q:'What is "Maman"?',choices:['Dad','Mom','Sister','Grandma'],answer:1},
+        {type:'mcq',q:'What is "Papa"?',choices:['Mom','Dad','Brother','Uncle'],answer:1},
+        {type:'mcq',q:'What is "le frère"?',choices:['Brother','Sister','Cousin','Father'],answer:0},
+        {type:'mcq',q:'What is "la sœur"?',choices:['Brother','Sister','Mother','Aunt'],answer:1},
+        {type:'match',q:'Match the French family words!',pairs:[['Maman','Mom'],['Papa','Dad'],['frère','Brother'],['sœur','Sister']]},
+      ]},
+  ];
+}
+/* Demo-preview tier — pushed after the base five. Same shape as other demo
+   activities (see addDemoPreviewLevels). Stays beginner vocabulary so a
+   kid who finishes Level 5 lands on more beginner content, not grammar. */
+function beginnerFrenchDemo(sid){
+  const pre = 'w1-'+sid+'-';
+  const P = (id, title, emoji, intro, qs) => ({
+    id, title, emoji, demoOnly:true,
+    lesson:{ title:title, intro:intro,
+      example:'Preview lesson — real students unlock this after finishing Levels 1–5 in every subject!',
+      hint:'Parents: this is a sample of upcoming content.' },
+    questions: qs.map(r => ({type:'mcq', q:r[0], choices:r[1], answer:r[2]})),
+  });
+  return [
+    P(pre+'f6','La Nourriture','🍎','Food in French: pain (bread), pomme (apple), fromage (cheese), eau (water).',[
+      ['"Pain" means...',['pain','bread','pie','pan'],1],
+      ['"Pomme" means...',['pear','apple','potato','plum'],1],
+      ['"Eau" means...',['milk','water','juice','egg'],1]]),
+    P(pre+'f7','Le Corps','🧍','Body parts: tête (head), main (hand), pied (foot), yeux (eyes).',[
+      ['"Tête" means...',['hand','head','foot','heart'],1],
+      ['"Main" means...',['head','hand','leg','mouth'],1],
+      ['"Pied" means...',['face','arm','foot','finger'],2]]),
+    P(pre+'f8','Les Vêtements','👕','Clothes: chapeau (hat), chaussures (shoes), manteau (coat).',[
+      ['"Chapeau" means...',['shoes','hat','coat','scarf'],1],
+      ['"Chaussures" means...',['shirts','shoes','pants','socks'],1],
+      ['"Manteau" means...',['boots','coat','scarf','hat'],1]]),
+    P(pre+'f9','La Météo','🌤️','Weather: il pleut (it rains), il neige (it snows), il fait chaud (it\'s hot).',[
+      ['"Il pleut" means...',['it snows','it rains','it\'s sunny','it\'s cold'],1],
+      ['"Il neige" means...',['it rains','it snows','it\'s windy','it\'s warm'],1],
+      ['"Il fait chaud" means...',['it\'s cold','it\'s hot','it\'s raining','it\'s night'],1]]),
+    P(pre+'f10','Les Jours','📅','Days of the week: lundi (Mon), mardi (Tues), mercredi (Wed), jeudi (Thurs), vendredi (Fri).',[
+      ['"Lundi" means...',['Sunday','Monday','Tuesday','Friday'],1],
+      ['"Mercredi" means...',['Tuesday','Wednesday','Thursday','Saturday'],1],
+      ['"Vendredi" means...',['Thursday','Friday','Saturday','Sunday'],1]]),
+  ];
+}
 const WEEKS = { 1: {
 
 /* ---- NISHAN (Senior Kindergarten) ---- */
@@ -2791,80 +3112,7 @@ nishan: {
         {type:'mcq',q:'Which group has the SAME number as 7 stars?',choices:['🍎🍎🍎🍎🍎','🍎🍎🍎🍎🍎🍎','🍎🍎🍎🍎🍎🍎🍎','🍎🍎🍎🍎🍎🍎🍎🍎'],answer:2},
       ]},
   ],
-  french: [
-    { id:'w1-nishan-f1', title:'Bonjour!', emoji:'👋', videoIds:['9BgyvEXTZbk'],
-      lesson:{title:'First French Words',intro:'French is a fun language! Learn five super-friendly words: hello, thank you, yes, no, and goodbye. Tap a card to hear it!',audioLang:'fr-FR',pictures:[
-        {emoji:'👋', word:'Bonjour', label:'Hello'},
-        {emoji:'🙏', word:'Merci', label:'Thank you'},
-        {emoji:'✅', word:'Oui', label:'Yes'},
-        {emoji:'❌', word:'Non', label:'No'},
-        {emoji:'👋', word:'Au revoir', label:'Goodbye'},
-      ],hint:'Say each word OUT LOUD — French loves sounds!'},
-      questions:[
-        {type:'mcq',q:'What does "Bonjour" mean?',choices:['Goodbye','Hello','Please','Sorry'],answer:1},
-        {type:'mcq',q:'What does "Merci" mean?',choices:['Please','Yes','Thank you','No'],answer:2},
-        {type:'mcq',q:'What does "Oui" mean?',choices:['No','Yes','Maybe','Hi'],answer:1},
-        {type:'mcq',q:'What does "Non" mean?',choices:['Yes','No','Sorry','Hi'],answer:1},
-        {type:'mcq',q:'What does "Au revoir" mean?',choices:['Hello','Goodbye','Good night','Thanks'],answer:1},
-      ]},
-    { id:'w1-nishan-f2', title:'Les Couleurs', emoji:'🎨', videoIds:['fZR66TjjrDc'],
-      lesson:{title:'Colors in French',intro:'Colors in French sound different, but they\'re still the same colors you know! Tap to hear each one.',audioLang:'fr-FR',pictures:[
-        {emoji:'🔴', word:'rouge', label:'red'},
-        {emoji:'🔵', word:'bleu', label:'blue'},
-        {emoji:'🟡', word:'jaune', label:'yellow'},
-        {emoji:'🟢', word:'vert', label:'green'},
-      ],hint:'Try pointing at things around you and naming their French color.'},
-      questions:[
-        {type:'mcq',q:'What is "rouge"?',choices:['🔵 Blue','🔴 Red','🟢 Green','🟡 Yellow'],answer:1},
-        {type:'mcq',q:'What is "bleu"?',choices:['🟡 Yellow','🔵 Blue','🟢 Green','🔴 Red'],answer:1},
-        {type:'mcq',q:'What is "jaune"?',choices:['🟡 Yellow','🟢 Green','🟣 Purple','🔴 Red'],answer:0},
-        {type:'mcq',q:'What is "vert"?',choices:['🔴 Red','🟢 Green','🔵 Blue','⚫ Black'],answer:1},
-        {type:'match',q:'Match each color to its French name!',pairs:[['🔴','rouge'],['🔵','bleu'],['🟡','jaune'],['🟢','vert']]},
-      ]},
-    { id:'w1-nishan-f3', title:'Les Nombres 1-5', emoji:'🔢', videoIds:['lsc3qLMaCu8'],
-      lesson:{title:'Counting in French',intro:'French numbers sound different but count the same: 1, 2, 3, 4, 5. Tap each card to hear the pronunciation!',audioLang:'fr-FR',pictures:[
-        {emoji:'1️⃣', word:'un', label:'one'},
-        {emoji:'2️⃣', word:'deux', label:'two'},
-        {emoji:'3️⃣', word:'trois', label:'three'},
-        {emoji:'4️⃣', word:'quatre', label:'four'},
-        {emoji:'5️⃣', word:'cinq', label:'five'},
-      ],hint:'Count your fingers in French!'},
-      questions:[
-        {type:'mcq',q:'What number is "un"?',choices:['1','2','3','5'],answer:0},
-        {type:'mcq',q:'What number is "trois"?',choices:['2','3','4','5'],answer:1},
-        {type:'mcq',q:'What number is "cinq"?',choices:['3','4','5','6'],answer:2},
-        {type:'mcq',q:'How do you say "2" in French?',choices:['un','deux','trois','quatre'],answer:1},
-        {type:'match',q:'Match the French number to the digit.',pairs:[['un','1'],['deux','2'],['trois','3'],['quatre','4']]},
-      ]},
-    { id:'w1-nishan-f4', title:'Les Animaux', emoji:'🐾',
-      lesson:{title:'French Animals',intro:'Cats, dogs, fish, birds — they all have French names too! Tap to hear them.',audioLang:'fr-FR',pictures:[
-        {emoji:'🐱', word:'le chat', label:'cat'},
-        {emoji:'🐶', word:'le chien', label:'dog'},
-        {emoji:'🐟', word:'le poisson', label:'fish'},
-        {emoji:'🐦', word:'l\'oiseau', label:'bird'},
-      ],hint:'"Le" and "la" both mean "the" in French.'},
-      questions:[
-        {type:'mcq',q:'What is "le chat"?',choices:['🐶 Dog','🐱 Cat','🐦 Bird','🐟 Fish'],answer:1},
-        {type:'mcq',q:'What is "le chien"?',choices:['🐱 Cat','🐶 Dog','🐰 Rabbit','🐸 Frog'],answer:1},
-        {type:'mcq',q:'What is "le poisson"?',choices:['🐟 Fish','🐸 Frog','🐢 Turtle','🐛 Bug'],answer:0},
-        {type:'mcq',q:'How do you say "dog" in French?',choices:['chat','chien','cheval','cochon'],answer:1},
-        {type:'match',q:'Match each animal to its French name!',pairs:[['🐱','chat'],['🐶','chien'],['🐟','poisson'],['🐦','oiseau']]},
-      ]},
-    { id:'w1-nishan-f5', title:'La Famille', emoji:'👨‍👩‍👧‍👦',
-      lesson:{title:'Family in French',intro:'Family words in French — some sound like English baby words! Tap to hear each.',audioLang:'fr-FR',pictures:[
-        {emoji:'👩', word:'Maman', label:'Mom'},
-        {emoji:'👨', word:'Papa', label:'Dad'},
-        {emoji:'👦', word:'le frère', label:'brother'},
-        {emoji:'👧', word:'la sœur', label:'sister'},
-      ],hint:'Maman and Papa are easy — almost the same as English!'},
-      questions:[
-        {type:'mcq',q:'What is "Maman"?',choices:['Dad','Mom','Sister','Grandma'],answer:1},
-        {type:'mcq',q:'What is "Papa"?',choices:['Mom','Dad','Brother','Uncle'],answer:1},
-        {type:'mcq',q:'What is "le frère"?',choices:['Brother','Sister','Cousin','Father'],answer:0},
-        {type:'mcq',q:'What is "la sœur"?',choices:['Brother','Sister','Mother','Aunt'],answer:1},
-        {type:'match',q:'Match the French family words!',pairs:[['Maman','Mom'],['Papa','Dad'],['frère','Brother'],['sœur','Sister']]},
-      ]},
-  ],
+  french: beginnerFrenchBase('nishan'),
   science: [
     { id:'w1-nishan-s1', title:'Living or Not?', emoji:'🌱', videoIds:['Gy60BqCnTG4'],
       lesson:{title:'Living vs. Non-Living',intro:'Living things GROW, EAT, BREATHE, MAKE BABIES, and REACT. Non-living things do NOT do all these things — even if they MOVE (like a car).',pictures:[
@@ -3224,67 +3472,7 @@ akaran: {
         {type:'mcq',q:'Ava is taller than Ben. Ben is taller than Cal. Who is the SHORTEST?',choices:['Ava','Ben','Cal','Same height'],answer:2},
       ]},
   ],
-  french: [
-    // Akaran's French content — swapped from Akshayan per teacher request.
-    { id:'w1-akaran-f1', title:'Polite Phrases', emoji:'🤝', videoIds:['9BgyvEXTZbk'],
-      lesson:{title:'Formal French',intro:'French has TWO ways to address people: casual (tu) and formal (vous). Adults use formal with strangers and people they respect. Here are the polite phrases you need.',example:'Greetings: Bonjour = Good morning · Bonsoir = Good evening · Au revoir = Goodbye · À bientôt = See you soon. Polite words: Excusez-moi = Excuse me · S\'il vous plaît = Please (formal) · Je vous en prie = You\'re welcome (formal). Asking: "Comment allez-vous?" (formal) · "Ça va?" (casual).',hint:'Use "vous" with teachers, strangers, and adults. "Tu" with friends and family.'},
-      questions:[
-        {type:'mcq',q:'"Comment allez-vous?" is used when speaking to...',choices:['A friend','A teacher or adult','A baby','Yourself'],answer:1},
-        {type:'mcq',q:'What does "À bientôt" mean?',choices:['See you soon','Thank you','Good night','I\'m hungry'],answer:0},
-        {type:'mcq',q:'Which means "Please" formally?',choices:['Merci','S\'il te plaît','S\'il vous plaît','De rien'],answer:2},
-        {type:'mcq',q:'What does "Je vous en prie" mean?',choices:['Please','You\'re welcome (formal)','Excuse me','Bye'],answer:1},
-        {type:'match',q:'Match formal phrases!',pairs:[['Bonjour','Good morning'],['Bonsoir','Good evening'],['Au revoir','Goodbye'],['Excusez-moi','Excuse me']]},
-      ]},
-    { id:'w1-akaran-f2', title:'Nombres 1-100', emoji:'💯', videoIds:['dhj9SqrIZqI'],
-      lesson:{title:'Counting to 100',intro:'French tens: vingt (20), trente (30), quarante (40), cinquante (50), soixante (60). Numbers 21, 31, etc. use "et un" (and one).',example:'21 = vingt-et-un, 35 = trente-cinq, 50 = cinquante, 100 = cent',hint:'Numbers 70-99 get tricky in French — 70 is "soixante-dix" (60+10)!'},
-      questions:[
-        {type:'mcq',q:'What is "trente"?',choices:['13','30','33','300'],answer:1},
-        {type:'mcq',q:'What is "cinquante"?',choices:['5','15','50','500'],answer:2},
-        {type:'mcq',q:'How do you say "42"?',choices:['deux-quarante','quarante-et-deux','quarante-deux','deux-quarante'],answer:2},
-        {type:'mcq',q:'What number is "soixante"?',choices:['16','60','66','600'],answer:1},
-        {type:'mcq',q:'What is "cent"?',choices:['10','50','100','1000'],answer:2},
-      ]},
-    { id:'w1-akaran-f3', title:'Verbs in Context', emoji:'✍️',
-      lesson:{title:'Useful Verbs',intro:'Learn verbs that let you express wants, likes, and abilities.',example:'J\'aime = I like · Je veux = I want · Je peux = I can · Je vais = I go',hint:'These all start with "Je" (I). Listen for that "zhuh" sound!'},
-      questions:[
-        {type:'mcq',q:'"J\'aime les chiens" means...',choices:['I have dogs','I like dogs','I see dogs','I want dogs'],answer:1},
-        {type:'mcq',q:'"Je veux" means...',choices:['I have','I want','I go','I like'],answer:1},
-        {type:'mcq',q:'"Je peux nager" means...',choices:['I want to swim','I can swim','I like swimming','I swam'],answer:1},
-        {type:'mcq',q:'Which verb means "to go"?',choices:['avoir','être','aller','faire'],answer:2},
-        {type:'match',q:'Match the French phrases!',pairs:[['J\'aime','I like'],['Je veux','I want'],['Je peux','I can'],['Je vais','I go']]},
-      ]},
-    { id:'w1-akaran-f4', title:'Simple Sentences', emoji:'💬',
-      lesson:{title:'Translating Sentences',intro:'Put French words together in order: Subject + Verb + Object — just like English. Here are the most useful everyday sentences.',example:'"Je m\'appelle Marc" = My name is Marc · "J\'ai un chat rouge" = I have a red cat · "Où est la maison?" = Where is the house? · "J\'ai huit ans" = I am 8 years old (literally "I have 8 years") · "Je mange une pomme" = I eat an apple.',hint:'"Un/une" = a/an · "Le/la" = the · Colors come AFTER the noun: "chat rouge" = red cat.'},
-      questions:[
-        {type:'mcq',q:'What does "Je m\'appelle Marc" mean?',choices:['I like Marc','My name is Marc','I see Marc','Marc has a dog'],answer:1},
-        {type:'mcq',q:'What does "J\'ai un chat rouge" mean?',choices:['I want a red cat','I have a red cat','I see a red cat','I am a red cat'],answer:1},
-        {type:'mcq',q:'What does "Où est la maison?" mean?',choices:['What is the house?','Where is the house?','Who is at home?','How big is the house?'],answer:1},
-        {type:'mcq',q:'Which sentence means "I am 8 years old"?',choices:['Je suis 8','J\'ai huit ans','Je huit','Moi 8'],answer:1},
-        {type:'order',q:'Unscramble: "I have a red cat."',items:['J\'ai','un','chat','rouge'],correctOrder:[0,1,2,3]},
-      ]},
-    { id:'w1-akaran-f5', title:'Question Words', emoji:'❓',
-      lesson:{title:'Asking Questions in French',intro:'To ask questions, use: Qui (Who), Quoi (What), Où (Where), Quand (When), Pourquoi (Why), Comment (How).',example:'"Comment tu t\'appelles?" = What\'s your name? · "Où est le livre?" = Where is the book?',hint:'"Combien" = how many/how much.'},
-      questions:[
-        {type:'mcq',q:'"Qui" means...',choices:['What','Where','Who','When'],answer:2},
-        {type:'mcq',q:'"Où" means...',choices:['When','Who','Where','Why'],answer:2},
-        {type:'mcq',q:'"Pourquoi" means...',choices:['How','Why','When','Where'],answer:1},
-        {type:'mcq',q:'How do you ask "What time is it?"',choices:['Quelle heure est-il?','Quel temps fait-il?','Où es-tu?','Qui es-tu?'],answer:0},
-        {type:'match',q:'Match each question word!',pairs:[['Qui','Who'],['Quoi','What'],['Où','Where'],['Quand','When']]},
-      ]},
-    // Level 6 (bonus stretch) — Watch-and-learn lesson. Uses a real French
-    // SpongeBob clip so the student hears expressions in context. Phrases
-    // chosen are ones a kid actually catches in cartoon dialogue.
-    { id:'w1-akaran-f6', title:'Bob l\'éponge: French from TV', emoji:'📺', videoIds:['c1BvxMg5QrU'],
-      lesson:{title:'French Through SpongeBob',intro:'The fastest way to pick up a language is to WATCH cartoons in it. Your brain matches the words to the pictures without trying. Here are six expressions you\'ll hear in Bob l\'éponge — real phrases real French kids say every day.',example:'"Bob l\'éponge, pantalon carré" = SpongeBob SquarePants · "Qu\'est-ce qui se passe?" = What\'s happening? · "Je suis prêt!" = I\'m ready! · "Attends, mon ami!" = Wait, my friend! · "Pas de problème!" = No problem! · "À la prochaine!" = See you next time!',hint:'First watch: just let the sounds wash over you. Second watch: count how many of the six expressions you catch!'},
-      questions:[
-        {type:'mcq',q:'"Qu\'est-ce qui se passe?" means...',choices:['Where are you going?','What\'s happening?','Who is this?','Why is this?'],answer:1},
-        {type:'mcq',q:'"Attends!" means...',choices:['Hurry!','Wait!','Watch!','Run!'],answer:1},
-        {type:'mcq',q:'"Pas de problème!" means...',choices:['Big problem!','No problem!','Help!','Stop!'],answer:1},
-        {type:'mcq',q:'"À la prochaine!" means...',choices:['At the beach','See you next time!','Hello there','In the house'],answer:1},
-        {type:'mcq',q:'"Bob l\'éponge, pantalon carré" means...',choices:['SpongeBob BigPants','SpongeBob SquarePants','SpongeBob RoundPants','SpongeBob LongPants'],answer:1},
-        {type:'match',q:'Match the TV expression!',pairs:[['Qu\'est-ce qui se passe?','What\'s happening?'],['Attends','Wait'],['Pas de problème','No problem'],['À la prochaine','See you next time']]},
-      ]},
-  ],
+  french: beginnerFrenchBase('akaran'),
   science: [
     { id:'w1-akaran-s1', title:'Living Things', emoji:'🌿', videoIds:['Gy60BqCnTG4'],
       lesson:{title:'Living vs. Non-Living',intro:'Living things GROW, EAT, DRINK, and BREATHE. Non-living things do not. Living things also make more of themselves (babies, seeds!).',pictures:[
@@ -3658,73 +3846,7 @@ rushan: {
         {type:'mcq',q:'If ⭐=3, what is ⭐+⭐+⭐?',choices:['6','9','12','3'],answer:1},
       ]},
   ],
-  french: [
-    { id:'w1-rushan-f1', title:'Conversation Basics', emoji:'💬', videoIds:['9BgyvEXTZbk'],
-      lesson:{title:'Everyday Conversation',intro:'Putting words together makes real conversation! Here are five phrases you\'ll use every day.',example:'"Comment ça va?" = How are you? · "Ça va bien" = I\'m doing well · "Enchanté" = Nice to meet you · "Je m\'appelle..." = My name is... · "De rien" = You\'re welcome / No problem',hint:'Introduce yourself: "Je m\'appelle [your name]." Say "De rien" when someone thanks you.'},
-      questions:[
-        {type:'mcq',q:'"Comment ça va?" means...',choices:['What is this?','How are you?','Who are you?','Where is it?'],answer:1},
-        {type:'mcq',q:'A nice answer to "Ça va?" is...',choices:['Ça va bien','Non non','Au revoir','Bonbon'],answer:0},
-        {type:'mcq',q:'What does "Enchanté(e)" mean?',choices:['I am lost','Nice to meet you','Good night','Thanks'],answer:1},
-        {type:'mcq',q:'What does "Je m\'appelle..." mean?',choices:['My name is...','I am going...','I like...','I am tired'],answer:0},
-        {type:'mcq',q:'What does "De rien" mean?',choices:['Please','No problem / You\'re welcome','Sorry','Goodnight'],answer:1},
-      ]},
-    { id:'w1-rushan-f2', title:'Nombres 11-30', emoji:'🔢', videoIds:['dhj9SqrIZqI'],
-      lesson:{title:'Bigger Numbers',intro:'After 10, French gets creative! 11-16 have unique names. Then 17-19 = "ten-seven", etc.',example:'onze (11), douze (12), treize (13), quatorze (14), quinze (15), seize (16), dix-sept (17 = 10+7)',hint:'After 20, combine: vingt-et-un (21), vingt-deux (22)...'},
-      questions:[
-        {type:'mcq',q:'What number is "onze"?',choices:['9','10','11','12'],answer:2},
-        {type:'mcq',q:'What number is "quinze"?',choices:['14','15','16','50'],answer:1},
-        {type:'mcq',q:'What number is "vingt"?',choices:['15','20','22','25'],answer:1},
-        {type:'mcq',q:'How do you say "25"?',choices:['vingt-cinq','cinq-vingt','deux-cinq','vingt-quatre'],answer:0},
-        {type:'match',q:'Match French to numbers!',pairs:[['onze','11'],['douze','12'],['quinze','15'],['vingt','20']]},
-      ]},
-    { id:'w1-rushan-f3', title:'Jours et Mois', emoji:'📅',
-      lesson:{title:'Days & Months',intro:'Days end in "-di" (mostly). All 12 months look similar to English with small spelling changes.',example:'Months: janvier, février, mars, avril, mai, juin, juillet, août, septembre, octobre, novembre, décembre.',hint:'Today = aujourd\'hui · Yesterday = hier · Tomorrow = demain.'},
-      questions:[
-        {type:'mcq',q:'What does "aujourd\'hui" mean?',choices:['yesterday','today','tomorrow','next week'],answer:1},
-        {type:'mcq',q:'What does "demain" mean?',choices:['today','tomorrow','yesterday','always'],answer:1},
-        {type:'mcq',q:'Which month is "mars"?',choices:['March','May','August','April'],answer:0},
-        {type:'mcq',q:'Which month is "juillet"?',choices:['June','July','August','January'],answer:1},
-        {type:'order',q:'Order the last 4 months of the year.',items:['septembre','octobre','novembre','décembre'],correctOrder:[0,1,2,3]},
-      ]},
-    { id:'w1-rushan-f4', title:'La Météo', emoji:'🌤️',
-      lesson:{title:'Weather Phrases',intro:'French weather phrases start with "Il fait..." (literally "It makes...").',example:'"Il fait beau" = Nice weather · "Il pleut" = It\'s raining · "Il neige" = It\'s snowing',hint:'"Il fait chaud" = hot. "Il fait froid" = cold.'},
-      questions:[
-        {type:'mcq',q:'"Il fait beau" means...',choices:['It\'s raining','The weather is nice','It\'s snowing','It\'s cold'],answer:1},
-        {type:'mcq',q:'"Il pleut" means...',choices:['It\'s snowing','It\'s raining','It\'s windy','It\'s sunny'],answer:1},
-        {type:'mcq',q:'"Il fait froid" means...',choices:['It\'s hot','It\'s cold','It\'s nice','It\'s late'],answer:1},
-        {type:'mcq',q:'"Il neige" means...',choices:['It\'s raining','It\'s snowing','It\'s sunny','It\'s cloudy'],answer:1},
-        {type:'match',q:'Match weather phrases!',pairs:[['Il fait beau','Nice weather'],['Il pleut','It rains'],['Il neige','It snows'],['Il fait chaud','It\'s hot']]},
-      ]},
-    { id:'w1-rushan-f5', title:'Être & Avoir', emoji:'✏️',
-      lesson:{title:'Two Essential Verbs',intro:'"Être" = to be. "Avoir" = to have. You\'ll use these ALL the time — for yourself, others, he, she, they.',example:'Être: Je suis (I am) · Tu es (You are) · Il est (He is) · Elle est (She is) · Ils sont (They are). Avoir: J\'ai (I have) · Tu as (You have).',hint:'Fun fact: In French, you HAVE years! "J\'ai 7 ans" = "I am 7" (literally "I have 7 years").'},
-      questions:[
-        {type:'mcq',q:'"Je suis" means...',choices:['I have','I am','I want','I go'],answer:1},
-        {type:'mcq',q:'"J\'ai" means...',choices:['I am','I go','I have','I like'],answer:2},
-        {type:'mcq',q:'How do you say "She is"?',choices:['Il est','Elle est','Ils sont','Elle a'],answer:1},
-        {type:'mcq',q:'How do you say "I have 7 years" (= I am 7)?',choices:['Je suis 7','J\'ai sept ans','Je sept','Moi 7'],answer:1},
-        {type:'match',q:'Match the verb forms.',pairs:[['Je suis','I am'],['Tu es','You are'],['J\'ai','I have'],['Tu as','You have']]},
-      ]},
-    // Level 6 (bonus stretch) — Watch-and-learn with a real French SpongeBob
-    // clip. Picture-cards give tap-to-speak audio so the student can practice
-    // each expression before hearing it in cartoon dialogue.
-    { id:'w1-rushan-f6', title:'Bob l\'éponge: TV Time!', emoji:'📺', videoIds:['c1BvxMg5QrU'],
-      lesson:{title:'Learning French from Cartoons',intro:'When you watch your favorite shows in French, your ears start to PICK UP words you already know. Here are six expressions kids hear all the time in French cartoons like Bob l\'éponge (SpongeBob). Tap each card to hear it!',audioLang:'fr-FR',pictures:[
-        {emoji:'🧽', word:'Bob l\'éponge', label:'SpongeBob'},
-        {emoji:'👀', word:'Regarde!', label:'Look!'},
-        {emoji:'💪', word:'Je suis prêt!', label:'I\'m ready!'},
-        {emoji:'🏃', word:'Allons-y!', label:'Let\'s go!'},
-        {emoji:'👬', word:'Mon ami', label:'My friend'},
-        {emoji:'🎉', word:'C\'est super!', label:'That\'s great!'},
-      ],hint:'Watch the clip! Don\'t worry about catching every word — listen for the six phrases above. "Bob l\'éponge" literally means "Bob the sponge".'},
-      questions:[
-        {type:'mcq',q:'What does "Bob l\'éponge" mean?',choices:['Bob the fish','Bob the sponge','Bob the king','Bob the ghost'],answer:1},
-        {type:'mcq',q:'What does "Regarde!" mean?',choices:['Listen!','Look!','Run!','Stop!'],answer:1},
-        {type:'mcq',q:'"Je suis prêt!" means...',choices:['I\'m tired','I\'m ready','I\'m hungry','I\'m scared'],answer:1},
-        {type:'mcq',q:'"Allons-y!" means...',choices:['Let\'s go!','Goodbye!','Help!','Wait!'],answer:0},
-        {type:'mcq',q:'"C\'est super!" means...',choices:['It\'s small','That\'s great!','It\'s late','That\'s silly'],answer:1},
-        {type:'match',q:'Match the TV-show expression!',pairs:[['Regarde!','Look!'],['Allons-y!','Let\'s go!'],['Mon ami','My friend'],['C\'est super!','That\'s great!']]},
-      ]},
-  ],
+  french: beginnerFrenchBase('rushan'),
   science: [
     { id:'w1-rushan-s1', title:'Life Cycles', emoji:'🐛', videoIds:['V5RSpMQQOpw'], // SciShow Kids — How Does a Caterpillar Become a Butterfly?
       lesson:{title:'The Butterfly Life Cycle',intro:'A LIFE CYCLE shows how an animal grows. A butterfly goes through 4 amazing stages!',heroImage:IMG.butterfly,pictures:[
@@ -4103,86 +4225,6 @@ akshayan: {
         {type:'mcq',q:'Maya reads 5 pages a day. After 4 days, how many pages?',choices:['9','15','20','25'],answer:2},
         {type:'mcq',q:'A farmer has 17 sheep. All but 9 run away. How many left?',choices:['8','9','17','0'],answer:1},
         {type:'mcq',q:'What month has 28 days?',choices:['Only February','All of them','None','Just March'],answer:1},
-      ]},
-  ],
-  french: [
-    // Akshayan's French content — swapped from Akaran per teacher request.
-    { id:'w1-akshayan-f1', title:'Greetings & Politeness', emoji:'🙋', videoIds:['9BgyvEXTZbk'],
-      lesson:{title:'Being Polite in French',intro:'French culture values politeness. Learn the words for hello, thanks, please, sorry — plus casual "hi" and "good evening". Tap each card to hear it.',audioLang:'fr-FR',pictures:[
-        {emoji:'🌅', word:'Bonjour', label:'Hello / Good day'},
-        {emoji:'👋', word:'Salut', label:'Hi (casual)'},
-        {emoji:'🌆', word:'Bonsoir', label:'Good evening'},
-        {emoji:'🙏', word:'Merci', label:'Thank you'},
-        {emoji:'🙇', word:'S\'il vous plaît', label:'Please (formal)'},
-        {emoji:'😬', word:'Pardon', label:'Excuse me / Sorry'},
-      ],hint:'Use "Bonjour" during the day and "Bonsoir" in the evening. "Salut" is for close friends only!'},
-      questions:[
-        {type:'mcq',q:'What does "S\'il vous plaît" mean?',choices:['Please','Thank you','Sorry','Goodbye'],answer:0},
-        {type:'mcq',q:'What does "Pardon" mean?',choices:['Hello','Thank you','Excuse me / Sorry','Please'],answer:2},
-        {type:'mcq',q:'What does "Salut" mean?',choices:['Goodbye','Hi (casual)','Please','Very good'],answer:1},
-        {type:'mcq',q:'How do you say "good evening"?',choices:['Bonjour','Bonsoir','Bonne nuit','Bonbon'],answer:1},
-        {type:'match',q:'Match these polite words!',pairs:[['Bonjour','Hello'],['Merci','Thank you'],['Pardon','Sorry'],['S\'il te plaît','Please']]},
-      ]},
-    { id:'w1-akshayan-f2', title:'Les Couleurs', emoji:'🎨', videoIds:['-4kNeFGBAcw'],
-      lesson:{title:'More Colors',intro:'Now you can learn even more colors in French! Tap to hear each one.',audioLang:'fr-FR',pictures:[
-        {emoji:'🔴', word:'rouge', label:'red'},
-        {emoji:'🔵', word:'bleu', label:'blue'},
-        {emoji:'🟡', word:'jaune', label:'yellow'},
-        {emoji:'🟢', word:'vert', label:'green'},
-        {emoji:'⚫', word:'noir', label:'black'},
-        {emoji:'⚪', word:'blanc', label:'white'},
-        {emoji:'🌸', word:'rose', label:'pink'},
-        {emoji:'🟠', word:'orange', label:'orange'},
-      ],hint:'Some like "orange" are almost the same in both languages!'},
-      questions:[
-        {type:'mcq',q:'What color is "noir"?',choices:['⚪ White','⚫ Black','🟤 Brown','🔵 Blue'],answer:1},
-        {type:'mcq',q:'What color is "blanc"?',choices:['⚫ Black','⚪ White','🟣 Purple','🔴 Red'],answer:1},
-        {type:'mcq',q:'What color is "rose"?',choices:['🔴 Red','🟢 Green','🌸 Pink','🟡 Yellow'],answer:2},
-        {type:'mcq',q:'How do you say "orange" in French?',choices:['oranj','orange','naranja','oren'],answer:1},
-        {type:'match',q:'Match the colors!',pairs:[['⚫','noir'],['⚪','blanc'],['🌸','rose'],['🟠','orange']]},
-      ]},
-    { id:'w1-akshayan-f3', title:'Les Nombres 1-10', emoji:'🔢',
-      lesson:{title:'Counting to 10',intro:'Now let\'s count all the way to TEN in French! Tap each number card to hear it pronounced.',audioLang:'fr-FR',pictures:[
-        {emoji:'1️⃣', word:'un'},{emoji:'2️⃣', word:'deux'},{emoji:'3️⃣', word:'trois'},{emoji:'4️⃣', word:'quatre'},{emoji:'5️⃣', word:'cinq'},
-        {emoji:'6️⃣', word:'six'},{emoji:'7️⃣', word:'sept'},{emoji:'8️⃣', word:'huit'},{emoji:'9️⃣', word:'neuf'},{emoji:'🔟', word:'dix'},
-      ],hint:'Say them in rhythm — French has a musical feel!'},
-      questions:[
-        {type:'mcq',q:'What number is "sept"?',choices:['5','6','7','9'],answer:2},
-        {type:'mcq',q:'What number is "dix"?',choices:['8','9','10','20'],answer:2},
-        {type:'mcq',q:'How do you say "8" in French?',choices:['six','sept','huit','neuf'],answer:2},
-        {type:'mcq',q:'How do you say "9" in French?',choices:['huit','neuf','dix','sept'],answer:1},
-        {type:'order',q:'Count from 1 to 5 in French!',items:['un','deux','trois','quatre','cinq'],correctOrder:[0,1,2,3,4]},
-      ]},
-    { id:'w1-akshayan-f4', title:'La Nourriture', emoji:'🍎',
-      lesson:{title:'French Food Words',intro:'French cooking is famous! Tap to hear how each food word sounds.',audioLang:'fr-FR',pictures:[
-        {emoji:'🍎', word:'la pomme', label:'apple'},
-        {emoji:'🍞', word:'le pain', label:'bread'},
-        {emoji:'🥛', word:'le lait', label:'milk'},
-        {emoji:'🧀', word:'le fromage', label:'cheese'},
-      ],hint:'Many French food words sneak into English (like "baguette"!).'},
-      questions:[
-        {type:'mcq',q:'What is "la pomme"?',choices:['🍌 Banana','🍎 Apple','🍞 Bread','🍪 Cookie'],answer:1},
-        {type:'mcq',q:'What is "le pain"?',choices:['🥛 Milk','🍞 Bread','🧀 Cheese','🍎 Apple'],answer:1},
-        {type:'mcq',q:'What is "le lait"?',choices:['🥛 Milk','💧 Water','☕ Coffee','🧃 Juice'],answer:0},
-        {type:'mcq',q:'What is "le fromage"?',choices:['🥚 Egg','🧀 Cheese','🍞 Bread','🍝 Pasta'],answer:1},
-        {type:'match',q:'Match the food words!',pairs:[['🍎','pomme'],['🍞','pain'],['🥛','lait'],['🧀','fromage']]},
-      ]},
-    { id:'w1-akshayan-f5', title:'Les Jours', emoji:'📅',
-      lesson:{title:'Days of the Week',intro:'In French, most day names end in "-di". The week starts with Monday (lundi). Tap each day to hear it!',audioLang:'fr-FR',pictures:[
-        {emoji:'📅', word:'lundi', label:'Monday'},
-        {emoji:'📅', word:'mardi', label:'Tuesday'},
-        {emoji:'📅', word:'mercredi', label:'Wednesday'},
-        {emoji:'📅', word:'jeudi', label:'Thursday'},
-        {emoji:'📅', word:'vendredi', label:'Friday'},
-        {emoji:'🎉', word:'samedi', label:'Saturday'},
-        {emoji:'☀️', word:'dimanche', label:'Sunday'},
-      ],hint:'"Samedi" = Saturday. "Dimanche" = Sunday. Those are the odd ones!'},
-      questions:[
-        {type:'mcq',q:'What day is "lundi"?',choices:['Sunday','Monday','Tuesday','Friday'],answer:1},
-        {type:'mcq',q:'What day is "vendredi"?',choices:['Wednesday','Thursday','Friday','Saturday'],answer:2},
-        {type:'mcq',q:'What day is "samedi"?',choices:['Friday','Saturday','Sunday','Monday'],answer:1},
-        {type:'mcq',q:'How do you say "Wednesday"?',choices:['mardi','mercredi','jeudi','vendredi'],answer:1},
-        {type:'order',q:'Put weekdays in order (Monday → Friday).',items:['lundi','mardi','mercredi','jeudi','vendredi'],correctOrder:[0,1,2,3,4]},
       ]},
   ],
   science: [
@@ -4638,91 +4680,7 @@ isaiah: {
         {type:'mcq',q:'Pattern: 100, 50, 25, 12.5, __. Rule and next term?',choices:['Subtract 50; answer 0','Halve each time; answer 6.25','Multiply by 2; answer 25','Cannot tell'],answer:1},
       ]},
   ],
-  french: [
-    // NOTE: French curriculum assumes students know only "bonjour" and "merci".
-    // Every lesson has pictures (= tap-to-speak audio) + a kid-safe YouTube video.
-    { id:'w1-isaiah-f1', title:'Les Salutations (Greetings)', emoji:'👋', videoIds:['9BgyvEXTZbk'],
-      lesson:{title:'Ways to Say Hello & Goodbye',intro:'You already know "bonjour"! Let\'s learn four more greeting words. Tap each card to hear the French pronunciation.',audioLang:'fr-FR',pictures:[
-        {emoji:'☀️', word:'bonjour', label:'hello / good morning'},
-        {emoji:'👋', word:'salut', label:'hi (casual)'},
-        {emoji:'🌆', word:'bonsoir', label:'good evening'},
-        {emoji:'🌙', word:'bonne nuit', label:'good night'},
-        {emoji:'🚪', word:'au revoir', label:'goodbye'},
-      ],hint:'"Bonjour" works any time in the day. "Salut" is just for friends. Use "Bonsoir" after the sun goes down.'},
-      questions:[
-        {type:'mcq',q:'What does "bonjour" mean?',choices:['👋 Goodbye','☀️ Hello / Good morning','🙏 Thank you','✅ Yes'],answer:1},
-        {type:'mcq',q:'Which word is a CASUAL "hi" for friends?',choices:['Bonjour','Bonsoir','Salut','Au revoir'],answer:2},
-        {type:'mcq',q:'You see your teacher in the evening. What do you say?',choices:['Bonjour','Bonsoir','Bonne nuit','Au revoir'],answer:1},
-        {type:'mcq',q:'Which phrase means "goodbye"?',choices:['Bonjour','Salut','Bonne nuit','Au revoir'],answer:3},
-        {type:'match',q:'Match the greeting to its meaning!',pairs:[['Bonjour','Hello'],['Salut','Hi'],['Bonsoir','Good evening'],['Au revoir','Goodbye']]},
-      ]},
-    { id:'w1-isaiah-f2', title:'La Politesse (Being Polite)', emoji:'🙏', videoIds:['9BgyvEXTZbk'],
-      lesson:{title:'Merci and Friends',intro:'You already know "merci"! Here are four more polite words that make you sound super kind in French. Tap each card to hear it.',audioLang:'fr-FR',pictures:[
-        {emoji:'🙏', word:'merci', label:'thank you'},
-        {emoji:'😊', word:'s\'il vous plaît', label:'please (polite)'},
-        {emoji:'💁', word:'de rien', label:'you\'re welcome'},
-        {emoji:'😅', word:'pardon', label:'sorry'},
-        {emoji:'🤚', word:'excusez-moi', label:'excuse me'},
-      ],hint:'"S\'il vous plaît" sounds like "see-voo-play". Use "pardon" if you bump into someone; "excusez-moi" to get someone\'s attention.'},
-      questions:[
-        {type:'mcq',q:'What does "merci" mean?',choices:['😊 Please','🙏 Thank you','😅 Sorry','☀️ Hello'],answer:1},
-        {type:'mcq',q:'Someone says "merci" to you. A polite reply is...',choices:['Bonjour','Pardon','De rien','Au revoir'],answer:2},
-        {type:'mcq',q:'Which means "please"?',choices:['Merci','S\'il vous plaît','Pardon','De rien'],answer:1},
-        {type:'mcq',q:'You step on someone\'s foot. You say...',choices:['Bonjour','Pardon','Merci','De rien'],answer:1},
-        {type:'match',q:'Match each polite word!',pairs:[['merci','thank you'],['s\'il vous plaît','please'],['de rien','you\'re welcome'],['pardon','sorry']]},
-      ]},
-    { id:'w1-isaiah-f3', title:'Oui, Non et Plus (Yes, No, More)', emoji:'✅', videoIds:['9BgyvEXTZbk'],
-      lesson:{title:'Yes, No & Little Answers',intro:'Learn the five tiny words that answer almost any question in French. Tap each card to hear how it sounds.',audioLang:'fr-FR',pictures:[
-        {emoji:'✅', word:'oui', label:'yes'},
-        {emoji:'❌', word:'non', label:'no'},
-        {emoji:'👍', word:'d\'accord', label:'OK / agreed'},
-        {emoji:'🤔', word:'peut-être', label:'maybe'},
-        {emoji:'🙂', word:'ça va', label:'I\'m OK'},
-      ],hint:'"Oui" sounds like "wee". "Peut-être" sounds like "puh-teh-truh". Short and quick!'},
-      questions:[
-        {type:'mcq',q:'What does "oui" mean?',choices:['❌ No','✅ Yes','🤔 Maybe','😊 Please'],answer:1},
-        {type:'mcq',q:'What does "non" mean?',choices:['✅ Yes','❌ No','☀️ Hi','👍 OK'],answer:1},
-        {type:'mcq',q:'Which word means "maybe"?',choices:['Oui','D\'accord','Peut-être','Ça va'],answer:2},
-        {type:'mcq',q:'A friend asks "Ça va?" (how are you?). A good reply is...',choices:['Merci','Ça va','Au revoir','Pardon'],answer:1},
-        {type:'match',q:'Match the short answer!',pairs:[['oui','yes'],['non','no'],['d\'accord','OK'],['peut-être','maybe']]},
-      ]},
-    { id:'w1-isaiah-f4', title:'Les Nombres 1-10 (Numbers)', emoji:'🔢', videoIds:['lsc3qLMaCu8'],
-      lesson:{title:'Counting in French',intro:'Counting in French sounds different, but the numbers still go 1, 2, 3! Tap each card to hear how it\'s pronounced.',audioLang:'fr-FR',pictures:[
-        {emoji:'1️⃣', word:'un', label:'one'},
-        {emoji:'2️⃣', word:'deux', label:'two'},
-        {emoji:'3️⃣', word:'trois', label:'three'},
-        {emoji:'4️⃣', word:'quatre', label:'four'},
-        {emoji:'5️⃣', word:'cinq', label:'five'},
-        {emoji:'6️⃣', word:'six', label:'six'},
-        {emoji:'7️⃣', word:'sept', label:'seven'},
-        {emoji:'8️⃣', word:'huit', label:'eight'},
-        {emoji:'9️⃣', word:'neuf', label:'nine'},
-        {emoji:'🔟', word:'dix', label:'ten'},
-      ],hint:'"Deux" sounds like "duh". "Huit" sounds like "weet". "Dix" sounds like "deese".'},
-      questions:[
-        {type:'mcq',q:'What number is "trois"?',choices:['1','2','3','4'],answer:2},
-        {type:'mcq',q:'What number is "cinq"?',choices:['4','5','6','7'],answer:1},
-        {type:'mcq',q:'Which word means "seven"?',choices:['six','sept','huit','neuf'],answer:1},
-        {type:'mcq',q:'Which word means "ten"?',choices:['huit','neuf','dix','douze'],answer:2},
-        {type:'order',q:'Put these numbers in order from lowest to highest!',items:['deux','quatre','six','huit'],correctOrder:[0,1,2,3]},
-      ]},
-    { id:'w1-isaiah-f5', title:'Les Couleurs (Colors)', emoji:'🎨', videoIds:['fZR66TjjrDc'],
-      lesson:{title:'Colors in French',intro:'Colors in French are simple! Tap each card to hear the color, then remember the matches.',audioLang:'fr-FR',pictures:[
-        {emoji:'🔴', word:'rouge', label:'red'},
-        {emoji:'🔵', word:'bleu', label:'blue'},
-        {emoji:'🟢', word:'vert', label:'green'},
-        {emoji:'🟡', word:'jaune', label:'yellow'},
-        {emoji:'⚫', word:'noir', label:'black'},
-        {emoji:'⚪', word:'blanc', label:'white'},
-      ],hint:'"Rouge" sounds like "roozh". "Jaune" sounds like "zhohn". Short and fun!'},
-      questions:[
-        {type:'mcq',q:'What color is "rouge"?',choices:['🔴 Red','🔵 Blue','🟢 Green','🟡 Yellow'],answer:0},
-        {type:'mcq',q:'What color is "bleu"?',choices:['🔴 Red','🔵 Blue','🟢 Green','⚫ Black'],answer:1},
-        {type:'mcq',q:'Which word means "yellow"?',choices:['vert','rouge','jaune','noir'],answer:2},
-        {type:'mcq',q:'Which word means "white"?',choices:['noir','blanc','bleu','vert'],answer:1},
-        {type:'match',q:'Match each color!',pairs:[['rouge','red'],['bleu','blue'],['vert','green'],['jaune','yellow']]},
-      ]},
-  ],
+  french: beginnerFrenchBase('isaiah'),
   science: [
     { id:'w1-isaiah-s1', title:'Human Body Systems', emoji:'🫀', videoIds:['EwY6p-r_hyU'],
       lesson:{title:'Body Systems Working Together',intro:'The human body is made of SYSTEMS that each do a job. CIRCULATORY (heart + blood) moves oxygen. DIGESTIVE (mouth → stomach → intestines) breaks down food. RESPIRATORY (lungs) takes in air. SKELETAL (bones) holds us up.',heroImage:IMG.skeleton,pictures:[
@@ -7388,8 +7346,62 @@ function clearLockState(sid){
 // localStorage. The key on THIS device is authoritative; allData.videoOverrides
 // is kept in sync as a best-effort mirror for cloud backup.
 const VIDEO_OVERRIDES_KEY = 'kidquest-video-overrides';
-const CLOUD_BUCKET = 'kidquest-dca83c70e20a70f247b6';
+
+/* ========== CLOUD BUCKET (dev/prod split) ==========
+   Production and dev/preview write to DIFFERENT textdb.dev buckets so that
+   anything the developer types in the console at localhost — including a
+   well-meaning "Reset everything" — can never corrupt the live student
+   coin/progress data. Detection is by hostname:
+
+     file://                    → DEV bucket
+     localhost / 127.* / *.local / 192.168.* → DEV bucket
+     kidquest.fun / rhahavy.github.io        → PROD bucket
+
+   The dev bucket name is just a random string on textdb.dev; it holds a
+   sandbox copy you can wipe as often as you like during edits. The prod
+   bucket is the one the live site has been writing to for months and is
+   the one kids' devices have synced from since launch — do not rename.
+
+   Override via URL query: ?env=dev forces the dev bucket on any host, and
+   ?env=prod forces prod (useful when testing production data locally —
+   read-only, please). Preference is sticky for the tab via sessionStorage
+   so a reload doesn't accidentally bounce back to the other env. */
+const CLOUD_BUCKET_PROD = 'kidquest-dca83c70e20a70f247b6';
+const CLOUD_BUCKET_DEV  = 'kidquest-dev-sandbox-9f3c2a7b';
+// Dedicated SIBLING bucket for auto-snapshots. Separate from the main
+// allData bucket so that (a) kid devices polling every 25s don't drag a
+// whole snapshot history down with them, and (b) a corrupt snapshot
+// blob can't take down the live site. Each environment keeps its own
+// ring so dev resets never touch the prod history.
+const CLOUD_SNAPSHOTS_BUCKET_PROD = 'kidquest-snapshots-a71f3e92d8c4';
+const CLOUD_SNAPSHOTS_BUCKET_DEV  = 'kidquest-snapshots-dev-2b8e4c1a';
+const IS_DEV_ENV = (() => {
+  try {
+    const url = new URL(location.href);
+    const envParam = url.searchParams.get('env');
+    if(envParam === 'dev')  { try{ sessionStorage.setItem('kidquest-env','dev'); }catch(e){} return true; }
+    if(envParam === 'prod') { try{ sessionStorage.setItem('kidquest-env','prod'); }catch(e){} return false; }
+    try {
+      const stickyEnv = sessionStorage.getItem('kidquest-env');
+      if(stickyEnv === 'dev')  return true;
+      if(stickyEnv === 'prod') return false;
+    } catch(e){}
+    if(location.protocol === 'file:') return true;
+    const h = location.hostname || '';
+    if(!h) return true; // unknown context — treat as dev (safer)
+    if(h === 'localhost' || h === '127.0.0.1' || h === '::1') return true;
+    if(h.endsWith('.local')) return true;
+    if(h.startsWith('192.168.') || h.startsWith('10.') || h.startsWith('172.')) return true;
+    return false;
+  } catch(e){ return true; /* fail-safe to dev */ }
+})();
+const CLOUD_BUCKET = IS_DEV_ENV ? CLOUD_BUCKET_DEV : CLOUD_BUCKET_PROD;
 const CLOUD_URL = 'https://textdb.dev/api/data/' + CLOUD_BUCKET;
+const CLOUD_SNAPSHOTS_BUCKET = IS_DEV_ENV ? CLOUD_SNAPSHOTS_BUCKET_DEV : CLOUD_SNAPSHOTS_BUCKET_PROD;
+const CLOUD_SNAPSHOTS_URL = 'https://textdb.dev/api/data/' + CLOUD_SNAPSHOTS_BUCKET;
+// Surface the choice in the console so you can SEE which bucket this tab
+// talks to. Visible banner added later in the boot sequence for the teacher.
+try { console.log('[KidQuest] cloud bucket:', IS_DEV_ENV ? 'DEV sandbox' : 'PRODUCTION', '('+CLOUD_BUCKET+')'); } catch(e){}
 const POLL_MS = 25000;
 
 // Parent progress reports — always CC the business owner so Rhahavy sees
@@ -7450,10 +7462,19 @@ function getPronouns(sidOrUd){
 }
 
 // Which students get read-aloud support turned ON by default on first load.
-// ESL kids (Evan) and early readers (Akaran, Nishan) benefit most — older
-// fluent readers (Isaiah, Rushan, Akshayan, Axel) start with it off so they
-// don't feel babied. The teacher can flip any student from the dashboard.
-const STUDENTS_TTS_DEFAULT_ON = new Set(['evan','akaran','nishan']);
+// Computed from STUDENTS metadata rather than hardcoded: any kid with an
+// 'articulation' support flag or an ESL plan gets TTS on by default, so
+// they hear model pronunciation without having to produce it themselves.
+// Fluent readers with no speech/ESL needs (e.g. Axel, Akshayan) start with
+// TTS off so they don't feel babied. The teacher can flip any student from
+// the dashboard, and the `ttsSeeded` gate means manual toggles stick —
+// the seed never overrides an explicit choice.
+const STUDENTS_TTS_DEFAULT_ON = new Set(
+  STUDENTS.filter(s =>
+    (Array.isArray(s.supports) && s.supports.includes('articulation')) ||
+    (s.plan && (s.plan.type === 'esl' || s.plan.type === 'gifted-esl'))
+  ).map(s => s.id)
+);
 
 // ---- THEMES ----
 // A small palette picker kids can change from their dashboard. Each theme
@@ -7518,6 +7539,14 @@ const defaultUser = () => ({
   parentEmail: '',
   joinedAt: 0,
   lastReportSentAt: 0,
+  // Review workflow: parent reports become "reviewable" 1 day before the
+  // 7-day send date, and the teacher must tap "Mark reviewed" before the
+  // report is considered cleared for the current cycle. If the day-of-send
+  // (or later) arrives without a review, a red badge appears on the
+  // "Parent Reports" tab, the browser tab title, and a desktop popup fires.
+  // Sending a report stamps lastReportSentAt → anchor advances → review
+  // state auto-resets for the NEXT cycle (no explicit clear needed).
+  lastReportReviewedAt: 0,
   wrongAnswers: [],
   // Pronouns — used by the parent progress report so language reads
   // naturally ("he has earned..." vs "they have earned..."). Default is
@@ -7588,6 +7617,18 @@ const defaultAll = () => ({
     achievedAt: 0,        // epoch ms when the goal was first hit this week; 0 = not yet
     bonusPaidSids: [],    // sids that have already been paid the +coins bonus for THIS week
   },
+  // Per-student education plan overrides (IEP / gifted / ESL / custom).
+  // Keyed by sid. Each value is a full plan object { type, notes, workingAt }
+  // that replaces the seed plan baked into STUDENTS (see getStudentPlan).
+  // Tutor edits via Teacher Dash → Student Plans. Kept separate from the
+  // student's `users[sid]` record because plans are roster metadata (about
+  // the kid), not session state.
+  studentPlans: {},
+  // Per-student supports overrides — the supports[] list (articulation,
+  // etc.) that orthogonally describes speech-therapy or accessibility
+  // needs. Kept separate from plans because a kid can be gifted + need
+  // articulation support simultaneously. Tutor edits via the same editor.
+  studentSupports: {},
   updatedAt:0
 });
 
@@ -7864,9 +7905,24 @@ function loginAs(uid){
   go('dashboard');
 }
 
+/* Teacher session grace period — after the teacher enters TEACHER_CREDS at
+   login (or types the password in a confirmTeacherPassword prompt), we skip
+   the re-prompt for destructive actions for TEACHER_GRACE_MS. Sliding
+   window: every successful auth (login OR prompt) resets the clock, so if
+   the teacher is actively working they stay authorized indefinitely; if
+   they walk away, the grace expires 10 minutes after their last action.
+   Kept in-memory only so a page reload forces a fresh prompt. */
+const TEACHER_GRACE_MS = 10 * 60 * 1000; // 10 minutes
+let teacherAuthAt = 0;
+function teacherGraceActive(){
+  return isTeacher && teacherAuthAt && (Date.now() - teacherAuthAt < TEACHER_GRACE_MS);
+}
+
 function loginTeacher(){
   isTeacher=true; currentUser=null; state=null;
   allData.teacher.lastLogin=Date.now();
+  // Start (or reset) the destructive-action grace window.
+  teacherAuthAt = Date.now();
   saveState();
   go('teacher');
 }
@@ -7878,6 +7934,9 @@ function loginTeacher(){
 // that's a real exit back to the public landing.
 function logout(dest){
   currentUser=null; isTeacher=false; state=null;
+  // Reset the teacher grace period on logout — next login has to re-enter
+  // password for destructive actions until they re-authenticate.
+  teacherAuthAt = 0;
   // Reset topbar bump-cache so the next login doesn't see a bogus delta.
   _prevTopbarUser = null; _prevTopbarStars = 0; _prevTopbarCoins = 0;
   // Drop back to the default cosmos palette so the profile picker shows
@@ -7970,6 +8029,215 @@ async function syncToCloud(){
   if(cloudBusy){pendingWrite=true;return}cloudBusy=true;
   try{await fetch(CLOUD_URL,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify(allData)})}catch(e){}
   cloudBusy=false;if(pendingWrite){pendingWrite=false;syncToCloud()}
+}
+
+/* ================ SNAPSHOTS (local undo ring) ================
+   Safety net for destructive actions. Before a reset / import / Nuke,
+   callers invoke pushSnapshot(reason) which copies the CURRENT allData
+   into a 5-slot rotating buffer in localStorage. The teacher dashboard's
+   "↶ Restore from snapshot" panel surfaces them with human-readable
+   timestamps + a stats summary (total coins / total stars / # activity
+   completions) so it's obvious which snapshot holds the data you want.
+
+   Design notes:
+     • Purely local — no cloud cost. The goal is surviving the 5 minutes
+       between "oh no I just clicked Reset" and "it's restored." It does
+       NOT protect against a lost laptop; for that, the teacher should
+       still use 📋 Export JSON periodically.
+     • Stored as JSON strings so we can `JSON.parse(snap.data)` later and
+       get back a clean `allData` shape.
+     • Capped at SNAP_MAX slots + a per-snapshot size guard so a huge
+       allData (lots of wrongAnswers history, say) can't blow the
+       ~5 MB localStorage budget. If quota is hit we drop the oldest
+       snapshots and retry once.
+     • Restore is also non-destructive: restoring itself takes a
+       pre-restore snapshot first ("↶ before restore YYYY-MM-DD HH:MM")
+       so you can undo your undo if you picked the wrong one.
+   ================================================================ */
+const SNAP_KEY = 'kidquest-snapshots-v1';
+const SNAP_MAX = 5;
+function snapshotSummary(data){
+  // Tiny preview string for the picker UI — totals across all students.
+  let coins=0, stars=0, acts=0;
+  try {
+    const users = (data && data.users) || {};
+    for(const sid in users){
+      const u = users[sid] || {};
+      coins += Number(u.coins||0);
+      stars += Number(u.totalStars||0);
+      acts  += Object.keys(u.completedActivities||{}).length;
+    }
+  } catch(e){}
+  return { coins, stars, acts };
+}
+function readSnapshots(){
+  try {
+    const raw = localStorage.getItem(SNAP_KEY);
+    if(!raw) return [];
+    const arr = JSON.parse(raw);
+    return Array.isArray(arr) ? arr : [];
+  } catch(e){ return []; }
+}
+function writeSnapshots(list){
+  // Retry once on quota error, dropping the oldest entry.
+  const write = (arr) => localStorage.setItem(SNAP_KEY, JSON.stringify(arr));
+  try { write(list); return true; }
+  catch(e){
+    try { write(list.slice(0, Math.max(1, list.length-2))); return true; }
+    catch(e2){ try{ localStorage.removeItem(SNAP_KEY); }catch(e3){} return false; }
+  }
+}
+function pushSnapshot(reason){
+  try {
+    const snap = {
+      at: Date.now(),
+      reason: String(reason || 'manual save'),
+      env: IS_DEV_ENV ? 'dev' : 'prod',
+      totals: snapshotSummary(allData),
+      data: JSON.stringify(allData),
+    };
+    // --- Local: write synchronously so even if cloud is down the snapshot
+    // exists on THIS device immediately ---
+    const list = readSnapshots();
+    list.unshift(snap);
+    const trimmed = list.slice(0, SNAP_MAX);
+    writeSnapshots(trimmed);
+    // --- Cloud: fire-and-forget so the destructive action doesn't wait.
+    // If offline or textdb.dev is unreachable, the local snapshot is still
+    // a safety net — we just don't gain cross-device recoverability for
+    // this particular entry until it's manually re-saved online. ---
+    try { pushCloudSnapshot(snap); } catch(e){}
+    return snap;
+  } catch(e){ try{ console.warn('[KidQuest] pushSnapshot failed:', e); }catch(_){}; return null; }
+}
+// Apply a snapshot object's stored `data` (a stringified allData) to the
+// live allData, taking a pre-restore snapshot first so the restore itself
+// is undoable. Used by both local and cloud restore paths.
+function applySnapshotToAllData(snap){
+  if(!snap || !snap.data) return false;
+  let parsed;
+  try { parsed = JSON.parse(snap.data); }
+  catch(e){ return false; }
+  if(!parsed || typeof parsed !== 'object' || !parsed.users) return false;
+  pushSnapshot('before restoring snapshot from '+new Date(snap.at).toLocaleString());
+  // Apply: merge each student record through defaultUser() so any new
+  // fields added to defaultUser() since the snapshot was taken are filled
+  // in with sensible defaults, not missing/undefined.
+  STUDENTS.forEach(s => {
+    allData.users[s.id] = Object.assign(defaultUser(), (parsed.users && parsed.users[s.id]) || {});
+  });
+  allData.orders            = Array.isArray(parsed.orders) ? parsed.orders : [];
+  allData.catalogOverrides  = (parsed.catalogOverrides && typeof parsed.catalogOverrides==='object') ? parsed.catalogOverrides : {};
+  allData.videoOverrides    = (parsed.videoOverrides   && typeof parsed.videoOverrides  ==='object') ? parsed.videoOverrides   : {};
+  if(parsed.messages && typeof parsed.messages==='object'){
+    allData.messages = {};
+    STUDENTS.forEach(s => { allData.messages[s.id] = Array.isArray(parsed.messages[s.id]) ? parsed.messages[s.id] : []; });
+  }
+  if(parsed.curriculum && typeof parsed.curriculum==='object'){
+    allData.curriculum = {
+      overrides: (parsed.curriculum.overrides && typeof parsed.curriculum.overrides==='object') ? parsed.curriculum.overrides : {},
+      updatedAt: typeof parsed.curriculum.updatedAt==='number' ? parsed.curriculum.updatedAt : 0,
+    };
+  }
+  allData.updatedAt = Date.now();
+  try { saveLocalVideoOverrides(allData.videoOverrides); } catch(e){}
+  saveState();
+  return true;
+}
+// Back-compat shim: older callers pass a local index.
+function restoreSnapshot(index){
+  const list = readSnapshots();
+  const snap = list[index];
+  return applySnapshotToAllData(snap);
+}
+function deleteSnapshot(index){
+  const list = readSnapshots();
+  if(index < 0 || index >= list.length) return false;
+  list.splice(index, 1);
+  writeSnapshots(list);
+  return true;
+}
+
+/* ---- Cloud snapshot ring ------------------------------------------------
+   Mirror of the local ring in a dedicated textdb.dev bucket so a teacher
+   who wipes data on one device can restore from a different device — or
+   a freshly re-imaged laptop with empty localStorage. Keeps the last
+   SNAP_MAX entries, dedupe by `at` timestamp on write (so concurrent
+   devices pushing near-simultaneous snapshots don't double-insert).
+
+   Concurrency: textdb.dev is last-write-wins with no CAS. In the worst
+   case two devices racing each other lose one entry. Acceptable — the
+   entries are additive backups of the same source data, and the LOCAL
+   ring on each device is unaffected.
+
+   Error handling: every path swallows errors and returns an empty array
+   or false. Destructive UI actions must NOT fail because the cloud is
+   unreachable — local snapshots are the primary safety net, cloud is a
+   cross-device convenience on top.
+   ----------------------------------------------------------------------- */
+async function fetchCloudSnapshots(){
+  try {
+    const r = await fetch(CLOUD_SNAPSHOTS_URL + '?_=' + Date.now(), { cache: 'no-store' });
+    if(!r.ok) return [];
+    const t = await r.text();
+    if(!t) return [];
+    const parsed = JSON.parse(t);
+    if(Array.isArray(parsed))       return parsed;            // legacy: raw array
+    if(parsed && Array.isArray(parsed.snapshots)) return parsed.snapshots; // wrapped
+    return [];
+  } catch(e){ return []; }
+}
+async function writeCloudSnapshots(list){
+  try {
+    const body = JSON.stringify({ snapshots: list.slice(0, SNAP_MAX), updatedAt: Date.now() });
+    await fetch(CLOUD_SNAPSHOTS_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body,
+    });
+    return true;
+  } catch(e){ return false; }
+}
+async function pushCloudSnapshot(snap){
+  if(!snap) return false;
+  // Read-modify-write. Prepend, trim, dedupe by `at`.
+  const existing = await fetchCloudSnapshots();
+  const seen = new Set();
+  const merged = [snap, ...existing].filter(s => {
+    if(!s || typeof s.at !== 'number') return false;
+    if(seen.has(s.at)) return false;
+    seen.add(s.at); return true;
+  });
+  merged.sort((a,b) => (b.at||0) - (a.at||0));
+  return writeCloudSnapshots(merged);
+}
+async function deleteCloudSnapshot(at){
+  const existing = await fetchCloudSnapshots();
+  const next = existing.filter(s => s && s.at !== at);
+  return writeCloudSnapshots(next);
+}
+// Merge the local + cloud lists into one deduped timeline, newest first.
+// Each entry is tagged with `sources: ['local'|'cloud', ...]` so the UI
+// can show where the snapshot lives (and whether it would be lost if
+// this device's localStorage were cleared).
+function mergeSnapshotLists(localList, cloudList){
+  const byAt = new Map();
+  (localList||[]).forEach(s => {
+    if(!s || typeof s.at !== 'number') return;
+    byAt.set(s.at, Object.assign({}, s, { sources: ['local'] }));
+  });
+  (cloudList||[]).forEach(s => {
+    if(!s || typeof s.at !== 'number') return;
+    const existing = byAt.get(s.at);
+    if(existing){
+      existing.sources = ['local','cloud'];
+      // Prefer whichever has full `data` (should be both, but defensive).
+      if(!existing.data && s.data) existing.data = s.data;
+    } else {
+      byAt.set(s.at, Object.assign({}, s, { sources: ['cloud'] }));
+    }
+  });
+  return Array.from(byAt.values()).sort((a,b) => (b.at||0) - (a.at||0));
 }
 
 /* ================ CHAT SYSTEM ================
@@ -9000,7 +9268,7 @@ function renderReviewCard(userId){
   return wrap;
 }
 
-/* buildFamilyScoreboard({ compact, highlightSid })  →  HTMLElement
+/* buildClassScoreboard({ compact, highlightSid })  →  HTMLElement
    ----------------------------------------------------------------
    Ranked list of every real student (skips DEMO_GRADES) keyed off
    allData.users. Primary sort: totalStars desc. Tiebreak: perfects, then
@@ -9014,7 +9282,7 @@ function renderReviewCard(userId){
 
    The viewer's row (highlightSid) gets .me styling + a "YOU" chip so
    kids can spot themselves on a shared family device. */
-function buildFamilyScoreboard(opts){
+function buildClassScoreboard(opts){
   const compact     = opts && opts.compact;
   const highlightSid = opts && opts.highlightSid;
   const rows = STUDENTS.map(s=>{
@@ -9046,7 +9314,7 @@ function buildFamilyScoreboard(opts){
   card.appendChild(h('div',{class:'sb-head'},[
     h('div',{class:'sb-title'},[
       h('span',{},'🏆'),
-      h('span',{}, compact ? 'Family Scoreboard' : 'Family Scoreboard — full view'),
+      h('span',{}, compact ? 'Class Scoreboard' : 'Class Scoreboard — full view'),
     ]),
     h('span',{class:'sb-sub'}, rows.length+' kids · ranked by stars'),
   ]));
@@ -9109,7 +9377,7 @@ function buildCoopGoalCard(opts){
   card.appendChild(h('div',{class:'coop-head'},[
     h('div',{class:'coop-title'},[
       h('span',{}, p.achieved ? '🎉' : '🌟'),
-      h('span',{}, p.achieved ? 'Family Goal — ACHIEVED!' : 'Family Goal This Week'),
+      h('span',{}, p.achieved ? 'Class Goal — ACHIEVED!' : 'Class Goal This Week'),
     ]),
     h('span',{class:'coop-sub'}, allData.weeklyGoal.weekId || ''),
   ]));
@@ -9127,9 +9395,9 @@ function buildCoopGoalCard(opts){
   } else if(p.pct >= 75){
     cheer = 'Almost there — just '+(p.target - p.current)+' more stars to go!';
   } else if(p.pct >= 40){
-    cheer = 'Keep going! You\'re over halfway as a family.';
+    cheer = 'Keep going! You\'re over halfway as a class.';
   } else if(p.pct >= 10){
-    cheer = 'Great start — every star counts toward the family goal.';
+    cheer = 'Great start — every star counts toward the class goal.';
   } else {
     cheer = 'New week, fresh goal. Let\'s work together to hit '+p.target+'!';
   }
@@ -9253,7 +9521,7 @@ function buildAnalyticsPanel(){
     .sort((a,b)=>b[1].count - a[1].count)
     .slice(0, 8);
   const sc = h('div',{class:'ana-section'});
-  sc.appendChild(h('h3',{},[h('span',{},'🧠'),h('span',{},'Top struggle concepts (family)')]));
+  sc.appendChild(h('h3',{},[h('span',{},'🧠'),h('span',{},'Top struggle concepts (class)')]));
   sc.appendChild(h('div',{class:'ana-sub'}, 'Concepts with the most wrong answers across every student. Use these to target the next week\'s content.'));
   if(!topConcepts.length){
     sc.appendChild(h('div',{class:'ana-sub',style:'text-align:center;padding:20px'},'No wrong answers logged yet — everyone\'s crushing it.'));
@@ -9673,6 +9941,74 @@ function getStudentData(sid){return allData.users[sid]||defaultUser()}
 function getStudentInfo(sid){
   return STUDENTS.find(s=>s.id===sid) || DEMO_GRADES.find(d=>d.id===sid);
 }
+/* Student education plan — an IEP (Individual Education Plan), gifted track,
+   ESL adaptation, or "none" (on-grade, no special plan). Merges:
+     1. Seed plan from STUDENTS (Isaiah, Evan, Akaran have defaults; others
+        default to none).
+     2. Tutor override from allData.studentPlans[sid], if present. A tutor
+        edit fully replaces the seed — we don't merge field-by-field so
+        wiping a field is predictable.
+   Plan shape: { type, workingAt, notes }. Type is one of:
+     - 'none'       — on-grade, no special plan
+     - 'iep'        — Individual Education Plan (accommodations)
+     - 'gifted'     — working above grade, stretch activated
+     - 'gifted-esl' — dual track: gifted in reasoning, ESL in language
+     - 'esl'        — English Language Learner scaffolding
+     - 'custom'     — tutor-defined (use notes to describe)                  */
+function getStudentPlan(sid){
+  const info = getStudentInfo(sid);
+  const seed = (info && info.plan) || { type:'none', workingAt:'', notes:'' };
+  const override = (allData && allData.studentPlans && allData.studentPlans[sid]) || null;
+  // Tutor override completely replaces seed. Default to 'none' shape if
+  // the override is a partial.
+  if(override){
+    return {
+      type: override.type || seed.type || 'none',
+      workingAt: override.workingAt || '',
+      notes: override.notes || '',
+    };
+  }
+  return { type: seed.type || 'none', workingAt: seed.workingAt || '', notes: seed.notes || '' };
+}
+/* Plan metadata — label, emoji, accent color for badges. 'none' maps to
+   null so callers can skip rendering for kids on the default track. */
+const PLAN_META = {
+  'none':       null,
+  'iep':        { label:'IEP',           emoji:'🧩', accent:'#6C5CE7', bg:'rgba(108,92,231,.12)',  bd:'rgba(108,92,231,.3)' },
+  'gifted':     { label:'Gifted',        emoji:'🌟', accent:'#d9480f', bg:'rgba(253,126,20,.12)',  bd:'rgba(253,126,20,.3)' },
+  'gifted-esl': { label:'Gifted · ESL',   emoji:'🌟', accent:'#2b8a3e', bg:'rgba(64,192,87,.12)',   bd:'rgba(64,192,87,.3)' },
+  'esl':        { label:'ESL',           emoji:'🌐', accent:'#1864ab', bg:'rgba(24,100,171,.1)',   bd:'rgba(24,100,171,.3)' },
+  'custom':     { label:'Custom Plan',   emoji:'📋', accent:'#c2185b', bg:'rgba(253,121,168,.12)', bd:'rgba(253,121,168,.3)' },
+};
+
+/* Student supports — orthogonal speech-therapy / accessibility needs that
+   don't fit in the academic plan (IEP/gifted/ESL). A kid can be "gifted +
+   articulation support" or "IEP + articulation support" — supports is a
+   flat list, plan is a single type. Known supports today:
+     - 'articulation' — struggles with spoken pronunciation. Auto-enable
+       TTS so they hear model speech without being graded on output.
+   Future expansion: 'fine-motor', 'visual', 'hearing', etc.           */
+const SUPPORT_META = {
+  'articulation': {
+    label:'Articulation support',
+    shortLabel:'Speech support',
+    emoji:'🗣️',
+    accent:'#0984e3',
+    bg:'rgba(9,132,227,.1)',
+    bd:'rgba(9,132,227,.3)',
+    description:'Struggles with spoken pronunciation. Keep read-aloud (TTS) on, and avoid grading activities on spoken output.',
+  },
+};
+function getStudentSupports(sid){
+  const info = getStudentInfo(sid);
+  const seed = (info && Array.isArray(info.supports)) ? info.supports.slice() : [];
+  const override = (allData && allData.studentSupports && allData.studentSupports[sid]) || null;
+  // Override completely replaces seed (including [] to wipe). Only when
+  // override is explicitly set do we use it — undefined falls through to seed.
+  if(Array.isArray(override)) return override.slice();
+  return seed;
+}
+function hasArticulationNeed(sid){ return getStudentSupports(sid).includes('articulation'); }
 /* Curriculum override merge — teacher edits from the Curriculum Editor live
    in allData.curriculum.overrides[activityId]. The override is a PATCH:
    any field present REPLACES the same field on the base activity; missing
@@ -10022,6 +10358,11 @@ function go(screen,opts={}){
   if(!root){console.warn('[KidQuest] #screen not found'); return;}
   root.innerHTML='';
   window.scrollTo({top:0,behavior:'smooth'});
+
+  // Keep the browser tab title "(N) KidQuest" prefix in sync with the
+  // current session — shows the unreviewed-reports count only while the
+  // teacher is logged in, clears on logout or when a student signs in.
+  try { if(typeof syncDocumentTitleBadge === 'function') syncDocumentTitleBadge(); } catch(e){}
 
   // Always hide the reward overlay on navigation (belt-and-suspenders)
   const rew = $('#reward'); if(rew){rew.classList.remove('show'); rew.style.display='none'}
@@ -10759,13 +11100,19 @@ function renderParentView(root){
   root.appendChild(wrap);
   // Hero card — uses the student's palette so two kids' parent links
   // look visibly different to the parent.
+  const metaChildren = [
+    h('span',{class:'pv-tag'},'Parent view'),
+    h('h1',{}, stu.name+'’s progress'),
+    h('div',{class:'pv-grade'}, stu.grade || ''),
+  ];
+  // NOTE: Plan type (IEP/gifted/ESL/custom) and support tags (articulation,
+  // etc.) are intentionally NOT shown in the parent-facing view. The tutor
+  // shares an IEP/accommodation plan with parents via in-person conversation
+  // or a separate report — not as a public label on the shared progress
+  // link. This keeps the data strictly teacher-dashboard-only.
   const hero = h('div',{class:'pv-hero'},[
     h('div',{class:'pv-av'}, stu.initial || stu.name[0]),
-    h('div',{class:'pv-meta'},[
-      h('span',{class:'pv-tag'},'Parent view'),
-      h('h1',{}, stu.name+'’s progress'),
-      h('div',{class:'pv-grade'}, stu.grade || ''),
-    ]),
+    h('div',{class:'pv-meta'}, metaChildren),
   ]);
   hero.style.setProperty('--pv-l', stu.colorLight || '#6C5CE7');
   hero.style.setProperty('--pv-d', stu.colorDark || '#4834D4');
@@ -10807,6 +11154,31 @@ function renderParentView(root){
     if(!stt || !stt.total) return;  // subject isn't in this kid's curriculum
     anySubject = true;
     const levelNames = ['', 'Growing', 'Steady', 'Strong', 'Mastering'];
+    // Ontario curriculum coverage for this subject this week — aggregate
+    // the grade levels + expectation codes across the activities the kid
+    // has this week. If no activity is tagged we skip the pill; if tagged
+    // we show a concise "G3 · 4 codes" summary with the full list on hover.
+    let curricPill = null;
+    try {
+      const weekActs = getWeekActivities(sid, sub.id) || [];
+      const taggedActs = weekActs.filter(a => a && a.curriculum && (a.curriculum.grade || (Array.isArray(a.curriculum.codes) && a.curriculum.codes.length) || a.curriculum.strand));
+      if(taggedActs.length){
+        const grades = Array.from(new Set(taggedActs.map(a=>a.curriculum.grade).filter(Boolean)));
+        const codes = Array.from(new Set(taggedActs.flatMap(a=>Array.isArray(a.curriculum.codes)?a.curriculum.codes:[])));
+        const strands = Array.from(new Set(taggedActs.map(a=>a.curriculum.strand).filter(Boolean)));
+        const parts = [];
+        if(grades.length === 1) parts.push(String(grades[0]).replace(/^Grade\s+/i,'G'));
+        else if(grades.length > 1) parts.push('Mixed');
+        if(codes.length) parts.push(codes.length+' code'+(codes.length>1?'s':''));
+        else if(strands.length) parts.push(strands[0].slice(0,14)+(strands[0].length>14?'…':''));
+        const tipLines = [];
+        if(grades.length) tipLines.push('Grade: '+grades.join(', '));
+        if(strands.length) tipLines.push('Strand: '+strands.join(', '));
+        if(codes.length) tipLines.push('Codes: '+codes.join(', '));
+        tipLines.push(taggedActs.length+' of '+weekActs.length+' activities this week are Ontario-aligned.');
+        curricPill = h('div',{class:'pvs-curric', title: tipLines.join('\n')}, '📋 '+parts.join(' · '));
+      }
+    } catch(e){ /* silent — never break parent view on a data issue */ }
     const card = h('div',{class:'pv-subj'},[
       h('div',{class:'pvs-head'},[
         h('div',{class:'pvs-name'},[h('span',{}, sub.emoji),h('span',{}, sub.name)]),
@@ -10817,6 +11189,7 @@ function renderParentView(root){
         h('span',{}, stt.done+' of '+stt.total+' done'),
         h('span',{}, stt.touched ? (stt.pctAccuracy+'% accuracy') : 'not started'),
       ]),
+      curricPill,
     ]);
     grid.appendChild(card);
   });
@@ -10894,16 +11267,24 @@ function renderDashboard(root){
       renderDashboard(root);
     }
   }, ttsOn ? '🔊 Read-aloud: ON' : '🔇 Read-aloud: OFF');
+  // NOTE: Plan type (IEP/gifted/ESL/custom) and support tags (articulation,
+  // etc.) are intentionally NOT shown on the kid-facing dashboard. That info
+  // lives on the teacher dashboard only — it's for the tutor's planning, not
+  // a label the kid carries around on their own screen. Same for the parent
+  // view below (renderParentView). Keep this private to the teacher UI.
+  const heroInfoKids = [
+    h('h1',{},'Hi, '+s.name+'!'),
+    h('span',{class:'grade-pill'},s.grade),
+  ];
+  heroInfoKids.push(
+    h('br'),
+    h('button',{class:'change-avatar-btn',onclick:()=>go('avatars')}, '🎨 Change avatar'),
+    h('button',{class:'change-theme-btn',onclick:()=>go('themes')}, '🌈 Change theme'),
+    ttsToggle,
+  );
   const hero=h('div',{class:'dash-hero c-'+currentUser},[
     buildAvatarTile(currentUser,'av'),
-    h('div',{class:'info'},[
-      h('h1',{},'Hi, '+s.name+'!'),
-      h('span',{class:'grade-pill'},s.grade),
-      h('br'),
-      h('button',{class:'change-avatar-btn',onclick:()=>go('avatars')}, '🎨 Change avatar'),
-      h('button',{class:'change-theme-btn',onclick:()=>go('themes')}, '🌈 Change theme'),
-      ttsToggle,
-    ]),
+    h('div',{class:'info'}, heroInfoKids),
   ]);
   // Nova the alien mascot — greets by time-of-day + streak + last-seen.
   // Deterministic per-kid per-day so a reload shows the same line.
@@ -10987,9 +11368,9 @@ function renderDashboard(root){
   // not before (we don't want a 5th-place kid demotivated by ranking
   // before they've even started the day's mission).
   try {
-    const sb = buildFamilyScoreboard({ compact:true, highlightSid: currentUser });
+    const sb = buildClassScoreboard({ compact:true, highlightSid: currentUser });
     if(sb) root.appendChild(sb);
-  } catch(e){ console.warn('[KidQuest] family scoreboard failed:', e); }
+  } catch(e){ console.warn('[KidQuest] class scoreboard failed:', e); }
   // Co-op weekly goal — sits below the scoreboard because it reframes the
   // competition from "me vs. them" into "us together". Kids who scored low
   // on the scoreboard can still feel like a key contributor to the family
@@ -12055,6 +12436,59 @@ function renderLesson(card,q){
     card.appendChild(panel);
   }
   if(L.hint) card.appendChild(h('div',{class:'lesson-hint'},['💡 ',L.hint]));
+  // Ontario curriculum chip — shows the provincial expectation this lesson
+  // addresses. Read from the activity (after override merge), not the
+  // lesson, since it's a property of the whole activity. Collapsed by
+  // default so it doesn't distract kids mid-lesson; parents + older kids
+  // who want to see "what school curriculum does this map to?" can tap
+  // to expand.
+  try {
+    const act = (quiz && quiz.activity) || null;
+    const cTag = act && act.curriculum;
+    if(cTag && (cTag.grade || cTag.strand || (Array.isArray(cTag.codes) && cTag.codes.length) || cTag.notes)){
+      const chipLabel = h('span',{class:'lc-chip-label'}, '📋 Ontario Curriculum');
+      const chipParts = [];
+      if(cTag.grade) chipParts.push(String(cTag.grade).replace(/^Grade\s+/i,'G'));
+      if(Array.isArray(cTag.codes) && cTag.codes.length) chipParts.push(cTag.codes[0] + (cTag.codes.length>1?'+'+(cTag.codes.length-1):''));
+      const chipCode = chipParts.length ? h('span',{class:'lc-chip-code'}, chipParts.join(' · ')) : null;
+      const body = h('div',{class:'lc-body'});
+      if(cTag.grade){
+        body.appendChild(h('div',{class:'lc-row'},[
+          h('span',{class:'lc-label'},'Grade:'),
+          h('span',{}, cTag.grade),
+        ]));
+      }
+      if(cTag.strand){
+        body.appendChild(h('div',{class:'lc-row'},[
+          h('span',{class:'lc-label'},'Strand:'),
+          h('span',{}, cTag.strand),
+        ]));
+      }
+      if(Array.isArray(cTag.codes) && cTag.codes.length){
+        const codesWrap = h('span',{class:'lc-codes'});
+        cTag.codes.forEach(c => codesWrap.appendChild(h('span',{class:'lc-code'}, c)));
+        body.appendChild(h('div',{class:'lc-row'},[
+          h('span',{class:'lc-label'},'Expectation:'),
+          codesWrap,
+        ]));
+      }
+      if(cTag.notes){
+        body.appendChild(h('div',{class:'lc-row',style:'margin-top:10px;line-height:1.5'}, cTag.notes));
+      }
+      if(cTag.link){
+        const a = h('a',{href: cTag.link, target:'_blank', rel:'noopener', class:'lc-link'}, ['🔗 ','Read the full Ontario expectation →']);
+        body.appendChild(a);
+      } else {
+        const a = h('a',{href:'https://www.dcp.edu.gov.on.ca/en/', target:'_blank', rel:'noopener', class:'lc-link'}, ['🔗 ','Browse Ontario expectations →']);
+        body.appendChild(a);
+      }
+      const chip = h('details',{class:'lesson-curriculum'},[
+        h('summary',{}, [chipLabel, chipCode].filter(Boolean)),
+        body,
+      ]);
+      card.appendChild(chip);
+    }
+  } catch(e){ console.warn('[KidQuest] curriculum chip render failed:', e); }
   quiz.locked=false;
   setTimeout(()=>{const b=$('#nextBtn');if(b){b.style.display='inline-flex';b.textContent="Let's practice! →"}},0);
 }
@@ -14398,6 +14832,24 @@ function renderTeacher(root){
     STUDENTS.forEach(s => { unreadTotal += (countUnread(s.id, 'teacher') || 0); });
   } catch(e){ /* chat may not be loaded yet */ }
 
+  // Pending store orders — same idea: red number on the Store Management tab
+  // when a kid has requested a reward and is waiting for the tutor to mark
+  // it approved / delivered. Matches the 'pending' filter used inside
+  // renderTeacherStore() so the badge count and the first stat card agree.
+  let pendingOrdersTotal = 0;
+  try {
+    const _orders = Array.isArray(allData.orders) ? allData.orders : [];
+    pendingOrdersTotal = _orders.filter(o => o && o.status === 'pending').length;
+  } catch(e){ /* orders may be absent */ }
+
+  // Parent reports awaiting review — red number on the "Parent Reports" tab,
+  // a big red banner above the accordion, a "(N)" prefix on the browser tab
+  // title, and (if consented) a desktop notification. See countUnreviewedReports.
+  let unreviewedReportsTotal = 0;
+  try {
+    unreviewedReportsTotal = countUnreviewedReports();
+  } catch(e){ /* non-fatal — surface a 0 count if anything throws */ }
+
   // --- Section-content builders. Each returns a DOM node that fills the
   //     accordion body for that section. Declared inline so they close
   //     over the local helpers without polluting the module namespace.
@@ -14469,49 +14921,152 @@ function renderTeacher(root){
     return wrap;
   };
 
-  // Backup & Data — the old export/import/clear-orders control row.
-  const buildBackupControls = () => h('div',{class:'t-controls',style:'margin-top:0'},[
-    h('button',{class:'btn btn-ghost',onclick:()=>{
-      // 📋 Export: copies ALL app state (students, progress, orders, catalog)
-      // to the clipboard as a JSON backup. Paste into a text file to save.
-      if(confirm('Copy all student data + orders as a JSON backup?')){
-        navigator.clipboard.writeText(JSON.stringify(allData,null,2))
-          .then(()=>alert('Backup copied to clipboard!\nPaste it somewhere safe (e.g. a text file) to save.'));
-      }
-    }},'📋 Export JSON'),
-    h('button',{class:'btn btn-ghost',onclick:()=>{
-      // 📥 Import: paste a previously-exported JSON backup to restore state.
-      const raw = prompt('Paste a KidQuest JSON backup here to RESTORE.\n\n' +
-        'Tip: export a backup first with "📋 Export JSON" before trying this.');
-      if(!raw) return;
-      try {
-        const d = JSON.parse(raw);
-        if(!d || typeof d!=='object' || !d.users) throw new Error('Missing "users" object — not a valid KidQuest backup.');
-        if(!confirm('This will OVERWRITE all current student progress, orders, and catalog overrides with the backup. Continue?')) return;
-        STUDENTS.forEach(s=>{ allData.users[s.id] = Object.assign(defaultUser(), d.users[s.id]||{}); });
-        allData.orders = Array.isArray(d.orders) ? d.orders : [];
-        allData.catalogOverrides = (d.catalogOverrides && typeof d.catalogOverrides==='object') ? d.catalogOverrides : {};
-        allData.videoOverrides   = (d.videoOverrides   && typeof d.videoOverrides  ==='object') ? d.videoOverrides   : {};
-        if(d.messages && typeof d.messages==='object'){
-          allData.messages = {};
-          STUDENTS.forEach(s=>{ allData.messages[s.id] = Array.isArray(d.messages[s.id]) ? d.messages[s.id] : []; });
+  // Backup & Data — export/import/clear-orders controls + the auto-snapshot
+  // restore panel. The snapshot list shows the 5 most-recent pre-destructive
+  // snapshots (taken automatically before Reset student / Reset EVERYTHING /
+  // Import JSON) so a bad wipe can be undone with one click.
+  const buildBackupControls = () => {
+    const wrap = h('div',{});
+    const controlRow = h('div',{class:'t-controls',style:'margin-top:0'},[
+      h('button',{class:'btn btn-ghost',onclick:()=>{
+        // 📋 Export: copies ALL app state (students, progress, orders, catalog)
+        // to the clipboard as a JSON backup. Paste into a text file to save.
+        if(confirm('Copy all student data + orders as a JSON backup?')){
+          navigator.clipboard.writeText(JSON.stringify(allData,null,2))
+            .then(()=>alert('Backup copied to clipboard!\nPaste it somewhere safe (e.g. a text file) to save.'));
         }
-        try { saveLocalVideoOverrides(allData.videoOverrides); } catch(e){}
-        allData.teacher = (d.teacher && typeof d.teacher==='object') ? d.teacher : allData.teacher;
-        allData.updatedAt = Date.now();
-        saveState();
-        alert('Backup restored successfully!');
+      }},'📋 Export JSON'),
+      h('button',{class:'btn btn-ghost',onclick:()=>{
+        // 📥 Import: paste a previously-exported JSON backup to restore state.
+        const raw = prompt('Paste a KidQuest JSON backup here to RESTORE.\n\n' +
+          'Tip: export a backup first with "📋 Export JSON" before trying this.');
+        if(!raw) return;
+        try {
+          const d = JSON.parse(raw);
+          if(!d || typeof d!=='object' || !d.users) throw new Error('Missing "users" object — not a valid KidQuest backup.');
+          if(!confirm('This will OVERWRITE all current student progress, orders, and catalog overrides with the backup. Continue?\n\nA pre-import auto-snapshot will be saved so you can roll back.')) return;
+          // Safety net — the current (about-to-be-overwritten) state goes
+          // into the local undo ring so "↶ Restore from snapshot" can get
+          // back to right-before-the-import.
+          try { pushSnapshot('before Import JSON'); } catch(e){}
+          STUDENTS.forEach(s=>{ allData.users[s.id] = Object.assign(defaultUser(), d.users[s.id]||{}); });
+          allData.orders = Array.isArray(d.orders) ? d.orders : [];
+          allData.catalogOverrides = (d.catalogOverrides && typeof d.catalogOverrides==='object') ? d.catalogOverrides : {};
+          allData.videoOverrides   = (d.videoOverrides   && typeof d.videoOverrides  ==='object') ? d.videoOverrides   : {};
+          if(d.messages && typeof d.messages==='object'){
+            allData.messages = {};
+            STUDENTS.forEach(s=>{ allData.messages[s.id] = Array.isArray(d.messages[s.id]) ? d.messages[s.id] : []; });
+          }
+          try { saveLocalVideoOverrides(allData.videoOverrides); } catch(e){}
+          allData.teacher = (d.teacher && typeof d.teacher==='object') ? d.teacher : allData.teacher;
+          allData.updatedAt = Date.now();
+          saveState();
+          alert('Backup restored successfully!');
+          go('teacher');
+        } catch(err){
+          alert('Could not import: '+err.message);
+        }
+      }},'📥 Import JSON'),
+      h('button',{class:'btn btn-ghost',onclick:()=>{
+        if(!confirm('Clear ALL reward order history?')) return;
+        if(!confirmTeacherPassword('clear all reward orders')) return;
+        allData.orders=[]; saveState(); go('teacher');
+      }},'🧹 Clear Orders'),
+      h('button',{class:'btn btn-ghost',onclick:()=>{
+        // ⏱️ Manual snapshot — useful right before any risky experiment.
+        const s = pushSnapshot('manual save');
+        if(s) alert('✓ Snapshot saved.\n\nRoll back any time in the next 5 resets via "↶ Restore from snapshot" below.');
+        else  alert('Could not save a snapshot — localStorage may be full. Try ⌘ Export JSON instead.');
         go('teacher');
-      } catch(err){
-        alert('Could not import: '+err.message);
+      }},'⏱️ Save snapshot now'),
+    ]);
+    wrap.appendChild(controlRow);
+
+    // --- Restore-from-snapshot panel ---------------------------------
+    // Shows local + cloud snapshots merged into one timeline. Local paints
+    // immediately; cloud fetch is async and re-renders the list when it
+    // resolves so the teacher sees snapshots from OTHER devices too (the
+    // whole point of moving snapshots to the cloud).
+    const snapHead = h('div',{style:'margin:18px 0 6px;font-size:13px;font-weight:800;color:var(--ink2);letter-spacing:.3px'},'↶ Restore from snapshot');
+    const snapHelp = h('div',{style:'font-size:12px;color:var(--ink3);line-height:1.5'},
+      'Automatic backups taken right before Reset student / Reset EVERYTHING / Import JSON. Mirrored to the cloud, so a snapshot made on ANY device can be restored from this one. Up to the 5 most recent.');
+    wrap.appendChild(snapHead);
+    wrap.appendChild(snapHelp);
+
+    const list = h('div',{class:'t-snap-list'});
+    wrap.appendChild(list);
+
+    // --- Renderer (re-used after cloud fetch resolves) ---
+    const renderRows = (entries) => {
+      // Clear existing rows without losing the reference to `list`
+      while(list.firstChild) list.removeChild(list.firstChild);
+      if(!entries.length){
+        list.appendChild(h('div',{class:'t-snap-empty'},
+          'No snapshots yet. One will be created automatically the next time progress is reset or a backup is imported.'));
+        return;
       }
-    }},'📥 Import JSON'),
-    h('button',{class:'btn btn-ghost',onclick:()=>{
-      if(!confirm('Clear ALL reward order history?')) return;
-      if(!confirmTeacherPassword('clear all reward orders')) return;
-      allData.orders=[]; saveState(); go('teacher');
-    }},'🧹 Clear Orders'),
-  ]);
+      entries.forEach(snap => {
+        const when = new Date(snap.at);
+        const whenStr = when.toLocaleString();
+        const totals = snap.totals || {coins:0,stars:0,acts:0};
+        const envBadge = snap.env === 'dev' ? ' · dev' : '';
+        const sources = snap.sources || ['local'];
+        const srcBadge = sources.includes('cloud')
+          ? (sources.includes('local') ? ' · ☁️ cloud + 💻 local' : ' · ☁️ cloud only')
+          : ' · 💻 local only';
+        const row = h('div',{class:'t-snap-row'},[
+          h('div',{class:'t-snap-meta'},[
+            h('div',{class:'t-snap-when'}, whenStr + envBadge + srcBadge),
+            h('div',{class:'t-snap-reason'}, String(snap.reason||'manual save')),
+            h('div',{class:'t-snap-stats'},
+              'Σ '+totals.coins+' coins · '+totals.stars+' stars · '+totals.acts+' completions'),
+          ]),
+          h('div',{class:'t-snap-actions'},[
+            h('button',{class:'btn btn-sm btn-primary',onclick:()=>{
+              const whereFrom = sources.includes('cloud') ? ' (cloud snapshot)' : ' (local snapshot)';
+              if(!confirm('Restore this snapshot from '+whenStr+whereFrom+'?\n\nIt will OVERWRITE current progress for every student. A pre-restore auto-snapshot will be saved so you can undo this.')) return;
+              if(!confirmTeacherPassword('restore a snapshot')) return;
+              const ok = applySnapshotToAllData(snap);
+              if(ok){
+                alert('✓ Snapshot restored.\n\nIf this was the wrong one, open this panel again — a "before restore" snapshot was saved on top (local + cloud), and you can roll back to it.');
+                go('teacher');
+              } else {
+                alert('Could not restore — the snapshot data looked malformed. Nothing changed.');
+              }
+            }},'↶ Restore'),
+            h('button',{class:'btn btn-sm btn-ghost',title:'Forget this snapshot (both local and cloud)',onclick:async ()=>{
+              if(!confirm('Forget this snapshot? It cannot be un-forgotten.\n\nRemoved from both this device and the shared cloud list.')) return;
+              // Remove from local ring by timestamp match
+              const locals = readSnapshots();
+              const filtered = locals.filter(s => s && s.at !== snap.at);
+              writeSnapshots(filtered);
+              // Remove from cloud ring (fire-and-forget; local removal is
+              // what the teacher will see immediately)
+              try { await deleteCloudSnapshot(snap.at); } catch(e){}
+              go('teacher');
+            }},'✕'),
+          ]),
+        ]);
+        list.appendChild(row);
+      });
+    };
+
+    // Paint local-only first — instant feedback, no loading spinner while
+    // waiting on the cloud round-trip.
+    const locals = readSnapshots();
+    renderRows(mergeSnapshotLists(locals, []));
+
+    // Then fetch cloud and re-render. If fetch fails (offline / cloud down)
+    // we silently stick with the local list we already showed.
+    (async () => {
+      const cloudSnaps = await fetchCloudSnapshots();
+      if(!cloudSnaps || !cloudSnaps.length) return;
+      const merged = mergeSnapshotLists(readSnapshots(), cloudSnaps);
+      renderRows(merged);
+    })();
+
+    return wrap;
+  };
 
   // Curriculum editor launcher — lives in the accordion for consistency
   // but clicking "Open Editor" navigates away to the full-screen editor
@@ -14533,13 +15088,301 @@ function renderTeacher(root){
     ]);
   };
 
+  // Quick-fill presets for the "Working at (grade level / track)" input.
+  // Given a student's home grade ("Grade 3", "Senior Kindergarten"), returns
+  // an ordered list of {label, value} chips tailored to that kid — so the
+  // tutor can tap "Stretch" instead of typing "Grade 3 stretch" every time.
+  // Free-text remains the source of truth; chips just seed the field.
+  const buildWorkingAtPresets = (studentGrade) => {
+    const g = String(studentGrade || '').trim();
+    const m = /Grade\s+(\d+)/i.exec(g);
+    const currentN = m ? parseInt(m[1], 10) : null;
+    const gradeLabel = (n) => {
+      if(n <= -1) return 'Junior Kindergarten';
+      if(n === 0) return 'Senior Kindergarten';
+      return 'Grade '+n;
+    };
+    const presets = [];
+    if(currentN !== null){
+      presets.push({label:'On-grade',    value: gradeLabel(currentN)});
+      presets.push({label:'Stretch',     value: gradeLabel(currentN)+' stretch'});
+      presets.push({label:'With support',value: gradeLabel(currentN)+' with support'});
+      if(currentN >= 1)  presets.push({label:'Catch-up',   value: gradeLabel(currentN-1)+' catch-up'});
+      if(currentN <= 7)  presets.push({label:'Accelerated',value: gradeLabel(currentN+1)+' accelerated'});
+    } else if(/Senior Kindergarten/i.test(g)){
+      presets.push({label:'On-grade',    value: 'Senior Kindergarten'});
+      presets.push({label:'Stretch',     value: 'Senior Kindergarten stretch'});
+      presets.push({label:'With support',value: 'Senior Kindergarten with support'});
+      presets.push({label:'Catch-up',    value: 'Junior Kindergarten catch-up'});
+      presets.push({label:'Accelerated', value: 'Grade 1 accelerated'});
+    } else if(/Junior Kindergarten/i.test(g)){
+      presets.push({label:'On-grade',    value: 'Junior Kindergarten'});
+      presets.push({label:'Stretch',     value: 'Junior Kindergarten stretch'});
+      presets.push({label:'With support',value: 'Junior Kindergarten with support'});
+      presets.push({label:'Accelerated', value: 'Senior Kindergarten accelerated'});
+    } else {
+      // Unknown / non-standard grade — offer the two most-used generics.
+      presets.push({label:'On-grade', value: g || 'On-grade'});
+      presets.push({label:'Stretch',  value: (g || 'Grade')+' stretch'});
+    }
+    return presets;
+  };
+
+  // Generic grade-level suggestions for the <datalist> — type-ahead any
+  // of these in the free-text input even if the student's chip shortcuts
+  // don't cover the case (e.g. a Grade 3 kid working at "Grade 1 catch-up
+  // for reading only").
+  const WORKING_AT_SUGGESTIONS = (() => {
+    const out = [];
+    const grades = ['Junior Kindergarten','Senior Kindergarten',
+      'Grade 1','Grade 2','Grade 3','Grade 4','Grade 5','Grade 6','Grade 7','Grade 8'];
+    grades.forEach(g => {
+      out.push(g);
+      out.push(g + ' stretch');
+      out.push(g + ' with support');
+      out.push(g + ' catch-up');
+      out.push(g + ' accelerated');
+    });
+    return out;
+  })();
+
+  // Student Plans panel — per-student IEP / gifted / ESL editor. The tutor
+  // can pick a plan type, describe the accommodations, and note the working
+  // grade. The kid's dashboard + parent view will show the plan badge.
+  // Overrides live in allData.studentPlans[sid]; seeds live on STUDENTS.
+  const buildStudentPlansPanel = () => {
+    const wrap = h('div',{class:'sp-wrap'});
+    wrap.appendChild(h('p',{class:'sp-intro'},
+      'Set an Individual Education Plan (IEP), gifted track, ESL adaptation, or custom plan for each student. The plan badge shows on their dashboard and in the parent view so everyone knows the kid is working on a custom path. Seeds for Isaiah, Evan, and Akaran are pre-filled — edit to match what the school or family has communicated.'));
+    STUDENTS.forEach(s => {
+      const plan = getStudentPlan(s.id);
+      const supports = getStudentSupports(s.id);
+      const row = h('details',{class:'sp-row'});
+      const meta = PLAN_META[plan.type];
+      const badgeText = meta ? meta.emoji+' '+meta.label : 'On-grade (no special plan)';
+      const badgeColor = meta ? meta.accent : 'var(--ink3)';
+      // Mini support chips in the summary — articulation shows a 🗣️ pill
+      // so the tutor sees speech needs without expanding.
+      const supportChips = supports.map(sup => {
+        const sm = SUPPORT_META[sup];
+        if(!sm) return null;
+        return h('span',{class:'sp-support-chip', style:'background:'+sm.bg+';color:'+sm.accent+';border-color:'+sm.bd, title: sm.description}, sm.emoji+' '+sm.shortLabel);
+      }).filter(Boolean);
+      const summary = h('summary',{class:'sp-summary'}, [
+        h('span',{class:'sp-av','aria-hidden':'true',style:'background:'+(s.colorDark||'#999')}, s.initial || s.name[0]),
+        h('div',{class:'sp-name-wrap'},[
+          h('div',{class:'sp-name'}, s.name),
+          h('div',{class:'sp-grade'}, s.grade),
+        ]),
+        h('div',{class:'sp-badge-wrap'},[
+          h('span',{class:'sp-badge',style:'color:'+badgeColor}, badgeText),
+          ...supportChips,
+        ]),
+        h('span',{class:'sp-chev'},'▾'),
+      ]);
+      row.appendChild(summary);
+
+      const body = h('div',{class:'sp-body'});
+      const typeSel = h('select',{class:'sp-input'},[
+        h('option',{value:'none'},   'On-grade (no special plan)'),
+        h('option',{value:'iep'},    '🧩 IEP (Individual Education Plan)'),
+        h('option',{value:'gifted'}, '🌟 Gifted'),
+        h('option',{value:'gifted-esl'}, '🌟 Gifted + ESL'),
+        h('option',{value:'esl'},    '🌐 ESL (English Language Learner)'),
+        h('option',{value:'custom'}, '📋 Custom Plan'),
+      ]);
+      typeSel.value = plan.type || 'none';
+      // "Working at" input — free text, but backed by (1) one-tap preset
+      // chips keyed off the student's home grade and (2) a <datalist> with
+      // every sensible "Grade N [track]" combo for type-ahead.
+      const datalistId = 'sp-workingat-list-'+s.id;
+      const workingAtInput = h('input',{
+        type:'text', class:'sp-input',
+        placeholder:'Tap a chip above, or type your own',
+        value: plan.workingAt || '',
+        list: datalistId,
+        autocomplete:'off',
+      });
+      const workingAtDatalist = h('datalist',{id:datalistId});
+      WORKING_AT_SUGGESTIONS.forEach(v => workingAtDatalist.appendChild(h('option',{value:v})));
+
+      // Preset chip row — tapping a chip fills the input and highlights
+      // the chip. Typing in the input clears the active highlight (so the
+      // chips don't claim ownership of a tutor's custom edit).
+      const presetChips = h('div',{class:'sp-chip-row'});
+      const presets = buildWorkingAtPresets(s.grade);
+      const chipEls = [];
+      const syncActiveChip = () => {
+        const cur = (workingAtInput.value || '').trim();
+        chipEls.forEach(ch => {
+          ch.classList.toggle('is-active', cur && ch.dataset.value === cur);
+        });
+      };
+      presets.forEach(p => {
+        const chip = h('button',{
+          type:'button', class:'sp-chip', title:p.value,
+          'data-value':p.value,
+          onclick:()=>{
+            workingAtInput.value = p.value;
+            syncActiveChip();
+            workingAtInput.focus();
+          },
+        }, p.label);
+        chipEls.push(chip);
+        presetChips.appendChild(chip);
+      });
+      // Typing dismisses the "active chip" styling unless what they typed
+      // happens to match a preset exactly.
+      workingAtInput.addEventListener('input', syncActiveChip);
+
+      const notesInput = h('textarea',{class:'sp-input sp-textarea', placeholder:'Accommodations, focus areas, goals, or specifics from the school\'s IEP document.'}, plan.notes || '');
+      const msg = h('div',{class:'sp-msg'});
+
+      body.appendChild(h('label',{class:'sp-label'}, 'Plan type'));
+      body.appendChild(typeSel);
+      body.appendChild(h('label',{class:'sp-label'}, 'Working at (grade level / track)'));
+      body.appendChild(presetChips);
+      body.appendChild(h('div',{class:'sp-chip-hint'},
+        'Tap a preset to fill the field — or type freely. '+s.name+' is in '+s.grade+'.'));
+      body.appendChild(workingAtInput);
+      body.appendChild(workingAtDatalist);
+      // Paint initial active state (if the saved value already matches a preset).
+      syncActiveChip();
+      body.appendChild(h('label',{class:'sp-label'}, 'Notes / accommodations'));
+      body.appendChild(notesInput);
+
+      // Articulation checkbox — orthogonal to plan type. A kid can be
+      // "Gifted + Articulation support" or just "Articulation support" on its
+      // own. Writes to allData.studentSupports[s.id], separate from the plan.
+      body.appendChild(h('label',{class:'sp-label'}, 'Additional supports'));
+      const artMeta = SUPPORT_META['articulation'];
+      const articulationCb = h('input',{type:'checkbox', id:'sp-art-'+s.id});
+      if(supports.includes('articulation')) articulationCb.checked = true;
+      const supportBox = h('div',{class:'sp-support-box'},[
+        articulationCb,
+        h('label',{for:'sp-art-'+s.id},[
+          h('div',{class:'ssb-title'}, (artMeta ? artMeta.emoji+' ' : '')+'Articulation / speech support'),
+          h('div',{class:'ssb-desc'}, artMeta ? artMeta.description : 'Struggles with spoken pronunciation.'),
+        ]),
+      ]);
+      body.appendChild(supportBox);
+
+      const saveBtn = h('button',{class:'btn btn-primary btn-sm', onclick: () => {
+        if(!allData.studentPlans) allData.studentPlans = {};
+        if(!allData.studentSupports) allData.studentSupports = {};
+        const t = typeSel.value || 'none';
+        const w = workingAtInput.value.trim();
+        const n = notesInput.value.trim();
+        // If everything matches 'none' AND there's no text, treat as wipe so
+        // we fall back to the seed. Otherwise write the override.
+        if(t === 'none' && !w && !n){
+          delete allData.studentPlans[s.id];
+        } else {
+          allData.studentPlans[s.id] = { type: t, workingAt: w, notes: n };
+        }
+        // Supports — we only override the seed when the checkbox state differs
+        // from what the seed would produce. Otherwise we leave override absent
+        // so future seed changes flow through.
+        const info = getStudentInfo(s.id);
+        const seedSupports = (info && Array.isArray(info.supports)) ? info.supports : [];
+        const seedHasArt = seedSupports.includes('articulation');
+        const wantArt = !!articulationCb.checked;
+        if(wantArt === seedHasArt){
+          // Match seed — drop any override.
+          delete allData.studentSupports[s.id];
+        } else if(wantArt){
+          // Seed doesn't have it, user wants it on — add it.
+          const base = seedSupports.filter(x=>x!=='articulation');
+          allData.studentSupports[s.id] = base.concat(['articulation']);
+        } else {
+          // Seed has it, user wants it off — explicit empty override.
+          allData.studentSupports[s.id] = seedSupports.filter(x=>x!=='articulation');
+        }
+        allData.updatedAt = Date.now();
+        saveState();
+        try { syncToCloud(); } catch(e){ console.warn('[KidQuest] plan sync failed:', e); }
+        msg.textContent = '✓ Saved';
+        msg.style.color = '#2b8a3e';
+        // Update the summary badge + support chips in place without a full re-render.
+        const newMeta = PLAN_META[t];
+        const newBadge = newMeta ? newMeta.emoji+' '+newMeta.label : 'On-grade (no special plan)';
+        const badgeEl = summary.querySelector('.sp-badge');
+        if(badgeEl){
+          badgeEl.textContent = newBadge;
+          badgeEl.style.color = newMeta ? newMeta.accent : 'var(--ink3)';
+        }
+        const wrapEl = summary.querySelector('.sp-badge-wrap');
+        if(wrapEl){
+          // Remove old chips, rebuild from new supports.
+          Array.from(wrapEl.querySelectorAll('.sp-support-chip')).forEach(c=>c.remove());
+          const newSupports = getStudentSupports(s.id);
+          newSupports.forEach(sup => {
+            const sm = SUPPORT_META[sup];
+            if(!sm) return;
+            const chip = h('span',{class:'sp-support-chip', style:'background:'+sm.bg+';color:'+sm.accent+';border-color:'+sm.bd, title: sm.description}, sm.emoji+' '+sm.shortLabel);
+            wrapEl.appendChild(chip);
+          });
+        }
+        setTimeout(()=>{ msg.textContent = ''; }, 2500);
+      }}, '💾 Save Plan');
+
+      const resetBtn = h('button',{class:'btn btn-ghost btn-sm', onclick: () => {
+        let dirty = false;
+        if(allData.studentPlans && allData.studentPlans[s.id]){
+          delete allData.studentPlans[s.id]; dirty = true;
+        }
+        if(allData.studentSupports && Object.prototype.hasOwnProperty.call(allData.studentSupports, s.id)){
+          delete allData.studentSupports[s.id]; dirty = true;
+        }
+        if(dirty){
+          allData.updatedAt = Date.now();
+          saveState();
+          try { syncToCloud(); } catch(e){}
+        }
+        const seed = getStudentPlan(s.id);
+        const seedSupports = getStudentSupports(s.id);
+        typeSel.value = seed.type || 'none';
+        workingAtInput.value = seed.workingAt || '';
+        notesInput.value = seed.notes || '';
+        articulationCb.checked = seedSupports.includes('articulation');
+        msg.textContent = '↺ Reset to default';
+        msg.style.color = 'var(--ink3)';
+        const newMeta = PLAN_META[seed.type];
+        const newBadge = newMeta ? newMeta.emoji+' '+newMeta.label : 'On-grade (no special plan)';
+        const badgeEl = summary.querySelector('.sp-badge');
+        if(badgeEl){
+          badgeEl.textContent = newBadge;
+          badgeEl.style.color = newMeta ? newMeta.accent : 'var(--ink3)';
+        }
+        const wrapEl = summary.querySelector('.sp-badge-wrap');
+        if(wrapEl){
+          Array.from(wrapEl.querySelectorAll('.sp-support-chip')).forEach(c=>c.remove());
+          seedSupports.forEach(sup => {
+            const sm = SUPPORT_META[sup];
+            if(!sm) return;
+            const chip = h('span',{class:'sp-support-chip', style:'background:'+sm.bg+';color:'+sm.accent+';border-color:'+sm.bd, title: sm.description}, sm.emoji+' '+sm.shortLabel);
+            wrapEl.appendChild(chip);
+          });
+        }
+        setTimeout(()=>{ msg.textContent = ''; }, 2500);
+      }}, '↺ Reset to default');
+
+      const actions = h('div',{class:'sp-actions'},[ saveBtn, resetBtn, msg ]);
+      body.appendChild(actions);
+
+      row.appendChild(body);
+      wrap.appendChild(row);
+    });
+    return wrap;
+  };
+
   // Section manifest — order matches the old linear layout so tutors who
   // had muscle memory for "scroll down to find X" still find X in roughly
   // Family scoreboard — full view above the accordion so the tutor sees
   // ranked progress the moment they open the dashboard, without having to
   // expand a section. Uses the teacher "highlight nobody" viewer variant.
   try {
-    const sb = buildFamilyScoreboard({ compact:false, highlightSid: null });
+    const sb = buildClassScoreboard({ compact:false, highlightSid: null });
     if(sb) dash.appendChild(sb);
   } catch(e){ console.warn('[KidQuest] teacher scoreboard failed:', e); }
   // Co-op weekly goal card on teacher dashboard — lets the tutor see at a
@@ -14551,16 +15394,82 @@ function renderTeacher(root){
     if(coop) dash.appendChild(coop);
   } catch(e){ console.warn('[KidQuest] teacher coop card failed:', e); }
 
+  // Red awaiting-review banner — sits above the accordion so it's the first
+  // thing the teacher sees after the scoreboard/coop cards. Impossible to
+  // miss when at least one parent report has crossed the 7-day mark without
+  // a "Mark reviewed" tap. Tapping the banner opens the Parent Reports tab.
+  // The "🔔 Enable alerts" button only appears if desktop notifications
+  // aren't already granted — one-shot permission request.
+  if(unreviewedReportsTotal > 0){
+    const bannerKids = [
+      h('span',{class:'t-review-icon','aria-hidden':'true'}, '🔔'),
+      h('span',{class:'t-review-count', 'aria-label': unreviewedReportsTotal + ' reports awaiting review'}, String(unreviewedReportsTotal)),
+      h('div',{class:'t-review-copy'},[
+        `Parent report${unreviewedReportsTotal===1?'':'s'} awaiting review`,
+        h('small',{}, unreviewedReportsTotal===1
+          ? 'One student\'s weekly report is ready — review it before it goes out.'
+          : `${unreviewedReportsTotal} students\' weekly reports are ready — review each before they go out.`),
+      ]),
+      h('button',{
+        type:'button',
+        onclick: () => {
+          // Open the Parent Reports tab and scroll it into view. Clear
+          // #screen first — renderTeacher only appends, so a raw call
+          // would stack a second dashboard below this one.
+          teacherTabOpen['parents'] = true;
+          const scr = document.getElementById('screen');
+          if(scr){ scr.innerHTML = ''; renderTeacher(scr); }
+          setTimeout(()=>{
+            try {
+              const headings = document.querySelectorAll('.t-acc-head .t-acc-title');
+              headings.forEach(el => {
+                if(el.textContent && el.textContent.trim() === 'Parent Reports'){
+                  el.scrollIntoView({behavior:'smooth', block:'start'});
+                }
+              });
+            } catch(e){}
+          }, 50);
+        }
+      }, 'Open Parent Reports ▸'),
+    ];
+    // "Enable alerts" button — asks for desktop-notification permission
+    // once. Hidden once granted (no point re-asking). Also hidden if the
+    // browser doesn't support Notifications.
+    try {
+      if(('Notification' in window) && Notification.permission !== 'granted'){
+        bannerKids.push(h('button',{
+          type:'button',
+          title:'Turn on desktop notifications so KidQuest can alert you even when this tab is in the background.',
+          onclick: () => {
+            requestReviewNotificationPermission((granted) => {
+              if(granted){
+                maybeFireReviewNotification(unreviewedReportsTotal);
+                // Re-render so the "Enable alerts" button disappears.
+                // Clear first — renderTeacher only appends.
+                try {
+                  const scr = document.getElementById('screen');
+                  if(scr){ scr.innerHTML = ''; renderTeacher(scr); }
+                } catch(e){}
+              }
+            });
+          }
+        }, '🔔 Enable alerts'));
+      }
+    } catch(e){ /* Notification API unavailable */ }
+    dash.appendChild(h('div',{class:'t-review-banner', role:'status'}, bannerKids));
+  }
+
   // the same place. Curriculum Editor sits second — it's the single most
   // important tutor-authoring tool.
   const sections = [
     { id:'students',    icon:'👥', title:'Students Overview',     build: buildOverviewGrid },
+    { id:'plans',       icon:'📋', title:'Student Education Plans', build: buildStudentPlansPanel },
     { id:'curriculum',  icon:'📚', title:'Curriculum Editor',     build: buildCurriculumLink },
-    { id:'messages',    icon:'💬', title:'Messages',              badge: unreadTotal, build: renderTeacherMessages },
+    { id:'messages',    icon:'💬', title:'Messages',              badge: unreadTotal,       badgeLabel:'unread messages', build: renderTeacherMessages },
     { id:'reports',     icon:'📊', title:'Detailed Report Cards', build: buildReportCardsPanel },
     { id:'analytics',   icon:'📈', title:'Learning Analytics',    build: buildAnalyticsPanel },
-    { id:'parents',     icon:'📧', title:'Parent Reports',        build: renderParentReports },
-    { id:'store',       icon:'🛍️', title:'Store Management',      build: renderTeacherStore },
+    { id:'parents',     icon:'📧', title:'Parent Reports',        badge: unreviewedReportsTotal, badgeLabel:'reports awaiting review', build: renderParentReports },
+    { id:'store',       icon:'🛍️', title:'Store Management',      badge: pendingOrdersTotal, badgeLabel:'pending orders',  build: renderTeacherStore },
     { id:'maintenance', icon:'🔧', title:'Maintenance',           build: renderMaintenanceControls },
     { id:'backup',      icon:'💾', title:'Backup & Data',         build: buildBackupControls },
     { id:'passwords',   icon:'🔑', title:'Passwords',             build: renderTeacherPasswords },
@@ -14577,7 +15486,11 @@ function renderTeacher(root){
       h('span',{class:'t-acc-title'}, sec.title),
     ];
     if(sec.badge && sec.badge > 0){
-      headChildren.push(h('span',{class:'t-acc-badge', 'aria-label': sec.badge+' unread'}, String(sec.badge)));
+      // Screen-reader label: use sec.badgeLabel if the section supplied one
+      // (e.g. "pending orders"), else default to the generic "new/unread"
+      // wording that works for messages.
+      const badgeAria = sec.badge + ' ' + (sec.badgeLabel || 'unread');
+      headChildren.push(h('span',{class:'t-acc-badge', 'aria-label': badgeAria}, String(sec.badge)));
     }
     headChildren.push(h('span',{class:'t-acc-chevron','aria-hidden':'true'}, '▾'));
     const head = h('button',{
@@ -14612,6 +15525,14 @@ function renderTeacher(root){
   });
   dash.appendChild(acc);
   root.appendChild(dash);
+
+  // Sync the browser tab title "(N)" prefix and fire a desktop notification
+  // (deduped — at most once per 4 hours per count threshold). Both are
+  // no-ops when the count is 0 or when Notification permission isn't
+  // granted. See the PARENT-REPORT REVIEW NOTIFICATIONS block for the
+  // full behaviour.
+  try { syncDocumentTitleBadge(); } catch(e){}
+  try { maybeFireReviewNotification(unreviewedReportsTotal); } catch(e){}
 }
 
 /* ==========================================================================
@@ -14695,6 +15616,155 @@ function buildEditorWeeks(sid, subjId){
     absLevelBase += Math.max(acts.length, chunkCount * BATCH_SIZE);
   });
   return out;
+}
+
+/* Render the merged activity as a human-readable preview for the
+   curriculum editor accordion. Used instead of dumping JSON — tutors
+   want to see WHAT the lesson is, not the shape of the object.
+
+   Renders (when present): lesson title/visual/intro, example, steps,
+   hint, math-stack column(s), picture chips, questions with the
+   correct choice highlighted, stretch questions, video-search badges,
+   and the Ontario curriculum alignment tag. Unknown fields are
+   ignored silently — the form-based Edit modal is where the raw
+   escape hatch lives. */
+function buildCurriculumPreview(merged){
+  const wrap = h('div',{class:'curr-preview'});
+  const section = (labelHtml, bodyEls) => {
+    const s = h('div',{class:'curr-preview-section'});
+    if(labelHtml) s.appendChild(h('div',{class:'curr-preview-label', html: labelHtml}));
+    (Array.isArray(bodyEls)?bodyEls:[bodyEls]).forEach(el => { if(el) s.appendChild(el); });
+    return s;
+  };
+  const lesson = merged && merged.lesson || {};
+
+  // Lesson title + visual (the big emoji banner like "🐘 🌳")
+  if(lesson.title || lesson.visual){
+    const bits = [];
+    if(lesson.visual) bits.push(h('div',{class:'curr-preview-visual'}, String(lesson.visual)));
+    if(lesson.title)  bits.push(h('div',{class:'curr-preview-title'}, String(lesson.title)));
+    wrap.appendChild(section('📖 Lesson', bits));
+  }
+
+  // Intro paragraph
+  if(lesson.intro){
+    wrap.appendChild(section('', h('p',{class:'curr-preview-text', html: String(lesson.intro)})));
+  }
+
+  // Example (plain text — often has commas & quotes, no HTML)
+  if(lesson.example){
+    wrap.appendChild(section('💡 Example', h('div',{class:'curr-preview-example', html: String(lesson.example)})));
+  }
+
+  // Stacked math column(s) — reuse the runtime renderer so the preview
+  // matches exactly what the student sees.
+  if(lesson.stack){
+    const stackBox = h('div',{});
+    const stacks = Array.isArray(lesson.stack) ? lesson.stack : [lesson.stack];
+    stacks.forEach(spec => {
+      try {
+        const sw = h('div',{class:'curr-preview-stack-wrap'});
+        sw.appendChild(buildMathStack(spec));
+        stackBox.appendChild(sw);
+      } catch(e) { /* malformed stack spec — skip silently */ }
+    });
+    wrap.appendChild(section('🔢 Worked column', stackBox));
+  }
+
+  // Step-by-step directions
+  if(Array.isArray(lesson.steps) && lesson.steps.length){
+    const ol = h('ol',{class:'curr-preview-steps'});
+    lesson.steps.forEach(st => ol.appendChild(h('li',{html: String(st)})));
+    wrap.appendChild(section('📝 Steps', ol));
+  }
+
+  // Hint
+  if(lesson.hint){
+    wrap.appendChild(section('🔑 Hint', h('div',{class:'curr-preview-hint', html: String(lesson.hint)})));
+  }
+
+  // Picture vocabulary tiles ({emoji, word, label})
+  if(Array.isArray(lesson.pictures) && lesson.pictures.length){
+    const row = h('div',{class:'curr-preview-pics'});
+    lesson.pictures.forEach(p => {
+      if(!p) return;
+      const chip = h('div',{class:'curr-preview-pic'}, [
+        p.emoji ? h('span',{class:'pic-emoji'}, String(p.emoji)) : null,
+        p.word  ? h('span',{}, String(p.word)) : null,
+        p.label ? h('span',{class:'pic-label'}, '— '+String(p.label)) : null,
+      ].filter(Boolean));
+      row.appendChild(chip);
+    });
+    wrap.appendChild(section('🖼️ Pictures', row));
+  }
+
+  // Questions — render each with its choices, marking the correct one.
+  const renderQuestionList = (arr, label) => {
+    if(!Array.isArray(arr) || !arr.length) return;
+    const box = h('div',{});
+    arr.forEach((q, idx) => {
+      if(!q) return;
+      const qEl = h('div',{class:'curr-preview-q'});
+      const typeChip = q.type ? h('span',{class:'curr-preview-q-type-chip'}, String(q.type)) : null;
+      qEl.appendChild(h('div',{class:'curr-preview-q-num'}, ['Q'+(idx+1), typeChip].filter(Boolean)));
+      // passage-style questions have an optional passage blurb above the question
+      if(q.passage){
+        qEl.appendChild(h('div',{class:'curr-preview-q-passage', html: (q.visual ? String(q.visual)+' — ' : '') + String(q.passage)}));
+      }
+      if(q.q){
+        qEl.appendChild(h('div',{class:'curr-preview-q-text', html: String(q.q)}));
+      }
+      if(Array.isArray(q.choices) && q.choices.length){
+        const ul = h('ul',{class:'curr-preview-q-choices'});
+        q.choices.forEach((c, ci) => {
+          const li = h('li',{class: (ci === q.answer ? 'is-correct' : '')}, String(c));
+          ul.appendChild(li);
+        });
+        qEl.appendChild(ul);
+      } else if(q.answer != null){
+        // Free-response: show the expected answer as a single correct chip
+        const ul = h('ul',{class:'curr-preview-q-choices'});
+        ul.appendChild(h('li',{class:'is-correct'}, 'Answer: '+String(q.answer)));
+        qEl.appendChild(ul);
+      }
+      box.appendChild(qEl);
+    });
+    wrap.appendChild(section(label, box));
+  };
+  renderQuestionList(merged && merged.questions, '❓ Questions ('+((merged.questions||[]).length)+')');
+  renderQuestionList(merged && merged.stretchQuestions, '⭐ Stretch questions ('+((merged.stretchQuestions||[]).length)+')');
+
+  // Meta chips — videos, curriculum alignment, hidden flag
+  const metaChips = [];
+  if(Array.isArray(merged && merged.videoIds) && merged.videoIds.length){
+    merged.videoIds.forEach(vid => {
+      metaChips.push(h('span',{class:'curr-preview-chip is-video'}, '🎬 Video: '+String(vid)));
+    });
+  }
+  if(merged && merged.curriculum){
+    const c = merged.curriculum;
+    if(c.grade) metaChips.push(h('span',{class:'curr-preview-chip is-curric'}, '📋 '+String(c.grade)));
+    if(c.strand) metaChips.push(h('span',{class:'curr-preview-chip is-curric'}, String(c.strand)));
+    if(Array.isArray(c.codes)) c.codes.forEach(code => {
+      metaChips.push(h('span',{class:'curr-preview-chip is-curric'}, String(code)));
+    });
+  }
+  if(merged && merged._hidden){
+    metaChips.push(h('span',{class:'curr-preview-chip'}, '🙈 Hidden from students'));
+  }
+  if(metaChips.length){
+    const chipRow = h('div',{class:'curr-preview-chips'});
+    metaChips.forEach(c => chipRow.appendChild(c));
+    wrap.appendChild(section('🏷️ Meta', chipRow));
+  }
+
+  // Empty-state: no lesson body and no questions — give the tutor a hint
+  // rather than showing a stark blank preview.
+  if(!wrap.children.length){
+    wrap.appendChild(h('div',{class:'curr-preview-empty'},
+      'No lesson body or questions yet. Click "+ Override" to add content.'));
+  }
+  return wrap;
 }
 
 function renderTeacherCurriculum(root){
@@ -14789,20 +15859,47 @@ function renderTeacherCurriculum(root){
       if(isModified){
         buttons.push(h('button',{class:'btn btn-sm btn-ghost', onclick: ()=>resetCurriculumOverride(base.id)}, '↺ Reset'));
       }
+      // Curriculum alignment badge. If the activity has Ontario tags we
+      // show the first code (e.g. "📋 G3 · B1.3"); if not, show a dashed
+      // "📋 Tag needed" so it's obvious which activities still need a
+      // tutor to map them to the provincial expectations.
+      const cTag = merged.curriculum || null;
+      let curricBadge;
+      if(cTag && (cTag.grade || (Array.isArray(cTag.codes) && cTag.codes.length) || cTag.strand)){
+        const parts = [];
+        if(cTag.grade) parts.push(String(cTag.grade).replace(/^Grade\s+/i,'G'));
+        if(Array.isArray(cTag.codes) && cTag.codes.length) parts.push(cTag.codes[0] + (cTag.codes.length>1?'+'+(cTag.codes.length-1):''));
+        else if(cTag.strand) parts.push(cTag.strand.length>18?cTag.strand.slice(0,15)+'…':cTag.strand);
+        const tooltip = [
+          cTag.grade && ('Grade: '+cTag.grade),
+          cTag.strand && ('Strand: '+cTag.strand),
+          Array.isArray(cTag.codes) && cTag.codes.length && ('Codes: '+cTag.codes.join(', ')),
+          cTag.notes && ('Notes: '+cTag.notes),
+        ].filter(Boolean).join('\n');
+        curricBadge = h('span',{class:'curr-curric-badge has-tag', title: tooltip || 'Ontario curriculum aligned'}, '📋 '+parts.join(' · '));
+      } else {
+        curricBadge = h('span',{class:'curr-curric-badge no-tag', title:'No Ontario curriculum tags yet. Click Edit → Ontario Curriculum Alignment to add.'}, '📋 Tag needed');
+      }
+
       const header = h('div',{class:'curr-row-header'},[
         h('span',{class:'curr-level-badge', title:'Absolute level number (what the student sees)'}, 'L'+absLevel),
         h('span',{class:'curr-emoji'}, merged.emoji || '📘'),
         h('div',{class:'curr-meta'},[
           h('div',{class:'curr-title'}, merged.title || '(untitled)'),
           h('div',{class:'curr-id'}, base.id + (isModified ? ' · Modified' : '') + (isHidden ? ' · Hidden from students' : '')),
+          curricBadge,
         ]),
         ...buttons,
       ]);
       row.appendChild(header);
 
+      // Preview body — read-only, human-readable render of the merged
+      // lesson (vs. the raw JSON dump we used to show here). Tutors want to
+      // scan what a lesson actually teaches without reading code; the
+      // form-based modal behind "+ Override" / "✎ Edit" handles edits.
       const body = h('details',{class:'curr-details'},[
-        h('summary',{}, '▸ Show full merged content ('+Object.keys(merged).length+' fields)'),
-        h('pre',{class:'curr-json'}, JSON.stringify(merged, null, 2)),
+        h('summary',{}, '▸ Preview lesson content'),
+        buildCurriculumPreview(merged),
       ]);
       row.appendChild(body);
       list.appendChild(row);
@@ -14874,6 +15971,46 @@ function openCurriculumEdit(baseActivity){
   ]);
   metaSection.appendChild(hiddenLabel);
   registerField({ key:'_hidden', get:()=> hiddenCb.checked ? true : undefined });
+
+  // CURRICULUM ALIGNMENT (Ontario) --------------------------------------
+  // A light-weight tag so the tutor, parents, and students can see WHICH
+  // Ontario expectations each activity is targeting. Data shape:
+  //   curriculum: { grade, strand, codes: ['B1.3','B2.5'], notes, link }
+  // All sub-fields optional. If everything is blank the curriculum key is
+  // omitted from the patch entirely (no override, base shines through).
+  const mergedCurric = merged.curriculum || {};
+  const currSection = h('div',{class:'cf-section'});
+  currSection.appendChild(h('h3',{class:'cf-section-title'},'📋 Ontario Curriculum Alignment'));
+  currSection.appendChild(h('p',{class:'cf-section-sub'},[
+    'Which Ontario expectation does this activity address? Show parents + students what school curriculum this maps to. ',
+    h('a',{href:'https://www.dcp.edu.gov.on.ca/en/', target:'_blank', rel:'noopener', style:'color:var(--primary);font-weight:700'},'Browse Ontario expectations →'),
+  ]));
+  const cGrade = h('input',{type:'text', class:'cf-input', value: mergedCurric.grade || '', placeholder:'e.g. Grade 3', style:'max-width:180px'});
+  const cStrand = h('input',{type:'text', class:'cf-input', value: mergedCurric.strand || '', placeholder:'e.g. Number Sense'});
+  const cCodes = h('input',{type:'text', class:'cf-input', value: Array.isArray(mergedCurric.codes) ? mergedCurric.codes.join(', ') : (mergedCurric.codes || ''), placeholder:'e.g. B1.3, B2.5'});
+  const cNotes = h('textarea',{class:'cf-textarea', placeholder:'Plain-English description of the expectation (shown to students + parents).'}, mergedCurric.notes || '');
+  const cLink = h('input',{type:'url', class:'cf-input', value: mergedCurric.link || '', placeholder:'https://… (optional — link to the full Ontario doc)'});
+  currSection.appendChild(h('div',{class:'cf-row'},[
+    h('div',{class:'cf-field',style:'flex:0 0 200px'},[ h('label',{class:'cf-field-label'},'Grade'), cGrade ]),
+    h('div',{class:'cf-field'},[ h('label',{class:'cf-field-label'},'Strand'), cStrand ]),
+  ]));
+  currSection.appendChild(h('div',{class:'cf-field'},[ h('label',{class:'cf-field-label'},'Expectation codes (comma-separated)'), cCodes ]));
+  currSection.appendChild(h('div',{class:'cf-field'},[ h('label',{class:'cf-field-label'},'Description (plain English)'), cNotes ]));
+  currSection.appendChild(h('div',{class:'cf-field'},[ h('label',{class:'cf-field-label'},'Link (optional)'), cLink ]));
+  const getCurriculumValue = () => {
+    const out = {};
+    const g = cGrade.value.trim();   if(g) out.grade = g;
+    const s = cStrand.value.trim();  if(s) out.strand = s;
+    const codesRaw = cCodes.value.trim();
+    if(codesRaw){
+      const codes = codesRaw.split(/[,\s]+/).map(c=>c.trim()).filter(Boolean);
+      if(codes.length) out.codes = codes;
+    }
+    const n = cNotes.value.trim();   if(n) out.notes = n;
+    const l = cLink.value.trim();    if(l) out.link = l;
+    return Object.keys(out).length ? out : null;
+  };
+  registerField({ key:'curriculum', get:getCurriculumValue });
 
   // LESSON fields ------------------------------------------------------
   // The lesson object is nested, but from the tutor's POV it's just a
@@ -15302,7 +16439,7 @@ function openCurriculumEdit(baseActivity){
   const advArea = h('textarea',{class:'curr-modal-textarea', spellcheck:'false', style:'min-height:120px'}, '');
   // Seed the advanced textarea with any existing exotic fields that the
   // form didn't absorb, so nothing silently disappears on save.
-  const FORM_OWNED = new Set(['id','title','emoji','_hidden','lesson','questions','stretchQuestions']);
+  const FORM_OWNED = new Set(['id','title','emoji','_hidden','lesson','questions','stretchQuestions','curriculum']);
   const LESSON_FORM_OWNED = new Set(['title','intro','example','hint']);
   const exotic = {};
   if(existing){
@@ -15348,6 +16485,11 @@ function openCurriculumEdit(baseActivity){
     if(stretch.length || (baseActivity.stretchQuestions || []).length){
       proposed.stretchQuestions = stretch;
     }
+    // Ontario curriculum alignment tags — shape {grade, strand, codes[], notes, link}.
+    // All fields optional; if tutor clears everything, getCurriculumValue
+    // returns null → we diff against base and either wipe or leave alone.
+    const curriculumVal = getCurriculumValue();
+    if(curriculumVal) proposed.curriculum = curriculumVal;
 
     // Diff proposed vs base → only keep fields that actually differ.
     const patch = {};
@@ -15369,6 +16511,15 @@ function openCurriculumEdit(baseActivity){
     }
     if(proposed.stretchQuestions !== undefined && !deepEqual(proposed.stretchQuestions, baseActivity.stretchQuestions || [])){
       patch.stretchQuestions = proposed.stretchQuestions;
+    }
+    // Curriculum alignment diff. Three cases:
+    //   1) tutor added/changed tags → patch.curriculum = proposed
+    //   2) tutor cleared all fields on an activity that had base tags → wipe ({})
+    //   3) no change → don't touch
+    if(proposed.curriculum && !deepEqual(proposed.curriculum, baseActivity.curriculum || null)){
+      patch.curriculum = proposed.curriculum;
+    } else if(!proposed.curriculum && baseActivity.curriculum){
+      patch.curriculum = {};
     }
 
     // Hidden toggle is explicit — always write when true, never write
@@ -15650,22 +16801,35 @@ function renderTeacherPasswords(){
    destructive action. Prevents misclicks from nuking a kid's progress.
    ========================================================================== */
 function confirmTeacherPassword(actionDesc){
+  // Grace-window pass-through: if the teacher recently logged in or
+  // re-entered the password, don't re-prompt. Sliding window — every hit
+  // refreshes the clock, so an actively-working teacher stays authorized.
+  if(teacherGraceActive()){
+    teacherAuthAt = Date.now();
+    return true;
+  }
   const pw = prompt('Teacher password required to '+actionDesc+'.\n\nEnter password:');
   if(pw === null) return false; // user hit Cancel — treat as aborted
   if(pw !== TEACHER_CREDS.password){
     alert('Incorrect password. Action canceled.');
     return false;
   }
+  // Successful prompt refreshes the grace window too.
+  teacherAuthAt = Date.now();
   return true;
 }
 function resetStudent(sid){
   if(!allData.users[sid]) return;
+  // Safety net — full pre-wipe allData goes into the snapshot ring so the
+  // teacher can roll back with one click from the dashboard.
+  try { pushSnapshot('before reset: '+sid); } catch(e){}
   allData.users[sid] = defaultUser();
   saveState();
 }
 function resetStudentSubject(sid, subjId){
   const ud = allData.users[sid];
   if(!ud) return;
+  try { pushSnapshot('before reset '+sid+' · subject '+subjId); } catch(e){}
   const acts = getWeekActivities(sid, subjId) || [];
   const actIds = new Set(acts.map(a=>a.id));
   // Wipe completedActivities / perfectActivities entries that belong to this subject
@@ -16008,12 +17172,25 @@ function previewProgressReport(sid){
 //   • lastReportSentAt — if the teacher has ever hit Send for them
 //   • joinedAt         — otherwise (their "week" starts the moment they
 //                        created their login)
-// Returns { label, cls, overdue, days } where `days` is elapsed since the
-// chosen anchor and `cls` drives chip color (ok/due/overdue/never).
+// Returns { label, cls, overdue, days, canReview, needsReview,
+//           reviewedForCycle } where `days` is elapsed since the chosen
+// anchor and `cls` drives chip color (ok/due/overdue/never).
+//
+// Review-workflow fields:
+//   • canReview        — true once the report is 1 day before due (day 6+).
+//                        The teacher CAN start reviewing; no red alert yet.
+//   • needsReview      — true once day-of-or-past AND the current cycle
+//                        has not been marked reviewed. Drives the red
+//                        badge, banner, tab title, and desktop popup.
+//   • reviewedForCycle — true if lastReportReviewedAt is AFTER the current
+//                        anchor — i.e. the teacher has already cleared
+//                        this cycle's report. Resets the next time a
+//                        report is sent (anchor advances past review ts).
 function reportStatusFor(ud){
-  if(!ud) return { label:'Never sent', cls:'never', overdue:false, days:Infinity };
+  if(!ud) return { label:'Never sent', cls:'never', overdue:false, days:Infinity, canReview:false, needsReview:false, reviewedForCycle:false };
   const sentAt   = ud.lastReportSentAt || 0;
   const joinedAt = ud.joinedAt || 0;
+  const reviewedAt = ud.lastReportReviewedAt || 0;
   // Pick whichever anchor is more recent. If the teacher sent a report after
   // the student joined (normal case), count from the send. If they haven't
   // sent any yet, count from joinedAt so the overdue chip appears 7 days
@@ -16023,11 +17200,17 @@ function reportStatusFor(ud){
     // No joinedAt AND no lastReportSentAt — legacy imported student who has
     // never appeared in the login flow. We can't time them; show the
     // untimed "Never sent" state so the teacher at least sees something.
-    return { label:'Never sent', cls:'never', overdue:false, days:Infinity };
+    return { label:'Never sent', cls:'never', overdue:false, days:Infinity, canReview:false, needsReview:false, reviewedForCycle:false };
   }
   const days = Math.floor((Date.now() - anchor) / (24*60*60*1000));
   const overdue = days >= REPORT_INTERVAL_DAYS;
   const cls = overdue ? 'overdue' : (days >= REPORT_INTERVAL_DAYS - 2 ? 'due' : 'ok');
+  // Review state — timestamp has to post-date the current anchor. If the
+  // teacher sent a new report, the anchor (sentAt) advances past any old
+  // reviewedAt, so reviewedForCycle correctly flips back to false.
+  const reviewedForCycle = reviewedAt > anchor;
+  const canReview   = days >= (REPORT_INTERVAL_DAYS - 1) && !reviewedForCycle;
+  const needsReview = overdue && !reviewedForCycle;
   let label;
   if(sentAt && sentAt >= joinedAt){
     // Clock is anchored on a real send.
@@ -16046,7 +17229,132 @@ function reportStatusFor(ud){
       else label = `Joined ${days}d ago · first report in ${daysLeft}d`;
     }
   }
-  return { label, cls, overdue, days };
+  return { label, cls, overdue, days, canReview, needsReview, reviewedForCycle };
+}
+
+/* ==========================================================================
+   PARENT-REPORT REVIEW NOTIFICATIONS
+   --------------------------------------------------------------------------
+   Four free surfaces — no servers, no email, no paid services:
+
+     1. Red pill count on the "📧 Parent Reports" accordion tab header
+        (inside the teacher dashboard; uses the existing .t-acc-badge CSS).
+     2. Red banner at the top of the teacher dashboard (above accordion).
+     3. Browser tab title prefix "(N) KidQuest — …" so the count is
+        visible even when the dashboard tab isn't focused.
+     4. Desktop/system notification via the built-in Notification API.
+        One-time permission prompt (button in the banner), deduped so it
+        doesn't re-pop every render — fires once per 4 hours OR when the
+        count increases past the previously-notified count.
+
+   "N" is countUnreviewedReports() — students with a parent email whose
+   current report cycle is day-of-or-past-due AND not yet marked reviewed.
+   ========================================================================== */
+
+function countUnreviewedReports(){
+  try {
+    let count = 0;
+    STUDENTS.forEach(s => {
+      const ud = allData.users[s.id];
+      if(!ud || !ud.parentEmail) return;
+      const st = reportStatusFor(ud);
+      if(st && st.needsReview) count++;
+    });
+    return count;
+  } catch(e){
+    console.warn('[KidQuest] countUnreviewedReports failed:', e);
+    return 0;
+  }
+}
+
+// Browser tab title badge. Only shown when the teacher is logged in —
+// students should never see "(3) KidQuest" because the count is meta-info
+// for the tutor, not them. Base title is captured lazily on first call.
+let _reportBaseTitle = null;
+function syncDocumentTitleBadge(){
+  try {
+    if(_reportBaseTitle === null) _reportBaseTitle = document.title;
+    if(!isTeacher){
+      document.title = _reportBaseTitle;
+      return;
+    }
+    const count = countUnreviewedReports();
+    document.title = count > 0 ? `(${count}) ${_reportBaseTitle}` : _reportBaseTitle;
+  } catch(e){ /* non-fatal */ }
+}
+
+// Desktop notification — asks for permission on first click of the
+// banner's "Enable alerts" button. After consent, fires once per 4h
+// OR whenever the count ticks up. Uses `tag: 'kidquest-review'` so
+// repeat firings COLLAPSE instead of stacking.
+const NOTIF_DEDUP_AT_KEY    = 'kidquest-review-notif-at';
+const NOTIF_DEDUP_COUNT_KEY = 'kidquest-review-notif-count';
+const NOTIF_DEDUP_MS = 4 * 60 * 60 * 1000; // 4h
+
+function canFireReviewNotification(){
+  try {
+    if(!('Notification' in window)) return false;
+    if(Notification.permission !== 'granted') return false;
+    return true;
+  } catch(e){ return false; }
+}
+
+function maybeFireReviewNotification(count){
+  try {
+    if(!canFireReviewNotification()) return;
+    if(!(count > 0)) return;
+    const lastAt    = Number(localStorage.getItem(NOTIF_DEDUP_AT_KEY)    || 0);
+    const lastCount = Number(localStorage.getItem(NOTIF_DEDUP_COUNT_KEY) || 0);
+    const now = Date.now();
+    const countIncreased = count > lastCount;
+    const cooledDown     = (now - lastAt) > NOTIF_DEDUP_MS;
+    if(!countIncreased && !cooledDown) return;
+    new Notification('KidQuest — parent reports awaiting review', {
+      body: `${count} parent report${count===1?'':'s'} ready to review and send.`,
+      tag:  'kidquest-review',
+    });
+    localStorage.setItem(NOTIF_DEDUP_AT_KEY, String(now));
+    localStorage.setItem(NOTIF_DEDUP_COUNT_KEY, String(count));
+  } catch(e){ console.warn('[KidQuest] review Notification failed:', e); }
+}
+
+// One-shot permission prompt wired into the banner's "🔔 Enable alerts"
+// button. Silently skips if browser lacks support or the user already
+// denied — in the denied case we tell them how to re-enable via the
+// address-bar site-settings menu.
+function requestReviewNotificationPermission(cb){
+  try {
+    if(!('Notification' in window)){
+      alert('Your browser does not support desktop notifications.');
+      cb && cb(false); return;
+    }
+    if(Notification.permission === 'granted'){ cb && cb(true); return; }
+    if(Notification.permission === 'denied'){
+      alert('Desktop notifications are blocked for this site.\n\nTo re-enable: click the 🔒 or ⓘ icon in your browser\'s address bar, find "Notifications", and switch to "Allow". Then refresh this page.');
+      cb && cb(false); return;
+    }
+    Notification.requestPermission().then(p => { cb && cb(p === 'granted'); });
+  } catch(e){ console.warn('[KidQuest] permission request failed:', e); cb && cb(false); }
+}
+
+// Mark a student's current parent-report cycle as reviewed. Called from
+// the "✓ Mark reviewed" button on each row in renderParentReports.
+// Stamps lastReportReviewedAt on the user and triggers a full teacher
+// re-render so the badge, banner, and tab title all refresh. Clears
+// #screen first because renderTeacher only appends — calling it raw would
+// stack a second dashboard below the first.
+function markReportReviewed(sid){
+  try {
+    const ud = allData.users[sid];
+    if(!ud) return;
+    ud.lastReportReviewedAt = Date.now();
+    saveState();
+    try {
+      const scr = document.getElementById('screen');
+      if(scr){ scr.innerHTML = ''; renderTeacher(scr); }
+    } catch(e){}
+    try { syncDocumentTitleBadge(); } catch(e){}
+  } catch(e){ console.warn('[KidQuest] markReportReviewed failed:', e); }
 }
 
 // Teacher-dashboard panel: one row per student with a parent-email input,
@@ -16069,11 +17377,32 @@ function renderParentReports(){
     const ud = allData.users[s.id];
     return ud && ud.parentEmail && !ud.lastReportSentAt;
   }).length;
+  // Review-workflow sub-counts so the teacher sees at a glance how many
+  // reports need attention AND how many are merely becoming reviewable
+  // (day 6, not yet the send date).
+  const awaitingReviewCount = STUDENTS.filter(s=>{
+    const ud = allData.users[s.id];
+    return ud && ud.parentEmail && reportStatusFor(ud).needsReview;
+  }).length;
+  const reviewableCount = STUDENTS.filter(s=>{
+    const ud = allData.users[s.id];
+    const st = ud && ud.parentEmail ? reportStatusFor(ud) : null;
+    // Reviewable BUT not yet needing review = one-day-before window.
+    return st && st.canReview && !st.needsReview;
+  }).length;
   if(overdueCount>0){
     wrap.appendChild(h('div',{class:'t-maint-pill on'},
       `🔔 ${overdueCount} report${overdueCount===1?'':'s'} overdue`));
   } else if(neverCount === STUDENTS.filter(s=>allData.users[s.id]?.parentEmail).length && neverCount>0){
     wrap.appendChild(h('div',{class:'t-maint-pill off'},'✓ No reports overdue'));
+  }
+  if(awaitingReviewCount>0){
+    wrap.appendChild(h('div',{class:'t-maint-pill on'},
+      `👀 ${awaitingReviewCount} awaiting your review`));
+  }
+  if(reviewableCount>0){
+    wrap.appendChild(h('div',{class:'t-maint-pill',style:'background:#fff4d6;color:#b57100'},
+      `📝 ${reviewableCount} ready for early review (1 day before send)`));
   }
 
   // One row per student
@@ -16081,7 +17410,11 @@ function renderParentReports(){
     const ud = allData.users[s.id] || defaultUser();
     const status = reportStatusFor(ud);
 
-    const row = h('div',{class:'t-parent-row'});
+    // Highlight rows that are day-of-or-past without a review. Drives the
+    // left-bar + subtle red wash so the teacher's eye is drawn to rows
+    // that need action.
+    const rowCls = 't-parent-row' + (status.needsReview ? ' awaiting-review' : '');
+    const row = h('div',{class: rowCls});
     // Left: student name + grade. Use chosen avatar emoji (if set) or
     // the initial from the name — NOT the tiny decoEmoji — so the header
     // matches the student's own profile identity.
@@ -16130,6 +17463,19 @@ function renderParentReports(){
     if(status.overdue && sentBased){
       meta.appendChild(h('span',{}, `(≥${REPORT_INTERVAL_DAYS} days — time to send)`));
     }
+    // Review-state chip — only shown for rows that have a parent email AND
+    // are in the review window. Awaiting = red pulse, Reviewable = yellow
+    // (day 6, early), Reviewed = green check (cleared for this cycle).
+    const hasEmailForReview = !!(ud.parentEmail||'').trim();
+    if(hasEmailForReview){
+      if(status.needsReview){
+        meta.appendChild(h('span',{class:'t-parent-chip awaiting','aria-label':'Awaiting review'},'👀 Awaiting review'));
+      } else if(status.canReview){
+        meta.appendChild(h('span',{class:'t-parent-chip reviewable','aria-label':'Ready for early review'},'📝 Ready to review'));
+      } else if(status.reviewedForCycle){
+        meta.appendChild(h('span',{class:'t-parent-chip reviewed','aria-label':'Reviewed for this cycle'},'✓ Reviewed'));
+      }
+    }
     meta.appendChild(h('span',{class:'t-parent-pronoun-wrap'},[
       h('span',{class:'tpp-label'},'Pronouns'),
       pronounSel
@@ -16168,12 +17514,56 @@ function renderParentReports(){
           }catch(err){ done(false); }
         }
       },'🔗 Parent link'),
+      // Mark reviewed — only shown when the report is either awaiting
+      // review (day-of-or-past without review) OR in the 1-day-early
+      // window (canReview). Explicit button so the teacher has to
+      // acknowledge each cycle — clicking "Preview" alone doesn't clear
+      // the red badge. Once clicked the next render replaces this button
+      // with a "✓ Reviewed" chip.
+      ...((status.needsReview || status.canReview) && hasEmail ? [h('button',{
+        class: 'btn btn-review',
+        title: 'Mark this week\'s report as reviewed — clears the red badge on the Parent Reports tab.',
+        onclick: () => {
+          // Pop the preview first so the teacher actually sees what they're
+          // approving, then stamp the review. If they cancel preview via
+          // the native alert, we still mark reviewed — the alert is modal
+          // and there's no "cancel" path that would skip this action.
+          try { previewProgressReport(s.id); } catch(e){}
+          markReportReviewed(s.id);
+        }
+      }, '✓ Mark reviewed')] : []),
+      // "Reviewed" confirmation button — replaces Mark reviewed once the
+      // stamp is set for this cycle. Clicking it UNDOES the review (lets
+      // the teacher reconsider before hitting Send).
+      ...(status.reviewedForCycle && hasEmail && !status.needsReview && !status.canReview ? [h('button',{
+        class: 'btn btn-reviewed',
+        title: 'You\'ve marked this week\'s report as reviewed. Click to undo.',
+        onclick: () => {
+          if(!confirm('Undo "reviewed" stamp for '+s.name+'\'s current report?')) return;
+          allData.users[s.id].lastReportReviewedAt = 0;
+          saveState();
+          try {
+            const scr = document.getElementById('screen');
+            if(scr){ scr.innerHTML = ''; renderTeacher(scr); }
+          } catch(e){}
+          try { syncDocumentTitleBadge(); } catch(e){}
+        }
+      }, '✓ Reviewed (undo)')] : []),
       h('button',{
         class:'btn btn-primary' + (hasEmail ? '' : ' btn-disabled'),
         disabled: hasEmail ? null : '',
         style: hasEmail ? '' : 'opacity:.45;cursor:not-allowed',
         onclick:()=>{
           if(!hasEmail){ alert('Enter the parent email first.'); return; }
+          // Soft-warn if the teacher tries to Send without marking reviewed
+          // — the whole point of the review workflow is forcing a glance
+          // before the email goes out. Still let them push through if
+          // they've just read the preview and don't want an extra click.
+          if(status.needsReview){
+            if(!confirm(`You haven't marked ${s.name}\'s report as reviewed yet.\n\nSend it anyway? (This will also auto-mark it reviewed.)`)) return;
+            // Proceeding = implicit review.
+            try { markReportReviewed(s.id); } catch(e){}
+          }
           sendProgressReport(s.id);
         }
       },'📧 Send'),
@@ -16243,12 +17633,14 @@ function renderResetControls(){
   row3.appendChild(h('div',{class:'t-reset-row-title'},'Reset EVERYTHING (every student)'));
   row3.appendChild(h('div',{class:'t-reset-row-sub'},'Wipes every student\'s progress and clears all reward order history in one shot.'));
   const btn3 = h('button',{class:'btn btn-danger t-reset-btn',onclick:()=>{
-    if(!confirm('Reset EVERY student\'s progress + clear all reward orders?\n\nThis cannot be undone. Export a JSON backup first if you might need the data later.')) return;
+    if(!confirm('Reset EVERY student\'s progress + clear all reward orders?\n\nA one-click auto-snapshot will be saved, so "↶ Restore from snapshot" on the dashboard can undo this within the next 5 resets.')) return;
     if(!confirmTeacherPassword('reset every student\'s progress')) return;
+    // Safety net — pre-wipe snapshot goes into the local undo ring.
+    try { pushSnapshot('before Reset EVERYTHING'); } catch(e){}
     STUDENTS.forEach(s=>{ allData.users[s.id] = defaultUser(); });
     allData.orders = [];
     saveState();
-    alert('✓ All student progress has been reset.');
+    alert('✓ All student progress has been reset.\n\nTip: if that was a mistake, open the teacher dashboard → Backup & Data → "↶ Restore from snapshot" to roll it back.');
     go('teacher');
   }},'🔴 Reset everything');
   row3.appendChild(h('div',{class:'t-reset-row-ctrls'},[btn3]));
@@ -16498,6 +17890,20 @@ function shuffle(a){const b=[...a];for(let i=b.length-1;i>0;i--){const j=Math.fl
    Defensive initialization. Any failure → safe fallback to home screen.
    Never leaves the user stuck on a half-rendered state. */
 try { initCloud(); } catch(e) { console.warn('[KidQuest] initCloud failed:',e); }
+
+// Dev-sandbox banner — if we're on localhost / file:// / ?env=dev, pin a
+// red-pink gradient bar at the top of every screen so it's impossible to
+// forget which cloud bucket this tab is writing to.
+try {
+  if(IS_DEV_ENV){
+    const devBanner = document.createElement('div');
+    devBanner.className = 'dev-banner';
+    devBanner.innerHTML = '<span class="env-label">Dev sandbox</span>'
+      + '<span class="env-note">Cloud writes go to the DEV bucket — production coin/progress data is safe.</span>';
+    document.body.appendChild(devBanner);
+    document.body.classList.add('has-dev-banner');
+  }
+} catch(e){ /* non-fatal */ }
 
 // Initialize EmailJS only when keys are configured. Safely no-op otherwise.
 try {
