@@ -1324,6 +1324,8 @@ img{max-width:100%}
 .curr-row.is-hidden{opacity:.55}
 .curr-row-header{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
 .curr-row .curr-emoji{font-size:22px;flex-shrink:0;line-height:1}
+.curr-row .curr-level-badge{display:inline-flex;align-items:center;justify-content:center;min-width:38px;height:26px;padding:0 8px;border-radius:8px;background:rgba(108,92,231,.12);color:var(--primary);font-family:var(--font-display);font-weight:900;font-size:12px;letter-spacing:.04em;flex-shrink:0}
+.curr-row.is-hidden .curr-level-badge{background:rgba(108,92,231,.08);color:var(--ink3)}
 .curr-row .curr-meta{flex:1;min-width:180px}
 .curr-row .curr-title{font-weight:800;font-size:15px;color:var(--ink);line-height:1.2}
 .curr-row .curr-id{font-size:11px;color:var(--ink3);font-family:ui-monospace,Menlo,monospace;margin-top:2px}
@@ -14639,16 +14641,78 @@ function renderTeacher(root){
 
    Selectors default to the most-recent week + first student + first
    subject, and remember the tutor's last choice across page visits via
-   curriculumEditorState. ========================================================================== */
+   curriculumEditorState.
+
+   ▸ Editor-week vs data-week
+   The tutor authors activities as ONE flat list of 10+ levels per
+   student/subject inside a WEEKS[n] data-bucket. Students experience
+   those as batches of 5 (BATCH_SIZE) — Level 5 and Level 10 are the
+   cross-subject gate boundaries. So the editor's "Week" selector is a
+   5-level batch, NOT a data-week:
+     Levels 1–5  → Editor Week 1
+     Levels 6–10 → Editor Week 2
+     Levels 11–15 → Editor Week 3
+   If a future WEEKS[2] data-bucket is authored, its batches continue
+   the editor-week numbering (Week 3, 4, …). `curriculumEditorState.week`
+   now stores the editor-week number (1-based across data-buckets).
+   ========================================================================== */
 let curriculumEditorState = { week: null, student: null, subject: null };
+
+/* Build the list of editor-weeks available for a given student+subject.
+   Each entry:
+     { editorWeek, dataWeek, sliceStart, sliceEnd, activityCount,
+       absLevelLow, absLevelHigh }
+   `dataWeek` is the WEEKS[] key the slice lives in; `sliceStart/End`
+   index into that bucket's activity array; `absLevelLow/High` are the
+   student-facing level numbers. */
+function buildEditorWeeks(sid, subjId){
+  const out = [];
+  const dataWeeks = Object.keys(WEEKS)
+    .map(n=>parseInt(n,10))
+    .filter(n=>!isNaN(n) && n>0)
+    .sort((a,b)=>a-b);
+  let editorIdx = 1;
+  let absLevelBase = 0;
+  dataWeeks.forEach(dw=>{
+    const acts = ((WEEKS[dw]||{})[sid]||{})[subjId] || [];
+    // Always emit at least one (empty) slot per data-week so the tutor
+    // sees a "Week N" option even for an unauthored bucket — makes it
+    // obvious where to put new content.
+    const chunkCount = Math.max(1, Math.ceil(acts.length / BATCH_SIZE));
+    for(let i=0;i<chunkCount;i++){
+      const start = i * BATCH_SIZE;
+      const end = Math.min(acts.length, (i+1) * BATCH_SIZE);
+      out.push({
+        editorWeek: editorIdx++,
+        dataWeek: dw,
+        sliceStart: start,
+        sliceEnd: end,
+        activityCount: end - start,
+        absLevelLow: absLevelBase + start + 1,
+        absLevelHigh: absLevelBase + end,
+      });
+    }
+    absLevelBase += Math.max(acts.length, chunkCount * BATCH_SIZE);
+  });
+  return out;
+}
 
 function renderTeacherCurriculum(root){
   if(!isTeacher){ go('home'); return; }
 
-  const availableWeeks = Object.keys(WEEKS).map(n=>parseInt(n,10)).filter(n=>!isNaN(n) && n>0).sort((a,b)=>a-b);
-  if(curriculumEditorState.week === null) curriculumEditorState.week = availableWeeks[availableWeeks.length-1] || 1;
   if(curriculumEditorState.student === null) curriculumEditorState.student = STUDENTS[0].id;
   if(curriculumEditorState.subject === null) curriculumEditorState.subject = SUBJECTS[0].id;
+
+  // Build editor-weeks for the currently selected student+subject. The
+  // selector recomputes as the tutor flips subjects — a spelling subject
+  // with only 5 levels will show just Week 1; math with 10 shows Weeks 1 & 2.
+  let editorWeeks = buildEditorWeeks(curriculumEditorState.student, curriculumEditorState.subject);
+  if(!editorWeeks.length) editorWeeks = [{editorWeek:1, dataWeek:1, sliceStart:0, sliceEnd:0, activityCount:0, absLevelLow:1, absLevelHigh:BATCH_SIZE}];
+  // Clamp the stored week to what exists for this combo, then default.
+  if(curriculumEditorState.week === null) curriculumEditorState.week = 1;
+  if(curriculumEditorState.week > editorWeeks.length) curriculumEditorState.week = editorWeeks.length;
+  if(curriculumEditorState.week < 1) curriculumEditorState.week = 1;
+  const selectedWeek = editorWeeks[curriculumEditorState.week - 1];
 
   const wrap = h('div',{class:'curr-editor'});
 
@@ -14658,7 +14722,7 @@ function renderTeacherCurriculum(root){
   ]));
 
   wrap.appendChild(h('p',{class:'curr-intro'},
-    'Edit the lessons, questions, and answers shown to students. Every activity below pulls from the committed curriculum in the app code; edits here are overrides stored in the cloud blob and merged at read time. Use Reset to fall back to the base any time — no code changes needed.'));
+    'Edit the lessons, questions, and answers shown to students. Each "Week" groups 5 levels — the same 5-level batches students unlock together. Edits are stored as overrides in the cloud blob and merged at read time. Use Reset to fall back to the base any time.'));
 
   // Selector row
   const ctrls = h('div',{class:'curr-ctrls'});
@@ -14675,7 +14739,10 @@ function renderTeacherCurriculum(root){
     ]);
   };
   ctrls.appendChild(mkSelect('Week',
-    availableWeeks.map(w=>({value:String(w), label:'Week '+w})),
+    editorWeeks.map(ew=>({
+      value:String(ew.editorWeek),
+      label:'Week '+ew.editorWeek+' · Levels '+ew.absLevelLow+'–'+ew.absLevelHigh,
+    })),
     String(curriculumEditorState.week),
     v => { curriculumEditorState.week = parseInt(v,10); go('teacher-curriculum'); }
   ));
@@ -14691,22 +14758,25 @@ function renderTeacherCurriculum(root){
   ));
   wrap.appendChild(ctrls);
 
-  // Fetch the raw base list — not getWeekActivities(), which filters
-  // demoOnly and uses `currentWeek`. The tutor needs ALL activities for
-  // the chosen week/student/subject, including hidden ones (so they can
-  // un-hide them).
-  const wk = WEEKS[curriculumEditorState.week];
-  const rawActs = (wk && wk[curriculumEditorState.student] && wk[curriculumEditorState.student][curriculumEditorState.subject]) || [];
+  // Fetch the raw base list for the currently selected data-week, then
+  // slice down to just this editor-week's 5-level chunk. Not using
+  // getWeekActivities() — that filters demoOnly and uses student
+  // `currentWeek`. The tutor needs ALL activities (including hidden ones
+  // so they can un-hide them) for the chosen slice.
+  const wk = WEEKS[selectedWeek.dataWeek];
+  const fullBucket = (wk && wk[curriculumEditorState.student] && wk[curriculumEditorState.student][curriculumEditorState.subject]) || [];
+  const rawActs = fullBucket.slice(selectedWeek.sliceStart, selectedWeek.sliceEnd);
 
   if(rawActs.length === 0){
     const stName = (STUDENTS.find(s=>s.id===curriculumEditorState.student) || {}).name || curriculumEditorState.student;
     const subName = (SUBJECTS.find(s=>s.id===curriculumEditorState.subject) || {}).name || curriculumEditorState.subject;
     wrap.appendChild(h('div',{class:'curr-empty'},
-      'No activities defined for '+stName+' · '+subName+' · Week '+curriculumEditorState.week+'. Add them in index.html to edit them here.'
+      'No activities defined for '+stName+' · '+subName+' · Levels '+selectedWeek.absLevelLow+'–'+selectedWeek.absLevelHigh+'. Add them in index.html to edit them here.'
     ));
   } else {
     const list = h('div',{class:'curr-list'});
-    rawActs.forEach(base => {
+    rawActs.forEach((base, i) => {
+      const absLevel = selectedWeek.absLevelLow + i;
       const override = (allData && allData.curriculum && allData.curriculum.overrides && allData.curriculum.overrides[base.id]) || null;
       const merged = applyCurriculumOverride(base) || base;
       const isModified = !!override;
@@ -14720,6 +14790,7 @@ function renderTeacherCurriculum(root){
         buttons.push(h('button',{class:'btn btn-sm btn-ghost', onclick: ()=>resetCurriculumOverride(base.id)}, '↺ Reset'));
       }
       const header = h('div',{class:'curr-row-header'},[
+        h('span',{class:'curr-level-badge', title:'Absolute level number (what the student sees)'}, 'L'+absLevel),
         h('span',{class:'curr-emoji'}, merged.emoji || '📘'),
         h('div',{class:'curr-meta'},[
           h('div',{class:'curr-title'}, merged.title || '(untitled)'),
