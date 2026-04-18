@@ -9681,6 +9681,19 @@ function nextQ(){
 const PASS_THRESHOLD = 0.6;
 
 function finishActivity(){
+  // Re-entry guard — the "Finish 🎉" button on the last question used to
+  // re-enter this function on repeat clicks (before the reward overlay
+  // had time to cover it), and each re-entry bumped `attempts` + pushed
+  // to the cloud. A kid mashing the button could hit 100+ attempts on a
+  // single run (Axel hit 129 on w1-axel-m1). One-shot flag fixes it:
+  // subsequent clicks on the same quiz instance are a no-op. Play Again
+  // is unaffected — it calls go('activity',…) which builds a fresh quiz.
+  if(!quiz || quiz.finished) return;
+  quiz.finished = true;
+  // Visually disable the button too so the kid sees their click registered
+  // and doesn't keep mashing. Removed on the next renderQ via full replace.
+  const finishBtn = $('#nextBtn');
+  if(finishBtn){ finishBtn.disabled = true; finishBtn.style.opacity = '0.6'; finishBtn.style.pointerEvents = 'none'; }
   const a=quiz.activity;
   // In stretch mode, score against the stretch pool (different length than
   // the normal questions); otherwise use the normal questions. Keeping the
