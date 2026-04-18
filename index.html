@@ -338,7 +338,7 @@ img{max-width:100%}
 .t-pw-block .t-pw-head{margin-bottom:14px}
 .t-pw-block h3{font-family:var(--font-display);font-size:18px;font-weight:800;margin:0 0 4px}
 .t-pw-block .t-pw-sub{font-size:13px;color:var(--ink3);font-weight:600;line-height:1.45}
-.t-pw-row{display:grid;grid-template-columns:minmax(120px,1.3fr) 60px minmax(120px,2fr) auto auto;gap:12px;align-items:center;padding:12px 6px;border-bottom:1px solid var(--line);font-size:14px}
+.t-pw-row{display:grid;grid-template-columns:minmax(120px,1.3fr) 60px minmax(120px,2fr) auto auto auto;gap:12px;align-items:center;padding:12px 6px;border-bottom:1px solid var(--line);font-size:14px}
 .t-pw-row:last-child{border-bottom:none}
 .t-pw-row .pw-name{font-weight:800;color:var(--ink)}
 .t-pw-row .pw-emoji{font-size:26px;text-align:center;line-height:1}
@@ -350,9 +350,13 @@ img{max-width:100%}
 .t-pw-row .pw-status.lock{background:rgba(231,76,60,.16);color:var(--coral)}
 .t-pw-row .pw-status.new{background:rgba(108,92,231,.12);color:var(--primary)}
 .t-pw-row .pw-reset{padding:6px 12px;font-size:12px;white-space:nowrap}
+.t-pw-row .pw-tts-toggle{padding:6px 12px;font-size:11px;font-weight:800;border-radius:999px;border:1.5px solid var(--line);background:#f1f3f6;color:#555;cursor:pointer;white-space:nowrap;transition:all .15s ease;font-family:inherit}
+.t-pw-row .pw-tts-toggle:hover{filter:brightness(.97)}
+.t-pw-row .pw-tts-toggle.on{background:linear-gradient(135deg,#6c5ce7 0%,#a29bfe 100%);color:#fff;border-color:rgba(255,255,255,.35);box-shadow:0 3px 10px rgba(108,92,231,.3)}
 @media(max-width:640px){
   .t-pw-row{grid-template-columns:1fr 50px auto;gap:8px 10px}
   .t-pw-row .pw-hint{grid-column:1/-1;margin-top:-4px}
+  .t-pw-row .pw-tts-toggle{grid-column:1/-1;justify-self:start;margin-top:4px}
   .t-pw-row .pw-reset{grid-column:1/-1;justify-self:start;margin-top:4px}
 }
 
@@ -408,6 +412,12 @@ img{max-width:100%}
 /* "Change avatar" button on the dashboard hero */
 .dash-hero .change-avatar-btn{margin-top:6px;background:rgba(108,92,231,.12);color:var(--primary);border:1.5px solid rgba(108,92,231,.2);border-radius:999px;padding:4px 12px;font-size:12px;font-weight:700;cursor:pointer;transition:all .2s ease;font-family:inherit}
 .dash-hero .change-avatar-btn:hover{background:rgba(108,92,231,.22);transform:translateY(-1px)}
+/* Read-aloud toggle pill — a twin to .change-avatar-btn but with a
+   tangible on/off state. The ON variant uses the same purple gradient as
+   the primary TTS button so kids associate the two UIs. */
+.dash-hero .tts-dash-toggle{margin-top:6px;margin-left:6px;background:#f1f3f6;color:#555;border:1.5px solid #d8dbe0;border-radius:999px;padding:4px 12px;font-size:12px;font-weight:800;cursor:pointer;transition:all .2s ease;font-family:inherit}
+.dash-hero .tts-dash-toggle:hover{filter:brightness(.97);transform:translateY(-1px)}
+.dash-hero .tts-dash-toggle.on{background:linear-gradient(135deg,#6c5ce7 0%,#a29bfe 100%);color:#fff;border-color:rgba(255,255,255,.35);box-shadow:0 3px 10px rgba(108,92,231,.3)}
 .dash-hero .av{width:100px;height:100px;border-radius:28px;display:grid;place-items:center;font-size:52px;color:#fff;font-weight:700;font-family:var(--font-display);border:3px solid #fff;box-shadow:0 12px 26px rgba(26,16,53,.2),inset 0 -4px 0 rgba(0,0,0,.18);flex-shrink:0;transition:transform .4s var(--spring)}
 .dash-hero:hover .av{transform:rotate(-4deg) scale(1.04)}
 .dash-hero .info{flex:1;min-width:200px}
@@ -592,6 +602,24 @@ img{max-width:100%}
 .write-submit{margin-top:12px;width:100%;padding:14px;border-radius:var(--r);background:var(--primary);color:#fff;font-size:16px;font-weight:800;box-shadow:0 6px 18px rgba(108,92,231,.35);transition:all .2s}
 .write-submit:hover{transform:translateY(-2px)}
 .write-submit:disabled{opacity:.5;cursor:not-allowed;transform:none}
+
+/* ---- Dictation (listen-and-spell) question ----
+   Used for spelling drills where the kid hears the word and types it out.
+   TTS buttons here are FORCED visible (ignore ttsEnabled) because without
+   audio the question is unanswerable — the word is only available
+   through sound. */
+.dictate-area{max-width:520px;margin:10px auto 0;display:flex;flex-direction:column;gap:12px}
+.dictate-prompt{font-size:15px;font-weight:700;color:var(--ink2);margin-bottom:4px;line-height:1.4;text-align:center}
+.dictate-input{width:100%;padding:16px 18px;border:2.5px solid var(--line);border-radius:var(--r);font-family:var(--font);font-size:22px;font-weight:700;color:var(--ink);text-align:center;letter-spacing:.04em;transition:all .2s}
+.dictate-input:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 4px rgba(108,92,231,.15)}
+.dictate-input.correct{border-color:#00b894;background:rgba(0,184,148,.08);color:#00805a}
+.dictate-input.wrong{border-color:var(--coral);background:rgba(231,76,60,.08);animation:shake .35s}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.dictate-submit{padding:14px;border-radius:var(--r);background:var(--primary);color:#fff;font-size:16px;font-weight:800;box-shadow:0 6px 18px rgba(108,92,231,.35);transition:all .2s}
+.dictate-submit:hover{transform:translateY(-2px)}
+.dictate-submit:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.dictate-reveal{margin-top:10px;padding:12px 16px;text-align:center;background:#f1f3f6;border-radius:var(--r);font-size:15px;font-weight:700;color:var(--ink2)}
+.dictate-reveal b{color:var(--primary);letter-spacing:.04em}
 .rubric{margin-top:16px;padding:18px;background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);animation:cardUp .4s var(--spring)}
 .rubric-level{display:flex;align-items:center;gap:10px;margin-bottom:8px}
 .rubric-badge{display:inline-flex;align-items:center;justify-content:center;width:42px;height:42px;border-radius:14px;font-size:20px;font-weight:800;color:#fff;flex-shrink:0}
@@ -687,6 +715,64 @@ img{max-width:100%}
 .passage-audio:hover{background:rgba(108,92,231,.18);transform:translateY(-1px)}
 .passage-audio.speaking{background:var(--primary);color:#fff;border-color:#fff;box-shadow:0 4px 12px rgba(108,92,231,.3)}
 .passage-audio .pa-ico{font-size:14px}
+
+/* ---- PROMINENT TTS BUTTONS (lesson intro, example, question text) ----
+   Bigger + more clickable than .passage-audio — these appear on every
+   lesson card and every question when the student has ttsEnabled on.
+   Minimum 44px tap target (iOS HIG). High-contrast gradient + shadow so
+   the kid spots them without scanning. The .tts-slow variant is a
+   turtle / syllable-pace helper — critical for Evan's -OUGH drills and
+   Akaran's vowel-sound practice.
+*/
+.tts-buttons{display:inline-flex;flex-wrap:wrap;align-items:center;gap:8px;margin:10px 0 14px 0}
+.tts-btn{
+  display:inline-flex;align-items:center;gap:8px;
+  min-height:44px;padding:10px 18px;
+  border-radius:999px;border:none;cursor:pointer;
+  font-family:'DM Sans',system-ui,sans-serif;font-size:15px;font-weight:800;
+  letter-spacing:.01em;line-height:1;
+  transition:transform .15s ease, box-shadow .15s ease, filter .15s ease;
+  -webkit-tap-highlight-color:transparent;
+  user-select:none;
+  white-space:nowrap;
+}
+.tts-btn .tts-ico{font-size:20px;line-height:1}
+.tts-btn .tts-lbl{font-weight:800}
+.tts-btn:active{transform:translateY(1px) scale(.98)}
+.tts-btn:hover{transform:translateY(-1px);filter:brightness(1.04)}
+.tts-btn:focus-visible{outline:3px solid #ffd54f;outline-offset:2px}
+.tts-btn.tts-primary{
+  background:linear-gradient(135deg,#6c5ce7 0%,#a29bfe 100%);
+  color:#fff;
+  box-shadow:0 6px 16px rgba(108,92,231,.35), inset 0 1px 0 rgba(255,255,255,.22);
+}
+.tts-btn.tts-slow{
+  background:linear-gradient(135deg,#00b894 0%,#55efc4 100%);
+  color:#063d2f;
+  box-shadow:0 6px 16px rgba(0,184,148,.3), inset 0 1px 0 rgba(255,255,255,.35);
+}
+.tts-btn.tts-primary.speaking,
+.tts-btn.tts-slow.speaking{
+  animation:tts-pulse 1s ease-in-out infinite;
+  filter:brightness(1.08);
+}
+@keyframes tts-pulse{
+  0%,100% { box-shadow:0 6px 16px rgba(108,92,231,.35), 0 0 0 0 rgba(108,92,231,.5); }
+  50%     { box-shadow:0 6px 20px rgba(108,92,231,.55), 0 0 0 8px rgba(108,92,231,0); }
+}
+.tts-btn.tts-slow.speaking{
+  animation:tts-pulse-slow 1.2s ease-in-out infinite;
+}
+@keyframes tts-pulse-slow{
+  0%,100% { box-shadow:0 6px 16px rgba(0,184,148,.3), 0 0 0 0 rgba(0,184,148,.5); }
+  50%     { box-shadow:0 6px 20px rgba(0,184,148,.55), 0 0 0 8px rgba(0,184,148,0); }
+}
+/* On wider screens the buttons stand on their own line; on phone the
+   wrap keeps them from pushing layout around. */
+@media (max-width:480px){
+  .tts-btn{padding:10px 14px;font-size:14px}
+  .tts-btn .tts-ico{font-size:18px}
+}
 
 /* ---- STACKED MATH COLUMN DISPLAY ----
    Used for vertical arithmetic (addition, subtraction, multiplication).
@@ -913,6 +999,24 @@ img{max-width:100%}
    2 hand-picked activities per day. Elevated with animated border glow.
    ========================================================================== */
 .daily-mission{margin-top:22px;padding:24px;position:relative;border-radius:var(--r-lg);background:linear-gradient(135deg,#fff6e0 0%,#ffe3f1 55%,#e7e4ff 100%);box-shadow:var(--shadow-lg);overflow:hidden;border:2px solid rgba(255,255,255,.9)}
+/* Review card — sits just above Daily Mission when the kid has recent
+   wrong answers. Uses a mint/lavender gradient to distinguish it from
+   the warm Daily Mission gradient at a glance. Smaller (only 1-2 items)
+   and explicitly framed as "these were tricky — let's try again" so it
+   reads like helpful spaced repetition, not a punishment list. */
+.review-card{margin-top:22px;padding:20px 22px;position:relative;border-radius:var(--r-lg);background:linear-gradient(135deg,#e3f9f0 0%,#eef0ff 55%,#fce8f4 100%);box-shadow:var(--shadow-lg);overflow:hidden;border:2px solid rgba(255,255,255,.9)}
+.rv-head{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.rv-head .rv-title{font-family:var(--font-display);font-size:18px;font-weight:800;display:flex;align-items:center;gap:6px}
+.rv-head .rv-sub{font-size:12px;color:var(--ink3);font-weight:700;margin-left:auto}
+.rv-list{display:grid;gap:10px}
+.rv-item{display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:18px;background:rgba(255,255,255,.9);border:1.5px solid rgba(0,184,148,.15);cursor:pointer;transition:all .3s var(--spring);text-align:left;font-family:inherit;font-weight:700;color:var(--ink);font-size:14px;width:100%}
+.rv-item:hover{transform:translateY(-3px);box-shadow:0 10px 24px rgba(0,184,148,.18);border-color:#00b894}
+.rv-item .rv-ico{font-size:26px;flex-shrink:0}
+.rv-item .rv-info{flex:1;min-width:0}
+.rv-item .rv-kicker{font-size:11px;font-weight:700;color:#00805a;text-transform:uppercase;letter-spacing:.05em}
+.rv-item .rv-name{font-size:15px;font-weight:800;color:var(--ink);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rv-item .rv-hint{font-size:12px;font-weight:600;color:var(--ink3);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rv-item .rv-go{font-size:14px;font-weight:800;color:#00805a;flex-shrink:0}
 .daily-mission::before{content:'';position:absolute;inset:-2px;background:conic-gradient(from 0deg,#6C5CE7,#FD79A8,#FDCB6E,#00CEC9,#6C5CE7);border-radius:var(--r-lg);z-index:-1;animation:missionSpin 8s linear infinite;opacity:.55}
 @keyframes missionSpin{to{transform:rotate(360deg)}}
 .daily-mission::after{content:'';position:absolute;inset:2px;background:linear-gradient(135deg,#fff6e0 0%,#ffe3f1 55%,#e7e4ff 100%);border-radius:calc(var(--r-lg) - 2px);z-index:-1}
@@ -5636,6 +5740,49 @@ evan: {
       ['"Adventure" ends with which suffix?',['-tion','-sion','-ture','-ous'],2],
     ]),
   ]);
+
+  /* ---- Dictation drills for Evan (ESL listen-and-spell) ----
+     Each of Evan's spelling levels gets 1-2 dictation questions APPENDED
+     to the MCQ pool. The kid hears the word through the TTS engine, types
+     it exactly. This is the bridge between "I can recognize the right
+     spelling" (MCQ) and "I can produce it myself" (recall) — critical
+     for ESL writing fluency. Target words are the HIGH-VALUE ones from
+     each level's theme. Mixed into questions[] so they appear in the
+     normal activity flow (shuffled alongside MCQs at quiz time). */
+  const EVAN_DICTATION = {
+    'w1-evan-sp1': [  // Homophones — which variant is dictated
+      { word:'there',   prompt:'Spell the word that means "in that place."' },
+      { word:'they\'re',prompt:'Spell the contraction that means "they are."' },
+    ],
+    'w1-evan-sp2': [  // Silent letters — the hardest to spell from sound
+      { word:'knight', prompt:'Spell the word for a medieval warrior.' },
+      { word:'thumb',  prompt:'Spell the name of the finger next to your index finger.' },
+    ],
+    'w1-evan-sp3': [  // -OUGH — the core pattern
+      { word:'through', prompt:'Spell the word that means "in one side and out the other."' },
+      { word:'thought', prompt:'Spell the past tense of THINK.' },
+    ],
+    'w1-evan-sp4': [  // Confusables — the spelling half of the pair
+      { word:'effect', prompt:'Spell the NOUN that means "the result of something."' },
+      { word:'advice', prompt:'Spell the NOUN that means "a helpful suggestion."' },
+    ],
+    'w1-evan-sp5': [  // Endings — the productive suffix
+      { word:'decision', prompt:'Spell the noun form of DECIDE.' },
+      { word:'nervous',  prompt:'Spell the adjective that means "full of nerves / anxious."' },
+    ],
+  };
+  (WEEKS[1].evan && WEEKS[1].evan.spelling || []).forEach(act=>{
+    const drills = EVAN_DICTATION[act.id];
+    if(!drills) return;
+    drills.forEach(d=>{
+      act.questions.push({
+        type:'dictate',
+        word: d.word,
+        prompt: d.prompt || 'Listen and spell the word.',
+        lang:'en-CA',
+      });
+    });
+  });
 })();
 
 /* ==========================================================================
@@ -6984,7 +7131,7 @@ const CHALLENGE_BANK = {
      + domain-restricted in their dashboard). Never paste an SMTP password.
    ========================================================================== */
 const EMAIL_CONFIG = {
-  teacherEmail: 'rhahavy@example.com',  // TODO: replace with your real email
+  teacherEmail: 'rhahavy.b@gmail.com',
   teacherName:  'Rhahavy',
   emailjs: {
     publicKey:  '',   // e.g. 'user_AbCd1234' — from EmailJS dashboard
@@ -7013,6 +7160,39 @@ const APP_VERSION = 4;
 const STORAGE_KEY = 'kidquest-v4';
 const LOCAL_USER_KEY = 'kidquest-current-user';
 const VERSION_KEY = 'kidquest-version';
+// Per-DEVICE PIN lockout state. We used to store `locked` + `loginAttempts`
+// on the cloud-synced user record, which had two bad side effects:
+//   1. A sibling mashing the wrong emoji on the shared iPad locked the kid
+//      out everywhere (Chromebook + teacher device + phone) until reset.
+//   2. The reset had to be manually triggered by the teacher because it
+//      lived in the cloud.
+// Moving it to localStorage means locks stay on the device that had the
+// wrong tries, and pickin' back up on a different device just works.
+// Key shape: "kidquest-lock-<sid>" → {attempts:int, locked:bool}.
+const LOCK_KEY_PREFIX = 'kidquest-lock-';
+function _lockKey(sid){ return LOCK_KEY_PREFIX + String(sid||''); }
+function getLockState(sid){
+  try{
+    const raw = localStorage.getItem(_lockKey(sid));
+    if(!raw) return { attempts: 0, locked: false };
+    const p = JSON.parse(raw);
+    return {
+      attempts: Number.isFinite(p.attempts) ? p.attempts : 0,
+      locked: !!p.locked,
+    };
+  }catch(e){ return { attempts: 0, locked: false }; }
+}
+function setLockState(sid, patch){
+  try{
+    const cur = getLockState(sid);
+    const next = Object.assign({}, cur, patch||{});
+    localStorage.setItem(_lockKey(sid), JSON.stringify(next));
+    return next;
+  }catch(e){ return getLockState(sid); }
+}
+function clearLockState(sid){
+  try{ localStorage.removeItem(_lockKey(sid)); }catch(e){}
+}
 // videoOverrides get their OWN dedicated local key so teacher edits survive
 // even if (a) a stale tab pushes allData to cloud without the field, or
 // (b) the teacher was demo-logged-in when saveState() short-circuited
@@ -7080,11 +7260,27 @@ function getPronouns(sidOrUd){
   return PRONOUN_PRESETS[key];
 }
 
+// Which students get read-aloud support turned ON by default on first load.
+// ESL kids (Evan) and early readers (Akaran, Nishan) benefit most — older
+// fluent readers (Isaiah, Rushan, Akshayan, Axel) start with it off so they
+// don't feel babied. The teacher can flip any student from the dashboard.
+const STUDENTS_TTS_DEFAULT_ON = new Set(['evan','akaran','nishan']);
 const defaultUser = () => ({
   totalStars:0, coins:0, streak:0, lastActiveDate:'',
   badges:{}, progress:{}, completedActivities:{}, perfectActivities:{},
   wishlist: [],  // array of STORE_ITEMS ids the student has saved for later
   avatar: null,  // optional emoji string — overrides initial-letter tile when set
+  // Read-aloud (TTS) toggle — when true, a prominent "🔊 Hear it" + "🐢 Slow"
+  // button pair appears on every lesson intro, example, and question. Uses
+  // the Web Speech API (free, no cloud cost, runs entirely on-device). The
+  // student can also toggle from their dashboard. For students in
+  // STUDENTS_TTS_DEFAULT_ON this is force-enabled at load time if the user
+  // has never touched the toggle (see ttsSeeded below).
+  ttsEnabled: false,
+  // Tracks whether we've already run the "default-on for ESL / early
+  // readers" seed. Without this, flipping ttsEnabled off would get
+  // overwritten back to true on every reload for Evan/Akaran/Nishan.
+  ttsSeeded: false,
   // Parent progress-report fields.
   //   parentEmail        — teacher enters on dashboard. Empty = no report yet.
   //   joinedAt           — epoch ms of the moment this student first "created
@@ -7229,6 +7425,22 @@ let allData = (function(){
 // can never wipe the teacher's saved video links on this device.
 try { rehydrateVideoOverrides(); } catch(e){ console.warn('[KidQuest] rehydrateVideoOverrides failed:', e); }
 
+// Seed the default-on TTS for ESL / early-reader students exactly once.
+// We gate this behind `ttsSeeded` so a student/teacher toggle OFF sticks —
+// otherwise the next reload would re-flip it back to true for Evan.
+// Runs after loadState() populates allData but before any render path.
+function seedTtsDefaults(){
+  try{
+    STUDENTS.forEach(s=>{
+      const ud = allData.users[s.id];
+      if(!ud || ud.ttsSeeded) return;
+      if(STUDENTS_TTS_DEFAULT_ON.has(s.id)) ud.ttsEnabled = true;
+      ud.ttsSeeded = true;
+    });
+  }catch(e){ console.warn('[KidQuest] seedTtsDefaults failed:', e); }
+}
+seedTtsDefaults();
+
 let currentUser = null;
 try{
   const stored = localStorage.getItem(LOCAL_USER_KEY);
@@ -7294,10 +7506,11 @@ function saveState(){
 function loginAs(uid){
   currentUser=uid; isTeacher=false;
   state=allData.users[uid];
-  // Any successful login clears failed-attempt counters — belt-and-braces
-  // in case a path other than renderPinEntry reached here (e.g. import
-  // restore or a future dev-shortcut).
-  if(state){ state.loginAttempts = 0; state.locked = false; }
+  // Any successful login clears the per-device failed-attempt counter.
+  // Cloud-synced ud.locked / ud.loginAttempts are no longer authoritative
+  // (they're left at their defaults for backward compat with older blobs)
+  // — lock state now lives in localStorage, keyed by device + sid.
+  try{ clearLockState(uid); }catch(e){}
   // Backfill joinedAt for users who existed before the field was introduced.
   // This is lossy (we can't recover their true first-login date), but it at
   // least starts the weekly-report clock from here on forward instead of
@@ -7407,6 +7620,9 @@ async function pullCloud(init){
       };
     }
     allData.updatedAt=d.updatedAt;
+    // Re-seed TTS defaults after cloud merge: if this is the first cloud
+    // sync for a fresh STUDENTS_TTS_DEFAULT_ON member, flip them on.
+    try{ seedTtsDefaults(); }catch(e){}
     if(currentUser)state=allData.users[currentUser];
     try{localStorage.setItem(STORAGE_KEY,JSON.stringify(allData))}catch(e){}
     // If maintenance just turned ON (and we're not bypassed), hijack the screen.
@@ -8375,6 +8591,83 @@ function renderDailyMission(userId){
   return wrap;
 }
 
+/* renderReviewCard(userId)  →  HTMLElement | null
+   ------------------------------------------------
+   Spaced-repetition dashboard card. Shows up to 2 "tricky" activities
+   the student recently missed — tapping one jumps back into that
+   activity to try again. The practice is framed positively ("let's
+   try these again") rather than punitively.
+
+   Item selection:
+     • Pull the last N entries from state.wrongAnswers (most recent first).
+     • Dedupe by activityId — one review per activity even if multiple
+       questions inside were missed.
+     • Skip entries from activities the student has now fully perfected
+       (in state.perfectActivities) — they've re-mastered it.
+     • Cap at 2/day so the dashboard doesn't feel like a punishment list.
+
+   Deterministic per-day like Daily Mission: same 2 items re-shown until
+   midnight, so the kid can come back later and find the same review.
+*/
+function renderReviewCard(userId){
+  const ud = allData.users[userId];
+  if(!ud || !Array.isArray(ud.wrongAnswers) || !ud.wrongAnswers.length) return null;
+  // Walk from most recent → oldest, dedupe by activity, skip perfected.
+  const seen = new Set();
+  const picks = [];
+  const perfected = ud.perfectActivities || {};
+  for(let i = ud.wrongAnswers.length - 1; i >= 0 && picks.length < 2; i--){
+    const w = ud.wrongAnswers[i];
+    if(!w || !w.aid) continue;
+    if(seen.has(w.aid)) continue;
+    if(perfected[w.aid]) continue; // they already got it right since — don't nag
+    seen.add(w.aid);
+    // Find the activity so we can link to it.
+    let act = null, subjId = '';
+    for(const sub of SUBJECTS){
+      const acts = getWeekActivities(userId, sub.id) || [];
+      const a = acts.find(x=>x && x.id===w.aid);
+      if(a){ act = a; subjId = sub.id; break; }
+    }
+    if(!act) continue; // activity gone or hidden — skip
+    picks.push({
+      aid: w.aid,
+      title: act.title,
+      emoji: act.emoji || '✏️',
+      subject: subjId,
+      lessonTitle: w.lessonTitle || act.title,
+      qType: w.qType || 'mcq',
+    });
+  }
+  if(!picks.length) return null;
+  const wrap = h('div',{class:'review-card'});
+  wrap.appendChild(h('div',{class:'rv-head'},[
+    h('div',{class:'rv-title'},[
+      h('span',{},'🔁'),
+      h('span',{},'Quick Review'),
+    ]),
+    h('span',{class:'rv-sub'}, picks.length===1 ? 'One from last time' : 'Two from last time'),
+  ]));
+  const list = h('div',{class:'rv-list'});
+  picks.forEach(p=>{
+    const kicker = p.qType==='dictate' ? 'TRICKY SPELLING' : 'TRY IT AGAIN';
+    const btn = h('button',{class:'rv-item', onclick:()=>{
+      go('activity', { activityId: p.aid, subject: p.subject });
+    }},[
+      h('div',{class:'rv-ico'}, p.emoji),
+      h('div',{class:'rv-info'},[
+        h('div',{class:'rv-kicker'}, kicker),
+        h('div',{class:'rv-name'}, p.title),
+        h('div',{class:'rv-hint'}, p.lessonTitle && p.lessonTitle !== p.title ? p.lessonTitle : 'Let\'s nail it this time!'),
+      ]),
+      h('div',{class:'rv-go'}, '→'),
+    ]);
+    list.appendChild(btn);
+  });
+  wrap.appendChild(list);
+  return wrap;
+}
+
 /* ==========================================================================
    TEXT-TO-SPEECH — browser-native Web Speech API with natural voice picking
    --------------------------------------------------------------------------
@@ -8461,17 +8754,31 @@ function _normalizeForTts(text){
     .replace(/\u2019/g,"'")                            // ’ → '
     .replace(/\u00A0/g,' ');                           // nbsp → space
 }
-function speak(text, lang){
+/* speak(text, lang, opts?)
+   opts.slow  — true = syllable-pace (≈0.65x) for read-aloud support where the
+                kid needs to hear each sound distinctly (Evan's -OUGH practice,
+                Akaran's vowel sounds, dictation prompts).
+   opts.pitch — override pitch (default 1.0 — no chipmunk effect).
+   Default lang is 'en-CA' (the local teacher + students are in Canada, and
+   the CA voice — when available — hits the Canadian vowel register better
+   than the US voice. Falls back through _getBestVoice() if CA isn't
+   installed). Passing a specific lang (e.g. 'fr-FR' for French) still wins.
+*/
+function speak(text, lang, opts){
   if(!text || typeof window.speechSynthesis === 'undefined') return;
+  const o = opts || {};
   try{
     window.speechSynthesis.cancel();
-    const isFrench = /^fr/i.test(lang || '');
+    const targetLang = lang || 'en-CA';
+    const isFrench = /^fr/i.test(targetLang);
     const u = new SpeechSynthesisUtterance(_normalizeForTts(text));
-    u.lang = lang || 'en-US';
+    u.lang = targetLang;
     // French benefits from a bit more clarity — kids learning pronunciation
     // need a slightly slower pace than native-English read-alouds.
-    u.rate  = isFrench ? 0.86 : 0.92;
-    u.pitch = 1.0;  // Natural pitch — no chipmunk effect
+    // Slow mode = syllable pace, for when the kid taps "🐢 Slow" to hear
+    // each sound distinctly.
+    u.rate = o.slow ? 0.65 : (isFrench ? 0.86 : 0.92);
+    u.pitch = (typeof o.pitch === 'number') ? o.pitch : 1.0;
     const v = _getBestVoice(u.lang);
     if(v){
       u.voice = v;
@@ -8497,6 +8804,62 @@ if(typeof window.speechSynthesis !== 'undefined'){
     window.speechSynthesis.getVoices();
     window.speechSynthesis.onvoiceschanged = ()=>{ _cachedVoices = window.speechSynthesis.getVoices(); };
   }catch(e){}
+}
+
+/* buildTtsButtons(text, lang, opts?)  →  HTMLElement | null
+   ------------------------------------------------------------------
+   Returns a prominent "🔊 Hear it" + "🐢 Slow" button pair for the
+   given text, or null if:
+     • there's no text,
+     • the browser lacks speechSynthesis,
+     • the current student has ttsEnabled:false (or opts.force=true
+       to bypass the gate — used for the always-on dictation prompt).
+
+   The buttons call speak() directly; the slow one passes opts.slow=true.
+   Speaking/listening state is shown via a pulse animation while audio
+   plays. Uses the .tts-buttons + .tts-btn CSS block above.
+
+   opts.force  — ignore the per-student ttsEnabled gate (for dictation).
+   opts.lang   — override the lang (e.g. 'fr-FR' for French activities).
+*/
+function buildTtsButtons(text, lang, opts){
+  if(!text) return null;
+  if(typeof window.speechSynthesis === 'undefined') return null;
+  const o = opts || {};
+  // Gate on the current student's ttsEnabled — unless forced (dictation).
+  if(!o.force){
+    const sid = currentUser;
+    const ud  = sid && allData.users && allData.users[sid];
+    if(!ud || !ud.ttsEnabled) return null;
+  }
+  const targetLang = lang || o.lang || 'en-CA';
+  const wrap = h('div',{class:'tts-buttons','aria-label':'Read aloud'});
+  const makeBtn = (cls, ico, lbl, slow)=>{
+    const btn = h('button',{
+      class:'tts-btn '+cls, type:'button',
+      'aria-label': (slow?'Hear it slowly':'Hear it out loud'),
+      onclick:(e)=>{
+        e.preventDefault(); e.stopPropagation();
+        // Clear speaking state on any other TTS button on the page so two
+        // buttons don't pulse at once.
+        document.querySelectorAll('.tts-btn.speaking').forEach(x=>x.classList.remove('speaking'));
+        btn.classList.add('speaking');
+        speak(text, targetLang, { slow: !!slow });
+        // Visual state duration is a rough estimate — Web Speech doesn't
+        // reliably fire end events everywhere, so we decay after a
+        // length-proportional delay (slow = more time).
+        const baseMs = Math.max(1200, text.length * (slow?140:80));
+        setTimeout(()=>btn.classList.remove('speaking'), baseMs);
+      }
+    }, [
+      h('span',{class:'tts-ico','aria-hidden':'true'}, ico),
+      h('span',{class:'tts-lbl'}, lbl),
+    ]);
+    return btn;
+  };
+  wrap.appendChild(makeBtn('tts-primary','🔊','Hear it', false));
+  wrap.appendChild(makeBtn('tts-slow',   '🐢','Slow',    true));
+  return wrap;
 }
 
 /* ==========================================================================
@@ -9230,8 +9593,20 @@ function renderPin(root, sid){
   // fields. Demo users never hit this path (enterDemoAs bypasses it).
   if(!allData.users[sid]) allData.users[sid] = defaultUser();
   const ud = allData.users[sid];
-  if(ud.locked){ renderPinLockout(root, sid, s); return; }
-  if(!ud.customPin){ renderPinSetup(root, sid, s); return; }
+  // Per-device lock state wins over the legacy cloud-synced ud.locked.
+  // A kid on a different device isn't affected by a sibling mashing the
+  // wrong emoji on the shared iPad. Legacy ud.locked from old installs is
+  // ignored (the cloud flag is no longer written at wrong-attempt time).
+  const lockState = getLockState(sid);
+  if(lockState.locked){ renderPinLockout(root, sid, s); return; }
+  if(!ud.customPin){
+    // First-time setup → also wipe any stale per-device lock so a kid who
+    // got locked out, had their PIN reset by the teacher, then comes back
+    // to the same device, doesn't get bounced back to the lockout screen.
+    clearLockState(sid);
+    renderPinSetup(root, sid, s);
+    return;
+  }
   renderPinEntry(root, sid, s, ud);
 }
 
@@ -9294,8 +9669,9 @@ function renderPinSetup(root, sid, s){
     const ud2 = allData.users[sid];
     ud2.customPin = picked;
     ud2.customHint = String(hintInput.value || '').trim().slice(0, 60);
-    ud2.loginAttempts = 0;
-    ud2.locked = false;
+    // Per-device lock reset — clear whatever the previous user's lock state
+    // was on THIS device. We no longer touch the cloud-synced ud.locked.
+    try{ clearLockState(sid); }catch(e){}
     // Stamp joinedAt now — this is the moment the student "creates a login"
     // and it anchors the weekly parent-report cadence. Only set if missing
     // so re-triggering this screen after a profile reset preserves a real
@@ -9336,28 +9712,29 @@ function renderPinEntry(root, sid, s, ud){
   EMOJI_KEYPAD.forEach(em=>{
     pad.appendChild(h('button',{class:'emoji-btn',type:'button',onclick:e=>{
       if(em === ud.customPin){
-        ud.loginAttempts = 0;
-        try{ saveState(); }catch(err){}
+        // Correct — clear per-device lock counter + continue. No cloud write.
+        try{ clearLockState(sid); }catch(err){}
         msg.textContent = 'Welcome back, '+s.name+'! 🎉';
         msg.className = 'pin-msg ok';
         triesChip.style.display = 'none';
         setTimeout(()=>loginAs(sid), 600);
         return;
       }
-      // Wrong tap — increment, flash the button, maybe lock the account.
-      ud.loginAttempts = (ud.loginAttempts || 0) + 1;
+      // Wrong tap — increment this DEVICE's counter, flash the button,
+      // maybe lock (only on this device).
+      const cur = getLockState(sid);
+      const attempts = (cur.attempts||0) + 1;
       e.currentTarget.classList.add('wrong');
       setTimeout(()=>e.currentTarget.classList.remove('wrong'), 500);
-      if(ud.loginAttempts >= MAX_LOGIN_ATTEMPTS){
-        ud.locked = true;
-        try{ saveState(); }catch(err){}
+      if(attempts >= MAX_LOGIN_ATTEMPTS){
+        setLockState(sid, { attempts, locked: true });
         // Re-render into the lockout screen
         root.innerHTML = '';
         renderPinLockout(root, sid, s);
         return;
       }
-      try{ saveState(); }catch(err){}
-      const left = MAX_LOGIN_ATTEMPTS - ud.loginAttempts;
+      setLockState(sid, { attempts, locked: false });
+      const left = MAX_LOGIN_ATTEMPTS - attempts;
       msg.textContent = 'Oops! Try again 😊';
       msg.className = 'pin-msg no';
       triesChip.textContent = left + (left === 1 ? ' try left' : ' tries left');
@@ -9401,6 +9778,16 @@ function renderTeacherLogin(root){
         localStorage.removeItem(STORAGE_KEY);
         localStorage.removeItem(LOCAL_USER_KEY);
         localStorage.removeItem(VERSION_KEY);
+        // Sweep per-device PIN lock keys too so no one is stuck after a
+        // full demo reset.
+        try{
+          const toDrop = [];
+          for(let i = 0; i < localStorage.length; i++){
+            const k = localStorage.key(i);
+            if(k && k.startsWith(LOCK_KEY_PREFIX)) toDrop.push(k);
+          }
+          toDrop.forEach(k => localStorage.removeItem(k));
+        }catch(e){}
       }catch(e){}
       alert('✓ Demo data cleared. Reloading...');
       location.reload();
@@ -9738,6 +10125,29 @@ function renderDashboard(root){
       ]),
     ]));
   }
+  // Read-aloud toggle — kid-visible, kid-togglable. Honors the
+  // ttsEnabled flag on their user record. Kids who want audio on (ESL,
+  // early readers) see the speaker pulse; everyone else gets a quiet
+  // "tap to turn on" state. Teacher can override from the teacher dash.
+  const ttsOn = !!state.ttsEnabled;
+  const ttsToggle = h('button',{
+    class:'tts-dash-toggle'+(ttsOn?' on':''),
+    'aria-pressed': ttsOn ? 'true' : 'false',
+    title: ttsOn ? 'Read-aloud is ON — tap to turn off' : 'Read-aloud is OFF — tap to turn on',
+    onclick: ()=>{
+      state.ttsEnabled = !state.ttsEnabled;
+      state.ttsSeeded = true;
+      saveState();
+      // Quick audible confirmation when turning ON — kid hears the voice
+      // immediately so they know what they just unlocked.
+      if(state.ttsEnabled){
+        try{ speak('Read aloud is on. Tap the speaker to hear any question.', 'en-CA'); }catch(e){}
+      } else {
+        try{ window.speechSynthesis && window.speechSynthesis.cancel(); }catch(e){}
+      }
+      renderDashboard(root);
+    }
+  }, ttsOn ? '🔊 Read-aloud: ON' : '🔇 Read-aloud: OFF');
   const hero=h('div',{class:'dash-hero c-'+currentUser},[
     buildAvatarTile(currentUser,'av'),
     h('div',{class:'info'},[
@@ -9745,6 +10155,7 @@ function renderDashboard(root){
       h('span',{class:'grade-pill'},s.grade),
       h('br'),
       h('button',{class:'change-avatar-btn',onclick:()=>go('avatars')}, '🎨 Change avatar'),
+      ttsToggle,
     ]),
   ]);
   // Nova the alien mascot — greets by time-of-day + streak + last-seen.
@@ -9810,6 +10221,14 @@ function renderDashboard(root){
     });
     root.appendChild(says);
   } catch(e){ console.warn('[KidQuest] Nova Says card failed:', e); }
+  // Review card — spaced-repetition nudge. Shows 1-2 activities the kid
+  // recently missed, framed as "let's try these again." Lives just above
+  // Daily Mission so it's the first thing the kid sees if they need to
+  // patch holes before moving on.
+  try {
+    const rv = renderReviewCard(currentUser);
+    if(rv) root.appendChild(rv);
+  } catch(e){ console.warn('[KidQuest] renderReviewCard failed:', e); }
   // Daily Mission — 2 hand-picked activities per day, stable per kid per day.
   // Renders right after stats so it gets eyeballs before the full subject grid.
   try {
@@ -10220,6 +10639,20 @@ function renderQ(wrap){
       card.appendChild(pBox);
     }
     card.appendChild(h('div',{class:'q-text'},q.q||''));
+    // Prominent "🔊 Hear it" + "🐢 Slow" buttons for the question prompt.
+    // Shown only when the current student has ttsEnabled on. Essential for
+    // ESL (Evan), early readers (Akaran, Nishan), and anyone who benefits
+    // from hearing the question alongside reading it. French activities
+    // read in fr-FR — everyone else in en-CA.
+    if(q.q){
+      try{
+        const subj = quiz && quiz.subject;
+        const actId = quiz && quiz.activityId || (quiz && quiz.activity && quiz.activity.id) || '';
+        const ttsLang = (subj==='french' || /-f\d/.test(actId)) ? 'fr-FR' : 'en-CA';
+        const ttsBtns = buildTtsButtons(q.q, ttsLang);
+        if(ttsBtns) card.appendChild(ttsBtns);
+      }catch(e){ console.warn('[KidQuest] question TTS failed:', e); }
+    }
     // Big emoji visual above the question. Priority:
     //   1. q.visual (hand-curated)
     //   2. emojiFor(q.q) — auto-detect a topical emoji from the question text
@@ -10245,6 +10678,7 @@ function renderQ(wrap){
       card.appendChild(img);
     }
     if(q.type==='write') renderWrite(card,q);
+    else if(q.type==='dictate') renderDictate(card,q);
     else if(q.type==='mcq'||q.type==='passage'||q.type==='fill') renderMCQ(card,q);
     else if(q.type==='compare') renderCompare(card,q);
     else if(q.type==='match') renderMatch(card,q);
@@ -10760,7 +11194,20 @@ function renderLesson(card,q){
     ]);
     card.appendChild(empty);
   }
-  if(L.intro) card.appendChild(h('p',{class:'lesson-intro'},L.intro));
+  if(L.intro) {
+    card.appendChild(h('p',{class:'lesson-intro'},L.intro));
+    // Prominent TTS buttons for the lesson intro — big, high-contrast,
+    // easy to tap. Shown only when the current student has ttsEnabled on.
+    // Language matches the activity: French lessons read in fr-FR, everyone
+    // else in en-CA.
+    try{
+      const subj = quiz && quiz.subject;
+      const actId = quiz && quiz.activity && quiz.activity.id || '';
+      const ttsLang = (subj==='french' || /-f\d/.test(actId)) ? 'fr-FR' : 'en-CA';
+      const ttsBtns = buildTtsButtons(L.intro, ttsLang);
+      if(ttsBtns) card.appendChild(ttsBtns);
+    }catch(e){ console.warn('[KidQuest] intro TTS failed:', e); }
+  }
   // If the lesson provides a stack spec OR array of specs, render those as
   // visual columns INSTEAD of (or in addition to) the text example.
   if(L.stack){
@@ -10771,6 +11218,16 @@ function renderLesson(card,q){
   } else if(L.example){
     const ex=addDeco(h('div',{class:'lesson-example'},[h('div',{class:'lesson-example-label'},'EXAMPLE'),h('div',{class:'lesson-example-text'},L.example)]));
     card.appendChild(ex);
+    // TTS for the example text too — often the most important thing for
+    // ESL students (e.g. "Though it was tough, she fought on" — Evan
+    // can't read -OUGH words yet but he CAN hear them).
+    try{
+      const subj = quiz && quiz.subject;
+      const actId = quiz && quiz.activity && quiz.activity.id || '';
+      const ttsLang = (subj==='french' || /-f\d/.test(actId)) ? 'fr-FR' : 'en-CA';
+      const ttsBtns = buildTtsButtons(L.example, ttsLang);
+      if(ttsBtns) card.appendChild(ttsBtns);
+    }catch(e){ console.warn('[KidQuest] example TTS failed:', e); }
   }
   // Picture-card grid — for vocab/symbol lessons (French words, science terms,
   // Canadian symbols). Each card has an emoji, word, optional translation, and
@@ -10988,6 +11445,89 @@ function renderWrite(card,q){
   }},'Submit Writing ✏️');
   area.appendChild(btn);
   card.appendChild(area);
+}
+
+/* ---- Dictation ----
+   type:'dictate' — kid hears the word (auto-played once on render), then
+   types it. Exact-match grading, case-insensitive, trims whitespace.
+   Accepts q.accept[] as additional valid spellings (for variants like
+   "colour" vs "color"). Auto-plays through speechSynthesis onload so the
+   kid hears the target without hunting for a button — but the big "🔊
+   Hear it" and "🐢 Slow" buttons are always visible for replays.
+   q shape:
+     { type:'dictate', word:'through', prompt?:'Spell the word you hear.',
+       accept?:['thru'], lang?:'en-CA' }
+   Notes:
+     • Forced-on TTS: dictation is unanswerable without audio, so the
+       buttons bypass the per-student ttsEnabled gate.
+     • On wrong answer we show the correct spelling so the kid learns
+       from the miss (and the miss is logged for spaced repetition).
+*/
+function renderDictate(card, q){
+  const area = h('div',{class:'dictate-area'});
+  const prompt = q.prompt || 'Listen and spell the word.';
+  area.appendChild(h('div',{class:'dictate-prompt'}, prompt));
+  const lang = q.lang || 'en-CA';
+  // Force the TTS buttons visible regardless of ttsEnabled — the word is
+  // ONLY available via audio, so the buttons must always be here.
+  const word = String(q.word || '').trim();
+  const ttsBtns = buildTtsButtons(word, lang, { force:true });
+  if(ttsBtns) area.appendChild(ttsBtns);
+  // Auto-play the word once when the card is rendered so the kid doesn't
+  // have to hunt. Small delay so it doesn't clip the screen-change
+  // animation audio on mobile.
+  if(word && typeof window.speechSynthesis !== 'undefined'){
+    setTimeout(()=>{ try{ speak(word, lang); }catch(e){} }, 350);
+  }
+  const input = h('input',{
+    class:'dictate-input',
+    type:'text',
+    autocomplete:'off',
+    autocapitalize:'off',
+    autocorrect:'off',
+    spellcheck:'false',
+    placeholder:'Type the word here',
+    'aria-label': prompt,
+  });
+  area.appendChild(input);
+  // Press Enter = submit, for kids who prefer keyboard.
+  input.addEventListener('keydown',(e)=>{
+    if(e.key === 'Enter' && !quiz.locked){ e.preventDefault(); submitBtn.click(); }
+  });
+  const submitBtn = h('button',{class:'dictate-submit', onclick:()=>{
+    if(quiz.locked) return;
+    const typed = String(input.value||'').trim();
+    if(!typed){ input.focus(); return; }
+    quiz.locked = true; clearTimer();
+    submitBtn.disabled = true;
+    input.disabled = true;
+    const accepted = [word, ...(Array.isArray(q.accept)?q.accept:[])]
+      .map(s=>String(s||'').trim().toLowerCase())
+      .filter(Boolean);
+    const ok = accepted.includes(typed.toLowerCase());
+    if(ok){
+      input.classList.add('correct');
+      quiz.correct++;
+      setFB(true);
+    } else {
+      input.classList.add('wrong');
+      setFB(false);
+      // Reveal the correct spelling so the kid can learn from the miss.
+      area.appendChild(h('div',{class:'dictate-reveal'},[
+        h('span',{},'The word was '),
+        h('b',{}, word),
+      ]));
+      // Read it one more time — reinforces the correct sound/spell pair.
+      setTimeout(()=>{ try{ speak(word, lang, { slow:true }); }catch(e){} }, 300);
+      logWrongAnswer(q, null, null);
+    }
+    showNext();
+  }}, 'Check spelling ✏️');
+  area.appendChild(submitBtn);
+  card.appendChild(area);
+  // Focus the input after a beat so mobile keyboards pop up without the
+  // kid tapping twice.
+  setTimeout(()=>{ try{ input.focus(); }catch(e){} }, 420);
 }
 
 /* Grade writing using heuristic rubric (1-4 scale).
@@ -14123,34 +14663,59 @@ function renderTeacherPasswords(){
   const wrap = h('div',{class:'t-pw-block'});
   wrap.appendChild(h('div',{class:'t-pw-head'},[
     h('h3',{},'🔐 Student Passwords'),
-    h('p',{class:'t-pw-sub'}, 'Each student chose their own secret emoji + hint on first login. Reset clears their password so they pick a new one next time they sign in. Use this when a student forgets theirs or is locked out after 4 wrong tries.'),
+    h('p',{class:'t-pw-sub'}, 'Each student chose their own secret emoji + hint on first login. Reset clears their password so they pick a new one next time they sign in. The "Locked" status below is THIS DEVICE ONLY — a kid locked out on their iPad can still log in on their Chromebook. Reset clears both.'),
   ]));
   STUDENTS.forEach(s=>{
     const ud = allData.users[s.id] || defaultUser();
     const hasPin = !!ud.customPin;
-    const isLocked = !!ud.locked;
+    // Per-device lock state (legacy ud.locked is ignored — kept for
+    // blob back-compat but never written on this path).
+    const deviceLock = getLockState(s.id);
+    const isLocked = !!deviceLock.locked;
     const statusCls = isLocked ? 'lock' : (hasPin ? 'ok' : 'new');
-    const statusText = isLocked ? 'Locked' : (hasPin ? 'Active' : 'Not set');
+    const statusText = isLocked ? 'Locked here' : (hasPin ? 'Active' : 'Not set');
     const emojiCell = hasPin
       ? h('div',{class:'pw-emoji'}, ud.customPin)
       : h('div',{class:'pw-emoji none'}, '—');
     const hintCell = ud.customHint
       ? h('div',{class:'pw-hint'}, '"' + ud.customHint + '"')
       : h('div',{class:'pw-hint none'}, hasPin ? '(no hint)' : '(not set yet)');
+    // Per-student read-aloud (TTS) toggle — teacher sees it next to the
+    // password controls. ESL / early-reader kids (Evan, Akaran, Nishan)
+    // default to ON; others default to OFF. Flipping here sticks because
+    // we set ttsSeeded=true so the load-time seeder leaves it alone.
+    const ttsOn = !!ud.ttsEnabled;
+    const ttsBtn = h('button',{
+      class:'pw-tts-toggle'+(ttsOn?' on':''),
+      type:'button',
+      'aria-pressed': ttsOn ? 'true' : 'false',
+      title: 'Toggle read-aloud buttons for '+s.name,
+      onclick:()=>{
+        const u = allData.users[s.id] || defaultUser();
+        u.ttsEnabled = !u.ttsEnabled;
+        u.ttsSeeded = true;
+        allData.users[s.id] = u;
+        saveState();
+        go('teacher');
+      }
+    }, ttsOn ? '🔊 Audio ON' : '🔇 Audio off');
     const row = h('div',{class:'t-pw-row'},[
       h('div',{class:'pw-name'}, s.name),
       emojiCell,
       hintCell,
       h('div',{class:'pw-status '+statusCls}, statusText),
+      ttsBtn,
       h('button',{class:'btn btn-ghost pw-reset',type:'button',onclick:()=>{
-        if(!confirm('Reset '+s.name+'\'s password?\n\nThis clears their chosen emoji + hint. Next time they log in, they\'ll pick a new one.')) return;
+        if(!confirm('Reset '+s.name+'\'s password?\n\nThis clears their chosen emoji + hint. Next time they log in on ANY device, they\'ll pick a new one. The lock on this device is also cleared.')) return;
         if(!confirmTeacherPassword('reset '+s.name+'\'s password')) return;
         const u = allData.users[s.id] || defaultUser();
         u.customPin = null;
         u.customHint = '';
-        u.loginAttempts = 0;
-        u.locked = false;
         allData.users[s.id] = u;
+        // Clear this device's lock state too. Other devices will see
+        // customPin=null via cloud sync and route into setup, which
+        // also clears their local lock.
+        try{ clearLockState(s.id); }catch(e){}
         saveState();
         alert('✓ '+s.name+'\'s password has been reset. They\'ll set a new one at next login.');
         go('teacher');
@@ -15111,6 +15676,62 @@ if(!__maintenanceActive){
     try{ go('home'); }catch(e2){ document.getElementById('screen').innerHTML='<div style="padding:40px;text-align:center"><h2>KidQuest</h2><p>Something went wrong. <button onclick="localStorage.clear();location.reload()" style="padding:12px 24px;background:#6C5CE7;color:#fff;border:none;border-radius:12px;font-weight:700;cursor:pointer">Reset & Reload</button></p></div>'; }
   }
 }
+
+/* ---- SERVICE WORKER + OFFLINE INDICATOR ----
+   Registers sw.js (same directory) so the app works offline after the
+   first visit. Also shows a small top-right "Offline" chip when the
+   browser reports no connection — the kid can keep learning, their
+   progress is stashed in localStorage until they come back online.
+   We skip SW registration on localhost:* during dev to avoid stale
+   caches while editing. */
+(function registerServiceWorker(){
+  try{
+    if(!('serviceWorker' in navigator)) return;
+    const isLocalDev = /^(localhost|127\.|0\.0\.0\.0)/.test(location.hostname);
+    if(isLocalDev && location.port && location.port !== '80' && location.port !== '443'){
+      // On localhost:8080 etc, skip SW so edits don't ship stale.
+      return;
+    }
+    window.addEventListener('load', ()=>{
+      navigator.serviceWorker.register('sw.js').catch(err=>{
+        console.warn('[KidQuest] SW registration failed:', err);
+      });
+    });
+  }catch(e){ console.warn('[KidQuest] SW setup failed:', e); }
+})();
+
+/* Offline chip — a tiny fixed badge at top-right that shows when the
+   device is offline. Hidden the rest of the time. Uses only
+   navigator.onLine + online/offline events, which is good enough for
+   "you won't be able to save to the cloud right now" signaling. */
+(function setupOfflineChip(){
+  try{
+    const chip = document.createElement('div');
+    chip.id = 'kq-offline-chip';
+    chip.setAttribute('role','status');
+    chip.setAttribute('aria-live','polite');
+    chip.innerHTML = '<span class="kq-off-ico">📡</span><span class="kq-off-txt">Offline</span>';
+    chip.style.cssText = [
+      'position:fixed','top:12px','right:12px',
+      'z-index:99998',
+      'display:none','align-items:center','gap:6px',
+      'padding:6px 12px','border-radius:999px',
+      'background:linear-gradient(135deg,#fd79a8 0%,#e17055 100%)',
+      'color:#fff','font-weight:800','font-size:12px',
+      'letter-spacing:.03em',
+      'box-shadow:0 4px 12px rgba(225,112,85,.35)',
+      'font-family:"DM Sans",system-ui,sans-serif',
+      'pointer-events:none',
+    ].join(';');
+    document.body.appendChild(chip);
+    const update = ()=>{
+      chip.style.display = navigator.onLine ? 'none' : 'inline-flex';
+    };
+    window.addEventListener('online', update);
+    window.addEventListener('offline', update);
+    update();
+  }catch(e){ console.warn('[KidQuest] offline chip setup failed:', e); }
+})();
 </script>
 </body>
 </html>
