@@ -869,6 +869,44 @@ img{max-width:100%}
 .speech-bubble::before{content:'';position:absolute;bottom:16px;left:-10px;width:0;height:0;border-style:solid;border-width:8px 12px 8px 0;border-color:transparent #fff transparent transparent;filter:drop-shadow(-2px 0 0 rgba(108,92,231,.12))}
 .speech-bubble .sb-small{display:block;font-size:12px;font-weight:600;color:var(--ink3);margin-top:2px}
 
+/* Nova click-to-react — tap the mascot and she does a quick reaction
+   (wiggle + cheek-flash + antenna-pulse). Keeps her feeling alive even
+   when no quiz is happening. */
+.mascot:focus-visible{outline:3px solid var(--primary);outline-offset:4px;border-radius:50%}
+.mascot.nova-reacting{animation:novaReact .9s var(--spring)}
+@keyframes novaReact{
+  0%   {transform:translateY(0) rotate(-2deg) scale(1)}
+  20%  {transform:translateY(-10px) rotate(-10deg) scale(1.06)}
+  45%  {transform:translateY(-4px)  rotate(8deg)   scale(1.03)}
+  70%  {transform:translateY(-8px)  rotate(-4deg)  scale(1.05)}
+  100% {transform:translateY(0)     rotate(-2deg)  scale(1)}
+}
+.mascot.nova-reacting .nova-antenna-tip{animation:novaAntennaBurst .9s ease-in-out}
+@keyframes novaAntennaBurst{0%,100%{transform:scale(1);opacity:1}40%{transform:scale(1.9);opacity:.55;filter:drop-shadow(0 0 10px #FD79A8)}}
+.mascot.nova-reacting .nova-cheek{opacity:1 !important;animation:none}
+.speech-bubble.bubble-flash{animation:bubbleFlash .45s var(--spring);background:#fff7fb;border-color:rgba(253,121,168,.4)}
+@keyframes bubbleFlash{0%{transform:scale(.9);opacity:.5}55%{transform:scale(1.06);opacity:1}100%{transform:scale(1);opacity:1}}
+
+/* Nova Says — a small rotating-thought card on the dashboard so Nova
+   has a presence even when the kid isn't starting a level. Tap to
+   shuffle to a fresh line — the .pop animation fires on each click. */
+.nova-says{display:flex;align-items:center;gap:14px;margin:16px auto;max-width:720px;padding:12px 18px 12px 14px;
+  background:linear-gradient(135deg, rgba(108,92,231,.10), rgba(253,121,168,.08));
+  border:2px solid rgba(108,92,231,.18);border-radius:18px;
+  box-shadow:0 6px 20px rgba(26,16,53,.08);cursor:pointer;user-select:none;
+  transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease}
+.nova-says:hover{transform:translateY(-2px);border-color:rgba(108,92,231,.35);box-shadow:0 10px 26px rgba(26,16,53,.14)}
+.nova-says:active{transform:translateY(0);box-shadow:0 4px 14px rgba(26,16,53,.1)}
+.nova-says:focus-visible{outline:3px solid var(--primary);outline-offset:2px}
+.nova-says-avatar{flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;width:56px;height:66px}
+.nova-says-avatar .mascot{animation-duration:4.6s}
+.nova-says-text{flex:1;min-width:0}
+.nova-says-label{font-size:11px;font-weight:800;color:var(--primary);text-transform:uppercase;letter-spacing:.75px;margin-bottom:2px}
+.nova-says-line{font-size:14.5px;font-weight:700;color:var(--ink);line-height:1.4}
+.nova-says-line.pop{animation:novaSaysPop .45s var(--spring)}
+@keyframes novaSaysPop{0%{opacity:0;transform:translateX(6px)}55%{opacity:1;transform:translateX(-2px)}100%{opacity:1;transform:translateX(0)}}
+@media(max-width:640px){.nova-says{margin-left:10px;margin-right:10px}.nova-says-line{font-size:13.5px}}
+
 /* ==========================================================================
    DAILY MISSION — highlighted card on the dashboard
    --------------------------------------------------------------------------
@@ -6862,39 +6900,168 @@ function createMascot(opts){
   const wrap = h('div',{class:'mascot-wrap'});
   const svgHolder = document.createElement('div');
   svgHolder.innerHTML = novaSVG(opts.tone||'cheerful', opts.size||110);
-  wrap.appendChild(svgHolder.firstChild);
+  const svg = svgHolder.firstChild;
+  wrap.appendChild(svg);
   if(opts.message){
     const bubble = h('div',{class:'speech-bubble'});
     bubble.appendChild(document.createTextNode(opts.message));
     if(opts.subMessage) bubble.appendChild(h('span',{class:'sb-small'}, opts.subMessage));
     wrap.appendChild(bubble);
   }
+  // Click-to-react — tap Nova and she does a quick wiggle + wink + says
+  // something surprising. Purely a delight touch. Debounced so mashing
+  // doesn't queue up 40 overlays. Skipped for small cameo renders where
+  // there's no room (< 70px — e.g. the Nova Says card avatar).
+  if((opts.size || 110) >= 70){
+    attachNovaTapReaction(wrap, svg);
+  }
   return wrap;
+}
+
+// Nova's tap-to-react quips. Kept separate from greetings/pep so they
+// stay surprising — these feel like unprompted sparks of personality.
+const NOVA_TAP_QUIPS = [
+  "Hi! 👋",
+  "Zorbs!",
+  "Ooh, a tap!",
+  "My antenna just FLASHED.",
+  "Heehee that tickles.",
+  "Three hearts, three flutters. 💗💗💗",
+  "Ready when you are!",
+  "I was JUST thinking about you.",
+  "Cosmic.",
+  "Hello, cosmic friend.",
+  "You poke good.",
+  "Back on Learnia we greet with four hugs. Just four.",
+  "🌟",
+  "You're glowing today.",
+  "Brain = charged. Mine and yours.",
+  "Beep boop — oh wait, I'm not a robot!",
+  "I blinked just for you.",
+  "Did you see that? I winked.",
+  "Tap me again, I dare you.",
+  "Careful, I might do a flip.",
+];
+function attachNovaTapReaction(wrap, svg){
+  let cooldown = false;
+  let tempBubble = null;
+  const handler = (ev) => {
+    if(cooldown) return;
+    cooldown = true;
+    // Animation sparks
+    svg.classList.add('nova-reacting');
+    const quip = NOVA_TAP_QUIPS[Math.floor(Math.random()*NOVA_TAP_QUIPS.length)];
+    // If there's no existing speech bubble, inject a short-lived one.
+    // If there IS one, briefly replace its first child text with the quip
+    // and restore on cooldown release — so the tap still feels reactive
+    // without destroying the original message permanently.
+    const existing = wrap.querySelector('.speech-bubble');
+    if(existing){
+      const originalHTML = existing.innerHTML;
+      existing.innerHTML = '';
+      existing.appendChild(document.createTextNode(quip));
+      existing.classList.add('bubble-flash');
+      setTimeout(()=>{
+        existing.innerHTML = originalHTML;
+        existing.classList.remove('bubble-flash');
+      }, 1700);
+    } else {
+      tempBubble = h('div',{class:'speech-bubble bubble-flash'}, quip);
+      wrap.appendChild(tempBubble);
+      setTimeout(()=>{ try{ tempBubble.remove(); }catch(e){} }, 1700);
+    }
+    setTimeout(()=>{
+      svg.classList.remove('nova-reacting');
+      cooldown = false;
+    }, 900);
+  };
+  svg.style.cursor = 'pointer';
+  svg.addEventListener('click', handler);
+  svg.addEventListener('keydown', (e) => {
+    if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); handler(e); }
+  });
+  svg.setAttribute('tabindex', '0');
+  svg.setAttribute('role', 'button');
+  svg.setAttribute('aria-label', 'Tap Nova');
 }
 
 /* ==========================================================================
    PERSONALITY — rotating cheer lines from Nova
    --------------------------------------------------------------------------
-   Time-of-day greetings + random pep talks. Deterministic per-day so a kid
-   sees the SAME greeting if they reload the dashboard (less jarring).
+   Nova is a friendly alien from the planet Learnia. Some quirks that thread
+   through every pool below, so kids pick up a consistent voice over time:
+
+     • Three hearts (often mentioned as a feelings-amplifier: "all three of
+       my hearts just did a flip!")
+     • Antenna that tingles when something clever happens or a kid is
+       about to learn something new
+     • Occasional alien exclamations ("Zorbs!", "By the moons!", "Cosmic!")
+     • Talks about "cosmic fuel" — the stuff your brain makes when learning
+     • Back-home lore about Learnia — where she's from, what it's like
+
+   Line selection:
+     • Greetings: deterministic per-day per-kid — same reload = same line.
+       Everything else is random each render so the overlays stay fresh.
+     • Context (streak, perfects today, return-after-gap) can push Nova
+       into special line pools — see pickNovaGreeting + pickRewardPepTalk.
    ========================================================================== */
 const NOVA_GREETINGS_MORNING = [
   "Morning, explorer! 🌅",
-  "Good morning! Ready to learn?",
-  "Rise and quest! Today's going to be awesome.",
+  "Good morning! My antenna's been tingling — today feels BIG.",
+  "Rise and quest! ☀️",
   "Up with the sun? Love that energy!",
+  "All three of my hearts say: let's go!",
+  "Fresh brain, full cosmic fuel. ⛽",
+  "Beamed in just to say hi!",
+  "Sunrise is my favorite — everything feels possible.",
+  "New day, new neurons!",
+  "Zorbs! You're up early — I love it.",
+  "Ready for today's mission, agent?",
+  "Morning brain = secret weapon.",
 ];
 const NOVA_GREETINGS_AFTERNOON = [
   "Afternoon adventure time!",
-  "Hey there! Let's tackle something fun.",
-  "Welcome back, brain builder!",
+  "Hey there, brain builder! 🧠",
+  "Welcome back! Antenna missed you.",
   "Ready for a challenge?",
+  "Afternoon on Earth, bedtime on Learnia — let's do this anyway.",
+  "My three hearts just picked up your signal. Hi!",
+  "Back for round two? I love that.",
+  "Midday brain is peak brain. Trust me.",
+  "Beep boop — just kidding, I'm not a robot, I just like saying that.",
+  "Cosmic fuel tanks refilled. Let's burn some!",
+  "Still solving stuff? You're unstoppable.",
+  "Afternoon champions unite!",
 ];
 const NOVA_GREETINGS_EVENING = [
   "Evening session — nice!",
-  "Let's end the day smart.",
+  "Night mode: engaged. 🌙",
   "One more quest before bed?",
   "Night owl mode: activated.",
+  "The stars on Learnia are SO bright right now.",
+  "My antenna works better at night, did you know?",
+  "Evening brain is quiet brain. Quiet brain is focused brain.",
+  "Shhhh… can you hear your cosmic fuel humming?",
+  "Even one little quest makes tomorrow's brain stronger.",
+  "Love a sunset session.",
+  "Dim the lights, fire up the neurons.",
+  "Cozy learning is the BEST kind of learning.",
+];
+// Special: first time this kid logs in today (or after a long gap).
+const NOVA_GREETINGS_RETURN = [
+  "You're BACK! My antenna lit up the second you arrived.",
+  "All three hearts just flipped — welcome back!",
+  "Missed you. I was just floating here, hoping you'd show up.",
+  "Welcome back, cosmic friend!",
+  "There you are! I was about to send a signal to your planet.",
+];
+// Special: streak 3+ days (rolls in alongside the greeting).
+const NOVA_GREETINGS_STREAK = [
+  d => "Day "+d+" streak! I'm practically vibrating over here.",
+  d => d+" days in a row?? My antenna cannot HANDLE this energy.",
+  d => "Streak: "+d+" days. Your brain is basically glowing.",
+  d => d+"-day streak! Back on Learnia, that'd make you a Learning Elder.",
+  d => "You've shown up "+d+" days in a row. That's what makes galaxies.",
 ];
 function dailySeed(salt){
   // Deterministic per-day int — same kid sees same greeting across reloads
@@ -6904,24 +7071,157 @@ function dailySeed(salt){
   // Mulberry32-ish — not cryptographic, just stable
   n |= 0; n = n + 0x6D2B79F5 | 0; let t = Math.imul(n ^ n>>>15, 1|n); t = t + Math.imul(t ^ t>>>7, 61|t) ^ t; return ((t^t>>>14)>>>0);
 }
+// Greeting picker. Context-aware:
+//   • streak >= 3 → ~40% chance of a streak-brag line
+//   • haven't logged in today → first 1-in-3 chance of a "welcome back" line
+//   • otherwise → time-of-day pool
+// All deterministic per-day so a reload shows the same line.
 function pickNovaGreeting(userId){
   const hr = new Date().getHours();
+  const seed = dailySeed(userId||'');
+  const ud = (allData && allData.users && allData.users[userId]) || null;
+  const streak = ud && ud.streak ? Number(ud.streak) : 0;
+  // Streak call-out — 40% odds when streak >= 3
+  if(streak >= 3 && (seed % 10) < 4){
+    const pool = NOVA_GREETINGS_STREAK;
+    const line = pool[seed % pool.length];
+    return typeof line === 'function' ? line(streak) : line;
+  }
+  // "Welcome back" when the kid hasn't played today yet
+  if(ud && ud.lastPlay){
+    const dayMs = 24*60*60*1000;
+    const daysSincePlay = (Date.now() - ud.lastPlay) / dayMs;
+    if(daysSincePlay > 0.8 && (seed % 3) === 0){
+      return NOVA_GREETINGS_RETURN[seed % NOVA_GREETINGS_RETURN.length];
+    }
+  }
   const pool = hr < 12 ? NOVA_GREETINGS_MORNING
              : hr < 18 ? NOVA_GREETINGS_AFTERNOON
              :          NOVA_GREETINGS_EVENING;
-  return pool[dailySeed(userId||'') % pool.length];
+  return pool[seed % pool.length];
 }
 
-/* Nova's reward-overlay pep talks. Pool depends on the result tier. */
+// Sub-messages under the main greeting bubble on the dashboard hero.
+// Rotated based on user state so the "I'm Nova — let's learn" line isn't
+// the same every time. Deterministic per-day so it doesn't flicker on
+// navigation.
+const NOVA_SUBMSG_DEFAULT = [
+  "I'm Nova — let's learn together!",
+  "Beep! Beep! I mean — hi!",
+  "I'm from Learnia, a planet that runs on curiosity.",
+  "Tap a subject when you're ready!",
+  "My antenna says today's a good day.",
+];
+const NOVA_SUBMSG_STREAK = [
+  d => "Day "+d+" streak — proud of you!",
+  d => "Streaks power my antenna. Yours is SO bright.",
+];
+const NOVA_SUBMSG_STARS = [
+  s => "⭐ "+s+" stars earned on Earth. Wild.",
+  s => "You know what "+s+" stars sounds like? A galaxy.",
+];
+function pickNovaDashSubMessage(){
+  try {
+    const ud = (allData && allData.users && allData.users[currentUser]) || null;
+    if(!ud) return NOVA_SUBMSG_DEFAULT[0];
+    const seed = dailySeed((currentUser||'')+'sub');
+    const streak = Number(ud.streak||0);
+    const stars = Number(ud.totalStars||0);
+    if(streak >= 3 && (seed % 4) === 0){
+      const line = NOVA_SUBMSG_STREAK[seed % NOVA_SUBMSG_STREAK.length];
+      return typeof line === 'function' ? line(streak) : line;
+    }
+    if(stars >= 50 && (seed % 5) === 0){
+      const line = NOVA_SUBMSG_STARS[seed % NOVA_SUBMSG_STARS.length];
+      return typeof line === 'function' ? line(stars) : line;
+    }
+    return NOVA_SUBMSG_DEFAULT[seed % NOVA_SUBMSG_DEFAULT.length];
+  } catch(e){ return NOVA_SUBMSG_DEFAULT[0]; }
+}
+
+/* Nova's reward-overlay pep talks. Pool depends on the result tier. The
+   "ctx" object can carry stretch/streak info; specific branches get their
+   own sub-pools so the overlay feels responsive to what just happened. */
 const NOVA_PEP = {
-  perfect: ["Flawless! 🌟","Perfect! You crushed it!","Every. Single. One. 🏆","Genius mode activated!","WOW! I'm impressed!"],
-  great:   ["Awesome work!","Boom! Well done!","You're getting SO good at this.","Seriously great!","High five! ✋"],
-  pass:    ["Nice one!","You did it! 🎉","Keep that energy up!","Solid work!","One step closer!"],
-  fail:    ["So close! Try again? 💪","Every try makes you sharper.","I believe in you.","Not yet — but almost!","You got this next time!"],
+  perfect: [
+    "Flawless! 🌟",
+    "Perfect! You crushed it!",
+    "Every. Single. One. 🏆",
+    "Genius mode activated!",
+    "WOW! All three of my hearts just exploded.",
+    "Zorbs! That was clean.",
+    "Antenna off-the-charts. 📡",
+    "Back on Learnia we'd throw you a parade.",
+    "Not one wrong. Not one! How??",
+    "Cosmic fuel, 100%. Bottled and shipped.",
+    "I'm literally floating with joy.",
+    "Perfect-mode unlocked. Next level: YOU.",
+  ],
+  great: [
+    "Awesome work!",
+    "Boom! Well done!",
+    "You're getting SO good at this.",
+    "Seriously great!",
+    "High five! ✋",
+    "My antenna went BZZZT that's how good this was.",
+    "Two of my three hearts did a flip.",
+    "Cosmic fuel is FLOWING.",
+    "That was smooth. Like, moon-smooth.",
+    "Keep this up and my planet's going to hear about you.",
+    "Big brain energy today.",
+    "That was the fun kind of hard — nice.",
+  ],
+  pass: [
+    "Nice one!",
+    "You did it! 🎉",
+    "Keep that energy up!",
+    "Solid work!",
+    "One step closer!",
+    "Progress counts. Always.",
+    "Three hearts approve. 💗💗💗",
+    "You kept going. That's the whole secret.",
+    "A win is a win — mark it.",
+    "Tiny rocket, real miles.",
+    "I logged this one on Learnia. We're watching. In a nice way.",
+  ],
+  fail: [
+    "So close! Try again? 💪",
+    "Every try makes you sharper.",
+    "I believe in you.",
+    "Not yet — but almost!",
+    "You got this next time!",
+    "My antenna says: one more go.",
+    "On Learnia, failing just means 'more learning'. Still counts.",
+    "Brains grow most when they're stretched. Yours is stretching.",
+    "Nobody gets a quest right the first time. Nobody.",
+    "Pause. Breath. Reset. Go again.",
+    "You're closer than you think.",
+  ],
 };
-function pickRewardPepTalk(tier){
+// Special pools layered on top:
+const NOVA_PEP_PERFECT_STREAK = [
+  "TWO perfects in a row?! My antenna is melting.",
+  "Back-to-back perfect. You're on another level today.",
+  "Perfect, again. All three hearts are shaking.",
+  "Two perfects! Are you sure you're from Earth?",
+];
+const NOVA_PEP_STRETCH = [
+  "Stretch mode — you went EXTRA. I love that.",
+  "Stretch-mode glory. Brave.",
+  "Tackled the hard stuff. Huge.",
+  "Stretch cleared! Cosmic fuel +10.",
+];
+function pickRewardPepTalk(tier, ctx){
+  ctx = ctx || {};
+  // Layer: back-to-back perfects (has to be perfect tier AND streakPerfects >= 2)
+  if(tier==='perfect' && ctx.streakPerfects >= 2){
+    return NOVA_PEP_PERFECT_STREAK[Math.floor(Math.random()*NOVA_PEP_PERFECT_STREAK.length)];
+  }
+  // Layer: stretch mode — Nova mentions it ~50% of the time
+  if(ctx.isStretch && (tier==='perfect' || tier==='great') && Math.random() < 0.5){
+    return NOVA_PEP_STRETCH[Math.floor(Math.random()*NOVA_PEP_STRETCH.length)];
+  }
   const pool = NOVA_PEP[tier] || NOVA_PEP.pass;
-  // Random each time so the same tier doesn't always say the same thing
   return pool[Math.floor(Math.random() * pool.length)];
 }
 
@@ -6931,17 +7231,115 @@ const NOVA_SUBJECT_TONE = {
   logic:'cheerful', french:'warm', science:'magic', social:'warm',
 };
 const NOVA_LESSON_OPENERS = {
-  reading: ["Story time! 📖","Let's read together.","Eyes on the page — you've got this!","Ready to explore?"],
-  writing: ["Let's make some words!","Pencils up! ✏️","You got this writer!","Your story starts here."],
-  math:    ["Numbers are friends!","Let's crunch it. 🧮","Deep breath — you've got this.","Math wizard mode: ON."],
-  logic:   ["Puzzle time! 🧩","Think think think…","Use those smart brain cells!","Pattern hunter, activate!"],
-  french:  ["Bonjour! 🇫🇷","On y va!","Let's speak French!","Ooh la la!"],
-  science: ["Lab coat on! 🔬","Let's discover stuff!","Science is wild.","Hypothesis time."],
-  social:  ["History time! 🌍","Let's explore Canada.","Know your country!","Citizen mode: ON."],
+  reading: [
+    "Story time! 📖",
+    "Let's read together.",
+    "Eyes on the page — you've got this!",
+    "Ready to explore?",
+    "My home planet has 9 libraries. You'd love it.",
+    "Reading is just pictures made of letters.",
+    "Words are little spaceships. Let's ride 'em.",
+    "Slow reader > fast guesser. Always.",
+  ],
+  writing: [
+    "Let's make some words!",
+    "Pencils up! ✏️",
+    "You got this, writer!",
+    "Your story starts here.",
+    "On Learnia we write with our antennas. Must be harder there.",
+    "Spell it out — nobody's born knowing.",
+    "Every writer was scared of the blank page once.",
+    "Write it messy first. Fix it later.",
+  ],
+  math: [
+    "Numbers are friends!",
+    "Let's crunch it. 🧮",
+    "Deep breath — you've got this.",
+    "Math wizard mode: ON.",
+    "My planet runs on math. Literally — gravity wouldn't work without it.",
+    "Every mistake here makes the next try easier.",
+    "Show your work. Your brain likes it that way.",
+    "Ones. Tens. Hundreds. All friends. No hierarchy.",
+  ],
+  logic: [
+    "Puzzle time! 🧩",
+    "Think think think…",
+    "Use those smart brain cells!",
+    "Pattern hunter, activate!",
+    "Antenna tip: patterns LOVE showing off.",
+    "If it feels like a trick, slow down.",
+    "Two paths look right? Pick one. Check it. Learn.",
+    "On Learnia we play this game for FUN.",
+  ],
+  french: [
+    "Bonjour! 🇫🇷",
+    "On y va!",
+    "Let's speak French!",
+    "Ooh la la!",
+    "French sounds fancy. You are now, too.",
+    "Two languages = two brains. Trust me.",
+    "Say it out loud — even whispered. It helps.",
+    "I can say hi in 400 languages. French is my 12th favorite.",
+  ],
+  science: [
+    "Lab coat on! 🔬",
+    "Let's discover stuff!",
+    "Science is wild.",
+    "Hypothesis time.",
+    "Curiosity is cosmic fuel grade A.",
+    "Wonder first. Memorize later.",
+    "Scientists are just kids with notebooks.",
+    "Everything in the universe has a reason. We're finding one.",
+  ],
+  social: [
+    "History time! 🌍",
+    "Let's explore Canada.",
+    "Know your country!",
+    "Citizen mode: ON.",
+    "Maps are just pictures of stories.",
+    "Every place has a name AND a story. We learn both.",
+    "I've visited 17 planets. Earth is top 3.",
+    "The past is where the clues are.",
+  ],
 };
 function pickNovaLessonOpener(subId){
-  const pool = NOVA_LESSON_OPENERS[subId] || ["Let's learn! 🚀","You've got this!"];
+  const pool = NOVA_LESSON_OPENERS[subId] || ["Let's learn! 🚀","You've got this!","Brain: warming up."];
   return pool[Math.floor(Math.random() * pool.length)];
+}
+
+/* Nova's Daily Thought — a lightweight "did you know / tip / pep" line
+   shown on the dashboard below the stats row. Rotates per day per kid so
+   refreshing doesn't flicker. Mixes alien-lore fun facts with actual
+   study tips so it's more than filler. */
+const NOVA_DAILY_THOUGHTS = [
+  "💡 Tip: read the question TWICE. It catches tricks nine times out of ten.",
+  "🌠 Fact: back on Learnia, 'fun' and 'learning' are the SAME word.",
+  "🧠 Brains grow when you try hard things. Today, try one.",
+  "💗💗💗 My three hearts each beat for a different subject. Today they're rooting for YOUR favorite.",
+  "📡 My antenna tingles when someone's about to ace something. It's tingling right now.",
+  "🔭 Pro tip: if you're stuck, say the question OUT LOUD. It helps. Try it.",
+  "🛸 I parked my ship by the Big Dipper. If you look up tonight, wave.",
+  "⛽ Cosmic fuel tip: a tiny bit of learning every day > one giant burst.",
+  "🏁 One level a day is a LOT in a week. Don't skip.",
+  "🧩 If two answers feel right, the second-longest one is often it. (Works most of the time.)",
+  "✨ You know what's wild? The word 'galaxy' comes from the word for milk. True story.",
+  "💪 Hard questions don't mean you're bad. They mean the question's doing its job.",
+  "📚 Reading makes writing easier. Writing makes reading easier. It's a loop!",
+  "🚀 On Learnia we celebrate WRONG answers. Why? Because they're proof you tried.",
+  "🎯 Your brain LOVES little wins. Give it one today.",
+  "🔑 Stuck? Take the hint. Not all heroes solve every puzzle alone.",
+  "☁️ Daydream, then focus. It's the secret recipe.",
+  "🕰️ Five minutes of focus > thirty minutes of half-focus. Trust me.",
+  "🎨 There's no 'wrong' way to show your work. Scribble big.",
+  "💎 A perfect score feels great. A score after a mistake feels BETTER.",
+  "🐢 Slow is smooth. Smooth is fast. Ancient Learnian proverb.",
+  "💫 The best learners ask 'WHY'. Ask it today. A lot.",
+  "🪐 I've visited 17 planets. Every one has a library. Every one.",
+  "🔎 If you re-read your answer before submitting, you'll catch one mistake you didn't see.",
+];
+function pickNovaDailyThought(userId){
+  const seed = dailySeed((userId||'') + 'thought');
+  return NOVA_DAILY_THOUGHTS[seed % NOVA_DAILY_THOUGHTS.length];
 }
 
 /* ==========================================================================
@@ -8497,13 +8895,14 @@ function renderDashboard(root){
       h('button',{class:'change-avatar-btn',onclick:()=>go('avatars')}, '🎨 Change avatar'),
     ]),
   ]);
-  // Nova the alien mascot — greets by time-of-day, deterministic per kid per day.
+  // Nova the alien mascot — greets by time-of-day + streak + last-seen.
+  // Deterministic per-kid per-day so a reload shows the same line.
   try {
     const mascot = createMascot({
       tone: 'cheerful',
       size: 110,
       message: pickNovaGreeting(currentUser),
-      subMessage: "I'm Nova — let's learn together!",
+      subMessage: pickNovaDashSubMessage(),
     });
     hero.appendChild(mascot);
   } catch(e){ console.warn('[KidQuest] Nova mascot render failed:', e); }
@@ -8517,6 +8916,48 @@ function renderDashboard(root){
     h('div',{class:'d-stat'},[h('div',{class:'num'},[h('span',{class:'stat-emoji'},'💯'),h('span',{},String(perfectCount))]),h('div',{class:'lbl'},'Perfect')]),
   ]);
   root.appendChild(stats);
+  // Nova Says — a daily thought / fact / tip from Nova in a small card
+  // right below the stats row. Gives her presence on the dashboard even
+  // when the kid is just scrolling past. Click the card to get a new
+  // random thought mid-session — a delight touch, not deterministic.
+  try {
+    const thought = pickNovaDailyThought(currentUser);
+    const says = h('div',{class:'nova-says', role:'button', tabindex:'0',
+      title:'Tap for a new Nova thought!',
+      'aria-label':'Nova says: '+thought,
+    });
+    const miniHolder = document.createElement('div');
+    miniHolder.className = 'nova-says-avatar';
+    miniHolder.innerHTML = novaSVG('cheerful', 56);
+    says.appendChild(miniHolder);
+    const textWrap = h('div',{class:'nova-says-text'},[
+      h('div',{class:'nova-says-label'}, 'Nova says'),
+      h('div',{class:'nova-says-line'}, thought),
+    ]);
+    says.appendChild(textWrap);
+    // Click the card → rotate to a NEW random thought (not from the
+    // deterministic pool, just fresh). Keeps it a little magical.
+    const rotateThought = () => {
+      const pool = NOVA_DAILY_THOUGHTS;
+      let next;
+      let tries = 0;
+      do {
+        next = pool[Math.floor(Math.random()*pool.length)];
+        tries++;
+      } while(next === textWrap.querySelector('.nova-says-line').textContent && tries < 5);
+      const lineEl = textWrap.querySelector('.nova-says-line');
+      lineEl.classList.remove('pop');
+      // Reflow trick so the animation restarts on repeated clicks.
+      void lineEl.offsetWidth;
+      lineEl.textContent = next;
+      lineEl.classList.add('pop');
+    };
+    says.addEventListener('click', rotateThought);
+    says.addEventListener('keydown', (e) => {
+      if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); rotateThought(); }
+    });
+    root.appendChild(says);
+  } catch(e){ console.warn('[KidQuest] Nova Says card failed:', e); }
   // Daily Mission — 2 hand-picked activities per day, stable per kid per day.
   // Renders right after stats so it gets eyeballs before the full subject grid.
   try {
@@ -9867,14 +10308,24 @@ function finishActivity(){
               : 'Nice effort!';
   $('#rwEmoji').textContent=emoji;$('#rwTitle').textContent=title;$('#rwMsg').textContent=msg;
   $('#rwStars').textContent='+'+stars;$('#rwCoins').textContent='+'+coins;$('#rwScore').textContent=correct+'/'+scorable;
-  // Nova cameo — tone + pep line depend on the result tier.
+  // Nova cameo — tone + pep line depend on the result tier. We also track
+  // a session-local "perfects in a row" counter so back-to-back perfects
+  // trigger a special pep-talk pool. Not persisted (resets on reload) —
+  // it's just a delight flavor, not a scoring thing.
+  try {
+    if(pct === 1) window.__novaPerfectStreak = (window.__novaPerfectStreak || 0) + 1;
+    else window.__novaPerfectStreak = 0;
+  } catch(e){}
   try {
     const rwMascot = $('#rwMascot');
     if(rwMascot){
       rwMascot.innerHTML = '';
       const tier = !passed ? 'fail' : pct===1 ? 'perfect' : pct>=.7 ? 'great' : 'pass';
       const tone = tier==='perfect' ? 'victory' : tier==='great' ? 'warm' : tier==='pass' ? 'cheerful' : 'magic';
-      const pep  = pickRewardPepTalk(tier);
+      const pep  = pickRewardPepTalk(tier, {
+        isStretch,
+        streakPerfects: window.__novaPerfectStreak || 0,
+      });
       rwMascot.appendChild(createMascot({ tone, size:72, message:pep }));
     }
   } catch(e){ console.warn('[KidQuest] reward Nova failed:', e); }
