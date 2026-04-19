@@ -15973,10 +15973,14 @@ function renderTeacher(root){
         const done = countDone(s.id,sub.id);
         const total = getWeekActivities(s.id,sub.id).length;
         const p = total ? Math.round(done/total*100) : 0;
-        const colors = {reading:'#0984e3',writing:'#6c5ce7',math:'#e17055',logic:'#00b894'};
+        // Pull the color off the SUBJECTS entry itself rather than a local
+        // lookup — the old hardcoded `{reading,writing,math,logic}` dict
+        // silently returned undefined for spelling/french/science/social,
+        // so their progress bars rendered transparent (looked empty even at
+        // 100%). Every SUBJECTS row already carries a `color`.
         bars.appendChild(h('div',{class:'t-subj-bar'},[
           h('div',{class:'t-bar-label'},[h('span',{},sub.emoji+' '+sub.name),h('span',{},done+'/'+total)]),
-          h('div',{class:'t-bar'},[h('i',{style:'width:'+p+'%;background:'+colors[sub.id]})]),
+          h('div',{class:'t-bar'},[h('i',{style:'width:'+p+'%;background:'+(sub.color||'#6c5ce7')})]),
         ]));
       });
       card.appendChild(bars);
