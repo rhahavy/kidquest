@@ -1111,6 +1111,54 @@ img{max-width:100%}
 @keyframes novaSaysPop{0%{opacity:0;transform:translateX(6px)}55%{opacity:1;transform:translateX(-2px)}100%{opacity:1;transform:translateX(0)}}
 @media(max-width:640px){.nova-says{margin-left:10px;margin-right:10px}.nova-says-line{font-size:13.5px}}
 
+/* Nova Tour — first-login guided walkthrough. Semi-transparent dim
+   overlay anchors a card at bottom-center with Nova, a speech line,
+   progress dots, and navigation buttons. The card blocks underlying
+   clicks so a 5-yr-old can't tap through to the Store mid-tour; the
+   gold outline on the CURRENT step's target element cuts through the
+   dim so the kid can see what Nova's pointing at.
+   Trigger: maybeStartNovaTour() called at the end of renderDashboard.
+   Idempotent — once state.onboardingCompleted=true we don't retrigger. */
+.nova-tour-backdrop{position:fixed;inset:0;z-index:500;background:rgba(20,20,35,.55);
+  display:grid;place-items:end center;padding:16px 16px 20px;animation:novaTourFadeIn .25s ease}
+@keyframes novaTourFadeIn{from{opacity:0}to{opacity:1}}
+.nova-tour-card{background:#fff;color:#2a2055;border-radius:22px;padding:18px 22px 16px;
+  max-width:min(520px,calc(100vw - 24px));width:100%;box-shadow:0 18px 48px rgba(44,22,122,.35);
+  text-align:center;position:relative;animation:novaTourCardIn .35s var(--spring)}
+@keyframes novaTourCardIn{0%{opacity:0;transform:translateY(24px) scale(.94)}100%{opacity:1;transform:translateY(0) scale(1)}}
+.nova-tour-nova{margin:-56px auto 4px;width:96px;height:112px;display:flex;align-items:flex-start;justify-content:center}
+.nova-tour-nova .mascot{filter:drop-shadow(0 4px 10px rgba(108,92,231,.35))}
+.nova-tour-title{margin:4px 0 6px;font-size:20px;font-weight:800;color:var(--primary,#6C5CE7)}
+.nova-tour-text{margin:0 0 14px;font-size:15px;line-height:1.45;color:#2a2055}
+.nova-tour-dots{display:flex;justify-content:center;gap:6px;margin-bottom:12px}
+.nova-tour-dot{width:8px;height:8px;border-radius:50%;background:#d6d0f3;transition:transform .2s ease, background .2s ease}
+.nova-tour-dot.done{background:#a29bfe}
+.nova-tour-dot.on{background:var(--primary,#6C5CE7);box-shadow:0 0 0 3px rgba(108,92,231,.2);transform:scale(1.25)}
+.nova-tour-btns{display:flex;justify-content:center;gap:8px;flex-wrap:wrap}
+.nova-tour-btn{padding:10px 16px;border:0;border-radius:12px;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer;
+  transition:transform .12s ease, box-shadow .12s ease}
+.nova-tour-btn.back{background:#ede9ff;color:var(--primary,#6C5CE7)}
+.nova-tour-btn.skip{background:transparent;color:#8b82b8;text-decoration:underline}
+.nova-tour-btn.next,.nova-tour-btn.done{background:linear-gradient(135deg,#6C5CE7,#A29BFE);color:#fff;box-shadow:0 4px 12px rgba(108,92,231,.4)}
+.nova-tour-btn:hover{transform:translateY(-1px)}
+.nova-tour-btn:active{transform:translateY(0)}
+.nova-tour-btn:focus-visible{outline:3px solid #FDCB6E;outline-offset:2px}
+/* Target glow — gold pulse that stays visible through the dim backdrop. */
+.nova-tour-highlight{position:relative;border-radius:14px;animation:novaTourGlow 1.8s ease-in-out infinite}
+@keyframes novaTourGlow{
+  0%,100%{box-shadow:0 0 0 4px rgba(253,203,110,.9), 0 0 0 10px rgba(253,203,110,0)}
+  50%    {box-shadow:0 0 0 4px rgba(253,203,110,.95),0 0 0 16px rgba(253,203,110,.25)}
+}
+@media(max-width:640px){.nova-tour-card{padding:16px 16px 14px}.nova-tour-title{font-size:18px}.nova-tour-text{font-size:14px}.nova-tour-btn{padding:9px 14px;font-size:13px}}
+
+/* Replay Tutorial button on the dashboard — small, sits alongside
+   the other customization controls (avatar, theme, read-aloud). Low
+   visual weight since it's a once-in-a-while action. */
+.replay-tour-btn{margin-left:6px;padding:6px 12px;border:2px dashed rgba(108,92,231,.4);background:transparent;
+  color:var(--primary,#6C5CE7);border-radius:999px;font-family:inherit;font-weight:700;font-size:12.5px;cursor:pointer;
+  transition:background .15s ease, border-color .15s ease}
+.replay-tour-btn:hover{background:rgba(108,92,231,.08);border-color:rgba(108,92,231,.7)}
+
 /* ==========================================================================
    DAILY MISSION — highlighted card on the dashboard
    --------------------------------------------------------------------------
@@ -7562,6 +7610,12 @@ const defaultUser = () => ({
   customHint: '',
   loginAttempts: 0,
   locked: false,
+  // First-login guided tour — Nova walks the student through the dashboard,
+  // how to start a lesson, avatar/theme customization, the store, read-aloud,
+  // and the switch/logout buttons. Set to true once the kid completes OR
+  // skips the tour (both count — we don't re-pester them). Teachers can
+  // force a replay via the "🎓 Replay Tutorial" button on the dashboard.
+  onboardingCompleted: false,
   // Brain-break mini-games — daily coin cap + personal bests.
   // Kept separate from academic progress so it can't replace real practice.
   miniGameStats: {
@@ -9949,6 +10003,236 @@ if(typeof window.speechSynthesis !== 'undefined'){
   }catch(e){}
 }
 
+/* ==========================================================================
+   NOVA-GUIDED FIRST-LOGIN TOUR
+   --------------------------------------------------------------------------
+   One-time walkthrough that pops up the first time a kid lands on their
+   dashboard. Nova introduces herself, points at each major part of the
+   screen (stats, daily mission, subjects, Nova Says, avatar/theme buttons,
+   read-aloud toggle, store, mascot, nav), and finishes with a send-off.
+
+   State model:
+     state.onboardingCompleted = false  ← defaultUser() seeds this
+       → set to true when the kid finishes OR skips (both count — we don't
+         re-pester them). The "🎓 Replay Tutorial" button on the dashboard
+         calls runNovaTour() directly, bypassing the flag so teachers /
+         curious kids can see it again.
+
+   Rendering:
+     - Dimmed backdrop (z-index:500) with a card pinned bottom-center so it
+       doesn't cover the page title. Card has Nova, title, text, dots, nav.
+     - The current step's target element gets `.nova-tour-highlight` (pulsing
+       gold ring). Missing target → step still renders, just no glow.
+     - TTS auto-speaks each step if the kid's ttsEnabled flag is on
+       (speakAsNova is already gated).
+
+   Accessibility:
+     - Backdrop has role="dialog" aria-modal="true".
+     - ESC closes (counts as skip).
+     - Arrow keys advance/go back.
+     - Focus lands on Next button each step.
+   ========================================================================== */
+const NOVA_TOUR_STEPS = [
+  { title: "Hi, I'm Nova! 👋",
+    text: "I'm your guide. I'll show you around super quick — tap Next!",
+    tone: 'cheerful' },
+  { title: 'Your rewards',
+    text: "⭐ Stars are for right answers. 🪙 Coins unlock real prizes in the Store!",
+    target: '.dash-stats',
+    tone: 'cheerful' },
+  { title: 'Your daily mission',
+    text: "Two special activities every day. Finish them to keep your streak going!",
+    target: '.daily-mission',
+    tone: 'cheerful' },
+  { title: 'Pick a subject',
+    text: "Tap any subject to start this week's lessons. Go with whatever looks fun!",
+    target: '.subjects',
+    tone: 'cheerful' },
+  { title: 'Nova Says',
+    text: "I'll leave little thoughts for you here. Tap me for a fresh one anytime.",
+    target: '.nova-says',
+    tone: 'warm' },
+  { title: 'Change how you look',
+    text: "Want a new avatar or color theme? Tap these any time you feel like a change.",
+    target: '.change-avatar-btn',
+    tone: 'warm' },
+  { title: 'Want me to read to you?',
+    text: "Tap this pill to turn read-aloud ON. I'll read every question out loud.",
+    target: '.tts-dash-toggle',
+    tone: 'warm' },
+  { title: 'The KidQuest Store',
+    text: "Spend your coins on REAL rewards your parent set up! Keep earning the big ones.",
+    target: '.dash-store-btn.store',
+    tone: 'cheerful' },
+  { title: 'Tap me anytime!',
+    text: "You'll see me on lots of screens. Tap me and I'll wiggle and say something fun.",
+    target: '.dash-hero .mascot',
+    tone: 'magic' },
+  { title: 'Switch kid or log out',
+    text: "Up top: 👤 Switch lets a sibling take over. 🚪 Log Out finishes your session.",
+    target: '#nav',
+    tone: 'cheerful' },
+  { title: "You've got this! 💜",
+    text: "Ready to explore? Tap Let's go and have fun, friend!",
+    tone: 'victory' },
+];
+
+function runNovaTour(opts){
+  opts = opts || {};
+  // Idempotent: if a tour is already mounted, bail so we don't double-stack.
+  if(document.querySelector('.nova-tour-backdrop')) return;
+
+  const steps = NOVA_TOUR_STEPS;
+  let idx = 0;
+  let currentHighlight = null;
+
+  const backdrop = h('div', {
+    class: 'nova-tour-backdrop',
+    role: 'dialog',
+    'aria-modal': 'true',
+    'aria-label': 'Nova tutorial',
+  });
+  const card = h('div', { class: 'nova-tour-card' });
+  backdrop.appendChild(card);
+
+  function clearHighlight(){
+    if(currentHighlight){
+      try{ currentHighlight.classList.remove('nova-tour-highlight'); }catch(e){}
+      currentHighlight = null;
+    }
+  }
+
+  function applyHighlight(sel){
+    clearHighlight();
+    if(!sel) return;
+    let el = null;
+    try{ el = document.querySelector(sel); }catch(e){}
+    if(!el) return;
+    el.classList.add('nova-tour-highlight');
+    currentHighlight = el;
+    // Bring the highlighted element into view — the card pins to the bottom,
+    // so centering the target vertically keeps both visible on most screens.
+    try{ el.scrollIntoView({ behavior: 'smooth', block: 'center' }); }catch(e){}
+  }
+
+  function renderStep(){
+    const step = steps[idx];
+    card.innerHTML = '';
+
+    // Floating Nova on top of the card (uses inline SVG factory).
+    const novaHolder = h('div', { class: 'nova-tour-nova' });
+    try {
+      const svgWrap = document.createElement('div');
+      svgWrap.innerHTML = novaSVG(step.tone || 'cheerful', 88);
+      if(svgWrap.firstChild) novaHolder.appendChild(svgWrap.firstChild);
+    } catch(e){}
+    card.appendChild(novaHolder);
+
+    // Title + body text.
+    card.appendChild(h('div', { class: 'nova-tour-title' }, step.title));
+    card.appendChild(h('div', { class: 'nova-tour-text' }, step.text));
+
+    // Progress dots.
+    const dots = h('div', { class: 'nova-tour-dots', 'aria-hidden': 'true' });
+    for(let i = 0; i < steps.length; i++){
+      const cls = i === idx
+        ? 'nova-tour-dot on'
+        : (i < idx ? 'nova-tour-dot done' : 'nova-tour-dot');
+      dots.appendChild(h('div', { class: cls }));
+    }
+    card.appendChild(dots);
+
+    // Buttons row. Back (when not first), Skip+Next (when not last), Done (last).
+    const isLast = idx === steps.length - 1;
+    const btns = h('div', { class: 'nova-tour-btns' });
+    if(idx > 0){
+      btns.appendChild(h('button', {
+        class: 'nova-tour-btn back',
+        type: 'button',
+        onclick: () => { idx--; renderStep(); },
+      }, '← Back'));
+    }
+    if(!isLast){
+      btns.appendChild(h('button', {
+        class: 'nova-tour-btn skip',
+        type: 'button',
+        onclick: () => finish(false),
+      }, 'Skip'));
+      const nextBtn = h('button', {
+        class: 'nova-tour-btn next',
+        type: 'button',
+        onclick: () => { idx++; renderStep(); },
+      }, 'Next →');
+      btns.appendChild(nextBtn);
+      // Autofocus the Next button so ENTER advances + a keyboard user can drive.
+      setTimeout(()=>{ try{ nextBtn.focus(); }catch(e){} }, 0);
+    } else {
+      const doneBtn = h('button', {
+        class: 'nova-tour-btn done',
+        type: 'button',
+        onclick: () => finish(true),
+      }, "Let's go! 🚀");
+      btns.appendChild(doneBtn);
+      setTimeout(()=>{ try{ doneBtn.focus(); }catch(e){} }, 0);
+    }
+    card.appendChild(btns);
+
+    applyHighlight(step.target);
+
+    // Speak the step. speakAsNova no-ops when ttsEnabled is off, so this is
+    // safe for all users.
+    try { speakAsNova(step.title.replace(/[👋💜🚀]/g,'').trim() + '. ' + step.text); } catch(e){}
+  }
+
+  function finish(completed){
+    clearHighlight();
+    try{ window.speechSynthesis && window.speechSynthesis.cancel(); }catch(e){}
+    try{ backdrop.remove(); }catch(e){}
+    document.removeEventListener('keydown', keyHandler);
+    // Flip the flag whether they finished or skipped — we don't re-pester.
+    try {
+      if(currentUser && state){
+        state.onboardingCompleted = true;
+        saveState();
+      }
+    } catch(e){ console.warn('[KidQuest] Could not save onboarding flag:', e); }
+  }
+
+  function keyHandler(e){
+    if(e.key === 'Escape'){ e.preventDefault(); finish(false); return; }
+    if(e.key === 'ArrowRight' || e.key === 'PageDown'){
+      if(idx < steps.length - 1){ idx++; renderStep(); }
+    } else if(e.key === 'ArrowLeft' || e.key === 'PageUp'){
+      if(idx > 0){ idx--; renderStep(); }
+    }
+  }
+
+  document.addEventListener('keydown', keyHandler);
+  document.body.appendChild(backdrop);
+  renderStep();
+}
+
+// Called at the end of renderDashboard. Idempotent — the flag is the gate.
+function maybeStartNovaTour(){
+  try {
+    if(!currentUser || !state) return;
+    if(state.onboardingCompleted) return;
+    // Demo users are transient (state isn't persisted) and the demo banner
+    // already explains the preview context — a tour on top would be noise.
+    if(typeof isDemoUser === 'function' && isDemoUser(currentUser)) return;
+    // Teachers don't need the kid tour.
+    if(isTeacher) return;
+    // Small delay so the dashboard finishes painting before Nova pops up.
+    // Also gives the mascot greeting bubble a beat to breathe.
+    setTimeout(() => {
+      try { runNovaTour(); }
+      catch(e){ console.warn('[KidQuest] runNovaTour failed:', e); }
+    }, 600);
+  } catch(e){
+    console.warn('[KidQuest] maybeStartNovaTour failed:', e);
+  }
+}
+
 /* buildTtsButtons(text, lang, opts?)  →  HTMLElement | null
    ------------------------------------------------------------------
    Returns a prominent "🔊 Hear it" + "🐢 Slow" button pair for the
@@ -11514,6 +11798,16 @@ function renderDashboard(root){
     h('button',{class:'change-avatar-btn',onclick:()=>go('avatars')}, '🎨 Change avatar'),
     h('button',{class:'change-theme-btn',onclick:()=>go('themes')}, '🌈 Change theme'),
     ttsToggle,
+    // Replay Tutorial — bypasses the onboardingCompleted flag so a curious
+    // kid (or a parent showing a new sibling) can re-launch Nova's walkthrough
+    // anytime. Hidden on demo accounts to keep the preview uncluttered.
+    (typeof isDemoUser === 'function' && isDemoUser(currentUser))
+      ? null
+      : h('button',{
+          class:'replay-tour-btn',
+          title:'Replay the welcome tour',
+          onclick:()=>{ try{ runNovaTour(); }catch(e){ console.warn('[KidQuest] replay tour failed:',e); } },
+        }, '🎓 Replay Tutorial'),
   );
   const hero=h('div',{class:'dash-hero c-'+currentUser},[
     buildAvatarTile(currentUser,'av'),
@@ -11709,6 +12003,11 @@ function renderDashboard(root){
   // Report Card — personalized progress summary
   try { root.appendChild(renderReportCard(currentUser, false)); }
   catch(e){ console.warn('[KidQuest] renderReportCard failed:',e); }
+  // First-login guided tour. Idempotent — no-ops after the first completion.
+  // Runs AFTER the report card so the tour steps can reference every part
+  // of the dashboard (the "Nova says" card in particular is appended later).
+  try { maybeStartNovaTour(); }
+  catch(e){ console.warn('[KidQuest] maybeStartNovaTour failed:',e); }
 }
 
 /* ========== WEEK VIEW ========== */
