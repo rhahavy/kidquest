@@ -8299,6 +8299,31 @@ async function pullCloud(init){
     try{ seedTtsDefaults(); }catch(e){}
     if(currentUser)state=allData.users[currentUser];
     try{localStorage.setItem(STORAGE_KEY,JSON.stringify(allData))}catch(e){}
+    // If cloud says maintenance is OFF but the DOM is still showing the
+    // maintenance screen, the boot IIFE (line ~19954) gated this tab from
+    // STALE localStorage before cloud could weigh in. Un-gate now that
+    // we have authoritative state. Runs on the first pull too — that's
+    // the whole point, since `init=true` is exactly when the stale-local
+    // trap needs to be released. Skips teachers (they can be inside the
+    // dashboard toggling the flag) and parent views (separate code path).
+    const _gatedDom = !!document.querySelector('.maintenance-screen');
+    const _maintOn  = !!(allData.maintenance && allData.maintenance.active);
+    if(_gatedDom && !_maintOn && !isTeacher){
+      try{
+        currentUser = null; state = null;
+        try{ localStorage.removeItem(LOCAL_USER_KEY); }catch(e){}
+        if(typeof __parentParamPresent !== 'undefined' && __parentParamPresent){
+          if(typeof __parentQuerySid !== 'undefined') parentViewSid = __parentQuerySid;
+          go('parent');
+        } else {
+          go('home');
+        }
+      }catch(e){
+        console.warn('[KidQuest] un-gate after maintenance-off failed, reloading:', e);
+        try{ location.reload(); }catch(e2){}
+      }
+      return;
+    }
     // If maintenance just turned ON (and we're not bypassed), hijack the screen.
     // Unless kid is mid-activity — let them finish, they'll gate on next screen change.
     if(!init && allData.maintenance && allData.maintenance.active && !isMaintenanceBypassed() && !isTeacher && currentScreen!=='activity'){
