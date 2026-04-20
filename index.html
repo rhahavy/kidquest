@@ -14885,11 +14885,13 @@ function wireSimplerButton(btn, textareaEl, getCurriculum, noteEl){
   btn.addEventListener('click', async ()=>{
     if(btn.disabled) return;
     if(btn.dataset.mode === 'undo'){
-      // Revert to the stashed original.
+      // Revert to the stashed original + restore its pre-rewrite height.
       textareaEl.value = btn.dataset.prev || textareaEl.value;
+      textareaEl.style.height = btn.dataset.prevHeight || '';
       btn.dataset.mode = 'simpler';
       btn.textContent = '✨ Simpler';
       delete btn.dataset.prev;
+      delete btn.dataset.prevHeight;
       if(noteEl){ noteEl.textContent = ''; noteEl.classList.remove('err'); }
       return;
     }
@@ -14912,7 +14914,14 @@ function wireSimplerButton(btn, textareaEl, getCurriculum, noteEl){
     btn.disabled = false;
     if(res.ok && res.data && typeof res.data.simplified === 'string' && res.data.simplified.trim()){
       btn.dataset.prev = original;
+      // Stash the pre-rewrite height so Undo can restore it — otherwise a
+      // long rewrite leaves the textarea expanded even after the tutor reverts.
+      btn.dataset.prevHeight = textareaEl.style.height || '';
       textareaEl.value = res.data.simplified.trim();
+      // Auto-grow to fit the rewrite. Reset height first so scrollHeight
+      // reflects the new content, not the old measurement.
+      textareaEl.style.height = 'auto';
+      textareaEl.style.height = Math.min(400, textareaEl.scrollHeight + 4) + 'px';
       btn.dataset.mode = 'undo';
       btn.textContent = '↶ Undo';
       if(noteEl){
