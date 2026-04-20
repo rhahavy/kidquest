@@ -1459,6 +1459,27 @@ body.nova-tour-active{scroll-padding-top:40px}
 .sp-actions .btn-ghost{background:transparent;color:var(--ink3);border:1px solid var(--line)}
 .sp-actions .btn-ghost:hover{background:rgba(0,0,0,.04);color:var(--ink)}
 .sp-msg{font-size:13px;font-weight:700;margin-left:auto;min-width:80px;text-align:right}
+/* Plan adjustments grid — the machine-readable toggles that actually
+   drive lesson behaviour (timer, quiz length, adaptive-down, stretch,
+   TTS). Rendered as two compact columns of checkboxes + one slider for
+   extendedTime. Color-coded slightly teal so tutors can distinguish
+   "these change gameplay" from "this is notes for me". */
+.sp-adj-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+@media(max-width:520px){.sp-adj-grid{grid-template-columns:1fr}}
+.sp-adj-cell{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;background:rgba(22,160,133,.05);border:1px solid rgba(22,160,133,.18);border-radius:10px;transition:background .15s}
+.sp-adj-cell:hover{background:rgba(22,160,133,.09)}
+.sp-adj-cell.is-active{background:rgba(22,160,133,.13);border-color:rgba(22,160,133,.4)}
+.sp-adj-cell input[type=checkbox]{width:18px;height:18px;margin-top:2px;flex-shrink:0;accent-color:#16a085;cursor:pointer}
+.sp-adj-cell label{display:block;cursor:pointer;flex:1;min-width:0;line-height:1.35}
+.sp-adj-cell .sac-title{font-weight:800;color:var(--ink);font-size:12.5px;display:flex;align-items:center;gap:6px}
+.sp-adj-cell .sac-desc{font-size:11px;color:var(--ink2);margin-top:3px;line-height:1.4}
+.sp-adj-range{display:flex;align-items:center;gap:12px;padding:12px 14px;background:rgba(22,160,133,.05);border:1px solid rgba(22,160,133,.18);border-radius:10px;margin-top:8px;grid-column:1/-1}
+.sp-adj-range label{font-weight:800;color:var(--ink);font-size:12.5px;flex-shrink:0}
+.sp-adj-range .sar-desc{font-size:11px;color:var(--ink2);line-height:1.4;margin-top:2px;font-weight:500}
+.sp-adj-range input[type=range]{flex:1;accent-color:#16a085}
+.sp-adj-range .sar-val{font-family:var(--font-display);font-weight:800;font-size:14px;color:#16a085;min-width:44px;text-align:right}
+.sp-adj-explain{font-size:11.5px;color:var(--ink2);line-height:1.5;font-weight:500;padding:8px 12px;background:rgba(108,92,231,.04);border-left:3px solid rgba(108,92,231,.3);border-radius:6px;margin:6px 0 2px}
+.sp-adj-explain b{color:var(--primary);font-weight:800}
 @media(max-width:480px){
   .t-acc-head{padding:12px 14px;font-size:14px;gap:10px}
   .t-acc-body{padding:14px 14px 16px}
@@ -2585,7 +2606,13 @@ const STUDENTS = [
     // short sessions, frequent brain breaks, chunked instructions,
     // high-engagement activities, and praise for sustained attention
     // (not just correctness). Tutor can refine via Student Plans editor.
-    plan:{ type:'iep', workingAt:'Grade 5 with ADHD accommodations', notes:'Severe ADHD. Keep sessions short (15-20 min max), use visual timers, and chunk multi-step instructions into one-at-a-time prompts. Avoid long text passages — prefer interactive formats. Celebrate focus effort, not just right answers.' },
+    plan:{ type:'iep', workingAt:'Grade 5 with ADHD accommodations',
+      notes:'Severe ADHD. Keep sessions short (15-20 min max), use visual timers, and chunk multi-step instructions into one-at-a-time prompts. Avoid long text passages — prefer interactive formats. Celebrate focus effort, not just right answers.',
+      // Explicit toggles that override the generic IEP defaults to match
+      // the specifics of Isaiah's plan notes. Tutor can flip these off if
+      // the school-side IEP changes. `avoidPassages` in particular is
+      // Isaiah-specific — other IEP kids may WANT passages.
+      adjustments:{ avoidPassages:true } },
     // Supports = orthogonal speech-therapy / accessibility needs, separate
     // from the academic plan. Articulation means the kid struggles with
     // spoken pronunciation — we auto-enable TTS so they hear model
@@ -2597,7 +2624,12 @@ const STUDENTS = [
     // Rushan is on-grade overall but slightly ahead in math — not a formal
     // gifted designation, just a "push him harder in math" custom note.
     // Use the stretchQuestions[] on math activities more aggressively for him.
-    plan:{ type:'custom', workingAt:'Grade 2 overall, Grade 2-3 math stretch', notes:'On-grade for his age overall. Math is slightly ahead — serve Grade 3 stretch questions once Grade 2 activities are solid. No formal plan needed; this is a "challenge him a bit more in math" nudge for the tutor.' },
+    plan:{ type:'custom', workingAt:'Grade 2 overall, Grade 2-3 math stretch',
+      notes:'On-grade for his age overall. Math is slightly ahead — serve Grade 3 stretch questions once Grade 2 activities are solid. No formal plan needed; this is a "challenge him a bit more in math" nudge for the tutor.',
+      // Custom plan type has no defaults — spell out the "stretch in math"
+      // intent explicitly so Rushan's math lessons auto-escalate after a
+      // first successful pass.
+      adjustments:{ autoStretch:true } },
     supports: ['articulation'] },
   { id:'akaran',   name:'Akaran',   grade:'Grade 1',               initial:'A', decoEmoji:'🦖', pin:'⭐', hint:'(s_ar)',     colorLight:'#b6adff', colorDark:'#6c5ce7',
     // Akaran is a Grade 1 student who's mildly gifted — a strong reader for
@@ -7905,7 +7937,20 @@ function seedTtsDefaults(){
     STUDENTS.forEach(s=>{
       const ud = allData.users[s.id];
       if(!ud || ud.ttsSeeded) return;
-      if(STUDENTS_TTS_DEFAULT_ON.has(s.id)) ud.ttsEnabled = true;
+      // Seed defaults come from TWO sources:
+      //  1) STUDENTS_TTS_DEFAULT_ON — the SEED STUDENTS metadata (articulation
+      //     or ESL on the student profile baked into code).
+      //  2) planAdjustments(sid).alwaysTTS — the tutor's saved plan override.
+      //     A tutor who toggles "Always read aloud" for a non-ESL kid gets
+      //     their override honored here on first boot.
+      let shouldEnable = STUDENTS_TTS_DEFAULT_ON.has(s.id);
+      if(!shouldEnable){
+        try{
+          const adj = planAdjustments(s.id);
+          if(adj && adj.alwaysTTS) shouldEnable = true;
+        }catch(_){}
+      }
+      if(shouldEnable) ud.ttsEnabled = true;
       ud.ttsSeeded = true;
     });
   }catch(e){ console.warn('[KidQuest] seedTtsDefaults failed:', e); }
@@ -10884,15 +10929,110 @@ function getStudentPlan(sid){
   const seed = (info && info.plan) || { type:'none', workingAt:'', notes:'' };
   const override = (allData && allData.studentPlans && allData.studentPlans[sid]) || null;
   // Tutor override completely replaces seed. Default to 'none' shape if
-  // the override is a partial.
+  // the override is a partial. `adjustments` is the structured, machine-
+  // readable accommodations block — see planAdjustments() below for how it
+  // drives actual lesson behaviour.
   if(override){
     return {
       type: override.type || seed.type || 'none',
       workingAt: override.workingAt || '',
       notes: override.notes || '',
+      adjustments: (override.adjustments && typeof override.adjustments === 'object') ? override.adjustments : null,
     };
   }
-  return { type: seed.type || 'none', workingAt: seed.workingAt || '', notes: seed.notes || '' };
+  return {
+    type: seed.type || 'none',
+    workingAt: seed.workingAt || '',
+    notes: seed.notes || '',
+    adjustments: (seed.adjustments && typeof seed.adjustments === 'object') ? seed.adjustments : null,
+  };
+}
+
+/* ==========================================================================
+   PLAN ADJUSTMENTS — the machine-readable layer that actually shapes lessons
+   --------------------------------------------------------------------------
+   `notes` on a plan is free text for the tutor to describe accommodations.
+   That's useful for humans but the engine can't act on "avoid long passages"
+   written in prose. So every plan also carries a structured `adjustments`
+   object with explicit toggles the quiz engine reads at runtime.
+
+   Flow:
+     1. A plan `type` maps to a set of DEFAULTS (PLAN_TYPE_DEFAULTS below).
+        Picking "IEP" in the editor auto-enables short sessions, early
+        bridge, and extended time — the things Isaiah's plan calls out.
+     2. The tutor can override any toggle per student. Saved toggles take
+        priority over type defaults so a tutor can say "IEP, but no quiz cap."
+     3. Every runtime hook (timer, quiz length, adaptive-down, stretch,
+        TTS default) reads from planAdjustments(sid) — one helper, one
+        source of truth. Adding a new adjustment = add a default + one
+        call-site, nothing else.
+
+   Fields (all optional — absent = on-grade behaviour):
+     shortSessions    — true caps the quiz to MAX_SHORT_SESSION_Q questions
+     earlyBridge      — true triggers adaptive-down after 1 wrong (not 2)
+     extendedTime     — multiplier applied to secondsForQuestion (1.0 = off)
+     noTimer          — true disables the per-question timer entirely
+     alwaysTTS        — true forces TTS on at login (overrides user off)
+     avoidPassages    — true filters out passage/write questions
+     autoStretch      — true auto-enters stretch mode on re-entry after a pass
+     simpleLanguage   — reserved for future UI-text simplification pass
+   ========================================================================== */
+const MAX_SHORT_SESSION_Q = 3;
+
+// Per-plan-type sensible defaults. Tutor overrides layer ON TOP of these.
+const PLAN_TYPE_DEFAULTS = {
+  'none': {
+    shortSessions: false, earlyBridge: false, extendedTime: 1.0,
+    noTimer: false, alwaysTTS: false, avoidPassages: false,
+    autoStretch: false, simpleLanguage: false,
+  },
+  'iep': {
+    // "Keep sessions short (15-20 min)" + "chunk into one-at-a-time prompts"
+    // + ADHD working-memory accommodations.
+    shortSessions: true, earlyBridge: true, extendedTime: 1.3,
+    noTimer: false, alwaysTTS: false, avoidPassages: false,
+    autoStretch: false, simpleLanguage: false,
+  },
+  'gifted': {
+    // "Ready for stretch once the base is solid." Auto-enter stretch mode
+    // on re-entry; no pace slowdowns.
+    shortSessions: false, earlyBridge: false, extendedTime: 1.0,
+    noTimer: false, alwaysTTS: false, avoidPassages: false,
+    autoStretch: true, simpleLanguage: false,
+  },
+  'gifted-esl': {
+    // Stretch challenge + ESL language scaffolding.
+    shortSessions: false, earlyBridge: false, extendedTime: 1.2,
+    noTimer: false, alwaysTTS: true, avoidPassages: false,
+    autoStretch: true, simpleLanguage: true,
+  },
+  'esl': {
+    // "Always enable read-aloud for text-heavy questions." Extra read time.
+    shortSessions: false, earlyBridge: false, extendedTime: 1.2,
+    noTimer: false, alwaysTTS: true, avoidPassages: false,
+    autoStretch: false, simpleLanguage: true,
+  },
+  'custom': {
+    // Tutor drives everything explicitly — no baked assumptions.
+    shortSessions: false, earlyBridge: false, extendedTime: 1.0,
+    noTimer: false, alwaysTTS: false, avoidPassages: false,
+    autoStretch: false, simpleLanguage: false,
+  },
+};
+
+function planAdjustments(sid){
+  // Single source of truth for every runtime hook. Returns the merged
+  // adjustments for a student: type defaults + explicit overrides on top.
+  // Always returns a fully-populated object so callers never have to null-check.
+  try {
+    const plan = getStudentPlan(sid);
+    const defaults = PLAN_TYPE_DEFAULTS[plan.type] || PLAN_TYPE_DEFAULTS['none'];
+    const overrides = (plan.adjustments && typeof plan.adjustments === 'object') ? plan.adjustments : {};
+    return Object.assign({}, defaults, overrides);
+  } catch(e){
+    console.warn('[KidQuest] planAdjustments failed:', e);
+    return PLAN_TYPE_DEFAULTS['none'];
+  }
 }
 /* Plan metadata — label, emoji, accent color for badges. 'none' maps to
    null so callers can skip rendering for kids on the default track. */
@@ -12606,6 +12746,11 @@ function secondsForQuestion(q){
   const t = q.type || 'mcq';
   if(t === 'lesson') return null;
 
+  // Education-plan opt-out: IEP kids with `noTimer` toggled ON never see
+  // the timer at all. Overrides the content-aware formula below.
+  const adj = planAdjustments(currentUser);
+  if(adj && adj.noTimer) return null;
+
   const floor = TIMER_FLOOR[t] || 30;
   const ceil  = TIMER_CEIL[t]  || 90;
   const rate  = READ_SPEED[currentUser] || 6;
@@ -12624,7 +12769,13 @@ function secondsForQuestion(q){
   // longer because they involve dragging/tapping multiple tiles.
   const readSecs = chars / rate;
   const BUFFER = (t==='passage') ? 20 : (t==='match'||t==='order') ? 25 : 10;
-  const secs = Math.round(readSecs * 2 + BUFFER);
+  let secs = Math.round(readSecs * 2 + BUFFER);
+
+  // Education-plan extended time. IEP/ESL kids get a generous multiplier
+  // applied AFTER the content scan so longer questions scale proportionally.
+  // The ceiling still caps the result so nothing becomes absurd.
+  const mult = (adj && typeof adj.extendedTime === 'number' && adj.extendedTime > 0) ? adj.extendedTime : 1;
+  if(mult !== 1) secs = Math.round(secs * mult);
 
   return Math.max(floor, Math.min(ceil, secs));
 }
@@ -12674,22 +12825,47 @@ function renderActivity(root,actId,subId){
   const acts=getWeekActivities(currentUser,subId);
   const activity=acts.find(a=>a.id===actId);
   if(!activity){go('dashboard');return}
+  // Pull this student's plan adjustments once — used for auto-stretch,
+  // short-sessions cap, and passage filtering below.
+  const adj = planAdjustments(currentUser);
   // STRETCH MODE — when a kid retries a lesson they've already aced AND
   // that lesson has `stretchQuestions` defined, swap in the harder pool.
   // - Doesn't overwrite their normal `best`/`attempts`/`perfectActivities`
   //   (tracked separately in state.stretchStats[actId]).
   // - Coins still flow on correct answers so effort is rewarded.
   // - A banner on the first question tells the kid why the quiz looks different.
-  const isRetryOfPerfect = !!(state.perfectActivities && state.perfectActivities[actId]);
-  const useStretch = isRetryOfPerfect
-    && Array.isArray(activity.stretchQuestions)
-    && activity.stretchQuestions.length > 0;
+  //
+  // `autoStretch` plans (gifted, gifted-esl) lower the retry bar: instead
+  // of needing a PERFECT score on the base pool, merely COMPLETING it once
+  // triggers stretch on re-entry. This matches Akaran's plan ("Ready for
+  // Grade 2 stretch once the Grade 1 activity is solid") — solid ≠ perfect.
+  // On-grade / IEP / ESL kids still need the perfect score to unlock stretch.
+  const hasStretchPool = Array.isArray(activity.stretchQuestions) && activity.stretchQuestions.length > 0;
+  const isRetryOfPerfect   = !!(state.perfectActivities  && state.perfectActivities[actId]);
+  const isRetryOfCompleted = !!(state.completedActivities && state.completedActivities[actId]);
+  const stretchEligible = (adj && adj.autoStretch) ? isRetryOfCompleted : isRetryOfPerfect;
+  const useStretch = hasStretchPool && stretchEligible;
   const baseQuestions = useStretch ? activity.stretchQuestions : activity.questions;
+  // avoidPassages (IEP accommodation): filter out passage + write types
+  // before they even reach the question list. We never filter below 2
+  // questions — if the lesson is almost entirely text, the kid still
+  // gets a (smaller) set so the lesson isn't empty.
+  let filtered = baseQuestions;
+  if(adj && adj.avoidPassages){
+    const slim = baseQuestions.filter(q => q && q.type !== 'passage' && q.type !== 'write');
+    if(slim.length >= 2) filtered = slim;
+  }
+  // shortSessions (IEP accommodation): cap at MAX_SHORT_SESSION_Q so a
+  // kid who fatigues quickly gets a real finish line. The tutor's
+  // "15-20 min max" guidance converts to 3 bite-sized questions.
+  if(adj && adj.shortSessions && filtered.length > MAX_SHORT_SESSION_Q){
+    filtered = filtered.slice(0, MAX_SHORT_SESSION_Q);
+  }
   // Build questions with lesson prepended (only for the FIRST pass — on a
   // stretch retry, skip re-showing the lesson since the kid already knows it).
   const qs = (activity.lesson && !useStretch)
-    ? [{type:'lesson',lesson:activity.lesson}, ...baseQuestions]
-    : [...baseQuestions];
+    ? [{type:'lesson',lesson:activity.lesson}, ...filtered]
+    : [...filtered];
   quiz={activityId:actId, subject:subId, activity, questions:qs, idx:0, correct:0, locked:false, stretchMode: useStretch};
   const wrap=h('div',{class:'quiz'});
   root.appendChild(wrap);
@@ -13790,8 +13966,18 @@ function showNext(){const b=$('#nextBtn');if(!b)return;b.style.display='inline-f
    the lesson and retries from scratch next time rather than snowballing
    into an all-easier session. Stretch Mode disables adaptive-down —
    by definition the kid aced the base pool, so the easier bridge would
-   be patronizing. */
-const WRONG_STREAK_TRIGGER = 2;
+   be patronizing.
+
+   IEP plans with `earlyBridge` toggled on drop the trigger to 1 — the
+   bridge fires on the FIRST miss. This matches the accommodation "chunk
+   multi-step instructions into one-at-a-time prompts" by refusing to
+   let a struggling ADHD kid stack two failures before the UI responds. */
+const WRONG_STREAK_TRIGGER_DEFAULT = 2;
+const WRONG_STREAK_TRIGGER_EARLY   = 1;
+function getWrongStreakTrigger(){
+  const adj = planAdjustments(currentUser);
+  return (adj && adj.earlyBridge) ? WRONG_STREAK_TRIGGER_EARLY : WRONG_STREAK_TRIGGER_DEFAULT;
+}
 
 function getEasierQuestion(currentQ){
   // Three fallback sources in priority order. Returns null if none match —
@@ -13834,7 +14020,7 @@ function maybeInjectEasier(){
   if(!quiz) return;
   if(quiz.stretchMode) return;                  // don't bridge during stretch retry
   if(quiz.easyBridgeUsed) return;               // one bridge per activity
-  if((quiz.wrongStreak || 0) < WRONG_STREAK_TRIGGER) return;
+  if((quiz.wrongStreak || 0) < getWrongStreakTrigger()) return;
   if(quiz.idx + 1 >= quiz.questions.length) return; // no next question to swap
   const currentQ = quiz.questions[quiz.idx];
   const easier = getEasierQuestion(currentQ);
@@ -16233,7 +16419,7 @@ function renderTeacher(root){
   const buildStudentPlansPanel = () => {
     const wrap = h('div',{class:'sp-wrap'});
     wrap.appendChild(h('p',{class:'sp-intro'},
-      'Set an Individual Education Plan (IEP), gifted track, ESL adaptation, or custom plan for each student. The plan badge shows on their dashboard and in the parent view so everyone knows the kid is working on a custom path. Seeds for Isaiah, Evan, and Akaran are pre-filled — edit to match what the school or family has communicated.'));
+      'Set an Individual Education Plan (IEP), gifted track, ESL adaptation, or custom plan for each student. The plan shapes the kid\'s experience in real time — quiz length, timer, adaptive-down, stretch mode, and read-aloud defaults all respect the adjustments you save below. Seeds for Isaiah, Evan, and Akaran are pre-filled; edit to match what the school or family has communicated.'));
     STUDENTS.forEach(s => {
       const plan = getStudentPlan(s.id);
       const supports = getStudentSupports(s.id);
@@ -16331,6 +16517,82 @@ function renderTeacher(root){
       body.appendChild(h('label',{class:'sp-label'}, 'Notes / accommodations'));
       body.appendChild(notesInput);
 
+      // ---- Lesson adjustments (the toggles that actually shape the quiz) ----
+      // Each toggle reads + writes back to `plan.adjustments.<key>`. When a
+      // tutor flips one, the kid's next activity picks it up immediately —
+      // `planAdjustments(sid)` reads fresh from allData on every call.
+      body.appendChild(h('label',{class:'sp-label'}, 'Lesson adjustments — these are followed in real time'));
+      body.appendChild(h('div',{class:'sp-adj-explain',html:
+        'Picking a <b>plan type</b> above auto-fills sensible defaults. You can override any individual toggle here and your choice wins. These settings immediately change how <b>'+s.name+'\'s</b> lessons are paced, timed, and adapted.'}));
+
+      const liveAdj = planAdjustments(s.id);
+      const adjCells = {};       // key → {input, root} so Save + type-change can read them
+      const mkAdjCell = (key, icon, title, desc) => {
+        const cb = h('input',{type:'checkbox', id:'sp-adj-'+key+'-'+s.id});
+        cb.checked = !!liveAdj[key];
+        const root = h('div',{class:'sp-adj-cell'+(cb.checked?' is-active':'')},[
+          cb,
+          h('label',{for:'sp-adj-'+key+'-'+s.id},[
+            h('div',{class:'sac-title'}, icon+' '+title),
+            h('div',{class:'sac-desc'}, desc),
+          ]),
+        ]);
+        cb.addEventListener('change', ()=>{ root.classList.toggle('is-active', cb.checked); });
+        adjCells[key] = { input: cb, root };
+        return root;
+      };
+
+      const adjGrid = h('div',{class:'sp-adj-grid'},[
+        mkAdjCell('shortSessions', '⏳', 'Short sessions', 'Cap each activity at '+MAX_SHORT_SESSION_Q+' questions. Useful when focus fades fast.'),
+        mkAdjCell('earlyBridge',   '💙', 'Early bridge',    'Swap in an easier question after 1 wrong (instead of 2). Catches struggles sooner.'),
+        mkAdjCell('noTimer',       '🕊️', 'No timer',        'Remove the per-question countdown entirely. Use when any clock raises anxiety.'),
+        mkAdjCell('alwaysTTS',     '🔊', 'Always read aloud','Seed TTS on for this student. They can still toggle it off from the dashboard.'),
+        mkAdjCell('avoidPassages', '📵', 'Skip long reads', 'Filter out passage + long-write questions. Keeps the quiz quick + interactive.'),
+        mkAdjCell('autoStretch',   '🌟', 'Auto-stretch',    'Enter Stretch Mode after the first completion (not just perfect scores).'),
+        mkAdjCell('simpleLanguage','🌐', 'Simple language', 'Hint to authors that this student benefits from simpler prompts. Reserved for future UI copy passes.'),
+      ]);
+      body.appendChild(adjGrid);
+
+      // Extended-time slider. Tutors see discrete 1.0 / 1.2 / 1.3 / 1.5
+      // multipliers rather than a free-form number — keeps the knob
+      // impossible to set to something silly like 0.1×.
+      const EXT_STEPS = [1.0, 1.2, 1.3, 1.5, 2.0];
+      const currentExtIdx = (()=>{
+        const v = (typeof liveAdj.extendedTime === 'number') ? liveAdj.extendedTime : 1.0;
+        // Snap to nearest step.
+        let best = 0, dist = Infinity;
+        EXT_STEPS.forEach((s, i) => { const d = Math.abs(s - v); if(d < dist){ dist = d; best = i; }});
+        return best;
+      })();
+      const extRange = h('input',{type:'range', min:'0', max:String(EXT_STEPS.length-1), step:'1', value:String(currentExtIdx)});
+      const extValEl = h('div',{class:'sar-val'}, EXT_STEPS[currentExtIdx].toFixed(1)+'×');
+      const extLabelWrap = h('div',{style:'flex:1;min-width:0'},[
+        h('div',{},'⏱ Extended time'),
+        h('div',{class:'sar-desc'}, '1.0× = standard. Higher = more seconds per question. Applies to every question type, respects the per-type ceiling.'),
+      ]);
+      extRange.addEventListener('input', ()=>{
+        const idx = parseInt(extRange.value,10);
+        extValEl.textContent = EXT_STEPS[idx].toFixed(1)+'×';
+      });
+      body.appendChild(h('div',{class:'sp-adj-range'},[extLabelWrap, extRange, extValEl]));
+
+      // When the tutor picks a new plan TYPE, pre-fill the toggles with
+      // that type's defaults so they see what "IEP" actually means in
+      // terms of behaviour. They can still un-check anything afterward.
+      typeSel.addEventListener('change', ()=>{
+        const defaults = PLAN_TYPE_DEFAULTS[typeSel.value] || PLAN_TYPE_DEFAULTS['none'];
+        Object.keys(adjCells).forEach(k => {
+          adjCells[k].input.checked = !!defaults[k];
+          adjCells[k].root.classList.toggle('is-active', !!defaults[k]);
+        });
+        // Snap the range to the closest step for the new type default.
+        const want = typeof defaults.extendedTime === 'number' ? defaults.extendedTime : 1.0;
+        let best = 0, dist = Infinity;
+        EXT_STEPS.forEach((s, i) => { const d = Math.abs(s - want); if(d < dist){ dist = d; best = i; }});
+        extRange.value = String(best);
+        extValEl.textContent = EXT_STEPS[best].toFixed(1)+'×';
+      });
+
       // Articulation checkbox — orthogonal to plan type. A kid can be
       // "Gifted + Articulation support" or just "Articulation support" on its
       // own. Writes to allData.studentSupports[s.id], separate from the plan.
@@ -16353,12 +16615,36 @@ function renderTeacher(root){
         const t = typeSel.value || 'none';
         const w = workingAtInput.value.trim();
         const n = notesInput.value.trim();
-        // If everything matches 'none' AND there's no text, treat as wipe so
-        // we fall back to the seed. Otherwise write the override.
-        if(t === 'none' && !w && !n){
+        // Read the current toggle + slider state into an adjustments object.
+        // We only persist the keys that DIFFER from the plan-type defaults —
+        // that way, changing plan type later re-applies fresh defaults
+        // cleanly and we don't store redundant state.
+        const defaults = PLAN_TYPE_DEFAULTS[t] || PLAN_TYPE_DEFAULTS['none'];
+        const extIdx = parseInt(extRange.value, 10);
+        const wantExt = EXT_STEPS[isFinite(extIdx) ? extIdx : 0] || 1.0;
+        const wantAdj = {
+          shortSessions:  !!adjCells.shortSessions.input.checked,
+          earlyBridge:    !!adjCells.earlyBridge.input.checked,
+          extendedTime:   wantExt,
+          noTimer:        !!adjCells.noTimer.input.checked,
+          alwaysTTS:      !!adjCells.alwaysTTS.input.checked,
+          avoidPassages:  !!adjCells.avoidPassages.input.checked,
+          autoStretch:    !!adjCells.autoStretch.input.checked,
+          simpleLanguage: !!adjCells.simpleLanguage.input.checked,
+        };
+        const adjustmentsOverride = {};
+        Object.keys(wantAdj).forEach(k => {
+          if(wantAdj[k] !== defaults[k]) adjustmentsOverride[k] = wantAdj[k];
+        });
+        const hasAdjOverride = Object.keys(adjustmentsOverride).length > 0;
+        // If everything matches 'none' AND there's no text AND no adjustment
+        // overrides, treat as wipe so we fall back to the seed.
+        if(t === 'none' && !w && !n && !hasAdjOverride){
           delete allData.studentPlans[s.id];
         } else {
-          allData.studentPlans[s.id] = { type: t, workingAt: w, notes: n };
+          const rec = { type: t, workingAt: w, notes: n };
+          if(hasAdjOverride) rec.adjustments = adjustmentsOverride;
+          allData.studentPlans[s.id] = rec;
         }
         // Supports — we only override the seed when the checkbox state differs
         // from what the seed would produce. Otherwise we leave override absent
@@ -16425,6 +16711,18 @@ function renderTeacher(root){
         workingAtInput.value = seed.workingAt || '';
         notesInput.value = seed.notes || '';
         articulationCb.checked = seedSupports.includes('articulation');
+        // Reset the adjustment toggles + range back to the plan-type defaults.
+        // `planAdjustments(s.id)` after the wipe above returns defaults only.
+        const seedAdj = planAdjustments(s.id);
+        Object.keys(adjCells).forEach(k => {
+          adjCells[k].input.checked = !!seedAdj[k];
+          adjCells[k].root.classList.toggle('is-active', !!seedAdj[k]);
+        });
+        const wantExt = (typeof seedAdj.extendedTime === 'number') ? seedAdj.extendedTime : 1.0;
+        let bestIdx = 0, bestDist = Infinity;
+        EXT_STEPS.forEach((st, i) => { const d = Math.abs(st - wantExt); if(d < bestDist){ bestDist = d; bestIdx = i; }});
+        extRange.value = String(bestIdx);
+        extValEl.textContent = EXT_STEPS[bestIdx].toFixed(1)+'×';
         msg.textContent = '↺ Reset to default';
         msg.style.color = 'var(--ink3)';
         const newMeta = PLAN_META[seed.type];
