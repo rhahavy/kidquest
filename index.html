@@ -2939,6 +2939,7 @@ function beginnerFrenchBase(sid){
   const pre = 'w1-'+sid+'-';
   return [
     { id: pre+'f1', title:'Bonjour!', emoji:'👋', videoIds:['9BgyvEXTZbk'],
+      curriculum: oc('Elementary FSL (Core French)', 'Oral Communication — Listening & Speaking', ['A1.1','B1.1'], 'Understand and produce basic social greetings (bonjour, merci, au revoir); the first-encounter FSL vocabulary recommended across SK–Grade 4 introductions.'),
       lesson:{title:'First French Words',intro:'French is a fun language! Learn five super-friendly words: hello, thank you, yes, no, and goodbye. Tap a card to hear it!',audioLang:'fr-FR',pictures:[
         {emoji:'👋', word:'Bonjour', label:'Hello'},
         {emoji:'🙏', word:'Merci', label:'Thank you'},
@@ -2954,6 +2955,7 @@ function beginnerFrenchBase(sid){
         {type:'mcq',q:'What does "Au revoir" mean?',choices:['Hello','Goodbye','Good night','Thanks'],answer:1},
       ]},
     { id: pre+'f2', title:'Les Nombres 1-10', emoji:'🔢', videoIds:['lsc3qLMaCu8'],
+      curriculum: oc('Elementary FSL (Core French)', 'Oral Communication — Listening & Speaking', ['A1.1','B1.2'], 'Recognize and say numbers 1–10 in French (un à dix); foundational FSL numeracy vocabulary.'),
       lesson:{title:'Counting in French',intro:'Count from one to ten in French. The first five (un, deux, trois, quatre, cinq) are the most useful — practice them every day!',audioLang:'fr-FR',pictures:[
         {emoji:'1️⃣', word:'un', label:'one'},
         {emoji:'2️⃣', word:'deux', label:'two'},
@@ -2974,6 +2976,7 @@ function beginnerFrenchBase(sid){
         {type:'match',q:'Match the French number to the digit.',pairs:[['un','1'],['deux','2'],['cinq','5'],['dix','10']]},
       ]},
     { id: pre+'f3', title:'Les Couleurs', emoji:'🎨', videoIds:['fZR66TjjrDc'],
+      curriculum: oc('Elementary FSL (Core French)', 'Oral Communication — Listening & Speaking', ['A1.1','B1.1'], 'Recognize and name common colors in French (rouge, bleu, jaune, vert, noir, blanc); daily-life descriptive vocabulary.'),
       lesson:{title:'Colors in French',intro:'Colors in French sound different, but they\'re still the same colors you know! Tap to hear each one.',audioLang:'fr-FR',pictures:[
         {emoji:'🔴', word:'rouge', label:'red'},
         {emoji:'🔵', word:'bleu', label:'blue'},
@@ -2990,6 +2993,7 @@ function beginnerFrenchBase(sid){
         {type:'match',q:'Match each color to its French name!',pairs:[['🔴','rouge'],['🔵','bleu'],['🟡','jaune'],['🟢','vert']]},
       ]},
     { id: pre+'f4', title:'Les Animaux', emoji:'🐾',
+      curriculum: oc('Elementary FSL (Core French)', 'Oral Communication — Listening & Speaking', ['A1.1','B1.1'], 'Recognize and name common animals in French (le chat, le chien, le poisson, l\'oiseau, le lapin); introduction to the gendered article system (le / la / l\').'),
       lesson:{title:'French Animals',intro:'Cats, dogs, fish, birds — they all have French names too! Tap to hear them.',audioLang:'fr-FR',pictures:[
         {emoji:'🐱', word:'le chat', label:'cat'},
         {emoji:'🐶', word:'le chien', label:'dog'},
@@ -3005,6 +3009,7 @@ function beginnerFrenchBase(sid){
         {type:'match',q:'Match each animal to its French name!',pairs:[['🐱','chat'],['🐶','chien'],['🐟','poisson'],['🐦','oiseau']]},
       ]},
     { id: pre+'f5', title:'La Famille', emoji:'👨‍👩‍👧‍👦',
+      curriculum: oc('Elementary FSL (Core French)', 'Oral Communication — Listening & Speaking', ['A1.1','B1.1'], 'Recognize and name family members in French (Maman, Papa, le frère, la sœur, le bébé); personal identity vocabulary.'),
       lesson:{title:'Family in French',intro:'Family words in French — some sound like English baby words! Tap to hear each.',audioLang:'fr-FR',pictures:[
         {emoji:'👩', word:'Maman', label:'Mom'},
         {emoji:'👨', word:'Papa', label:'Dad'},
@@ -3092,6 +3097,7 @@ const WEEKS = { 1: {
 nishan: {
   reading: [
     { id:'w1-nishan-r1', title:'The Cat', emoji:'🐱', videoIds:['BELlZKpi1Zs'],
+      curriculum: oc('Senior Kindergarten', 'Frame 3 — Literacy Behaviours', ['OE.13'], 'Listen to a short story and answer simple recall questions (Kindergarten Program 2016).'),
       lesson:{title:'Reading a Story',intro:'Read each sentence carefully. Think about what is happening!',example:'The cat sat on a mat.',hint:'Picture it in your mind.'},
       questions:[
         {type:'passage',passage:'The cat sat on a red mat. The cat is big. The sun is hot. The cat is happy.',q:'Where did the cat sit?',choices:['On a mat','On a bed','On a rock','In a box'],answer:0},
@@ -3101,6 +3107,7 @@ nishan: {
         {type:'mcq',q:'The cat is...',choices:['Small','Big','Tiny','Thin'],answer:1},
       ]},
     { id:'w1-nishan-r2', title:'I See a Dog', emoji:'🐶', videoIds:['_UR-l3QI2nE'],
+      curriculum: oc('Senior Kindergarten', 'Frame 3 — Literacy Behaviours', ['OE.13','OE.14'], 'Notice details in simple text and respond to comprehension questions.'),
       lesson:{title:'Looking at Details',intro:'Good readers notice small details in a story.',example:'"The dog runs to the ball" — we know the dog likes balls!',hint:'Read each word carefully.'},
       questions:[
         {type:'passage',passage:'I see a dog. The dog can run. I see a ball. The dog runs to the ball. Good dog!',q:'What can the dog do?',choices:['Fly','Run','Swim','Sleep'],answer:1},
@@ -3110,6 +3117,7 @@ nishan: {
         {type:'mcq',q:'What could the dog do with the ball?',choices:['Eat it','Play with it','Sleep on it','Read it'],answer:1},
       ]},
     { id:'w1-nishan-r3', title:'I Like Food', emoji:'🍎', videoIds:['hq3yfQnllfQ'],
+      curriculum: oc('Senior Kindergarten', 'Frame 3 — Literacy Behaviours', ['OE.13'], 'Recognize common high-frequency words (I, like, the) in context.'),
       lesson:{title:'Words We Know',intro:'Some words we see ALL the time: I, like, the, a, is.',example:'"I like apples" — the word "like" tells us a favorite!',hint:'Look for the word "like" in each sentence.'},
       questions:[
         {type:'passage',passage:'I like apples. I like bananas. I like milk. I like bread. Yum!',q:'Which is a food from the story?',choices:['Apples','Cars','Shoes','Books'],answer:0},
@@ -3119,6 +3127,7 @@ nishan: {
         {type:'mcq',q:'The word "Yum" means food tastes...',choices:['Bad','Good','Sour','Cold'],answer:1},
       ]},
     { id:'w1-nishan-r4', title:'Big or Small', emoji:'🔍',
+      curriculum: oc('Senior Kindergarten', 'Frame 3 — Literacy Behaviours', ['OE.13','OE.14'], 'Use comparative vocabulary (bigger, taller, faster) in a story context.'),
       lesson:{title:'Comparing Things',intro:'Words like BIG, SMALL, TALL, SHORT, FAST, SLOW help us compare. Good readers notice these compare words.',example:'"The blue ball is BIGGER than the red ball." — the word BIGGER compares two balls.',hint:'Look for "-er" words like bigger, smaller, taller — they compare!'},
       questions:[
         {type:'passage',passage:'Max has a big red ball. Sam has a small blue ball. The red ball bounces HIGHER than the blue ball. But the blue ball rolls FASTER. Which ball do you want?',q:'Whose ball is BIGGER?',choices:['Max\'s','Sam\'s','The same','Nobody\'s'],answer:0},
@@ -3128,6 +3137,7 @@ nishan: {
         {type:'compare',q:'Which is TALLER?',a:'🌲 Tree',b:'🌷 Flower',answer:'a'},
       ]},
     { id:'w1-nishan-r5', title:'At the Park', emoji:'🌳',
+      curriculum: oc('Senior Kindergarten', 'Frame 3 — Literacy Behaviours', ['OE.13'], 'Identify who, where, and what happens in a simple narrative.'),
       lesson:{title:'Understanding Stories',intro:'Stories have a PLACE (where), CHARACTERS (who), and a PROBLEM or EVENT (what happens).',example:'"We go to the park" — WHERE: park. WHO: we. WHAT: going.',hint:'Ask: Where? Who? What happens?'},
       questions:[
         {type:'passage',passage:'Mia and her little brother Leo went to the park. Mia wanted to go on the swings, but Leo was too small. Mia pushed Leo gently on the baby swings first. Then SHE took a turn on the big swings. They both laughed!',q:'Who are the TWO characters?',choices:['Mia and Mom','Mia and Leo','Leo and Dad','Mia alone'],answer:1},
@@ -3139,6 +3149,7 @@ nishan: {
   ],
   writing: [
     { id:'w1-nishan-w1', title:'First Letters', emoji:'🔤', videoIds:['saF3-f0XWAY'],
+      curriculum: oc('Senior Kindergarten', 'Frame 3 — Literacy Behaviours', ['OE.15','OE.16'], 'Identify the initial sound of a spoken word and link it to its letter.'),
       lesson:{title:'Starting Sounds',intro:'Every word starts with a letter. Say the word and listen to the first sound!',example:'🐱 = Cat → starts with C',hint:'Whisper the word — listen to the VERY first sound.'},
       questions:[
         {type:'mcq',q:'What letter does this start with?',visual:'🍎',choices:['B','A','D','P'],answer:1},
@@ -3148,6 +3159,7 @@ nishan: {
         {type:'mcq',q:'What letter does this start with?',visual:'🌙',choices:['N','M','S','L'],answer:1},
       ]},
     { id:'w1-nishan-w2', title:'Spell It!', emoji:'📝', videoIds:['75p-N9YKqNo'],
+      curriculum: oc('Senior Kindergarten', 'Frame 3 — Literacy Behaviours', ['OE.16','OE.17'], 'Match printed 3-letter words (CVC) to matching pictures.'),
       lesson:{title:'Picking the Right Spelling',intro:'Some words LOOK right but are spelled wrong. Pick the correct one!',example:'DOG is correct. DOGG is not.',hint:'Sound out each letter slowly.'},
       questions:[
         {type:'mcq',q:'How do you spell this?',visual:'🐱',choices:['CAT','KAT','CATT','KET'],answer:0},
@@ -3157,6 +3169,7 @@ nishan: {
         {type:'mcq',q:'How do you spell this?',visual:'🐖',choices:['PEG','PIG','PIGG','PIC'],answer:1},
       ]},
     { id:'w1-nishan-w3', title:'Missing Letter', emoji:'🧩',
+      curriculum: oc('Senior Kindergarten', 'Frame 3 — Literacy Behaviours', ['OE.16'], 'Identify missing letters in familiar CVC words using phonemic awareness.'),
       lesson:{title:'Missing Sounds',intro:'Find missing letters anywhere in a word — beginning, middle, or end! Vowels (A, E, I, O, U) are often in the middle.',example:'C_T → middle is A → CAT. _OG → beginning is D → DOG.',hint:'Say the word slowly. Which sound is missing?'},
       questions:[
         {type:'mcq',q:'Fill the MIDDLE: F _ SH',visual:'🐟',choices:['A','I','U','O'],answer:1},
@@ -3166,6 +3179,7 @@ nishan: {
         {type:'mcq',q:'Fill the MIDDLE: TR _ E',visual:'🌳',choices:['A','E','I','U'],answer:1},
       ]},
     { id:'w1-nishan-w4', title:'Match Big & Small', emoji:'🔡',
+      curriculum: oc('Senior Kindergarten', 'Frame 3 — Literacy Behaviours', ['OE.16'], 'Recognize upper- and lower-case letters and when each is used.'),
       lesson:{title:'Uppercase & Lowercase',intro:'Every letter has a BIG form (A) and small form (a). BIG letters start sentences and names. Small letters fill in the rest!',example:'My name is Sam. → BIG M, small y, small n, BIG S, small a, small m.',hint:'BIG letters go at the START of sentences and names!'},
       questions:[
         {type:'match',q:'Match each BIG letter to its small letter.',pairs:[['A','a'],['B','b'],['D','d'],['M','m']]},
@@ -3174,6 +3188,7 @@ nishan: {
         {type:'mcq',q:'In "my dog Rex" — which letter MUST be big?',choices:['m','d','R','x'],answer:2},
       ]},
     { id:'w1-nishan-w5', title:'My Writing!', emoji:'✍️',
+      curriculum: oc('Senior Kindergarten', 'Frame 3 — Literacy Behaviours', ['OE.17'], 'Use letters and invented spelling to compose a short sentence about a familiar topic.'),
       lesson:{title:'Writing Your Own Sentences!',intro:'A full sentence starts with a BIG letter and ends with a dot (.) or ! or ?. Try writing TWO sentences!',example:'"I have a cat. She is soft." — two sentences, both start BIG and end with dots.',hint:'Aim for at least 6 words. Use a capital letter to start!'},
       questions:[
         {type:'write',q:'Write about your favorite animal.',prompt:'🐾 What is your favorite animal? Write 2 sentences.',placeholder:'I like cats. They are soft and...',minWords:6,goodWords:10,keywords:['cat','dog','fish','bird','rabbit','bear','lion','horse','turtle','hamster']},
@@ -3185,6 +3200,7 @@ nishan: {
   ],
   math: [
     { id:'w1-nishan-m1', title:'Count Them!', emoji:'🔢', videoIds:['bMpeUL43ONg'],
+      curriculum: oc('Senior Kindergarten', 'Frame 3 — Mathematics Behaviours', ['OE.19'], 'Count to 10+ using one-to-one correspondence and recognize the next number.'),
       lesson:{title:'Counting Objects',intro:'Point to each thing and say the number: 1, 2, 3, 4, 5... We can count past 10 too!',example:'🍎🍎🍎🍎🍎🍎🍎🍎🍎🍎🍎 = 11 apples!',hint:'Count carefully — don\'t skip any!'},
       // Warm opener: start small (3, 5) so kids feel the win on Q1/Q2. Each
       // question adds just 1-2 more items. Skip-counting is a Grade 1 skill —
@@ -3197,6 +3213,7 @@ nishan: {
         {type:'mcq',q:'What comes AFTER 7?',choices:['6','7','8','9'],answer:2},
       ]},
     { id:'w1-nishan-m2', title:'Number Names', emoji:'🔤', videoIds:['E8mMXiSRLnU'], // Jack Hartmann — Teen Numbers Rap (teens + counting)
+      curriculum: oc('Senior Kindergarten', 'Frame 3 — Mathematics Behaviours', ['OE.19'], 'Read, write, and order numbers to 20; use ordinal numbers (1st, 2nd, 3rd).'),
       lesson:{title:'Numbers Have Names',intro:'Each number has a name. After TEN come the TEENS: eleven, twelve, thirteen... Ordinal numbers tell POSITION: 1st, 2nd, 3rd.',example:'SEVEN = 7, FIFTEEN = 15, 1st = first, 2nd = second',hint:'Practice counting past 10 and naming positions!'},
       questions:[
         {type:'mcq',q:'Which number is ELEVEN?',choices:['1','10','11','12'],answer:2},
@@ -3206,6 +3223,7 @@ nishan: {
         {type:'mcq',q:'Put in order: 13, 11, 15, 14. Which comes FIRST?',choices:['13','11','15','14'],answer:1},
       ]},
     { id:'w1-nishan-m3', title:'Compare Numbers', emoji:'⚖️',
+      curriculum: oc('Senior Kindergarten', 'Frame 3 — Mathematics Behaviours', ['OE.20'], 'Compare quantities using more / fewer / equal, including two-digit numbers.'),
       lesson:{title:'Bigger and Smaller',intro:'Numbers get bigger as you count up. Two-digit numbers like 15 and 18 can be compared too — look at the tens first!',example:'7 > 4 (seven is bigger than four). 18 > 15 (both have one ten, but 8 ones is more than 5 ones).',hint:'Which number comes LATER when counting?'},
       questions:[
         {type:'compare',q:'Which is BIGGER?',a:'15',b:'18',answer:'b'},
@@ -3215,6 +3233,7 @@ nishan: {
         {type:'mcq',q:'What is 10 MORE than 5?',choices:['6','10','15','50'],answer:2},
       ]},
     { id:'w1-nishan-m4', title:'Shape Finder', emoji:'🔺', videoIds:['QaF84YHNQNg'],
+      curriculum: oc('Senior Kindergarten', 'Frame 3 — Mathematics Behaviours', ['OE.21'], 'Identify 2-D shapes by attributes (sides, corners) and find them in the world.'),
       lesson:{title:'Shapes Around Us',intro:'Shapes have names: circle (round), triangle (3 sides), square (4 EQUAL sides), rectangle (4 sides but longer), hexagon (6 sides like a honeycomb).',example:'A ball is a circle. A door is a rectangle. A stop sign has 8 sides (octagon).',hint:'Count the sides AND corners!'},
       questions:[
         {type:'mcq',q:'How many CORNERS does a triangle have?',choices:['2','3','4','5'],answer:1},
@@ -3224,6 +3243,7 @@ nishan: {
         {type:'mcq',q:'A STOP sign has how many sides?',choices:['4','6','8','10'],answer:2},
       ]},
     { id:'w1-nishan-m5', title:'First Adding & Subtracting', emoji:'➕',
+      curriculum: oc('Senior Kindergarten', 'Frame 3 — Mathematics Behaviours', ['OE.19','OE.20'], 'Join and separate small quantities within 10 using concrete strategies.'),
       // Kept to sums and subtractions WITHIN 10 so a kindergartener can use
       // fingers / counters without running out. Previously went to 14 which
       // required crossing 10 — that's a Grade 1 skill, not SK.
@@ -3238,6 +3258,7 @@ nishan: {
   ],
   logic: [
     { id:'w1-nishan-l1', title:'What Goes Together?', emoji:'🤝',
+      curriculum: oc('Senior Kindergarten', 'Frame 4 — Problem Solving & Innovating', ['OE.24'], 'Sort items by attribute and explain why each pair belongs together.'),
       lesson:{title:'Matching Pairs',intro:'Some things go together because we USE them together. Others go together because they are both the SAME KIND of thing.',example:'🔑 goes with 🔒 — we use a key to open a lock!',hint:'Think: Do I use them together? Or are they the same kind of thing?'},
       questions:[
         {type:'match',q:'Match things we USE together!',pairs:[['🔑 Key','🔒 Lock'],['🧦 Sock','👟 Shoe'],['✏️ Pencil','📄 Paper'],['🍞 Bread','🧈 Butter']]},
@@ -3245,6 +3266,7 @@ nishan: {
         {type:'mcq',q:'Which goes BEST with 🧤 gloves?',choices:['🍦 Ice cream','☀️ Hot sun','❄️ Cold snow','🏊 Pool'],answer:2},
       ]},
     { id:'w1-nishan-l2', title:'Odd One Out', emoji:'❌',
+      curriculum: oc('Senior Kindergarten', 'Frame 4 — Problem Solving & Innovating', ['OE.24'], 'Identify the item that does not belong in a group and name the group rule.'),
       lesson:{title:'Finding the Different One',intro:'Three things share something. One is DIFFERENT. Look for what makes the group — animals? tools? things that FLY? things that are COLD?',example:'🍎🍌🍇🚗 — three fruits and a car. Car doesn\'t belong!',hint:'Try to name the GROUP in one word.'},
       questions:[
         {type:'mcq',q:'Which does NOT belong? (Think: pets)',choices:['🐱 Cat','🐶 Dog','🐰 Rabbit','🦒 Giraffe'],answer:3},
@@ -3254,6 +3276,7 @@ nishan: {
         {type:'mcq',q:'Which is NOT cold?',choices:['❄️ Snow','🧊 Ice','🔥 Fire','🍦 Ice cream'],answer:2},
       ]},
     { id:'w1-nishan-l3', title:'What Comes Next?', emoji:'🔁',
+      curriculum: oc('Senior Kindergarten', 'Frame 3 — Mathematics Behaviours', ['OE.20'], 'Recognize and extend simple AB / ABC / ABBA repeating patterns.'),
       lesson:{title:'Finding Patterns',intro:'Patterns REPEAT. A simple AB pattern goes 🔴🔵🔴🔵. An ABC pattern goes 🔴🔵🟡🔴🔵🟡. Find the rule first!',example:'🔴🔵🟡🔴🔵🟡🔴? → next is 🔵!',hint:'Say the pattern out loud — find the group that repeats.'},
       questions:[
         {type:'mcq',q:'What comes next? (ABC pattern)',visual:'🔴 🔵 🟡 🔴 🔵 🟡 🔴 ?',choices:['🔴','🔵','🟢','🟡'],answer:1},
@@ -3263,6 +3286,7 @@ nishan: {
         {type:'mcq',q:'What 2 letters are MISSING?',visual:'A B ? D ? F',choices:['A, E','C, E','E, G','B, C'],answer:1},
       ]},
     { id:'w1-nishan-l4', title:'Sort by Size', emoji:'📏',
+      curriculum: oc('Senior Kindergarten', 'Frame 3 — Mathematics Behaviours', ['OE.21'], 'Order objects by a measurable attribute (size, weight, height, speed).'),
       lesson:{title:'Small to Big',intro:'We can order things by size — but also by weight, by age, or by how fast they go!',example:'🐜 → 🐁 → 🐈 → 🐘 (smallest to biggest)',hint:'Picture them lined up next to each other.'},
       questions:[
         {type:'order',q:'SMALLEST to BIGGEST!',items:['🐜 Ant','🐁 Mouse','🐈 Cat','🐕 Dog','🐘 Elephant'],correctOrder:[0,1,2,3,4]},
@@ -3272,6 +3296,7 @@ nishan: {
         {type:'compare',q:'Which is HEAVIER?',a:'🐘 Elephant',b:'🐁 Mouse',answer:'a'},
       ]},
     { id:'w1-nishan-l5', title:'Same or Different', emoji:'👀',
+      curriculum: oc('Senior Kindergarten', 'Frame 3 — Mathematics Behaviours', ['OE.19','OE.20'], 'Compare quantities using more, fewer, double, and half.'),
       lesson:{title:'Looking Closely',intro:'Count carefully and compare. "How many MORE" means subtract. "DOUBLE" means twice as many.',example:'🍎🍎🍎🍎🍎 has 2 MORE than 🍎🍎🍎 (5 − 3 = 2)',hint:'Count slowly with your finger, then compare!'},
       questions:[
         {type:'mcq',q:'🍎🍎🍎🍎🍎🍎 vs 🍎🍎🍎. How many MORE on the left?',choices:['1','2','3','6'],answer:2},
@@ -3284,6 +3309,7 @@ nishan: {
   french: beginnerFrenchBase('nishan'),
   science: [
     { id:'w1-nishan-s1', title:'Living or Not?', emoji:'🌱', videoIds:['Gy60BqCnTG4'],
+      curriculum: oc('Senior Kindergarten', 'Frame 3 — Science Inquiry Behaviours', ['OE.23','OE.24'], 'Distinguish living from non-living things by observable traits.'),
       lesson:{title:'Living vs. Non-Living',intro:'Living things GROW, EAT, BREATHE, MAKE BABIES, and REACT. Non-living things do NOT do all these things — even if they MOVE (like a car).',pictures:[
         {emoji:'🐶', word:'Dog', label:'living'},
         {emoji:'🌸', word:'Flower', label:'living'},
@@ -3298,6 +3324,7 @@ nishan: {
         {type:'mcq',q:'What do ALL living things need?',choices:['Water','Cell phones','Toys','Shoes'],answer:0},
       ]},
     { id:'w1-nishan-s2', title:'My Five Senses', emoji:'👁️',
+      curriculum: oc('Senior Kindergarten', 'Frame 3 — Science Inquiry Behaviours', ['OE.24'], 'Use the five senses to gather information about the world.'),
       lesson:{title:'The Five Senses',intro:'We have 5 senses: SEE (eyes), HEAR (ears), SMELL (nose), TASTE (tongue), TOUCH (skin). Each sense gives us DIFFERENT information about the world!',pictures:[
         {emoji:'👁️', word:'See', label:'eyes'},
         {emoji:'👂', word:'Hear', label:'ears'},
@@ -3313,6 +3340,7 @@ nishan: {
         {type:'match',q:'Match each sense to the body part!',pairs:[['See','Eyes'],['Hear','Ears'],['Smell','Nose'],['Taste','Tongue']]},
       ]},
     { id:'w1-nishan-s3', title:'Weather & Seasons', emoji:'🌤️',
+      curriculum: oc('Senior Kindergarten', 'Frame 3 — Science Inquiry Behaviours', ['OE.23'], 'Observe and describe daily weather and the four seasons.'),
       lesson:{title:'Weather and the Four Seasons',intro:'Weather changes daily. Seasons are LONGER: SPRING (warm, rainy), SUMMER (hot, sunny), FALL (cool, windy), WINTER (cold, snowy).',pictures:[
         {emoji:'🌱', word:'Spring'},{emoji:'☀️', word:'Summer'},{emoji:'🍂', word:'Fall'},{emoji:'❄️', word:'Winter'},
       ],hint:'Think: What clothes do you wear in each season?'},
@@ -3324,6 +3352,7 @@ nishan: {
         {type:'mcq',q:'Flowers BLOOM in which season?',choices:['Winter','Fall','Spring','Night'],answer:2},
       ]},
     { id:'w1-nishan-s4', title:'Animal Babies', emoji:'🐾',
+      curriculum: oc('Senior Kindergarten', 'Frame 3 — Science Inquiry Behaviours', ['OE.23'], 'Recognize that living things grow and change through life stages.'),
       lesson:{title:'Baby Animal Names',intro:'Every animal has a special name for their baby. Some are easy (puppy, kitten), some are tricky (joey for kangaroo, cub for bear)!',heroImage:IMG.puppy,pictures:[
         {emoji:'🐱', word:'Cat', label:'baby = kitten', image:IMG.cat},
         {emoji:'🐶', word:'Dog', label:'baby = puppy', image:IMG.dog},
@@ -3339,6 +3368,7 @@ nishan: {
         {type:'mcq',q:'A baby chicken is called a...',choices:['Pup','Chick','Kit','Joey'],answer:1},
       ]},
     { id:'w1-nishan-s5', title:'Parts of a Plant', emoji:'🌻',
+      curriculum: oc('Senior Kindergarten', 'Frame 3 — Science Inquiry Behaviours', ['OE.23'], 'Identify basic plant structures (roots, stem, leaves, flower) and their functions.'),
       lesson:{title:'What Makes a Plant',intro:'Each plant part has a JOB. ROOTS drink water. STEM carries water up. LEAVES use sunlight to make food (this is called "photosynthesis"!). FLOWERS make seeds.',heroImage:IMG.sunflower,pictures:[
         {emoji:'🌱', word:'Roots', label:'drink water', image:IMG.seedling},
         {emoji:'🌾', word:'Stem', label:'holds plant up'},
@@ -3355,6 +3385,7 @@ nishan: {
   ],
   social: [
     { id:'w1-nishan-c1', title:'I Live in Canada 🍁', emoji:'🍁',
+      curriculum: oc('Senior Kindergarten', 'Frame 1 — Belonging and Contributing', ['OE.1','OE.2'], 'Develop awareness of being Canadian — country, capital, provinces, and flag.'),
       lesson:{title:'My Country: Canada',intro:'Canada is a big country in North America. Its capital city is OTTAWA. Canada has 10 PROVINCES and 3 TERRITORIES. Our flag has a red maple leaf.',heroImage:IMG.canadaFlag,pictures:[
         {emoji:'🍁', word:'Maple Leaf', label:'Canada\'s symbol', image:IMG.mapleLeaf},
         {emoji:'🇨🇦', word:'Flag', label:'red and white', image:IMG.canadaFlag},
@@ -3369,6 +3400,7 @@ nishan: {
         {type:'mcq',q:'Canada has how many PROVINCES?',choices:['5','10','20','50'],answer:1},
       ]},
     { id:'w1-nishan-c2', title:'My Family', emoji:'👨‍👩‍👧‍👦',
+      curriculum: oc('Senior Kindergarten', 'Frame 1 — Belonging and Contributing', ['OE.1'], 'Describe roles and relationships in a family (parents, siblings, grandparents).'),
       lesson:{title:'People in a Family',intro:'A FAMILY TREE shows how people are related. Parents → children. Siblings are brothers and sisters. Your parents\' parents are your GRANDPARENTS. Your parents\' siblings are your AUNTS and UNCLES. Their children are your COUSINS!',pictures:[
         {emoji:'👩', word:'Mom'},{emoji:'👨', word:'Dad'},{emoji:'👧', word:'Sister'},{emoji:'👦', word:'Brother'},{emoji:'👵', word:'Grandma'},{emoji:'👴', word:'Grandpa'},{emoji:'👩‍🦱', word:'Aunt'},{emoji:'👨‍🦱', word:'Uncle'},
       ],hint:'Aunt/uncle are your parent\'s sister/brother. Cousins are their kids!'},
@@ -3380,6 +3412,7 @@ nishan: {
         {type:'mcq',q:'Your grandpa is your dad\'s...',choices:['Brother','Father','Son','Friend'],answer:1},
       ]},
     { id:'w1-nishan-c3', title:'Community Helpers', emoji:'🚑', videoIds:['BOv4EnaeM9w'],
+      curriculum: oc('Senior Kindergarten', 'Frame 1 — Belonging and Contributing', ['OE.2'], 'Identify community helpers and how they contribute to safety and well-being.'),
       lesson:{title:'People Who Help Us',intro:'Lots of people in our community help keep us safe, healthy, and happy. Some help in EMERGENCIES (911). Others help EVERY DAY (teachers, dentists, garbage collectors).',pictures:[
         {emoji:'👮', word:'Police', label:'keeps us safe'},
         {emoji:'🚒', word:'Firefighter', label:'fights fires'},
@@ -3396,6 +3429,7 @@ nishan: {
         {type:'mcq',q:'Your cat is stuck in a tree. Who might help?',choices:['Firefighter','Dentist','Mail carrier','Chef'],answer:0},
       ]},
     { id:'w1-nishan-c4', title:'Canada\'s Symbols', emoji:'🍁',
+      curriculum: oc('Senior Kindergarten', 'Frame 1 — Belonging and Contributing', ['OE.2'], 'Recognize national symbols (flag, anthem, maple leaf, beaver, loonie).'),
       lesson:{title:'Canadian Symbols',intro:'Canada has special SYMBOLS that represent our country. Symbols appear on money, flags, and buildings. Some symbols: maple leaf, beaver, "O Canada" anthem, the loonie ($1 coin with a loon bird).',heroImage:IMG.canadaFlag,pictures:[
         {emoji:'🍁', word:'Maple Leaf', image:IMG.mapleLeaf},
         {emoji:'🦫', word:'Beaver', image:IMG.beaver},
@@ -3411,6 +3445,7 @@ nishan: {
         {type:'mcq',q:'When do we STAND for "O Canada"?',choices:['To show respect','Because we\'re tired','To exercise','We don\'t stand'],answer:0},
       ]},
     { id:'w1-nishan-c5', title:'Day and Night', emoji:'🌞',
+      curriculum: oc('Senior Kindergarten', 'Frame 3 — Science Inquiry Behaviours', ['OE.23'], 'Describe the pattern of day and night and name parts of the day.'),
       lesson:{title:'Day, Night & Time',intro:'Day and night happen because the Earth SPINS. One full spin = one day (24 hours). We have MORNING (wake up), AFTERNOON (lunch), EVENING (dinner), and NIGHT (sleep).',pictures:[
         {emoji:'🌅', word:'Morning', label:'sun rises'},
         {emoji:'☀️', word:'Noon', label:'sun highest'},
@@ -3431,6 +3466,7 @@ nishan: {
 akaran: {
   reading: [
     { id:'w1-akaran-r1', title:'The Lost Kite', emoji:'🪁',
+      curriculum: oc('Grade 1', 'Language — C. Comprehension: Understanding and Responding to Texts', ['C1.3','C1.4'], 'Identify key ideas and make inferences about WHO, WHAT, WHERE, WHY in a short narrative.'),
       lesson:{title:'Reading for Details',intro:'Good readers pay attention to WHO, WHAT, WHERE, and WHY. Read each sentence and remember the important details.',example:'If a story says "Mia grabbed her jacket because it was chilly," you know WHY she got the jacket.',hint:'After reading, ask yourself: what just happened and why?'},
       questions:[
         {type:'passage',passage:'One windy afternoon, Kira took her new red kite to the field near her house. She ran as fast as she could and the kite lifted high into the sky. But suddenly, a strong gust of wind snapped the string. The kite flew over the fence into Mrs. Chen\'s garden. Kira knocked on the door and politely asked for her kite back. Mrs. Chen smiled and returned it.',q:'Why did the kite fly away?',choices:['Kira let go','The string snapped in a gust of wind','A bird took it','It was too small'],answer:1},
@@ -3449,6 +3485,7 @@ akaran: {
         {type:'mcq',q:'What could happen if Kira had NOT asked permission?',choices:['Nothing would change','Mrs. Chen might have been upset','The kite would fly home','The fence would break'],answer:1},
       ]},
     { id:'w1-akaran-r2', title:'The Class Trip', emoji:'🚌',
+      curriculum: oc('Grade 1', 'Language — C. Comprehension', ['C1.3'], 'Follow the sequence of events in a short narrative using time-order words.'),
       lesson:{title:'Understanding Events',intro:'Stories often tell about things that happen in ORDER. First this, then that, finally something else.',example:'Look for time words: first, next, then, after, finally.',hint:'Picture the events like scenes in a movie.'},
       questions:[
         {type:'passage',passage:'On Friday, Ms. Patel\'s class went on a trip to the science museum. First, they saw a giant dinosaur skeleton. Then they watched a show about outer space in the planetarium. After lunch, they visited the butterfly garden. Everyone agreed the butterflies were the best part!',q:'Where did the class go?',choices:['The zoo','The science museum','The library','The park'],answer:1},
@@ -3466,6 +3503,7 @@ akaran: {
         {type:'mcq',q:'The BEST title for this story is...',choices:['My Weekend','Our Museum Adventure','Ms. Patel\'s Life','The Bus'],answer:1},
       ]},
     { id:'w1-akaran-r3', title:'Making Guesses', emoji:'🔍',
+      curriculum: oc('Grade 1', 'Language — C. Comprehension', ['C1.4'], 'Make simple inferences from textual clues (weather, mood, identity).'),
       lesson:{title:'Reading Between the Lines',intro:'Sometimes the story gives CLUES but doesn\'t tell you directly. You have to figure it out!',example:'"Alex put on his boots and grabbed his umbrella." → It\'s probably raining!',hint:'Ask: what do the clues tell me?'},
       questions:[
         {type:'passage',passage:'Mia\'s stomach growled loudly. She glanced at the clock — it was already 12:30. She walked to the kitchen and opened the fridge.',q:'How is Mia feeling?',choices:['Tired','Bored','Hungry','Scared'],answer:2},
@@ -3483,6 +3521,7 @@ akaran: {
         {type:'mcq',q:'"Jamal smelled smoke. He ran to the kitchen." What did he probably find?',choices:['A party','Something burning','A snowman','A cat'],answer:1},
       ]},
     { id:'w1-akaran-r4', title:'Word Meanings', emoji:'📖',
+      curriculum: oc('Grade 1', 'Language — B. Foundations of Language', ['B2.1'], 'Use context clues to determine the meaning of unfamiliar vocabulary.'),
       lesson:{title:'Vocabulary from Context',intro:'When you see a word you don\'t know, look at the other words around it for clues about what it means.',example:'"The enormous elephant towered over the fence." Enormous must mean really big!',hint:'Replace the unknown word with your guess — does it still make sense?'},
       questions:[
         {type:'passage',passage:'The exhausted puppy could barely keep its eyes open after playing all day. It curled up on its bed and fell asleep right away.',q:'What does "exhausted" probably mean?',choices:['Excited','Very tired','Hungry','Happy'],answer:1},
@@ -3500,6 +3539,7 @@ akaran: {
         {type:'match',q:'Match the harder word to its meaning.',pairs:[['Glimpse','Quick look'],['Murmur','Soft voice'],['Shiver','Shake from cold'],['Sparkle','Shine brightly']]},
       ]},
     { id:'w1-akaran-r5', title:'Retell the Story', emoji:'🗣️',
+      curriculum: oc('Grade 1', 'Language — C. Comprehension', ['C1.2','C1.3'], 'Retell a short story identifying beginning, middle, and end.'),
       lesson:{title:'Story Order',intro:'Every story has a BEGINNING, MIDDLE, and END. Good readers can retell what happened in order.',example:'Beginning: The problem starts. Middle: Things happen. End: The problem is solved.',hint:'Think: what happened first, next, and last?'},
       questions:[
         {type:'order',q:'Put this story in the right order.',items:['Ben found a stray kitten in the rain.','He brought it inside and dried it with a towel.','He gave it warm milk and a cozy blanket.','The next day, he found the kitten\'s owner.'],correctOrder:[0,1,2,3]},
@@ -3519,6 +3559,7 @@ akaran: {
   ],
   writing: [
     { id:'w1-akaran-w1', title:'Capitalization Rules', emoji:'🔠', videoIds:['0Wrv_ZviMEc'],
+      curriculum: oc('Grade 1', 'Language — D. Composition: Expressing Ideas and Creating Texts', ['D2.1'], 'Apply capitalization rules for sentence starts, proper nouns, days, months, and the word "I".'),
       // Softer opener: dropped the "count the capitals" Q5 — counting-and-
       // finding all at once is a lot for a first lesson. Replaced with a
       // direct "which WORD needs a capital" which reinforces the same rule.
@@ -3531,6 +3572,7 @@ akaran: {
         {type:'mcq',q:'In "my name is sara" — which word should START with a capital?',choices:['my','name','is','both "my" AND "sara"'],answer:3},
       ]},
     { id:'w1-akaran-w2', title:'Punctuation Mix', emoji:'❗', videoIds:['LdCOswMeXFQ'],
+      curriculum: oc('Grade 1', 'Language — D. Composition', ['D2.1'], 'Use end punctuation (period, question mark, exclamation point) and commas in series.'),
       lesson:{title:'Periods, Questions, Exclamations, Commas',intro:'Period (.) for statements. Question mark (?) for questions. Exclamation (!) for strong feelings. Comma (,) to separate items.',example:'"I like apples, bananas, and grapes." uses commas in a list.',hint:'Read aloud — your voice tells you which punctuation fits!'},
       questions:[
         {type:'mcq',q:'Which is punctuated correctly?',choices:['I like red blue and green.','I like red, blue, and green.','I like red blue, and green.','I, like red blue and green.'],answer:1},
@@ -3540,6 +3582,7 @@ akaran: {
         {type:'mcq',q:'Which uses a comma correctly?',choices:['Yes I will come.','Yes, I will come.','Yes I, will come.','Yes I will, come.'],answer:1},
       ]},
     { id:'w1-akaran-w3', title:'Tricky Spelling', emoji:'📝', videoIds:['9S7DY2lgJlU'],
+      curriculum: oc('Grade 1', 'Language — B. Foundations of Language', ['B3.1'], 'Spell high-frequency words with irregular patterns (because, people, friend).'),
       lesson:{title:'Spelling Harder Words',intro:'Some common words have tricky spellings. Practice the ones that trip people up!',example:'"Because" not "becuz". "Friend" not "frend". "People" not "pepul".',hint:'Break hard words into chunks: be-cause, to-geth-er, beau-ti-ful.'},
       questions:[
         {type:'mcq',q:'Which is spelled correctly?',choices:['becuz','because','becuase','becaus'],answer:1},
@@ -3549,6 +3592,7 @@ akaran: {
         {type:'mcq',q:'Which is spelled correctly?',choices:['realy','relly','really','reely'],answer:2},
       ]},
     { id:'w1-akaran-w4', title:'Longer Sentences', emoji:'🏗️',
+      curriculum: oc('Grade 1', 'Language — D. Composition', ['D2.2'], 'Build complete sentences with descriptive detail (where, when, how).'),
       lesson:{title:'Building Better Sentences',intro:'Good sentences have details! Add WHERE, WHEN, or HOW to make them more interesting.',example:'Basic: "The dog ran." Better: "The big brown dog ran quickly across the yard."',hint:'Ask: can I add a describing word or a detail about where/when?'},
       questions:[
         {type:'order',q:'Unscramble this sentence.',items:['The','little','bird','sang','a','pretty','song'],correctOrder:[0,1,2,3,4,5,6]},
@@ -3558,6 +3602,7 @@ akaran: {
         {type:'mcq',q:'Which is a COMPLETE sentence?',choices:['Running to school.','The happy girl.','My friend and I walked home together.','After the game.'],answer:2},
       ]},
     { id:'w1-akaran-w5', title:'My Writing!', emoji:'✍️',
+      curriculum: oc('Grade 1', 'Language — D. Composition', ['D1.2','D1.4'], 'Compose a short paragraph on a familiar topic with a topic sentence and supporting details.'),
       lesson:{title:'Write Your Own Paragraphs!',intro:'A paragraph is a group of sentences about ONE topic. Start with a topic sentence, add details, end with a closing thought.',example:'"I love rainy days. The sound of rain on the roof is so relaxing. I like to read books and drink hot chocolate. Rainy days are the best!"',hint:'Write 8+ words. Use at least 2 sentences. Add describing words!'},
       questions:[
         {type:'write',q:'Write about your favorite hobby.',prompt:'What do you love to do in your free time? Describe it and explain why you enjoy it.',placeholder:'My favorite hobby is...',minWords:8,goodWords:18,keywords:['like','love','fun','because','play','enjoy','favorite','hobby','when','always'],expectSentences:true},
@@ -3569,6 +3614,7 @@ akaran: {
   ],
   math: [
     { id:'w1-akaran-m1', title:'Counting to 50', emoji:'🔢', videoIds:['W8CEOlAOGas'],
+      curriculum: oc('Grade 1', 'Math — B. Number', ['B1.1','B1.3'], 'Read, represent, and order whole numbers to 50; count by 10s.'),
       // Softer opener: dropped the 5-item ordering exercise (heavy cognitive
       // load for the first math lesson) in favor of a simple 2-number
       // comparison that builds on the same "which comes later when counting"
@@ -3591,6 +3637,7 @@ akaran: {
         {type:'mcq',q:'What comes BEFORE 100?',choices:['90','98','99','101'],answer:2},
       ]},
     { id:'w1-akaran-m2', title:'Adding to 15', emoji:'➕',
+      curriculum: oc('Grade 1', 'Math — B. Number', ['B2.2','B2.4'], 'Add whole numbers within 20 using counting-on strategies.'),
       // Previously "Adding to 20" with make-a-ten strategy. For a Grade 1
       // student still building fluency, sums-to-15 with counting up is a
       // more reachable target. Kids can use fingers or a number line —
@@ -3614,6 +3661,7 @@ akaran: {
         {type:'mcq',q:'What is 10 MORE than 7?',choices:['8','14','17','20'],answer:2},
       ]},
     { id:'w1-akaran-m3', title:'Subtracting from 20', emoji:'➖',
+      curriculum: oc('Grade 1', 'Math — B. Number', ['B2.2','B2.4'], 'Subtract whole numbers within 20 using counting-back and think-addition strategies.'),
       lesson:{title:'Bigger Subtraction',intro:'For harder subtraction, count back or think about what adds up to the number.',stack:{op:'−',top:'15',bottom:'7',answer:'8',note:'Think: 7 + ? = 15.'},hint:'You can also count backwards from 15: 14, 13, 12, 11, 10, 9, 8.'},
       questions:[
         {type:'mcq',q:'14 − 6 = ?',choices:['6','7','8','9'],answer:2},
@@ -3632,6 +3680,7 @@ akaran: {
         {type:'mcq',q:'? + 7 = 15',choices:['7','8','9','10'],answer:1},
       ]},
     { id:'w1-akaran-m4', title:'Two-Digit Sums', emoji:'📈',
+      curriculum: oc('Grade 1', 'Math — B. Number', ['B2.4'], 'Add two-digit numbers by place value when no regrouping is needed.'),
       lesson:{title:'Adding Two-Digit Numbers (No Carrying)',intro:'Add tens to tens and ones to ones. Line them up!',stack:{op:'+',top:'23',bottom:'14',answer:'37',note:'Ones: 3+4=7. Tens: 2+1=3.'},hint:'Keep columns lined up: tens under tens, ones under ones.'},
       questions:[
         {type:'mcq',q:'23 + 14 = ?',choices:['33','37','47','27'],answer:1},
@@ -3651,6 +3700,7 @@ akaran: {
         {type:'mcq',q:'What is 25 + 19?',choices:['34','44','54','314'],answer:1},
       ]},
     { id:'w1-akaran-m5', title:'Story Problems', emoji:'📖',
+      curriculum: oc('Grade 1', 'Math — B. Number', ['B2.5'], 'Solve one-step addition and subtraction word problems within 20.'),
       // Simplified to ONE-STEP word problems only. Multi-step stories made
       // kids lose track of what to do — better to master the single-operation
       // "more = add, left = subtract" pattern first.
@@ -3674,6 +3724,7 @@ akaran: {
   ],
   logic: [
     { id:'w1-akaran-l1', title:'Number Patterns', emoji:'🔁',
+      curriculum: oc('Grade 1', 'Math — C. Algebra', ['C1.1','C1.3'], 'Identify and extend repeating and growing number patterns.'),
       lesson:{title:'Finding Number Rules',intro:'Number patterns follow a RULE. Some add 2, some add 5, some add 10. Find the rule!',example:'2, 4, 6, 8 → the rule is +2. Next: 10!',hint:'Find the difference between each pair of numbers.'},
       questions:[
         {type:'mcq',q:'What comes next? 2, 4, 6, 8, ?',choices:['9','10','11','12'],answer:1},
@@ -3683,6 +3734,7 @@ akaran: {
         {type:'mcq',q:'What comes next? 1, 3, 5, 7, ?',choices:['8','9','10','11'],answer:1},
       ]},
     { id:'w1-akaran-l2', title:'Smart Sorting', emoji:'🧐',
+      curriculum: oc('Grade 1', 'Math — D. Data', ['D1.1'], 'Sort objects into categories and identify which do not belong.'),
       lesson:{title:'Categories',intro:'Things belong to groups. Animals, vehicles, instruments, planets. Find what DOESN\'T fit.',example:'Piano, Guitar, Drum, Hammer — Hammer is not an instrument!',hint:'Ask: what do 3 of these share that the 4th does NOT?'},
       questions:[
         {type:'mcq',q:'Which does NOT belong?',choices:['Robin','Sparrow','Eagle','Cat'],answer:3},
@@ -3692,6 +3744,7 @@ akaran: {
         {type:'mcq',q:'Which is NOT a body part?',choices:['Elbow','Knee','Shoulder','Notebook'],answer:3},
       ]},
     { id:'w1-akaran-l3', title:'Simple Analogies', emoji:'🔗',
+      curriculum: oc('Grade 1', 'Language — B. Foundations of Language', ['B2.1','B2.3'], 'Use simple analogies to build vocabulary and identify word relationships.'),
       lesson:{title:'Pairs That Relate',intro:'An analogy shows how pairs are connected in the SAME way.',example:'Hot is to cold as up is to DOWN. (They\'re opposites!)',hint:'Figure out the relationship in the first pair, then apply it.'},
       questions:[
         {type:'mcq',q:'Hot is to cold as big is to ___',choices:['Huge','Small','Fast','Red'],answer:1},
@@ -3701,6 +3754,7 @@ akaran: {
         {type:'mcq',q:'Ear is to hear as eye is to ___',choices:['Smell','Touch','See','Taste'],answer:2},
       ]},
     { id:'w1-akaran-l4', title:'Order Everything', emoji:'⏰',
+      curriculum: oc('Grade 1', 'Math — E. Spatial Sense', ['E2.1'], 'Sequence events and objects in logical order (time, size, life cycles).'),
       lesson:{title:'Sequencing',intro:'Put things in the right order based on logic: time, size, steps in a process.',example:'Egg → Caterpillar → Chrysalis → Butterfly',hint:'Think: what MUST happen before the next step?'},
       questions:[
         {type:'order',q:'Order the butterfly life cycle!',items:['Egg','Caterpillar','Chrysalis','Butterfly'],correctOrder:[0,1,2,3]},
@@ -3710,6 +3764,7 @@ akaran: {
         {type:'mcq',q:'What month comes AFTER June?',choices:['May','July','August','April'],answer:1},
       ]},
     { id:'w1-akaran-l5', title:'Brain Puzzles', emoji:'🧠',
+      curriculum: oc('Grade 1', 'Math — C. Algebra', ['C3.1'], 'Apply logical reasoning to solve multi-clue puzzles and identify relationships.'),
       lesson:{title:'Multi-Clue Thinking',intro:'Use ALL the clues together to find the answer. Each clue eliminates wrong answers.',example:'"I have 4 legs, a tail, and say meow." → 4 legs (many animals) + tail + meow = Cat!',hint:'After each clue, cross out options that don\'t fit.'},
       questions:[
         {type:'mcq',q:'I am a fruit. I am red. I grow on a tree. What am I?',choices:['Banana','Grape','Apple','Orange'],answer:2},
@@ -3722,6 +3777,7 @@ akaran: {
   french: beginnerFrenchBase('akaran'),
   science: [
     { id:'w1-akaran-s1', title:'Living Things', emoji:'🌿', videoIds:['Gy60BqCnTG4'],
+      curriculum: oc('Grade 1', 'Science — Life Systems: Needs and Characteristics of Living Things', ['1.1','2.2'], 'Identify basic needs of living things (air, food, water, space) and distinguish living from non-living.'),
       lesson:{title:'Living vs. Non-Living',intro:'Living things GROW, EAT, DRINK, and BREATHE. Non-living things do not. Living things also make more of themselves (babies, seeds!).',pictures:[
         {emoji:'🌳', word:'Tree', label:'living'},{emoji:'🐢', word:'Turtle', label:'living'},{emoji:'🪨', word:'Rock', label:'non-living'},{emoji:'☁️', word:'Cloud', label:'non-living'},
       ],hint:'If it needs water and food, it\'s living!'},
@@ -3733,6 +3789,7 @@ akaran: {
         {type:'mcq',q:'🌻 A sunflower is...',choices:['Non-living','Living','A rock','Made of plastic'],answer:1},
       ]},
     { id:'w1-akaran-s2', title:'Four Seasons', emoji:'🌸', videoIds:['Iisj2kTZIFs'], // Jack Hartmann — Four Seasons Song
+      curriculum: oc('Grade 1', 'Science — Earth and Space Systems: Daily and Seasonal Changes', ['1.1','3.2'], 'Describe changes in weather and daily/seasonal patterns across the four seasons.'),
       lesson:{title:'The Four Seasons',intro:'A year has 4 seasons: SPRING (flowers bloom), SUMMER (hot & sunny), FALL (leaves change), WINTER (cold & snowy).',pictures:[
         {emoji:'🌷', word:'Spring', label:'flowers'},{emoji:'☀️', word:'Summer', label:'hot'},{emoji:'🍂', word:'Fall', label:'leaves'},{emoji:'❄️', word:'Winter', label:'snow'},
       ],hint:'What season is it outside right now?'},
@@ -3744,6 +3801,7 @@ akaran: {
         {type:'order',q:'Put seasons in order (start with Spring):',items:['Spring','Summer','Fall','Winter'],correctOrder:[0,1,2,3]},
       ]},
     { id:'w1-akaran-s3', title:'Where Animals Live', emoji:'🦊',
+      curriculum: oc('Grade 1', 'Science — Life Systems: Needs and Characteristics of Living Things', ['3.2','3.4'], 'Describe animal habitats and how animals meet their needs in different environments.'),
       lesson:{title:'Animal Habitats',intro:'A HABITAT is where an animal lives. Different animals live in different places.',pictures:[
         {emoji:'🐟', word:'Fish', label:'ocean/lake'},{emoji:'🐻', word:'Bear', label:'forest'},{emoji:'🐫', word:'Camel', label:'desert'},{emoji:'🐧', word:'Penguin', label:'icy places'},{emoji:'🐵', word:'Monkey', label:'jungle'},
       ],hint:'Animals live where they can find food and stay safe!'},
@@ -3755,6 +3813,7 @@ akaran: {
         {type:'mcq',q:'A habitat is a place where...',choices:['People work','Animals live','Cars park','Stars shine'],answer:1},
       ]},
     { id:'w1-akaran-s4', title:'The Water Cycle', emoji:'💧', videoIds:['ncORPosDrjI'], // Dr. Binocs / Peekaboo Kidz — The Water Cycle
+      curriculum: oc('Grade 1', 'Science — Earth and Space Systems: Daily and Seasonal Changes', ['3.3','3.5'], 'Describe how water changes state (evaporation, condensation, precipitation).'),
       lesson:{title:'Where Rain Comes From',intro:'Water goes round and round! The sun heats water → water rises as vapor → makes clouds → clouds rain → water goes back down.',heroImage:IMG.rainbow,pictures:[
         {emoji:'☀️', word:'1. Sun heats water', image:IMG.sunny},
         {emoji:'💨', word:'2. Water rises'},
@@ -3774,6 +3833,7 @@ akaran: {
         {type:'mcq',q:'The water cycle...',choices:['Stops in winter','Never stops','Only happens once','Is invisible'],answer:1},
       ]},
     { id:'w1-akaran-s5', title:'Materials', emoji:'🧱', videoIds:['wyRy8kowyM8'],
+      curriculum: oc('Grade 1', 'Science — Structures and Mechanisms: Materials, Objects, and Everyday Structures', ['2.4','3.1'], 'Identify materials (wood, metal, plastic, glass, fabric) and describe their properties.'),
       lesson:{title:'What Things Are Made Of',intro:'Objects are made of different materials: WOOD, METAL, PLASTIC, GLASS, FABRIC. Each has different properties.',pictures:[
         {emoji:'🪵', word:'Wood'},{emoji:'🔩', word:'Metal'},{emoji:'🧴', word:'Plastic'},{emoji:'🥛', word:'Glass'},{emoji:'🧵', word:'Fabric'},
       ],hint:'Look around — what are objects near you made of?'},
@@ -3787,6 +3847,7 @@ akaran: {
   ],
   social: [
     { id:'w1-akaran-c1', title:'Canada\'s Provinces', emoji:'🗺️',
+      curriculum: oc('Grade 1', 'Social Studies — Strand B: People and Environments — The Local Community', ['B1.1','B3.3'], 'Identify Canada as a country with provinces and territories, and locate Canada on a map.'),
       lesson:{title:'Canada has 10 Provinces + 3 Territories',intro:'Canada is a BIG country with 10 PROVINCES and 3 TERRITORIES. A province is like a big area inside Canada.',heroImage:IMG.canadaMap,pictures:[
         {emoji:'🗺️', word:'Canada', label:'our country', image:IMG.canadaMap},
         {emoji:'🔟', word:'10 Provinces'},
@@ -3800,6 +3861,7 @@ akaran: {
         {type:'mcq',q:'Canada is...',choices:['A city','A country','A continent','A small town'],answer:1},
       ]},
     { id:'w1-akaran-c2', title:'National Symbols', emoji:'🍁',
+      curriculum: oc('Grade 1', 'Social Studies — Strand A: Heritage and Identity — Our Changing Roles and Responsibilities', ['A2.1','A3.2'], 'Identify Canadian symbols (flag, anthem, maple leaf, beaver) and explain what they represent.'),
       lesson:{title:'Symbols of Canada',intro:'A SYMBOL stands for something bigger. Canada has many symbols we all share.',heroImage:IMG.canadaFlag,pictures:[
         {emoji:'🇨🇦', word:'Flag', image:IMG.canadaFlag},{emoji:'🍁', word:'Maple Leaf', image:IMG.mapleLeaf},{emoji:'🦫', word:'Beaver', image:IMG.beaver},{emoji:'🎵', word:'O Canada', label:'anthem'},{emoji:'🏒', word:'Hockey', label:'sport'},
       ],hint:'Hockey is Canada\'s favourite winter sport!'},
@@ -3811,6 +3873,7 @@ akaran: {
         {type:'mcq',q:'A symbol is...',choices:['A real animal','Something that stands for a bigger idea','A small food','A cloud'],answer:1},
       ]},
     { id:'w1-akaran-c3', title:'Indigenous Peoples', emoji:'🪶',
+      curriculum: oc('Grade 1', 'Social Studies — Strand A: Heritage and Identity', ['A1.1','A3.1'], 'Recognize that First Nations, Métis, and Inuit are the original peoples of Canada.'),
       lesson:{title:'The First People of Canada',intro:'Long before anyone else came, INDIGENOUS PEOPLES already lived here. Canada recognizes three main groups — each with their own languages, cultures, and traditions.',heroImage:IMG.inukshuk,pictures:[
         {emoji:'🪶', word:'First Nations'},
         {emoji:'🏹', word:'Métis'},
@@ -3829,6 +3892,7 @@ akaran: {
         {type:'mcq',q:'Which IS NOT one of the three Indigenous groups?',choices:['First Nations','Métis','Inuit','Vikings'],answer:3},
       ]},
     { id:'w1-akaran-c4', title:'Canadian Holidays', emoji:'🎉',
+      curriculum: oc('Grade 1', 'Social Studies — Strand A: Heritage and Identity', ['A2.2','A3.2'], 'Identify Canadian holidays (Canada Day, Thanksgiving, Remembrance Day) and their significance.'),
       lesson:{title:'Special Canadian Days',intro:'Canada celebrates special days each year.',pictures:[
         {emoji:'🎆', word:'Canada Day', label:'July 1'},
         {emoji:'🦃', word:'Thanksgiving', label:'October'},
@@ -3843,6 +3907,7 @@ akaran: {
         {type:'mcq',q:'July 1 celebrates Canada\'s...',choices:['Birthday','Biggest storm','Election','Hockey'],answer:0},
       ]},
     { id:'w1-akaran-c5', title:'My Community', emoji:'🏘️',
+      curriculum: oc('Grade 1', 'Social Studies — Strand B: People and Environments — The Local Community', ['B1.1','B2.2'], 'Describe the local community — where people live, learn, work, and play.'),
       lesson:{title:'Where You Live',intro:'A COMMUNITY is a group of people who live near each other and share things like schools, parks, and stores.',pictures:[
         {emoji:'🏠', word:'Home'},{emoji:'🏫', word:'School'},{emoji:'🏥', word:'Hospital'},{emoji:'🏪', word:'Stores'},{emoji:'🌳', word:'Parks'},
       ],hint:'Your neighborhood is part of your community!'},
@@ -3860,6 +3925,7 @@ akaran: {
 rushan: {
   reading: [
     { id:'w1-rushan-r1', title:'The Turtle', emoji:'🐢', videoIds:['PkWU-lMdnJg'],
+      curriculum: oc('Grade 2', 'Language — C. Comprehension: Understanding and Responding to Texts', ['C1.3'], 'Answer literal and inferential comprehension questions about a short narrative.'),
       lesson:{title:'Reading Comprehension',intro:'After reading, you should be able to answer questions about it. Read carefully!',example:'If Maya fed her turtle lettuce — you know Maya has a turtle.',hint:'Read the whole passage before answering.'},
       questions:[
         {type:'passage',passage:'Maya found a small turtle in her backyard. She gave it some lettuce and water. The turtle hid in its shell at first, but soon it started eating the leaves happily.',q:'What did Maya give the turtle?',choices:['Bread and milk','Lettuce and water','Worms and seeds','Only water'],answer:1},
@@ -3869,6 +3935,7 @@ rushan: {
         {type:'mcq',q:'A turtle\'s shell is like a...',choices:['Hat','Blanket','House','Toy'],answer:2},
       ]},
     { id:'w1-rushan-r2', title:'Weather Report', emoji:'🌤️',
+      curriculum: oc('Grade 2', 'Language — C. Comprehension', ['C1.4','C1.5'], 'Draw inferences from text clues about setting, season, and character feelings.'),
       lesson:{title:'Making Inferences',visual:'☂️ 🕵️',intro:'Sometimes the story doesn\'t tell you everything — you figure it out from clues!',example:'"Mia grabbed her umbrella" → it must be raining!',steps:[
         '<b>Look for clues</b> — what do the characters do, wear, or see?',
         '<b>Think about real life:</b> when would YOU do that?',
@@ -3882,6 +3949,7 @@ rushan: {
         {type:'mcq',q:'What is Leo probably feeling?',choices:['Sad','Bored','Excited','Angry'],answer:2},
       ]},
     { id:'w1-rushan-r3', title:'The Library', emoji:'📚', videoIds:['ML2oX207Mwc'],
+      curriculum: oc('Grade 2', 'Language — C. Comprehension', ['C1.3'], 'Identify key details (who, what, where, when) in a short narrative passage.'),
       lesson:{title:'Story Details',intro:'Good readers remember the little details: names, places, actions.',example:'Note the character names, where they go, what they do.',hint:'Who? What? Where? When?'},
       questions:[
         {type:'passage',passage:'Every Saturday, Ben goes to the library with his dad. He picks two books each time. Last week he chose a book about dinosaurs and one about space. The librarian, Ms. Chen, helped him find them.',q:'When does Ben go to the library?',choices:['Monday','Every day','Saturday','Sunday'],answer:2},
@@ -3891,6 +3959,7 @@ rushan: {
         {type:'mcq',q:'Who goes with Ben?',choices:['His mom','His sister','His dad','His friend'],answer:2},
       ]},
     { id:'w1-rushan-r4', title:'Vocabulary Match', emoji:'🧠',
+      curriculum: oc('Grade 2', 'Language — B. Foundations of Language', ['B2.1','B2.3'], 'Match vocabulary to definitions and identify synonyms and antonyms.'),
       lesson:{title:'Word Meanings',intro:'Knowing what words mean helps you understand stories better.',example:'Huge = very big. Tiny = very small. Swift = very fast.',hint:'Think about the word in a sentence.'},
       questions:[
         {type:'match',q:'Match each word to its meaning!',pairs:[['Huge','Very big'],['Tiny','Very small'],['Swift','Very fast'],['Chilly','A little cold']]},
@@ -3899,6 +3968,7 @@ rushan: {
         {type:'match',q:'Match the opposites!',pairs:[['Happy','Sad'],['Day','Night'],['Hot','Cold'],['Up','Down']]},
       ]},
     { id:'w1-rushan-r5', title:'Sentence Sorter', emoji:'🧩',
+      curriculum: oc('Grade 2', 'Language — B. Foundations of Language', ['B3.3'], 'Unscramble words into complete sentences with subject-verb-object order.'),
       lesson:{title:'Sentence Order',intro:'Words in a sentence go in a specific order. Unscramble by asking "what makes sense?"',example:'"The curious cat quietly climbed the tree."',hint:'Usually: Who → did what → where/when.'},
       questions:[
         {type:'order',q:'Unscramble this sentence.',items:['The','happy','dog','played','in','the','park'],correctOrder:[0,1,2,3,4,5,6]},
@@ -3910,6 +3980,7 @@ rushan: {
   ],
   writing: [
     { id:'w1-rushan-w1', title:'Punctuation Power', emoji:'❗', videoIds:['LdCOswMeXFQ'],
+      curriculum: oc('Grade 2', 'Language — D. Composition', ['D2.1'], 'Use correct end punctuation and commas in lists and introductory phrases.'),
       // Softer opener: dropped the quotation-marks question (Grade 3+ skill)
       // in favor of another period/question-mark pick which matches the
       // lesson's stated scope (. / ? / ! / ,).
@@ -3922,6 +3993,7 @@ rushan: {
         {type:'mcq',q:'What goes at the end? — "I love pizza"',choices:['.','?','!',','],answer:0},
       ]},
     { id:'w1-rushan-w2', title:'Spelling Bee', emoji:'🐝', videoIds:['9S7DY2lgJlU'],
+      curriculum: oc('Grade 2', 'Language — B. Foundations of Language', ['B3.1'], 'Spell high-frequency words with tricky patterns (friend, because, school, people).'),
       lesson:{title:'Tricky Spellings',intro:'Some words are spelled in surprising ways. Watch for sneaky ones!',example:'"Friend" has "i" before "e". "Because" has "cause" inside it.',hint:'If it looks weird, it probably is — memorize it!'},
       questions:[
         {type:'mcq',q:'Which is spelled correctly?',choices:['frend','friend','freind','frennd'],answer:1},
@@ -3931,6 +4003,7 @@ rushan: {
         {type:'mcq',q:'Which is spelled correctly?',choices:['pepul','peple','people','peepol'],answer:2},
       ]},
     { id:'w1-rushan-w3', title:'Build Sentences', emoji:'🏗️', videoIds:['0Wrv_ZviMEc'],
+      curriculum: oc('Grade 2', 'Language — D. Composition', ['D2.2'], 'Construct complete sentences with a subject, verb, and descriptive detail.'),
       lesson:{title:'Building Longer Sentences',intro:'Good sentences have a subject (who), verb (action), and details.',example:'"The fluffy cat slept on the warm pillow."',hint:'"Running fast." is NOT complete — WHO is running?'},
       questions:[
         {type:'order',q:'Unscramble this sentence.',items:['The','tired','puppy','curled','up','on','the','pillow'],correctOrder:[0,1,2,3,4,5,6,7]},
@@ -3940,6 +4013,7 @@ rushan: {
         {type:'mcq',q:'Which word best fills the blank? "The ___ dog barked loudly."',choices:['quickly','big','jumping','loudly'],answer:1},
       ]},
     { id:'w1-rushan-w4', title:'Parts of Speech', emoji:'🏷️',
+      curriculum: oc('Grade 2', 'Language — B. Foundations of Language', ['B3.3'], 'Identify nouns, verbs, and adjectives within a sentence.'),
       lesson:{title:'Types of Words',intro:'Nouns = people/places/things. Verbs = actions. Adjectives = describing words.',example:'"The fluffy cat slept." — cat (noun), slept (verb), fluffy (adjective)',hint:'Ask: is it a thing, an action, or describing something?'},
       questions:[
         {type:'mcq',q:'Which word is a NOUN?',choices:['Run','Happy','School','Quickly'],answer:2},
@@ -3949,6 +4023,7 @@ rushan: {
         {type:'mcq',q:'In "The dog barks loudly," which is the verb?',choices:['The','dog','barks','loudly'],answer:2},
       ]},
     { id:'w1-rushan-w5', title:'Free Writing', emoji:'✍️',
+      curriculum: oc('Grade 2', 'Language — D. Composition', ['D1.2','D1.4'], 'Compose a short descriptive paragraph with a topic sentence and supporting details.'),
       lesson:{title:'Write a Short Paragraph!',intro:'Now you get to write YOUR OWN paragraph. Use at least 2-3 sentences. Remember capitals, periods, and descriptive words!',example:'Prompt: "Describe your room" → "My room is small but cozy. I have a blue bed and a bookshelf. My favorite toy is on the shelf."',hint:'Write 8+ words. Use describing words like "big," "colorful," "exciting."'},
       questions:[
         {type:'write',q:'Write about your favorite place.',prompt:'🌍 What is your favorite place to go? Describe what it looks like and why you like it.',placeholder:'My favorite place is...',minWords:8,goodWords:18,keywords:['place','like','go','because','favorite','fun','beautiful','love','visit','see'],expectSentences:true},
@@ -3960,6 +4035,7 @@ rushan: {
   ],
   math: [
     { id:'w1-rushan-m1', title:'Two-Digit Addition', emoji:'➕',
+      curriculum: oc('Grade 2', 'Math — B. Number', ['B2.4','B2.5'], 'Add two-digit numbers with regrouping (carrying) using a standard algorithm.'),
       // Softer on-ramp: Q1 and Q2 are now NO-CARRY 2-digit sums so Rushan
       // gets the "line up the columns" mechanic down before the carrying
       // kicks in at Q3. Previously all 5 questions required carrying on
@@ -3988,6 +4064,7 @@ rushan: {
         {type:'mcq',q:'Which sum requires carrying in BOTH the ones AND tens columns?',choices:['34 + 25','46 + 28','58 + 67','72 + 16'],answer:2},
       ]},
     { id:'w1-rushan-m2', title:'Two-Digit Subtraction', emoji:'➖',
+      curriculum: oc('Grade 2', 'Math — B. Number', ['B2.4','B2.5'], 'Subtract two-digit numbers with regrouping (borrowing) using the standard algorithm.'),
       lesson:{title:'Subtracting with Borrowing',intro:'If the top digit is smaller than the bottom, borrow 1 from the column to the left.',stack:{op:'−',top:'42',bottom:'15',carries:[3,12],mode:'borrow',answer:'27',steps:[
         '<b>Ones:</b> we need 2 − 5, but 2 is too small — so we borrow.',
         'Borrow from the tens: <b>4</b> becomes <b>3</b>, and the ones becomes <b>12</b>.',
@@ -4012,6 +4089,7 @@ rushan: {
         {type:'mcq',q:'A bakery had 245 buns. It sold 78. How many left?',choices:['157','167','177','187'],answer:1},
       ]},
     { id:'w1-rushan-m3', title:'Word Problems', emoji:'📖',
+      curriculum: oc('Grade 2', 'Math — B. Number', ['B2.1','B2.6'], 'Solve one-step addition and subtraction word problems within 100, including money problems.'),
       // Pulled back from mixed multi-step problems. Each question is now a
       // single operation so Rushan can focus on the "add or subtract?" choice
       // without juggling two steps in his head.
@@ -4024,6 +4102,7 @@ rushan: {
         {type:'mcq',q:'You have $10. Buy something for $4. How much change?',choices:['$4','$5','$6','$7'],answer:2},
       ]},
     { id:'w1-rushan-m4', title:'Skip Counting', emoji:'🦘',
+      curriculum: oc('Grade 2', 'Math — B. Number', ['B1.3'], 'Skip-count by 2s, 5s, 10s, 25s, and 50s forward and backward, to build toward multiplication.'),
       lesson:{title:'Counting by 2s, 5s, 10s',intro:'Skip counting jumps: by 2s (2,4,6,8), by 5s (5,10,15,20), by 10s (10,20,30).',example:'Count by 5s: 5, 10, 15, 20, 25!',hint:'Skip counting helps count faster — and leads to multiplication!'},
       questions:[
         {type:'mcq',q:'Skip by 3s: 3, 6, 9, 12, ?',choices:['13','14','15','18'],answer:2},
@@ -4033,6 +4112,7 @@ rushan: {
         {type:'mcq',q:'Skip by 2s: 14, 16, 18, ?',choices:['19','20','22','24'],answer:1},
       ]},
     { id:'w1-rushan-m5', title:'Place Value', emoji:'🏠',
+      curriculum: oc('Grade 2', 'Math — B. Number', ['B1.4'], 'Read, represent, compose, and decompose whole numbers up to 200 using place-value concepts (tens and ones).'),
       lesson:{title:'Tens and Ones',intro:'In a number, each digit has a PLACE. 74 = 7 tens + 4 ones.',example:'74 → the 7 is in tens place (worth 70), 4 is in ones place (worth 4)',hint:'Imagine columns: hundreds | tens | ones.'},
       questions:[
         {type:'mcq',q:'In 58, what is in the TENS place?',choices:['8','5','0','58'],answer:1},
@@ -4044,6 +4124,7 @@ rushan: {
   ],
   logic: [
     { id:'w1-rushan-l1', title:'Number Patterns', emoji:'🔢',
+      curriculum: oc('Grade 2', 'Math — C. Algebra', ['C1.1','C1.2'], 'Identify, extend, and describe repeating and growing arithmetic patterns (including missing terms).'),
       // Softer opener: swapped the geometric doubling pattern (1,2,4,8,?)
       // for another arithmetic sequence. Doubling is a leap on a first
       // logic lesson — kids are still learning "find the difference."
@@ -4057,6 +4138,7 @@ rushan: {
         {type:'mcq',q:'What is MISSING? 10, ?, 30, 40, 50',choices:['15','20','25','35'],answer:1},
       ]},
     { id:'w1-rushan-l2', title:'Sorting Challenge', emoji:'📦',
+      curriculum: oc('Grade 2', 'Math — D. Data', ['D1.1'], 'Sort and classify sets of data using one or more attributes (finding the item that does not belong).'),
       lesson:{title:'Odd One Out',intro:'Find the item that does NOT belong with the others.',example:'Chair, Table, Sofa, Moon — Moon is not furniture!',hint:'What do 3 of these have in common?'},
       questions:[
         {type:'mcq',q:'Which does NOT belong?',choices:['Robin','Sparrow','Eagle','Bat'],answer:3},
@@ -4066,6 +4148,7 @@ rushan: {
         {type:'mcq',q:'Which does NOT belong?',choices:['Ocean','River','Lake','Desert'],answer:3},
       ]},
     { id:'w1-rushan-l3', title:'Analogies', emoji:'🔗',
+      curriculum: oc('Grade 2', 'Language — C. Comprehension', ['C3.1'], 'Use critical and creative thinking to compare relationships between word pairs (analogical reasoning).'),
       lesson:{title:'A is to B as C is to...',intro:'An analogy shows how pairs relate the same way.',example:'Bird : Sky :: Fish : Water (bird lives in sky, fish lives in water)',hint:'Figure out the relationship in the first pair, then apply it!'},
       questions:[
         {type:'mcq',q:'Bird is to sky as fish is to ___',choices:['Tree','Water','Cave','Cloud'],answer:1},
@@ -4075,6 +4158,7 @@ rushan: {
         {type:'mcq',q:'Writer is to pen as painter is to ___',choices:['Paper','Brush','Song','Book'],answer:1},
       ]},
     { id:'w1-rushan-l4', title:'Sequencing', emoji:'📚',
+      curriculum: oc('Grade 2', 'Language — C. Comprehension', ['C2.3'], 'Identify and apply text structure clues (first, next, then, finally) to reconstruct the sequence of events in a process or story.'),
       lesson:{title:'Order of Events',intro:'Events and processes have a natural order. What happens first, next, last?',example:'Plant seed → Water it → Sprout grows → Flower blooms',hint:'Look for clue words: First, Then, Next, Finally.'},
       questions:[
         {type:'order',q:'Put in order!',items:['Plant a seed','Water the soil','A sprout grows','A flower blooms'],correctOrder:[0,1,2,3]},
@@ -4084,6 +4168,7 @@ rushan: {
         {type:'order',q:'Making a sandwich!',items:['Get bread','Add filling','Close sandwich','Take a bite'],correctOrder:[0,1,2,3]},
       ]},
     { id:'w1-rushan-l5', title:'Code Breaker', emoji:'🔐',
+      curriculum: oc('Grade 2', 'Math — C. Algebra', ['C3.1','C3.2'], 'Solve problems and create computational representations using coding concepts (sequential mapping of symbols to values).'),
       lesson:{title:'Simple Codes',intro:'A code uses symbols for other things. A=1, B=2, C=3...',example:'If A=1, B=2, then C=3 and D=4!',hint:'Find the pattern, then apply it.'},
       questions:[
         {type:'mcq',q:'If A=1, B=2, C=3, what is D?',choices:['3','4','5','6'],answer:1},
@@ -4096,6 +4181,7 @@ rushan: {
   french: beginnerFrenchBase('rushan'),
   science: [
     { id:'w1-rushan-s1', title:'Life Cycles', emoji:'🐛', videoIds:['V5RSpMQQOpw'], // SciShow Kids — How Does a Caterpillar Become a Butterfly?
+      curriculum: oc('Grade 2', 'Science — B. Life Systems: Growth and Changes in Animals', ['B2.1','B2.4'], 'Describe major stages of growth and change in a variety of animals, including metamorphosis (egg → larva → pupa → adult).'),
       lesson:{title:'The Butterfly Life Cycle',intro:'A LIFE CYCLE shows how an animal grows. A butterfly goes through 4 amazing stages!',heroImage:IMG.butterfly,pictures:[
         {emoji:'🥚', word:'1. Egg'},
         {emoji:'🐛', word:'2. Caterpillar', image:IMG.caterpillar},
@@ -4115,6 +4201,7 @@ rushan: {
         {type:'mcq',q:'Caterpillars eat mostly...',choices:['Meat','Leaves','Sand','Rocks'],answer:1},
       ]},
     { id:'w1-rushan-s2', title:'Plant Life Cycle', emoji:'🌱',
+      curriculum: oc('Grade 2', 'Science — B. Life Systems: Growth and Changes in Animals', ['B1.1'], 'Connect to Grade 3 "Growth and Changes in Plants": assess ways in which plants have an impact on society and the environment (seed → sprout → plant → flower).'),
       lesson:{title:'From Seed to Flower',visual:'🌰 ➡️ 🌻',intro:'Plants grow from a seed. First the seed sprouts, then grows roots, a stem, leaves, and finally flowers or fruit.',pictures:[
         {emoji:'🌰', word:'Seed'},{emoji:'🌱', word:'Sprout'},{emoji:'🌿', word:'Plant'},{emoji:'🌸', word:'Flower'},
       ],hint:'Plants need water, sunlight, and soil to grow!'},
@@ -4126,6 +4213,7 @@ rushan: {
         {type:'mcq',q:'Flowers can turn into...',choices:['Rocks','Fruit or seeds','Buildings','Animals'],answer:1},
       ]},
     { id:'w1-rushan-s3', title:'Solid, Liquid, Gas', emoji:'🧊',
+      curriculum: oc('Grade 2', 'Science — C. Matter and Energy: Properties of Liquids and Solids', ['C2.1','C2.3'], 'Describe properties of solids and liquids; recognize that matter has observable properties and can change state.'),
       lesson:{title:'States of Matter',intro:'Everything is made of MATTER. Matter has three main states: SOLID (keeps shape), LIQUID (flows), GAS (spreads out).',pictures:[
         {emoji:'🧊', word:'Solid', label:'ice, rock, wood'},
         {emoji:'💧', word:'Liquid', label:'water, milk'},
@@ -4139,6 +4227,7 @@ rushan: {
         {type:'mcq',q:'A liquid can...',choices:['Hold its shape','Flow and take the shape of its container','Float in the sky','Only stay cold'],answer:1},
       ]},
     { id:'w1-rushan-s4', title:'Simple Machines', emoji:'⚙️',
+      curriculum: oc('Grade 2', 'Science — D. Structures and Mechanisms: Simple Machines and Movement', ['D2.1','D2.3'], 'Investigate simple machines (lever, wheel and axle, pulley, inclined plane) and how they help move objects and reduce effort.'),
       lesson:{title:'Machines That Help Us',intro:'Simple machines make work easier! Common ones: LEVER, WHEEL, PULLEY, INCLINED PLANE (ramp).',pictures:[
         {emoji:'⚖️', word:'Lever', label:'seesaw'},
         {emoji:'☸️', word:'Wheel', label:'rolls'},
@@ -4153,6 +4242,7 @@ rushan: {
         {type:'mcq',q:'Simple machines make work...',choices:['Harder','Easier','Impossible','Noisier'],answer:1},
       ]},
     { id:'w1-rushan-s5', title:'Earth\'s Resources', emoji:'🌎',
+      curriculum: oc('Grade 2', 'Science — E. Earth and Space Systems: Air and Water in the Environment', ['E1.1','E2.2'], 'Assess the impact of human activities on natural resources (water, air, trees, minerals); recognize the importance of conserving Earth\'s limited resources.'),
       lesson:{title:'Gifts from Earth',intro:'Earth gives us natural resources: WATER, AIR, TREES (for wood), MINERALS (rocks & metals), SUNLIGHT. We must use them carefully!',pictures:[
         {emoji:'💧', word:'Water'},{emoji:'💨', word:'Air'},{emoji:'🌳', word:'Trees'},{emoji:'⚒️', word:'Minerals'},{emoji:'☀️', word:'Sunlight'},
       ],hint:'Recycling helps save Earth\'s resources!'},
@@ -4166,6 +4256,7 @@ rushan: {
   ],
   social: [
     { id:'w1-rushan-c1', title:'Provinces & Territories', emoji:'🗺️',
+      curriculum: oc('Grade 2', 'Social Studies — B. People and Environments: Global Communities', ['B2.3','B3.5'], 'Locate Canada\'s provinces, territories, and capital on a map; introduce Canadian political geography (bridges to Grade 4 Strand B).'),
       lesson:{title:'Canada\'s Big Map',intro:'Canada has 10 PROVINCES (like Ontario, Quebec, BC) and 3 TERRITORIES (Yukon, Northwest Territories, Nunavut). Ontario has the most people!',heroImage:IMG.canadaMap,pictures:[
         {emoji:'🍁', word:'Ontario'},{emoji:'⚜️', word:'Quebec'},{emoji:'🏔️', word:'British Columbia', image:IMG.rockies},{emoji:'🌾', word:'Alberta'},{emoji:'❄️', word:'Yukon', label:'territory'},
       ],hint:'The 3 territories are in the far NORTH of Canada.'},
@@ -4180,6 +4271,7 @@ rushan: {
         {type:'mcq',q:'Quebec\'s main language is...',choices:['French','Spanish','German','Italian'],answer:0},
       ]},
     { id:'w1-rushan-c2', title:'First Peoples', emoji:'🪶',
+      curriculum: oc('Grade 2', 'Social Studies — A. Heritage and Identity: Changing Family and Community Traditions', ['A2.3','A3.6'], 'Describe the diverse traditions and ways of life of Indigenous Peoples (First Nations, Métis, Inuit) in Canada.'),
       lesson:{title:'Indigenous Peoples of Canada',intro:'Indigenous Peoples are the FIRST people to live here. There are three main groups: FIRST NATIONS, MÉTIS (mixed European + First Nations), and INUIT (Arctic peoples).',pictures:[
         {emoji:'🪶', word:'First Nations'},{emoji:'🏹', word:'Métis'},{emoji:'🛖', word:'Inuit'},
       ],hint:'Each group has its own language, culture, and history.'},
@@ -4191,6 +4283,7 @@ rushan: {
         {type:'mcq',q:'How long have Indigenous Peoples been in Canada?',choices:['A few decades','Thousands of years','One year','A hundred years'],answer:1},
       ]},
     { id:'w1-rushan-c3', title:'Two Official Languages', emoji:'🗣️',
+      curriculum: oc('Grade 2', 'Social Studies — A. Heritage and Identity: Changing Family and Community Traditions', ['A3.2'], 'Identify languages and cultural traditions that contribute to Canadian identity (bilingualism: English & French).'),
       lesson:{title:'English & French',intro:'Canada is BILINGUAL — it has TWO official languages: ENGLISH and FRENCH. Road signs, government documents, and cereal boxes all have both!',pictures:[
         {emoji:'🇬🇧', word:'English'},{emoji:'🇫🇷', word:'French'},
       ],hint:'Quebec is mostly French-speaking!'},
@@ -4202,6 +4295,7 @@ rushan: {
         {type:'mcq',q:'Canadian cereal boxes usually have...',choices:['One language','English AND French','Only French','Emojis only'],answer:1},
       ]},
     { id:'w1-rushan-c4', title:'Canadian Geography', emoji:'🏔️',
+      curriculum: oc('Grade 2', 'Social Studies — B. People and Environments: Global Communities', ['B2.1','B2.2'], 'Identify physical features of Canada (mountains, lakes, rivers, oceans) and describe how geography shapes communities.'),
       lesson:{title:'Our Land & Water',intro:'Canada has MOUNTAINS (Rockies in the west), huge LAKES (the Great Lakes), long RIVERS (like the St. Lawrence), and an OCEAN on three sides.',heroImage:IMG.rockies,pictures:[
         {emoji:'🏔️', word:'Rocky Mountains', image:IMG.rockies},{emoji:'🏞️', word:'Niagara Falls', image:IMG.niagara},{emoji:'🌊', word:'3 Oceans', label:'Atlantic, Pacific, Arctic'},
       ],hint:'Canada is the SECOND-largest country in the world!'},
@@ -4213,6 +4307,7 @@ rushan: {
         {type:'mcq',q:'Which ocean is in the FAR NORTH of Canada?',choices:['Pacific','Atlantic','Arctic','Indian'],answer:2},
       ]},
     { id:'w1-rushan-c5', title:'Rules & Laws', emoji:'⚖️',
+      curriculum: oc('Grade 2', 'Social Studies — A. Heritage and Identity: Changing Family and Community Traditions', ['A1.2','A2.4'], 'Explain why communities have rules and laws and how they help people live together safely and fairly.'),
       lesson:{title:'Why We Have Rules',intro:'RULES and LAWS help people live together safely and fairly. Schools have rules, homes have rules, and the country has LAWS that everyone must follow.',pictures:[
         {emoji:'🚸', word:'Safety Rules'},{emoji:'⚖️', word:'Fairness Laws'},{emoji:'🤝', word:'Respect Rules'},
       ],hint:'Rules keep everyone safe and happy!'},
@@ -4230,6 +4325,7 @@ rushan: {
 akshayan: {
   reading: [
     { id:'w1-akshayan-r1', title:'The Explorer', emoji:'🧭', videoIds:['XjR2B3YJH9U'],
+      curriculum: oc('Grade 3', 'Language — C. Comprehension: Understanding Texts', ['C1.3','C1.4'], 'Read and comprehend grade-level narrative passages; identify explicit (who/what/where) and implicit (why) information.'),
       lesson:{title:'Reading Longer Passages',intro:'Longer stories have more details. Read carefully and remember the key points.',example:'Who are the characters? What happened? Why?',steps:[
         '<b>Read slowly.</b> If a sentence is tricky, read it again.',
         '<b>Ask WHO</b> is in the story (the characters).',
@@ -4245,6 +4341,7 @@ akshayan: {
         {type:'mcq',q:'The word "narrow" means...',choices:['↔️ Very wide','📏 Not very wide','➡️ Very long','⬇️ Very deep'],answer:1},
       ]},
     { id:'w1-akshayan-r2', title:'Weather & Seasons', emoji:'🌦️', videoIds:['WrUX6j9MwUY'],
+      curriculum: oc('Grade 3', 'Language — C. Comprehension: Understanding Texts', ['C1.1','C3.2'], 'Use context clues within a passage to determine the meaning of unfamiliar words; build vocabulary knowledge.'),
       lesson:{title:'Vocabulary in Context',intro:'When you see a new word, look at the sentences around it for clues about what it means.',example:'"The chilly wind made us shiver" — chilly must mean cold!',hint:'Context clues = words around the unknown word.'},
       questions:[
         {type:'passage',passage:'As autumn arrived, the leaves turned brilliant shades of red, orange, and gold. The air became crisp and chilly. Birds started their long migration south. Emma loved collecting the colorful leaves for her scrapbook.',visual:'🍂',q:'What does "chilly" probably mean?',choices:['🔥 Hot','❄️ Cold','💨 Windy','🌧️ Rainy'],answer:1},
@@ -4254,6 +4351,7 @@ akshayan: {
         {type:'mcq',q:'What does Emma collect?',choices:['🪨 Rocks','🐛 Bugs','🍁 Colorful leaves','🥢 Sticks'],answer:2},
       ]},
     { id:'w1-akshayan-r3', title:'The Inventor', emoji:'💡', videoIds:['PkWU-lMdnJg'],
+      curriculum: oc('Grade 3', 'Language — C. Comprehension: Understanding Texts', ['C1.5'], 'Analyze characters in narrative texts by examining their actions, motivations, and character traits.'),
       lesson:{title:'Understanding Characters',intro:'Characters in stories have feelings, goals, and actions. Pay attention to what they DO and WHY.',example:'If a character "frowned and crossed her arms" — she\'s probably upset.',hint:'Actions reveal feelings.'},
       questions:[
         {type:'passage',passage:'Priya wanted to build a birdhouse for the sparrows in her garden. She gathered wood scraps, nails, and paint from the garage. Her first attempt fell apart. She studied her mistake, redesigned it, and tried again. This time it was sturdy. She hung it on the oak tree with a big smile.',q:'Why did Priya build a birdhouse?',choices:['For homework','For the sparrows','To sell','For her room'],answer:1},
@@ -4263,6 +4361,7 @@ akshayan: {
         {type:'mcq',q:'Priya is someone who...',choices:['Gives up easily','Is lazy','Is determined and keeps trying','Doesn\'t like birds'],answer:2},
       ]},
     { id:'w1-akshayan-r4', title:'Main Idea', emoji:'🎯', videoIds:['ML2oX207Mwc'],
+      curriculum: oc('Grade 3', 'Language — C. Comprehension: Understanding Texts', ['C1.4','C1.6'], 'Identify the main idea of an informational passage and the supporting details that develop it.'),
       lesson:{title:'Finding the Main Point',intro:'The main idea is what a passage is MOSTLY about. Details support it.',example:'A paragraph about bees making honey → main idea: "Bees are important."',hint:'Sum it up in ONE sentence — that\'s the main idea.'},
       questions:[
         {type:'passage',passage:'Honeybees are amazing insects. They live in colonies and work together to make honey. They also pollinate flowers, helping plants grow. Without bees, many of the fruits and vegetables we eat would disappear.',q:'What is the main idea?',choices:['Honey tastes good','Bees can sting','Bees are important to nature and food','Bees live in hives'],answer:2},
@@ -4271,6 +4370,7 @@ akshayan: {
         {type:'mcq',q:'Which would make the BEST title?',choices:['My Favorite Book','How to Read Fast','Why Reading Matters','The Library'],answer:2},
       ]},
     { id:'w1-akshayan-r5', title:'Figurative Language', emoji:'🎭',
+      curriculum: oc('Grade 3', 'Language — C. Comprehension: Understanding Texts', ['C2.4'], 'Identify and interpret figurative language (idioms, similes, metaphors) in a variety of texts.'),
       lesson:{title:'Phrases That Don\'t Mean What They Say',intro:'Some phrases paint a picture. "Raining cats and dogs" means raining HARD!',example:'"Time flies" = time passes quickly. "Piece of cake" = very easy.',hint:'Think about what the phrase REMINDS you of.'},
       questions:[
         {type:'mcq',q:'"It\'s raining cats and dogs" means...',choices:['Animals are falling','It\'s raining very hard','Pets are outside','There is thunder'],answer:1},
@@ -4282,6 +4382,7 @@ akshayan: {
   ],
   writing: [
     { id:'w1-akshayan-w1', title:'Punctuation Pro', emoji:'❗', videoIds:['LdCOswMeXFQ'],
+      curriculum: oc('Grade 3', 'Language — B. Foundations of Language', ['B3.5'], 'Apply conventions of punctuation correctly: commas in lists, commas with introductory phrases, quotation marks for dialogue.'),
       lesson:{title:'Advanced Punctuation',intro:'Commas separate list items and set off extra info. Quotation marks show speech.',example:'"I bought apples, oranges, and pears." — commas between items.',hint:'Read aloud — commas go where you naturally pause.'},
       questions:[
         {type:'mcq',q:'Which uses commas correctly?',choices:['I bought apples oranges and pears.','I bought apples, oranges, and pears.','I, bought apples oranges and pears.','I bought, apples oranges and pears.'],answer:1},
@@ -4291,6 +4392,7 @@ akshayan: {
         {type:'mcq',q:'Which is punctuated correctly?',choices:['We visited Paris France.','We visited Paris, France.','We visited, Paris France.','We, visited Paris France.'],answer:1},
       ]},
     { id:'w1-akshayan-w2', title:'Homophones', emoji:'👂',
+      curriculum: oc('Grade 3', 'Language — B. Foundations of Language', ['B3.6'], 'Apply spelling strategies to distinguish between commonly-confused homophones (their/there/they\'re, to/too/two, bear/bare).'),
       lesson:{title:'Sound-Alike Words',intro:'Homophones sound the same but mean different things: their/there/they\'re, to/too/two.',example:'"I saw a bear" vs "My feet are bare" — same sound, different words!',hint:'Pick the one that makes sense in the sentence.'},
       questions:[
         {type:'mcq',q:'"I saw a ___ climbing a tree."',choices:['bare','bear'],answer:1},
@@ -4300,6 +4402,7 @@ akshayan: {
         {type:'mcq',q:'Which pair are homophones?',choices:['cat/dog','see/sea','happy/sad','big/small'],answer:1},
       ]},
     { id:'w1-akshayan-w3', title:'Sentence Building', emoji:'🏗️',
+      curriculum: oc('Grade 3', 'Language — B. Foundations of Language', ['B3.3','B3.4'], 'Combine simple sentences into compound and complex sentences using conjunctions (because, although, when, and, but).'),
       lesson:{title:'Complex Sentences',intro:'Good writers use longer sentences with conjunctions: because, although, when, and, but.',example:'"Although it rained, we played outside."',hint:'Combine ideas with connecting words.'},
       questions:[
         {type:'order',q:'Unscramble this sentence.',items:['Although','it','was','cold,','the','kids','played','outside'],correctOrder:[0,1,2,3,4,5,6,7]},
@@ -4309,6 +4412,7 @@ akshayan: {
         {type:'mcq',q:'Which is the BEST combined sentence?',choices:['I was tired. I went to bed.','I was tired so I went to bed.','Tired. Bed.','I tired bed went.'],answer:1},
       ]},
     { id:'w1-akshayan-w4', title:'Topic Sentences', emoji:'📄',
+      curriculum: oc('Grade 3', 'Language — D. Composition: Expressing Ideas and Creating Texts', ['D1.3','D2.2'], 'Organize ideas in a paragraph around a clear topic sentence that captures the main idea.'),
       lesson:{title:'Starting a Paragraph',intro:'A topic sentence tells what the paragraph is about. It comes first!',example:'"Dogs make wonderful pets." — the rest explains WHY.',steps:[
         '<b>Look at all the sentences</b> in the paragraph.',
         '<b>Ask:</b> "What do these sentences share? What\'s the main idea?"',
@@ -4322,6 +4426,7 @@ akshayan: {
         {type:'mcq',q:'Which does NOT belong in a paragraph about summer?',choices:['Swimming at the beach','Eating ice cream','Building snowmen','Having picnics'],answer:2},
       ]},
     { id:'w1-akshayan-w5', title:'Paragraph Writing', emoji:'✍️',
+      curriculum: oc('Grade 3', 'Language — D. Composition: Expressing Ideas and Creating Texts', ['D1.2','D1.4','D2.1'], 'Compose well-organized paragraphs with a topic sentence, supporting details, and a closing sentence, using precise descriptive language.'),
       lesson:{title:'Write a Full Paragraph!',intro:'A strong paragraph has a TOPIC SENTENCE (main idea), DETAIL SENTENCES (supporting info), and a CLOSING SENTENCE. Use descriptive language!',example:'Topic: My pet → "I have a dog named Buddy. He is a golden retriever with soft, fluffy fur. Every morning, he wakes me up by licking my face. Buddy is the best pet I could ever have!"',hint:'Write 12+ words with 3+ sentences. Use adjectives like "amazing," "colorful," "exciting."'},
       questions:[
         {type:'write',q:'Write about your hero.',prompt:'🦸 Who is someone you look up to? Why do you admire them? Write a paragraph about your hero.',placeholder:'My hero is... because...',minWords:12,goodWords:25,keywords:['hero','because','admire','brave','kind','strong','help','important','look up to','respect','love'],expectSentences:true},
@@ -4333,6 +4438,7 @@ akshayan: {
   ],
   math: [
     { id:'w1-akshayan-m1', title:'Regrouping Addition', emoji:'➕', videoIds:['8hz0fAQV0ac'], // NUMBEROCK — Addition with Regrouping (2-digit)
+      curriculum: oc('Grade 3', 'Math — B. Number', ['B2.4'], 'Use the standard algorithm to add whole numbers to 1000 with regrouping (carrying) across place-value columns.'),
       // Dropped from double-carry 3-digit (148+275) down to SINGLE-carry problems.
       // Kids master one carry at a time — double-carries confused the step-by-step.
       lesson:{title:'Adding with One Carry',intro:'Line up the numbers. Add from right to left. If a column adds to 10 or more, carry the 1 to the next column.',stack:{op:'+',top:'45',bottom:'38',carries:[1,''],answer:'83',steps:[
@@ -4358,6 +4464,7 @@ akshayan: {
         {type:'mcq',q:'208 + 394 = ?',choices:['502','592','602','612'],answer:2},
       ]},
     { id:'w1-akshayan-m2', title:'Regrouping Subtraction', emoji:'➖',
+      curriculum: oc('Grade 3', 'Math — B. Number', ['B2.4'], 'Use the standard algorithm to subtract whole numbers to 1000 with regrouping (borrowing), including borrow-across-zero in stretch questions.'),
       // Simplified from 3-digit with borrow-across-zero (403−187) to straight
       // 2-digit with ONE borrow. That's the core regrouping skill — cross-zero
       // borrowing can come later once this is automatic.
@@ -4385,6 +4492,7 @@ akshayan: {
         {type:'mcq',q:'A shop had 802 apples. It sold 567. How many left?',choices:['225','235','245','335'],answer:1},
       ]},
     { id:'w1-akshayan-m3', title:'Early Multiplication', emoji:'✖️', videoIds:['gzFbUZ8VjEg'], // NUMBEROCK — Equal Groups / Repeated Addition Using Arrays
+      curriculum: oc('Grade 3', 'Math — B. Number', ['B2.5','B2.6'], 'Represent and solve multiplication facts to 10 × 10 using equal groups, arrays, and the commutative property (a × b = b × a).'),
       lesson:{title:'Groups and Times',intro:'Multiplication is adding the same number many times. 3 × 4 = 3+3+3+3 = 12.',example:'3 × 4 = 12. Think: 3 groups of 4!',hint:'3 × 4 = 4 × 3 — order doesn\'t matter!'},
       questions:[
         {type:'mcq',q:'3 × 4 = ?',choices:['7','10','12','14'],answer:2},
@@ -4403,6 +4511,7 @@ akshayan: {
         {type:'mcq',q:'A classroom has 6 rows of 8 desks. How many desks total?',choices:['42','48','54','56'],answer:1},
       ]},
     { id:'w1-akshayan-m4', title:'Word Problems', emoji:'🎯',
+      curriculum: oc('Grade 3', 'Math — B. Number', ['B2.6'], 'Solve one-step word problems involving addition, subtraction, and multiplication, including money contexts.'),
       // Renamed from "Multi-Step" — we pulled all questions down to SINGLE-step.
       // Multi-step problems belong in a later lesson once one-step is automatic.
       lesson:{title:'One-Step Word Problems',intro:'Read the story. Find the numbers. Pick an operation — add, subtract, or multiply — and solve.',example:'"Sam had 24 stickers. He gave 8 away." → 24 − 8 = 16.',hint:'"Gave / sold / lost / ate" → subtract. "Got / bought / total" → add. "Groups of / each" → multiply.'},
@@ -4414,6 +4523,7 @@ akshayan: {
         {type:'mcq',q:'A baker makes 30 muffins. She sells 18. How many left?',choices:['8','10','12','14'],answer:2},
       ]},
     { id:'w1-akshayan-m5', title:'Fractions Intro', emoji:'🍕', videoIds:['CA9XLJpQp3c'], // Math Antics — Fractions Are Parts (targeted intro)
+      curriculum: oc('Grade 3', 'Math — B. Number', ['B1.6','B1.7'], 'Represent and compare fractions as parts of a whole (halves, thirds, fourths, eighths) using area models.'),
       lesson:{title:'Parts of a Whole',intro:'A fraction shows PART of something. 1/2 = half. 1/4 = a quarter.',example:'Pizza cut in 4 slices — one slice is 1/4 of the pizza.',hint:'Bottom number = total parts. Top number = parts you have.'},
       questions:[
         {type:'mcq',q:'How many halves make a whole?',choices:['1','2','3','4'],answer:1},
@@ -4425,6 +4535,7 @@ akshayan: {
   ],
   logic: [
     { id:'w1-akshayan-l1', title:'Number Patterns', emoji:'🔢',
+      curriculum: oc('Grade 3', 'Math — C. Algebra', ['C1.1','C1.2','C1.3'], 'Identify, extend, and describe growing and shrinking arithmetic patterns using the constant difference rule.'),
       // Apr 2026: softened — dropped the doubling (2→4→8→16) and the −9 descending
       // pattern. Both were solid G3 content but too abstract as an intro for a kid
       // still building pattern fluency. Replaced with straight +/- patterns that
@@ -4438,6 +4549,7 @@ akshayan: {
         {type:'mcq',q:'What comes next? 50, 40, 30, 20, ?',choices:['0','5','10','15'],answer:2},
       ]},
     { id:'w1-akshayan-l2', title:'If-Then Logic', emoji:'🧠',
+      curriculum: oc('Grade 3', 'Math — C. Algebra', ['C3.1','C3.2'], 'Use computational thinking (sequential logic, conditionals) to solve simple deductive reasoning problems.'),
       lesson:{title:'Logical Reasoning',intro:'If one thing is true, something else MUST follow.',example:'"All cats purr. Whiskers is a cat. So Whiskers purrs."',hint:'Go step by step — each "if" leads to a "then".'},
       questions:[
         {type:'mcq',q:'All cats purr. Whiskers is a cat. Whiskers...',choices:['Barks','Purrs','Flies','Swims'],answer:1},
@@ -4447,6 +4559,7 @@ akshayan: {
         {type:'mcq',q:'Anna has MORE apples than Ben. Ben has 3. Anna could have...',choices:['2','3','5','1'],answer:2},
       ]},
     { id:'w1-akshayan-l3', title:'Analogies Pro', emoji:'🔗',
+      curriculum: oc('Grade 3', 'Language — C. Comprehension: Understanding Texts', ['C3.1'], 'Apply critical thinking to analogical reasoning: identify relationships between word pairs and transfer them to new pairs.'),
       lesson:{title:'Advanced Analogies',intro:'Figure out the RELATIONSHIP, then apply it to a new pair.',example:'Doctor : Hospital :: Teacher : School (they work at those places)',hint:'Ask: what\'s the connection between the first pair?'},
       questions:[
         {type:'mcq',q:'Doctor : Hospital :: Teacher : ?',choices:['Office','School','Store','Home'],answer:1},
@@ -4456,6 +4569,7 @@ akshayan: {
         {type:'mcq',q:'Monday : Tuesday :: Thursday : ?',choices:['Wednesday','Friday','Saturday','Sunday'],answer:1},
       ]},
     { id:'w1-akshayan-l4', title:'Number Detective', emoji:'🔍',
+      curriculum: oc('Grade 3', 'Math — B. Number', ['B1.3','B1.4'], 'Apply number sense to identify, compare, and classify whole numbers using attributes (odd/even, range, place value).'),
       lesson:{title:'Mystery Numbers',intro:'Use clues to figure out a secret number. Each clue narrows it down.',example:'"Between 10-20, even, ends in 4" → 14!',hint:'Apply each clue one at a time.'},
       questions:[
         {type:'mcq',q:'I am between 10 and 20. I am even. I end in 4. What am I?',choices:['12','14','16','18'],answer:1},
@@ -4465,6 +4579,7 @@ akshayan: {
         {type:'mcq',q:'I am between 30 and 40. Both of my digits are the SAME.',choices:['33','34','35','36'],answer:0},
       ]},
     { id:'w1-akshayan-l5', title:'Multi-Step Thinking', emoji:'💡',
+      curriculum: oc('Grade 3', 'Math — B. Number', ['B2.6'], 'Apply multi-step problem-solving strategies involving two or more operations on whole numbers within context.'),
       lesson:{title:'Thinking in Steps',intro:'Break big problems into smaller steps. Solve each one.',example:'"Maya reads 5 pages a day. After 4 days?" → 5 × 4 = 20 pages.',hint:'One step at a time. Write each step down.'},
       questions:[
         {type:'mcq',q:'Alex has twice as many stickers as Ben. Ben has 4. How many does Alex have?',choices:['2','6','8','12'],answer:2},
@@ -4476,6 +4591,7 @@ akshayan: {
   ],
   science: [
     { id:'w1-akshayan-s1', title:'Animal Groups', emoji:'🦓', videoIds:['CZhE2p46vJk'],
+      curriculum: oc('Grade 3', 'Science — B. Life Systems: Growth and Changes in Plants', ['B1.1','B2.4'], 'Review vertebrate classification (mammals, birds, reptiles, fish, amphibians) — bridges Grade 2 Life Systems to Grade 6 Biodiversity.'),
       lesson:{title:'Classifying Animals',intro:'Animals are grouped by what they share. MAMMALS have fur/hair and feed babies milk. BIRDS have feathers. REPTILES have scales. FISH live in water with gills. AMPHIBIANS (like frogs) live in water AND land.',pictures:[
         {emoji:'🐘', word:'Mammals', label:'fur, milk'},{emoji:'🦜', word:'Birds', label:'feathers'},{emoji:'🐍', word:'Reptiles', label:'scales'},{emoji:'🐟', word:'Fish', label:'gills'},{emoji:'🐸', word:'Amphibians', label:'water + land'},
       ],hint:'Humans are mammals too!'},
@@ -4487,6 +4603,7 @@ akshayan: {
         {type:'mcq',q:'Reptiles have...',choices:['Feathers','Fur','Scales','Slime'],answer:2},
       ]},
     { id:'w1-akshayan-s2', title:'Forces & Motion', emoji:'🏃', videoIds:['ljRlB6TuMOU'], // Crash Course Kids — Defining Gravity (force/push-pull)
+      curriculum: oc('Grade 3', 'Science — C. Matter and Energy: Forces Causing Movement', ['C2.1','C2.3','C2.4'], 'Investigate different forces (push, pull, gravity, friction) and describe how they cause objects to start, stop, or change direction.'),
       lesson:{title:'Push and Pull',intro:'A FORCE is a push or a pull. Forces can make things start moving, stop moving, or change direction. GRAVITY is a force that pulls things down toward Earth. FRICTION slows things down when they rub together.',pictures:[
         {emoji:'➡️', word:'Push'},{emoji:'⬅️', word:'Pull'},{emoji:'⬇️', word:'Gravity'},{emoji:'🛑', word:'Friction'},
       ],hint:'When you kick a ball, you PUSH it with force!'},
@@ -4498,6 +4615,7 @@ akshayan: {
         {type:'mcq',q:'Opening a drawer uses a...',choices:['Push','Pull','Spin','Hop'],answer:1},
       ]},
     { id:'w1-akshayan-s3', title:'Circuits & Electricity', emoji:'💡', videoIds:['HOFp8bHTN30'], // SciShow Kids — The Power of Circuits!
+      curriculum: oc('Grade 3', 'Science — C. Matter and Energy: Forces Causing Movement', ['C1.2'], 'Introduce electrical circuits, conductors, and insulators (bridges to Grade 6 Electricity and Electrical Devices).'),
       lesson:{title:'How Electricity Flows',intro:'Electricity flows in a CIRCUIT — a loop from a battery, through wires, to a bulb or motor, and back. CONDUCTORS (metals) let electricity pass. INSULATORS (plastic, wood) block it.',pictures:[
         {emoji:'🔋', word:'Battery', label:'power'},{emoji:'🔌', word:'Wire'},{emoji:'💡', word:'Bulb'},{emoji:'🧲', word:'Metal', label:'conductor'},{emoji:'🪵', word:'Wood', label:'insulator'},
       ],hint:'Metal wires carry electricity — rubber coatings keep you safe!'},
@@ -4509,6 +4627,7 @@ akshayan: {
         {type:'mcq',q:'If the circuit is broken, the bulb...',choices:['Stays on','Turns off','Gets hotter','Rings'],answer:1},
       ]},
     { id:'w1-akshayan-s4', title:'Photosynthesis', emoji:'🌱', videoIds:['D1Ymc311XS8'], // Dr. Binocs / Peekaboo Kidz — Photosynthesis
+      curriculum: oc('Grade 3', 'Science — B. Life Systems: Growth and Changes in Plants', ['B2.2','B2.3','B3.3'], 'Describe how plants use sunlight, water, and carbon dioxide to produce food (photosynthesis) and release oxygen.'),
       lesson:{title:'How Plants Make Food',intro:'Plants are amazing — they make their OWN food from sunlight, water, and air. This process is called photosynthesis.',heroImage:IMG.sunflower,pictures:[
         {emoji:'☀️', word:'Sunlight', image:IMG.sunny},
         {emoji:'💧', word:'Water'},
@@ -4530,6 +4649,7 @@ akshayan: {
         {type:'mcq',q:'The food plants make is mostly...',choices:['Meat','Sugar','Salt','Oil'],answer:1},
       ]},
     { id:'w1-akshayan-s5', title:'Ecosystems', emoji:'🌳', videoIds:['MuKs9o1s8h8'], // Crash Course Kids — Fabulous Food Chains
+      curriculum: oc('Grade 3', 'Science — B. Life Systems: Growth and Changes in Plants', ['B1.2','B3.5'], 'Introduce the concept of ecosystems and simple food chains (plants → herbivores → predators) — bridges to Grade 4 Habitats and Communities.'),
       lesson:{title:'Living Together',intro:'An ECOSYSTEM is a community of living things + their environment. A FOOD CHAIN shows who eats whom: plants → insects → small animals → big animals.',pictures:[
         {emoji:'🌳', word:'Plants'},{emoji:'🐛', word:'Insects'},{emoji:'🐦', word:'Birds'},{emoji:'🦊', word:'Predators'},
       ],hint:'If one part of the chain disappears, the others get hurt!'},
@@ -4543,6 +4663,7 @@ akshayan: {
   ],
   social: [
     { id:'w1-akshayan-c1', title:'Early Indigenous Life', emoji:'🪶',
+      curriculum: oc('Grade 3', 'Social Studies — A. Heritage and Identity: Communities in Canada, 1780–1850', ['A2.1','A3.1'], 'Describe ways of life of Indigenous Peoples in early Canadian communities: shelter (wigwam, longhouse, igloo), food sources, and regional adaptations.'),
       lesson:{title:'Indigenous Communities Long Ago',intro:'Long before Europeans came, Indigenous Peoples lived across what is now Canada. Different groups had different homes (wigwams, longhouses, igloos), foods (fish, buffalo, berries), and languages.',pictures:[
         {emoji:'🏕️', word:'Wigwam'},{emoji:'🛖', word:'Longhouse'},{emoji:'❄️', word:'Igloo'},{emoji:'🏹', word:'Hunting'},{emoji:'🐟', word:'Fishing'},
       ],hint:'Each group adapted to their land — forest, prairie, or Arctic.'},
@@ -4554,6 +4675,7 @@ akshayan: {
         {type:'mcq',q:'Indigenous cultures are...',choices:['All the same','Diverse and unique','Made up','Extinct'],answer:1},
       ]},
     { id:'w1-akshayan-c2', title:'Provinces & Capitals', emoji:'🗺️',
+      curriculum: oc('Grade 3', 'Social Studies — B. People and Environments: Living and Working in Ontario', ['B2.2','B3.3'], 'Locate Canada\'s capital and provincial/territorial capitals; identify how governments are organized geographically (bridges to Grade 5 government).'),
       lesson:{title:'Canadian Capitals',intro:'Each province has a CAPITAL — the city where the provincial government meets. Canada\'s national capital is OTTAWA.',heroImage:IMG.parliament,pictures:[
         {emoji:'🏛️', word:'Ottawa', label:'Canada', image:IMG.parliament},{emoji:'🏙️', word:'Toronto', label:'Ontario'},{emoji:'⛪', word:'Quebec City', label:'Quebec'},{emoji:'🌊', word:'Victoria', label:'BC'},{emoji:'🛢️', word:'Edmonton', label:'Alberta'},
       ],hint:'Capital ≠ biggest city! Toronto is bigger than Ottawa.'},
@@ -4565,6 +4687,7 @@ akshayan: {
         {type:'mcq',q:'A capital is where...',choices:['The biggest store is','The government meets','The mayor lives only','Planes land'],answer:1},
       ]},
     { id:'w1-akshayan-c3', title:'Urban vs. Rural', emoji:'🏙️',
+      curriculum: oc('Grade 3', 'Social Studies — B. People and Environments: Living and Working in Ontario', ['B2.1','B2.3'], 'Compare urban, suburban, and rural communities in Ontario: how population density and land use differ by region.'),
       lesson:{title:'City vs. Country',intro:'URBAN communities are CITIES — lots of people, tall buildings, busy streets. RURAL communities are in the COUNTRYSIDE — fewer people, farms, open land. SUBURBAN is in between.',pictures:[
         {emoji:'🏙️', word:'Urban', label:'city'},
         {emoji:'🏡', word:'Suburban', label:'edge of city'},
@@ -4578,6 +4701,7 @@ akshayan: {
         {type:'mcq',q:'Which best describes Toronto?',choices:['Rural','Suburban','Urban','Wilderness'],answer:2},
       ]},
     { id:'w1-akshayan-c4', title:'Canadian Government', emoji:'🏛️',
+      curriculum: oc('Grade 3', 'Social Studies — A. Heritage and Identity: Communities in Canada, 1780–1850', ['A3.5'], 'Introduce the three levels of government (federal, provincial, municipal) and their leaders — bridges to Grade 5 Strand B Role of Government.'),
       lesson:{title:'Levels of Government',intro:'Canada\'s government has 3 LEVELS. Each one runs different things and has its own leader.',heroImage:IMG.parliament,pictures:[
         {emoji:'🇨🇦', word:'Federal', label:'Prime Minister', image:IMG.canadaFlag},
         {emoji:'🏢', word:'Provincial', label:'Premier'},
@@ -4596,6 +4720,7 @@ akshayan: {
         {type:'mcq',q:'Schools are usually run by...',choices:['Federal','Provincial','Nobody','Parents only'],answer:1},
       ]},
     { id:'w1-akshayan-c5', title:'Early Explorers', emoji:'⛵',
+      curriculum: oc('Grade 3', 'Social Studies — A. Heritage and Identity: Communities in Canada, 1780–1850', ['A1.2','A3.2','A3.3'], 'Identify early European explorers (Jacques Cartier, Samuel de Champlain) and their interactions with Indigenous Peoples in what is now Canada.'),
       // Apr 2026: softened — dropped the specific-year recall (1534) in favor
       // of "long ago" framing. Exact dates are Grade 4+ memorization; the
       // core concept ("Europeans came AFTER Indigenous Peoples") is what
@@ -4620,6 +4745,7 @@ akshayan: {
 isaiah: {
   reading: [
     { id:'w1-isaiah-r1', title:'Main Idea & Details', emoji:'📚', videoIds:['XjR2B3YJH9U'],
+      curriculum: oc('Grade 4', 'Language — C. Comprehension: Understanding Texts', ['C1.4','C1.6'], 'Identify the main idea and supporting details of informational passages; use details to justify the main idea.'),
       lesson:{title:'Finding the Main Idea',visual:'🐘 🌳',intro:'The MAIN IDEA is what a passage is MOSTLY about. Supporting DETAILS are smaller facts that help explain the main idea.',example:'If a passage is mostly about how elephants find food — that\'s the main idea. Details = WHAT they eat (grass, leaves), WHERE they look (savannas, forests), and HOW they gather it (using their trunks).',steps:[
         '<b>Read the whole passage</b> once, no stopping.',
         '<b>Ask yourself:</b> "What is this mostly about?" Try to answer in one sentence.',
@@ -4634,6 +4760,7 @@ isaiah: {
         {type:'mcq',q:'If a story is mostly about a lost puppy finding home, the main idea is about...',choices:['🐕 The puppy\'s journey home','☁️ The weather','🏠 A house','🦴 Dog food'],answer:0},
       ]},
     { id:'w1-isaiah-r2', title:'Cause & Effect', emoji:'🔗', videoIds:['QVw521JjRjA'],
+      curriculum: oc('Grade 4', 'Language — C. Comprehension: Understanding Texts', ['C1.6','C2.2'], 'Identify and analyze cause-and-effect relationships as a text structure in narrative and informational texts.'),
       lesson:{title:'Cause → Effect',visual:'🌧️ ➡️ ☂️',intro:'A CAUSE is WHY something happens. An EFFECT is WHAT happens because of it. They are linked by words like "because", "so", "since", "as a result".',example:'CAUSE: It rained all night. EFFECT: The soccer game was cancelled. ("It rained, SO the game was cancelled.")',hint:'Ask: "What made this happen?" = cause. "What happened because of that?" = effect.'},
       questions:[
         {type:'mcq',q:'"Ella forgot her umbrella, so she got soaked." What is the CAUSE?',choices:['💦 She got soaked','☂️ She forgot her umbrella','🌧️ It was raining','🚶 She was walking'],answer:1},
@@ -4643,6 +4770,7 @@ isaiah: {
         {type:'mcq',q:'"The leaves turned orange since it was autumn." What happened BECAUSE of autumn?',choices:['🍂 The leaves turned orange','🌳 The trees grew','☁️ The sky changed','🐻 Animals hibernated'],answer:0},
       ]},
     { id:'w1-isaiah-r3', title:'Reading Between the Lines', emoji:'🔍', videoIds:['WrUX6j9MwUY'],
+      curriculum: oc('Grade 4', 'Language — C. Comprehension: Understanding Texts', ['C1.5'], 'Make inferences by combining evidence in the text with prior knowledge to understand implicit meaning.'),
       lesson:{title:'Making Inferences',visual:'🔍 💭',intro:'An INFERENCE is a smart guess based on clues in the text — things the author doesn\'t say directly. You combine the clues with what you already know.',example:'TEXT: "Maya walked in with muddy boots and dripping clothes." CLUES → muddy + dripping. INFERENCE: It\'s raining outside (even though the text never says "rain").',steps:[
         '<b>Read carefully</b> and notice small details (what characters do, say, wear, feel).',
         '<b>List the clues</b> in your head — what facts is the author showing you?',
@@ -4658,6 +4786,7 @@ isaiah: {
         {type:'mcq',q:'To make an inference, you...',choices:['🎲 Guess randomly','📖 Read the title only','🕵️ Use text clues + what you know','⏭️ Skip ahead'],answer:2},
       ]},
     { id:'w1-isaiah-r4', title:'Author\'s Purpose', emoji:'✍️', videoIds:['klu7TNy-7qw'],
+      curriculum: oc('Grade 4', 'Language — C. Comprehension: Understanding Texts', ['C2.3','C3.1'], 'Identify the author\'s purpose (to inform, entertain, persuade) and critically analyze how text features support that purpose.'),
       lesson:{title:'Why Did the Author Write It?',visual:'✍️ 💡',intro:'Every piece of writing has a PURPOSE. Remember PIE: Persuade, Inform, or Entertain.',example:'PERSUADE: a letter trying to convince you to eat veggies · INFORM: an encyclopedia page about volcanoes · ENTERTAIN: a funny story about a talking cat.',hint:'Ask: Is the author trying to convince me, teach me, or make me enjoy a story?'},
       questions:[
         {type:'mcq',q:'What is the MAIN purpose of a news article?',choices:['🎭 Entertain','📰 Inform','🗣️ Persuade','😵 Confuse'],answer:1},
@@ -4668,6 +4797,7 @@ isaiah: {
       ]},
     // ★ LEVEL 5 STRETCH — Grade 5 content
     { id:'w1-isaiah-r5', title:'Summarizing (G5 Stretch!)', emoji:'🌟', videoIds:['ML2oX207Mwc'],
+      curriculum: oc('Grade 5', 'Language — C. Comprehension: Understanding Texts', ['C1.7','C2.3'], 'Grade 5 stretch: Summarize a text by identifying the main idea and key supporting details in a concise paraphrase.'),
       lesson:{title:'Summarizing Longer Passages',visual:'📖 ✂️',intro:'A SUMMARY is a short version of a passage in your OWN words. Include the main idea + the most important details, but leave out small facts.',example:'Don\'t rewrite every sentence. Pick 2-3 key ideas. A good summary of a long story should fit in 1-2 sentences.',steps:[
         '<b>Read</b> the whole passage once, without stopping.',
         '<b>Find the main idea</b> — what is this mostly about?',
@@ -4685,6 +4815,7 @@ isaiah: {
   ],
   writing: [
     { id:'w1-isaiah-w1', title:'Topic Sentences', emoji:'🎯', videoIds:['LdCOswMeXFQ'],
+      curriculum: oc('Grade 4', 'Language — D. Composition: Expressing Ideas and Creating Texts', ['D1.3','D2.2'], 'Craft effective topic sentences that establish the main idea and set up supporting details in a paragraph.'),
       lesson:{title:'The Topic Sentence',visual:'📝 🎯',intro:'Every paragraph needs a TOPIC SENTENCE — the first (or main) sentence that tells the reader what the paragraph is about.',example:'Topic: My dog Max loves swimming. → The rest of the paragraph can then give examples: "He jumps in the pool, chases toys in the water, and splashes everywhere."',steps:[
         '<b>Decide your subject</b> — what is this paragraph about in ONE word or phrase?',
         '<b>Write ONE sentence</b> that tells the reader that subject clearly.',
@@ -4699,6 +4830,7 @@ isaiah: {
         {type:'mcq',q:'Which is NOT a strong topic sentence?',choices:['Fall is my favorite season','There are three reasons dogs are the best pet','The zoo has many interesting animals','I walked to the store'],answer:3},
       ]},
     { id:'w1-isaiah-w2', title:'Transition Words', emoji:'🔀',
+      curriculum: oc('Grade 4', 'Language — D. Composition: Expressing Ideas and Creating Texts', ['D2.2','D2.4'], 'Use transition words and phrases (first, then, however, because, finally) to create cohesion and flow between sentences and paragraphs.'),
       lesson:{title:'Connecting Your Ideas',visual:'🔗 📝',intro:'TRANSITION WORDS help readers follow your writing. Use them to show ORDER (first, next, then, finally), ADD info (also, in addition), or show CAUSE (because, so).',example:'First, preheat the oven. Next, mix the flour and sugar. Then, add the eggs. Finally, bake for 25 minutes.',hint:'Good transitions are like stepping stones — they help readers hop from one idea to the next without getting lost.'},
       questions:[
         {type:'mcq',q:'Which transition word shows ORDER?',choices:['First','Because','However','Angry'],answer:0},
@@ -4708,6 +4840,7 @@ isaiah: {
         {type:'mcq',q:'"It was snowing heavily; ___, the school closed." Best transition?',choices:['however','therefore','suddenly','first'],answer:1},
       ]},
     { id:'w1-isaiah-w3', title:'Descriptive Writing', emoji:'🎨',
+      curriculum: oc('Grade 4', 'Language — D. Composition: Expressing Ideas and Creating Texts', ['D1.4','D2.1'], 'Use precise and descriptive language (vivid adjectives, sensory details, figurative language) to engage the reader.'),
       lesson:{title:'Show, Don\'t Tell',visual:'👀 ✨',intro:'Strong writing uses SENSORY DETAILS (sight, sound, smell, touch, taste) and STRONG VERBS. Instead of telling readers how someone feels, show it with details.',example:'TELL: "The dog was excited." SHOW: "The dog\'s tail spun in circles and he bounced off the couch with a happy bark."',hint:'Close your eyes and imagine the scene. What do you SEE, HEAR, SMELL? Put those details on the page.'},
       questions:[
         {type:'mcq',q:'Which sentence SHOWS instead of tells?',choices:['It was cold','My teeth chattered and my nose turned bright red','The weather was bad','I was outside'],answer:1},
@@ -4717,6 +4850,7 @@ isaiah: {
         {type:'mcq',q:'Good descriptive writing uses:',choices:['Only one sense','All five senses when possible','No details','Long words only'],answer:1},
       ]},
     { id:'w1-isaiah-w4', title:'Full Paragraph: TSDC', emoji:'📝',
+      curriculum: oc('Grade 4', 'Language — D. Composition: Expressing Ideas and Creating Texts', ['D1.2','D2.1','D2.2'], 'Compose complete paragraphs using the TSDC structure: Topic sentence → Supporting details → Development → Closing sentence.'),
       lesson:{title:'Topic-Support-Detail-Closing',visual:'📝 🧱',intro:'A great paragraph has four parts: Topic sentence (main idea), Supporting sentences (2-3 reasons or examples), Details (facts or description), Closing sentence (wrap it up).',example:'T: Dogs are great pets. S: They are loyal companions and also easy to train. D: My dog, Buddy, learned "sit" and "stay" in just two weeks. C: For these reasons, dogs make wonderful family members.',steps:[
         '<b>T — Topic sentence:</b> announce what the paragraph is about in ONE sentence.',
         '<b>S — Supporting sentences:</b> give 2–3 reasons or examples that back up your topic.',
@@ -4732,6 +4866,7 @@ isaiah: {
       ]},
     // ★ LEVEL 5 STRETCH — Grade 5 content
     { id:'w1-isaiah-w5', title:'Opinion Essay (G5 Stretch!)', emoji:'🌟',
+      curriculum: oc('Grade 5', 'Language — D. Composition: Expressing Ideas and Creating Texts', ['D1.2','D2.1','D2.4'], 'Grade 5 stretch: Write a persuasive/opinion piece with a clear claim, supporting reasons, and evidence organized across paragraphs.'),
       lesson:{title:'Short Opinion Essay',visual:'💭 ✍️',intro:'An OPINION ESSAY shares what you think AND why. Structure: Intro (your opinion), 2-3 reasons (each with evidence), Conclusion (restate and wrap up).',example:'INTRO: Recess should be longer. REASON 1: Kids focus better after breaks. REASON 2: Physical activity helps learning. REASON 3: Friendships grow at recess. CONCLUSION: For these reasons, a longer recess would help everyone.',steps:[
         '<b>Intro:</b> state your opinion clearly in 1–2 sentences. ("I think _____ because...")',
         '<b>Reason 1:</b> give one reason with an example or evidence. Start with "First,".',
@@ -4762,6 +4897,7 @@ isaiah: {
     //   m5: One-step word problems (add OR subtract, not both)
     // When Isaiah consistently passes these, raise them back toward Gr 4.
     { id:'w1-isaiah-m1', title:'Two-Digit Addition & Subtraction', emoji:'➕', videoIds:['8hz0fAQV0ac'], // NUMBEROCK — Addition with Regrouping (2-digit)
+      curriculum: oc('Grade 4', 'Math — B. Number', ['B2.4'], 'Fluently add and subtract whole numbers up to 10,000 using the standard algorithm with regrouping (including borrow-across-zero).'),
       lesson:{title:'Adding and Subtracting Two-Digit Numbers',intro:'Line up the TENS under the TENS and the ONES under the ONES. Start at the ONES column on the right. If the ones add up to 10 or more, CARRY 1 to the tens. If you can\'t subtract (top is smaller), BORROW 1 from the tens.',stack:[
         {op:'+',top:'28',bottom:'17',carries:[1,''],answer:'45',steps:[
           '<b>Ones:</b> 8 + 7 = <b>15</b>. Write <b>5</b>, carry the <b>1</b> to the tens.',
@@ -4792,6 +4928,7 @@ isaiah: {
         {type:'mcq',q:'A library had 2,506 books. 1,278 were loaned out. How many left?',choices:['1,218','1,228','1,238','1,328'],answer:1},
       ]},
     { id:'w1-isaiah-m2', title:'Times Tables', emoji:'✖️', videoIds:['gzFbUZ8VjEg'], // NUMBEROCK — Equal Groups / Repeated Addition Using Arrays
+      curriculum: oc('Grade 4', 'Math — B. Number', ['B2.5'], 'Demonstrate automaticity with multiplication facts up to 10 × 10; apply multiplication to multi-digit numbers.'),
       lesson:{title:'Multiplication Facts',intro:'Multiplication is a shortcut for adding the same number many times. 3 × 4 means "3 groups of 4" — which is 4 + 4 + 4 = 12. Learn your times tables up to 10 and they\'ll come back to you in one second.',stack:[
         {op:'×',top:'3',bottom:'4',answer:'12',note:'Three groups of four: 4+4+4=12.'},
         {op:'×',top:'5',bottom:'6',answer:'30',note:'Five groups of six. Count by 6s: 6, 12, 18, 24, 30.'},
@@ -4820,6 +4957,7 @@ isaiah: {
         {type:'mcq',q:'Each egg carton holds 12 eggs. How many eggs in 8 cartons?',choices:['84','88','92','96'],answer:3},
       ]},
     { id:'w1-isaiah-m3', title:'Simple Division', emoji:'➗', videoIds:['LGqBQrUYua4'],
+      curriculum: oc('Grade 4', 'Math — B. Number', ['B2.5','B2.6'], 'Use division to solve problems; understand division as the inverse of multiplication; interpret remainders in context.'),
       lesson:{title:'Division — Sharing Into Equal Groups',visual:'12 🍪  ➗  3 👧  = 4 each',intro:'Division splits a number into equal groups. 12 ÷ 3 asks "If I share 12 things among 3 people, how many does each get?" Answer: 4 each.',example:'12 ÷ 3 = 4 (three friends share 12 cookies — 4 each). 20 ÷ 5 = 4 (twenty candies into 5 equal piles — 4 per pile).',steps:[
         '<b>Read it as sharing.</b> 15 ÷ 3 = "split 15 into 3 equal piles — how many per pile?"',
         '<b>Think times tables backward.</b> 15 ÷ 3? Ask "3 times what equals 15?" → 3 × <b>5</b> = 15. So 15 ÷ 3 = <b>5</b>.',
@@ -4834,6 +4972,7 @@ isaiah: {
         {type:'mcq',q:'10 ÷ 3 = 3 with a little left over. How much is left?',choices:['0','1','2','3'],answer:1},
       ]},
     { id:'w1-isaiah-m4', title:'Fractions Basics', emoji:'🍕', videoIds:['CA9XLJpQp3c'], // Math Antics — Fractions Are Parts
+      curriculum: oc('Grade 4', 'Math — B. Number', ['B1.6','B1.7','B2.7'], 'Represent, compare, and order fractions with like denominators; add fractions with the same denominator.'),
       lesson:{title:'What is a Fraction?',intro:'A FRACTION shows PART of a WHOLE thing. The TOP number (numerator) tells how many pieces you have. The BOTTOM number (denominator) tells how many equal pieces make up the whole.',example:'1/2 of a pizza = one of two equal slices. 1/4 = one of four equal slices. 3/4 = three out of four slices.',steps:[
         '<b>Picture a pizza.</b> Cut it into 4 equal slices — each slice is 1/4 of the pizza.',
         '<b>Top = how many you took.</b> If you took 3 slices out of 4, you have <b>3/4</b>.',
@@ -4849,6 +4988,7 @@ isaiah: {
         {type:'mcq',q:'Which is the BIGGEST slice?',choices:['1/2','1/4','1/8','1/10'],answer:0},
       ]},
     { id:'w1-isaiah-m5', title:'One-Step Word Problems', emoji:'📖', videoIds:['KG6ILNOiMgM'],
+      curriculum: oc('Grade 4', 'Math — B. Number', ['B2.6'], 'Solve word problems involving the four operations with whole numbers, including money and measurement contexts.'),
       lesson:{title:'Word Problems — One Step at a Time',intro:'A word problem is a math problem told as a little story. Read it twice. Figure out what it is asking. Pick one operation (add, subtract, multiply, or divide) and solve.',example:'"Sam has 8 apples. He eats 3. How many are left?" This is a subtraction: 8 − 3 = 5 apples.',steps:[
         '<b>Read the whole problem twice.</b> First for the story, then for the question.',
         '<b>Find the numbers.</b> 8 apples, 3 eaten.',
@@ -4866,6 +5006,7 @@ isaiah: {
   ],
   logic: [
     { id:'w1-isaiah-l1', title:'Sorting & Categories', emoji:'🗂️',
+      curriculum: oc('Grade 4', 'Math — D. Data', ['D1.1','D1.2'], 'Sort and classify items using multiple attributes; explain the reasoning behind a classification scheme.'),
       lesson:{title:'Grouping Things Together',intro:'CATEGORIZING means grouping items by what they have in common. Figure out the RULE for the category and decide what fits and what doesn\'t.',example:'Apples, oranges, bananas — all FRUIT. Cars, trucks, bikes — all VEHICLES. The category rule = what they share.',hint:'Ask: "What do these things have in common?" or "Which one does NOT belong?"'},
       questions:[
         {type:'mcq',q:'Which does NOT belong: lion, tiger, cheetah, penguin?',visual:'🦁 🐯 🐆 🐧',choices:['🦁 Lion','🐯 Tiger','🐆 Cheetah','🐧 Penguin'],answer:3},
@@ -4875,6 +5016,7 @@ isaiah: {
         {type:'mcq',q:'Good sorting means finding...',choices:['🎲 Random items','🔗 What things have in common','1️⃣ Only one item','🦣 The biggest one'],answer:1},
       ]},
     { id:'w1-isaiah-l2', title:'Multi-Step Reasoning', emoji:'🧠',
+      curriculum: oc('Grade 4', 'Math — B. Number', ['B2.6'], 'Solve multi-step word problems by breaking them into smaller sub-problems and applying the correct operation sequence.'),
       lesson:{title:'Thinking in Steps',intro:'Some puzzles need TWO or MORE steps to solve. Break the problem down: find clue 1, then use it to find clue 2, and so on.',example:'"Joe is older than Sam. Sam is older than Lily. Who is youngest?" Step 1: Joe > Sam. Step 2: Sam > Lily. So: Joe > Sam > Lily. Lily is youngest.',steps:[
         '<b>Read the whole problem.</b> Underline or remember what you need to find out.',
         '<b>List the clues</b> one at a time. Write short notes if it helps.',
@@ -4890,6 +5032,7 @@ isaiah: {
         {type:'mcq',q:'If today is Wednesday and a trip is in 4 days, what day will the trip be?',choices:['Saturday','Sunday','Monday','Tuesday'],answer:1},
       ]},
     { id:'w1-isaiah-l3', title:'Analogies', emoji:'🔁',
+      curriculum: oc('Grade 4', 'Language — C. Comprehension: Understanding Texts', ['C3.1'], 'Apply analogical reasoning (A : B :: C : ?) to identify semantic and functional relationships between word pairs.'),
       lesson:{title:'Pattern Relationships',intro:'ANALOGIES are "this : that :: this : that" — comparing one relationship to another. Figure out the RELATIONSHIP in the first pair and apply it to the second.',example:'Bird : fly :: Fish : ___? Relationship = what the creature does. Birds fly, fish SWIM.',hint:'Ask: "How is the first pair related?" Then apply the SAME relationship to the second pair.'},
       questions:[
         {type:'mcq',q:'Hot : Cold :: Up : ?',choices:['Left','Down','Over','Small'],answer:1},
@@ -4899,6 +5042,7 @@ isaiah: {
         {type:'mcq',q:'Doctor : Hospital :: Teacher : ?',choices:['Farm','School','Garage','Restaurant'],answer:1},
       ]},
     { id:'w1-isaiah-l4', title:'Deduction Puzzles', emoji:'🕵️',
+      curriculum: oc('Grade 4', 'Math — C. Algebra', ['C3.1','C3.2'], 'Apply computational thinking and logical deduction: use constraints to eliminate possibilities and identify a unique solution.'),
       lesson:{title:'Detective Thinking',intro:'DEDUCTION is using clues to eliminate wrong answers until only the right one is left. Cross off what CAN\'T be true, and you\'ll find what MUST be true.',example:'"The thief is tall. Ali is short, Ben is short, Carla is tall." Ali = eliminated. Ben = eliminated. So Carla is the thief.',steps:[
         '<b>List all the options</b> (suspects, boxes, choices).',
         '<b>Read each clue</b> one at a time.',
@@ -4915,6 +5059,7 @@ isaiah: {
       ]},
     // ★ LEVEL 5 STRETCH — Grade 5 pattern rules
     { id:'w1-isaiah-l5', title:'Pattern Rules (G5 Stretch!)', emoji:'🌟',
+      curriculum: oc('Grade 5', 'Math — C. Algebra', ['C1.3','C1.4'], 'Grade 5 stretch: Describe patterns using algebraic rules (e.g. n+3, 2n+1) and extend geometric/growing patterns.'),
       lesson:{title:'Finding the Rule in a Pattern',intro:'Advanced patterns aren\'t just "add 2" — sometimes the rule is multiply, square, alternate, or involve a mix. Look at HOW each number/item changes.',example:'2, 4, 8, 16, 32 — rule is DOUBLE each time. Or: 1, 4, 9, 16, 25 — rule is SQUARES (1², 2², 3², 4², 5²).',steps:[
         '<b>Find the difference</b> between each pair of numbers. Is it the same?',
         'If YES → the rule is <b>"add N"</b> (the difference).',
@@ -4934,6 +5079,7 @@ isaiah: {
   french: beginnerFrenchBase('isaiah'),
   science: [
     { id:'w1-isaiah-s1', title:'Human Body Systems', emoji:'🫀', videoIds:['EwY6p-r_hyU'],
+      curriculum: oc('Grade 5', 'Science — B. Life Systems: Human Organ Systems', ['B2.1','B2.3'], 'Grade 5 stretch: Identify major human organ systems (digestive, respiratory, circulatory, skeletal, muscular) and describe how they work together.'),
       lesson:{title:'Body Systems Working Together',intro:'The human body is made of SYSTEMS that each do a job. CIRCULATORY (heart + blood) moves oxygen. DIGESTIVE (mouth → stomach → intestines) breaks down food. RESPIRATORY (lungs) takes in air. SKELETAL (bones) holds us up.',heroImage:IMG.skeleton,pictures:[
         {emoji:'🫀', word:'Circulatory', label:'heart + blood', image:IMG.heart},
         {emoji:'🫁', word:'Respiratory', label:'lungs'},
@@ -4948,6 +5094,7 @@ isaiah: {
         {type:'mcq',q:'What pumps blood throughout your body?',choices:['Lungs','Stomach','Heart','Liver'],answer:2},
       ]},
     { id:'w1-isaiah-s2', title:'Properties of Matter', emoji:'🧪', videoIds:['wyRy8kowyM8'],
+      curriculum: oc('Grade 5', 'Science — C. Matter and Energy: Properties of and Changes in Matter', ['C2.1','C2.3'], 'Grade 5 stretch: Describe physical and chemical properties of matter; investigate reversible and irreversible changes.'),
       lesson:{title:'How We Describe Matter',intro:'MATTER has properties we can measure: MASS (how much stuff), VOLUME (how much space), STATE (solid/liquid/gas), DENSITY (mass per volume — why some things float), and MAGNETISM (only some metals).',pictures:[
         {emoji:'⚖️', word:'Mass', label:'grams'},
         {emoji:'🥤', word:'Volume', label:'mL or L'},
@@ -4962,6 +5109,7 @@ isaiah: {
         {type:'mcq',q:'Volume measures...',choices:['Weight','How much space something takes up','Loudness only','Color'],answer:1},
       ]},
     { id:'w1-isaiah-s3', title:'Energy & Circuits', emoji:'⚡', videoIds:['HOFp8bHTN30'], // SciShow Kids — The Power of Circuits!
+      curriculum: oc('Grade 6', 'Science — C. Matter and Energy: Electricity and Electrical Devices', ['C2.1','C2.3'], 'Grade 6 bridge: Describe series and parallel circuits; identify conductors and insulators; trace electrical energy flow.'),
       lesson:{title:'Kinds of Energy',intro:'ENERGY makes things happen. Kinds: ELECTRICAL (wires, batteries), LIGHT (sun, bulbs), HEAT (fire, sun), SOUND (vibrations), KINETIC (motion), POTENTIAL (stored — like a stretched rubber band).',pictures:[
         {emoji:'⚡', word:'Electrical'},{emoji:'💡', word:'Light'},{emoji:'🔥', word:'Heat'},{emoji:'🔊', word:'Sound'},{emoji:'🏃', word:'Kinetic', label:'motion'},{emoji:'🏹', word:'Potential', label:'stored'},
       ],hint:'Energy can CHANGE forms — electrical → light in a bulb!'},
@@ -4973,6 +5121,7 @@ isaiah: {
         {type:'mcq',q:'A guitar playing makes ____ energy.',choices:['Only heat','Only cold','Sound','Electrical only'],answer:2},
       ]},
     { id:'w1-isaiah-s4', title:'Food Chains & Ecosystems', emoji:'🌿', videoIds:['MuKs9o1s8h8'], // Crash Course Kids — Fabulous Food Chains
+      curriculum: oc('Grade 4', 'Science — B. Life Systems: Habitats and Communities', ['B2.3','B2.4','B3.5'], 'Analyze food chains and food webs: identify producers, consumers (herbivore/carnivore/omnivore), and decomposers within a habitat.'),
       lesson:{title:'Who Eats Whom',intro:'In every ECOSYSTEM, energy flows through a FOOD CHAIN. Each link has a job.',heroImage:IMG.tree,steps:[
         '<b>Step 1 — Start at the Sun:</b> All energy in a food chain begins with sunlight.',
         '<b>Step 2 — Producers (plants):</b> Plants capture sunlight and make food (photosynthesis). They\'re the first level of every food chain.',
@@ -4993,6 +5142,7 @@ isaiah: {
         {type:'mcq',q:'What starts every food chain?',choices:['A rock','Energy from the sun','A predator','A river'],answer:1},
       ]},
     { id:'w1-isaiah-s5', title:'Space & Planets (G5 Stretch!)', emoji:'🌟', videoIds:['mQrlgH97v94'], // The Planet Song — KLT (kid-safe). Replace with TED-Ed URL when provided.
+      curriculum: oc('Grade 6', 'Science — E. Earth and Space Systems: Space', ['E2.1','E3.3'], 'Grade 6 bridge: Identify the planets of our solar system in order; describe characteristics of each planet and Earth\'s place in space.'),
       lesson:{title:'Our Solar System',intro:'Our solar system has the SUN and 8 PLANETS orbiting it: Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, Neptune. The MOON orbits Earth and goes through 8 PHASES each month.',heroImage:IMG.solarSystem,pictures:[
         {emoji:'☀️', word:'Sun', image:IMG.sunny},
         {emoji:'🌍', word:'Earth', image:IMG.earth},
@@ -5011,6 +5161,7 @@ isaiah: {
   ],
   social: [
     { id:'w1-isaiah-c1', title:'First Nations, Métis, Inuit', emoji:'🪶',
+      curriculum: oc('Grade 5', 'Social Studies — A. Heritage and Identity: First Nations, Métis, and Inuit in Canada', ['A2.1','A3.1','A3.6'], 'Grade 5 stretch: Describe the diverse ways of life, cultures, languages, and contributions of First Nations, Métis, and Inuit peoples in Canada.'),
       lesson:{title:'Indigenous Peoples of Canada',intro:'Canada recognizes THREE Indigenous groups: FIRST NATIONS (many nations across Canada), MÉTIS (mixed Indigenous + European ancestry, often in the Prairies), and INUIT (Arctic peoples). Each has unique languages, traditions, and treaties with the government.',heroImage:IMG.inukshuk,pictures:[
         {emoji:'🪶', word:'First Nations'},{emoji:'🏹', word:'Métis', label:'Prairies'},{emoji:'🛖', word:'Inuit', label:'Arctic', image:IMG.inukshuk},
       ],hint:'Treaties are agreements between Indigenous nations and the Canadian government.'},
@@ -5022,6 +5173,7 @@ isaiah: {
         {type:'mcq',q:'Indigenous Peoples were the...',choices:['Last to arrive','First to live in Canada','Recent immigrants','Not in Canada'],answer:1},
       ]},
     { id:'w1-isaiah-c2', title:'European Contact', emoji:'⛵',
+      curriculum: oc('Grade 5', 'Social Studies — A. Heritage and Identity: First Nations, Métis, and Inuit in Canada', ['A1.2','A3.4'], 'Grade 5 stretch: Analyze the impact of European contact on Indigenous Peoples: trade, alliances, disease, and cultural disruption.'),
       lesson:{title:'European Arrival',intro:'European explorers (French, British, Norse earlier) arrived, establishing trade and settlements. This changed life drastically for Indigenous Peoples — through fur trade, disease, and land loss. Key figures: JACQUES CARTIER (1534), SAMUEL DE CHAMPLAIN (founded Quebec 1608).',pictures:[
         {emoji:'⛵', word:'1534: Cartier'},
         {emoji:'🏰', word:'1608: Champlain', label:'Quebec'},
@@ -5035,6 +5187,7 @@ isaiah: {
         {type:'mcq',q:'Who came to Canada FIRST — Europeans or Indigenous Peoples?',choices:['Europeans','Indigenous Peoples','Same time','No one'],answer:1},
       ]},
     { id:'w1-isaiah-c3', title:'3 Levels of Government', emoji:'🏛️',
+      curriculum: oc('Grade 5', 'Social Studies — B. People and Environments: The Role of Government and Responsible Citizenship', ['B1.2','B3.2','B3.5'], 'Grade 5 stretch: Identify the three levels of government in Canada (federal, provincial, municipal) and describe their responsibilities.'),
       lesson:{title:'How Canada is Governed',intro:'Canada\'s government works on 3 levels. Each level has its own responsibilities and its own leader — voted in by Canadian citizens.',heroImage:IMG.parliament,pictures:[
         {emoji:'🇨🇦', word:'Federal', label:'Prime Minister', image:IMG.canadaFlag},
         {emoji:'🏢', word:'Provincial', label:'Premier'},
@@ -5053,6 +5206,7 @@ isaiah: {
         {type:'mcq',q:'Garbage pickup and city parks are run by...',choices:['Federal','Provincial','Municipal','Nobody'],answer:2},
       ]},
     { id:'w1-isaiah-c4', title:'Provinces & Capitals', emoji:'🗺️',
+      curriculum: oc('Grade 4', 'Social Studies — B. People and Environments: Political and Physical Regions of Canada', ['B2.1','B2.3','B3.1'], 'Locate and identify Canada\'s provinces, territories, and their capitals; describe the political divisions of Canada.'),
       lesson:{title:'All 10 Provinces + 3 Territories',intro:'Canada = 10 PROVINCES + 3 TERRITORIES. Learn the pattern east→west: Newfoundland & Labrador (St. John\'s), PEI (Charlottetown), Nova Scotia (Halifax), New Brunswick (Fredericton), Quebec (Quebec City), Ontario (Toronto), Manitoba (Winnipeg), Saskatchewan (Regina), Alberta (Edmonton), BC (Victoria). Territories: Yukon (Whitehorse), NWT (Yellowknife), Nunavut (Iqaluit).',heroImage:IMG.canadaMap,pictures:[
         {emoji:'🦞', word:'Atlantic', label:'NL/PE/NS/NB'},
         {emoji:'⚜️', word:'Quebec → Ontario'},
@@ -5068,6 +5222,7 @@ isaiah: {
         {type:'mcq',q:'Total provinces + territories in Canada?',choices:['10','11','13','15'],answer:2},
       ]},
     { id:'w1-isaiah-c5', title:'Rights & Freedoms (G5 Stretch!)', emoji:'🌟',
+      curriculum: oc('Grade 5', 'Social Studies — B. People and Environments: The Role of Government and Responsible Citizenship', ['B2.4','B3.8'], 'Grade 5 stretch: Identify rights and freedoms guaranteed by the Canadian Charter of Rights and Freedoms and the responsibilities that accompany them.'),
       lesson:{title:'Canadian Charter',intro:'The CANADIAN CHARTER OF RIGHTS AND FREEDOMS (1982) protects everyone\'s rights. Examples: FREEDOM OF SPEECH (say what you believe), FREEDOM OF RELIGION (worship as you choose), RIGHT TO EQUALITY (no discrimination), RIGHT TO VOTE (age 18+), LEGAL RIGHTS (fair trial).',pictures:[
         {emoji:'🗣️', word:'Free speech'},
         {emoji:'🙏', word:'Religion'},
@@ -5096,6 +5251,7 @@ isaiah: {
 evan: {
   reading: [
     { id:'w1-evan-r1', title:'Context Clues', emoji:'🔍',
+      curriculum: oc('Grade 7', 'Language — C. Comprehension: Understanding Texts', ['C1.1','C3.2'], 'Use context clues within a passage to determine the meaning of unfamiliar or academic vocabulary (ESL priority skill).'),
       lesson:{title:'Guessing New Words From Context',intro:'When you see a word you don\'t know, DON\'T stop and look it up every time. Use CONTEXT CLUES — the words around it — to figure out what it probably means. This is the #1 reading skill for any second-language reader.',example:'"The teacher was ELATED when the whole class passed the test. She smiled for hours afterward." → You don\'t know ELATED? Clue: "smiled for hours" = very happy. ELATED means "very happy".',steps:[
         '<b>Read the whole sentence</b> — don\'t stop at the unknown word.',
         '<b>Look at the words BEFORE and AFTER.</b> What feeling, action, or idea do they describe?',
@@ -5111,6 +5267,7 @@ evan: {
         {type:'passage',passage:'The children were OVERJOYED to see the snow. They ran outside shouting and laughing without even grabbing their coats.',q:'OVERJOYED most likely means...',choices:['Slightly sad','Very happy','Confused','Cold'],answer:1},
       ]},
     { id:'w1-evan-r2', title:'Main Idea & Details', emoji:'📚',
+      curriculum: oc('Grade 7', 'Language — C. Comprehension: Understanding Texts', ['C1.4','C1.6'], 'Identify the main idea and supporting details in grade-level informational and narrative texts.'),
       lesson:{title:'Finding What the Passage Is About',intro:'Every passage has ONE main idea — the big thing it\'s mostly about. The other sentences give SUPPORTING DETAILS that back up or explain the main idea.',example:'MAIN IDEA: "Bees are important for growing food." DETAILS: They pollinate flowers. Farmers rent bees for their fields. Without bees, many fruits would disappear.',steps:[
         '<b>Read the whole passage</b> once without stopping.',
         '<b>Ask:</b> "What is this mostly about?" Try to say it in ONE short sentence.',
@@ -5125,6 +5282,7 @@ evan: {
         {type:'mcq',q:'Where do writers often put the main idea?',choices:['Only at the end','Only in the middle','Often in the first or last sentence of a paragraph','Hidden randomly'],answer:2},
       ]},
     { id:'w1-evan-r3', title:'Making Inferences', emoji:'🕵️',
+      curriculum: oc('Grade 7', 'Language — C. Comprehension: Understanding Texts', ['C1.5'], 'Make inferences by combining explicit text evidence with prior knowledge to understand implicit meaning.'),
       lesson:{title:'Reading Between the Lines',intro:'An INFERENCE is a smart guess using CLUES from the text + what you already know about the world. Writers don\'t say everything directly — you have to figure some things out.',example:'TEXT: "Sarah zipped up her thick coat and wrapped a scarf around her neck before stepping outside." You can INFER it is cold, even though the text never says the word "cold".',steps:[
         '<b>Notice details</b> — what characters do, say, wear, or feel.',
         '<b>Ask:</b> "What do these details suggest?"',
@@ -5139,6 +5297,7 @@ evan: {
         {type:'passage',passage:'The waiter brought two plates of pasta. He lit a small candle in the middle of the table. Soft music played in the background. The young couple smiled at each other and held hands.',q:'What type of dinner is this, most likely?',choices:['A business meeting','A romantic date','A school lunch','A fast-food stop'],answer:1},
       ]},
     { id:'w1-evan-r4', title:'Idioms & Figurative Language', emoji:'🎭',
+      curriculum: oc('Grade 7', 'Language — C. Comprehension: Understanding Texts', ['C2.3','C2.4'], 'Identify and interpret idioms, similes, metaphors, and figurative language (high-priority ESL skill for conversational English).'),
       lesson:{title:'When Words Don\'t Mean What They Say',intro:'English speakers often use FIGURATIVE LANGUAGE — words that don\'t mean exactly what they say. An IDIOM is a fixed phrase with a hidden meaning. This is tricky for anyone learning English — you have to LEARN idioms the same way you learn vocabulary.',example:'"It\'s raining cats and dogs" does NOT mean animals are falling. It means "it\'s raining very hard." "Break a leg!" does NOT mean hurt yourself. It means "good luck!" (often said to performers before a show).',steps:[
         '<b>Simile</b> — compares two things using "like" or "as": "brave as a lion", "sings like an angel".',
         '<b>Metaphor</b> — compares directly, no "like" or "as": "Life is a journey."',
@@ -5161,6 +5320,7 @@ evan: {
         {type:'mcq',q:'"His eyes were diamonds" is a...',choices:['Simile','Metaphor','Idiom','Fact'],answer:1},
       ]},
     { id:'w1-evan-r5', title:'Summarizing a Passage', emoji:'✂️',
+      curriculum: oc('Grade 7', 'Language — C. Comprehension: Understanding Texts', ['C1.7','C2.3'], 'Summarize a text by identifying its main idea, key supporting details, and paraphrasing concisely in one\'s own words.'),
       lesson:{title:'Shrinking a Long Passage Into a Short Summary',intro:'A SUMMARY retells a passage in your own words, much shorter than the original. Good summaries keep the main idea + 2-3 key points and leave out the small details.',example:'Original (3 sentences): "Pandas eat mostly bamboo. They need up to 12 kg of it every day. Pandas live only in China\'s mountain forests." Summary (1 sentence): "Pandas are Chinese mountain animals who eat large amounts of bamboo every day."',steps:[
         '<b>Read</b> the passage once, fully, without stopping.',
         '<b>Find the main idea</b> — what is this mostly about?',
@@ -5178,6 +5338,7 @@ evan: {
   ],
   writing: [
     { id:'w1-evan-w1', title:'Complete Sentences', emoji:'🧱',
+      curriculum: oc('Grade 7', 'Language — B. Foundations of Language', ['B3.3'], 'Identify and correct sentence fragments and run-on sentences; construct grammatically complete sentences (subject + predicate).'),
       lesson:{title:'Every Sentence Needs These Three Things',intro:'A COMPLETE SENTENCE in English must have: (1) a SUBJECT (who or what), (2) a VERB (what they do or are), and (3) a COMPLETE THOUGHT. If any one is missing, it\'s a FRAGMENT — not a real sentence.',example:'✅ "The dog runs." (Subject = dog, verb = runs, complete thought.) ❌ "Running in the park." (No subject. FRAGMENT.) ❌ "Because I was tired." (No complete thought — because WHAT? FRAGMENT.)',steps:[
         '<b>Find the SUBJECT</b> — ask "Who or what is this about?" (A person, place, thing, or idea.)',
         '<b>Find the VERB</b> — ask "What does the subject DO, or what IS the subject?"',
@@ -5200,6 +5361,7 @@ evan: {
         {type:'mcq',q:'Which is the BEST way to turn "Running in the park" into a complete sentence?',choices:['"Running in the park."','"In the park."','"I love running in the park."','"Running."'],answer:2},
       ]},
     { id:'w1-evan-w2', title:'Verb Tenses', emoji:'⏰',
+      curriculum: oc('Grade 7', 'Language — B. Foundations of Language', ['B3.4'], 'Apply the correct verb tense (past, present, future) consistently within a sentence or paragraph (ESL priority skill).'),
       lesson:{title:'Past, Present, Future — And When to Use Each',intro:'VERB TENSE tells WHEN the action happens. Three main tenses: PRESENT (now / always), PAST (before), FUTURE (later). Each has a regular form you can build, plus some irregular verbs you have to memorize.',example:'Regular verb "to walk": PRESENT = "I walk to school every day." PAST = "I walked to school yesterday." FUTURE = "I will walk to school tomorrow." Irregular verb "to go": PRESENT = "I go." PAST = "I went." (NOT "goed") FUTURE = "I will go."',steps:[
         '<b>Present tense:</b> base verb. Add -s for he/she/it. "I play" / "She plays".',
         '<b>Past tense (regular):</b> add -ed. "I played yesterday." "He worked last week."',
@@ -5222,6 +5384,7 @@ evan: {
         {type:'mcq',q:'The past tense of BUY is...',choices:['buyed','boughten','bought','buyt'],answer:2},
       ]},
     { id:'w1-evan-w3', title:'Subject-Verb Agreement', emoji:'🤝',
+      curriculum: oc('Grade 7', 'Language — B. Foundations of Language', ['B3.4'], 'Apply subject-verb agreement: singular subjects with singular verbs, plural subjects with plural verbs (high-priority ESL grammar skill).'),
       lesson:{title:'The Verb Must Match the Subject',intro:'In English, the VERB changes to match the SUBJECT. SINGULAR subjects (one) use a different verb form than PLURAL subjects (more than one). This is a top-3 ESL mistake — native speakers notice it instantly.',example:'✅ "She WALKS to school." (singular subject "she" → verb +s) ✅ "They WALK to school." (plural subject "they" → verb stays plain) ✅ "He IS happy." (singular → "is") ✅ "We ARE happy." (plural → "are") ❌ "They walks" / ❌ "He are"',steps:[
         '<b>Find the subject.</b> Is it ONE (singular) or MORE THAN ONE (plural)?',
         '<b>Present tense rule:</b> he/she/it → verb + s. I/you/we/they → base verb. "She plays" / "They play".',
@@ -5244,6 +5407,7 @@ evan: {
         {type:'mcq',q:'My family ___ from Sri Lanka. (family = singular unit)',choices:['are','is','were','be'],answer:1},
       ]},
     { id:'w1-evan-w4', title:'Articles (a / an / the)', emoji:'🔤',
+      curriculum: oc('Grade 7', 'Language — B. Foundations of Language', ['B3.4'], 'Apply correct use of indefinite articles (a/an) and the definite article (the) — a high-priority ESL skill since many L1s (Tamil, Mandarin, Korean) lack articles.'),
       lesson:{title:'When to Use A, An, The — and When to Skip',intro:'ARTICLES are tiny words that come before nouns: A, AN, THE. They confuse almost every ESL learner because many languages don\'t use them the same way English does.',example:'"A" / "AN" = one (any one, not a specific one). Use "A" before a consonant sound ("a dog", "a university"). Use "AN" before a vowel sound ("an apple", "an hour"). "THE" = a specific one both speaker and listener know about. "I saw A dog yesterday. THE dog was brown."',steps:[
         '<b>A / AN</b> = one of something, the first time you mention it, any example will do.',
         '<b>A</b> before consonant sound: a book, a car, a tree.',
@@ -5266,6 +5430,7 @@ evan: {
         {type:'mcq',q:'Pick the sentence with the CORRECT articles.',choices:['I have a dog. A dog is brown.','I have the dog. A dog is brown.','I have a dog. The dog is brown.','I have an dog. The dog is brown.'],answer:2},
       ]},
     { id:'w1-evan-w5', title:'Prepositions of Time & Place', emoji:'📍',
+      curriculum: oc('Grade 7', 'Language — B. Foundations of Language', ['B3.4'], 'Apply correct use of prepositions (in, on, at) for time and location — ESL grammar priority since prepositional systems differ across languages.'),
       lesson:{title:'In, On, At — The Three Tiny Words That Trip Everyone',intro:'PREPOSITIONS show position or time. The English "in / on / at" rules are different from most languages, so you have to memorize them.',example:'TIME — IN a month/year/season: "in July", "in 2026", "in winter". ON a day/date: "on Monday", "on April 17". AT a clock time: "at 3pm", "at noon", "at night". PLACE — IN a container/building/country: "in the box", "in Canada". ON a surface: "on the table", "on the wall". AT a point/address: "at the bus stop", "at home", "at 123 Main Street".',steps:[
         '<b>TIME — IN:</b> longer periods. in 2026, in July, in the morning.',
         '<b>TIME — ON:</b> specific days / dates. on Monday, on my birthday, on April 17.',
@@ -5291,6 +5456,7 @@ evan: {
   ],
   math: [
     { id:'w1-evan-m1', title:'Integers & Negative Numbers', emoji:'➖',
+      curriculum: oc('Grade 7', 'Math — B. Number', ['B1.4','B2.3'], 'Represent and compare integers (positive and negative whole numbers); add, subtract, multiply, and divide integers.'),
       lesson:{title:'Numbers Below Zero',intro:'INTEGERS are whole numbers including NEGATIVE numbers. Think of a number line: positives go right, negatives go left, zero in the middle. Adding a negative means moving LEFT. Subtracting a negative means moving RIGHT (double-negative = positive).',example:'5 + (−3) = 2 (start at 5, move 3 left). 4 − (−2) = 4 + 2 = 6. −3 + −5 = −8. (−4) × 3 = −12. (−4) × (−3) = +12 (two negatives multiply to a positive).',steps:[
         '<b>Adding integers:</b> same signs → add and keep the sign. Different signs → subtract and keep the sign of the bigger number.',
         '<b>Subtracting:</b> change the subtraction to addition of the opposite. 5 − (−3) → 5 + 3 = 8.',
@@ -5305,6 +5471,7 @@ evan: {
         {type:'mcq',q:'Which is the SMALLEST?',choices:['−10','−5','0','3'],answer:0},
       ]},
     { id:'w1-evan-m2', title:'Order of Operations (BEDMAS)', emoji:'🔢',
+      curriculum: oc('Grade 7', 'Math — B. Number', ['B2.3'], 'Apply the order of operations (BEDMAS/PEMDAS) to evaluate numerical expressions involving integers, decimals, and fractions.'),
       lesson:{title:'The Correct Order for Mixed Math',intro:'When a math problem has more than one operation, solve it in a strict ORDER. In Canada we use BEDMAS: Brackets → Exponents → Division & Multiplication (left to right) → Addition & Subtraction (left to right). If you skip the rule, you get a wrong answer.',example:'2 + 3 × 4 = ? Do multiplication FIRST → 2 + 12 = 14. NOT 5 × 4 = 20. (10 − 2) × 3 = 8 × 3 = 24 (brackets first). 6 + 2² × 3 = 6 + 4 × 3 = 6 + 12 = 18.',steps:[
         '<b>B — Brackets</b> ( ) first.',
         '<b>E — Exponents</b> (like 2³ = 8) next.',
@@ -5320,6 +5487,7 @@ evan: {
         {type:'mcq',q:'What is the FIRST step in BEDMAS?',choices:['Addition','Brackets','Division','Exponents'],answer:1},
       ]},
     { id:'w1-evan-m3', title:'Fractions, Decimals & Percents', emoji:'💯',
+      curriculum: oc('Grade 7', 'Math — B. Number', ['B1.3','B1.4','B2.4'], 'Convert between equivalent representations of rational numbers (fractions ↔ decimals ↔ percents) and operate on them.'),
       lesson:{title:'Three Ways to Say the Same Thing',intro:'Fractions, decimals, and percents are three ways of writing the same number. 1/2 = 0.5 = 50%. Being able to switch between them is a Grade 7 must.',example:'Fraction → Decimal: divide top by bottom. 3/4 = 3 ÷ 4 = 0.75. Decimal → Percent: multiply by 100. 0.75 × 100 = 75%. Percent → Fraction: put over 100, simplify. 20% = 20/100 = 1/5.',steps:[
         '<b>Fraction → Decimal:</b> numerator ÷ denominator. 1/4 = 1 ÷ 4 = 0.25.',
         '<b>Decimal → Percent:</b> ×100 (move the decimal point two places to the right). 0.6 → 60%.',
@@ -5335,6 +5503,7 @@ evan: {
         {type:'mcq',q:'Which is the LARGEST?',choices:['0.6','55%','1/2','0.45'],answer:0},
       ]},
     { id:'w1-evan-m4', title:'Solving for x (1-step)', emoji:'🧮',
+      curriculum: oc('Grade 7', 'Math — C. Algebra', ['C2.2','C2.3'], 'Solve one-step linear equations (e.g. x + 7 = 12, 3x = 24) using inverse operations; verify solutions by substitution.'),
       lesson:{title:'Finding the Mystery Number',intro:'In algebra, X (or any letter) stands for an unknown number. To SOLVE an equation means to find X. The big rule: whatever you do to one side, do to the other — so the equation stays balanced.',example:'Solve: x + 5 = 12. Subtract 5 from BOTH sides → x = 7. Check: 7 + 5 = 12. ✅ Solve: 3x = 15. Divide BOTH sides by 3 → x = 5. Solve: x − 4 = 10. Add 4 to both sides → x = 14.',steps:[
         '<b>Goal:</b> get X alone on one side.',
         '<b>Ask:</b> "What is being done to X?" (added, subtracted, multiplied, divided?)',
@@ -5350,6 +5519,7 @@ evan: {
         {type:'mcq',q:'To solve x + 8 = 15, you should...',choices:['Add 8 to both sides','Subtract 8 from both sides','Multiply by 8','Divide by 8'],answer:1},
       ]},
     { id:'w1-evan-m5', title:'Ratios & Unit Rates', emoji:'⚖️',
+      curriculum: oc('Grade 7', 'Math — B. Number', ['B1.6','B1.7','B2.4'], 'Represent ratios, rates, and percents; use unit rates to solve proportional problems (e.g. 60 km / 4 hr = 15 km/h).'),
       lesson:{title:'Comparing Two Quantities',intro:'A RATIO compares two amounts: 3 apples to 2 oranges → 3:2. A UNIT RATE is a ratio where the second term is 1 (how much per ONE): 120 km in 2 hours = 60 km per hour.',example:'Ratio: "2 boys for every 3 girls" → 2:3. If there are 6 boys, how many girls? 6:? Since 2×3=6, multiply girls by 3 too → 9 girls. Unit rate: 5 apples cost $2. 1 apple costs $2 ÷ 5 = $0.40 each.',steps:[
         '<b>Write the ratio</b> in the right order. "3 boys to 2 girls" = 3:2 (NOT 2:3).',
         '<b>Simplify</b> if you can — divide both terms by the same number. 6:4 = 3:2.',
@@ -5367,6 +5537,7 @@ evan: {
   ],
   logic: [
     { id:'w1-evan-l1', title:'Patterns & Sequences', emoji:'🔢',
+      curriculum: oc('Grade 7', 'Math — C. Algebra', ['C1.1','C1.2','C1.3'], 'Identify and describe linear and non-linear patterns using algebraic expressions (e.g. the nth term of 3, 7, 11, 15 is 4n−1).'),
       lesson:{title:'Finding the Rule',intro:'A SEQUENCE is a list of numbers with a pattern. ARITHMETIC sequences add/subtract the same number each time (2, 5, 8, 11 → +3). GEOMETRIC sequences multiply/divide by the same number (3, 6, 12, 24 → ×2).',example:'2, 5, 8, 11, ? → rule is +3 → next is 14. 3, 6, 12, 24, ? → rule is ×2 → next is 48. 100, 90, 80, ? → rule is −10 → next is 70.',steps:[
         '<b>Subtract</b> consecutive pairs. Same result? It\'s arithmetic.',
         '<b>Divide</b> consecutive pairs. Same result? It\'s geometric.',
@@ -5381,6 +5552,7 @@ evan: {
         {type:'mcq',q:'The rule for 2, 4, 8, 16, 32 is...',choices:['+2','×2','+4','×3'],answer:1},
       ]},
     { id:'w1-evan-l2', title:'Deductive Reasoning', emoji:'🧠',
+      curriculum: oc('Grade 7', 'Math — C. Algebra', ['C3.1','C3.2'], 'Apply logical (deductive) reasoning and computational thinking to solve problems involving constraints and conditional statements.'),
       lesson:{title:'If-Then Thinking',intro:'DEDUCTIVE REASONING means using true facts to reach a certain conclusion. Classic form: "If A is true, and B is true, then C must be true." The conclusion can\'t be wrong if the facts are right.',example:'Fact 1: All mammals have hair. Fact 2: A whale is a mammal. Conclusion: A whale has hair. ✅ (It does — tiny whiskers count!)',steps:[
         '<b>Identify the facts</b> (premises). Are they actually true?',
         '<b>Combine them</b> step by step.',
@@ -5395,6 +5567,7 @@ evan: {
         {type:'mcq',q:'Which argument has a LOGIC ERROR?',choices:['All cats are mammals. Fluffy is a cat. So Fluffy is a mammal.','All mammals have fur. Fluffy has fur. So Fluffy is a mammal.','All dogs bark. Rex is a dog. So Rex barks.','All triangles have 3 sides. This is a triangle. So it has 3 sides.'],answer:1},
       ]},
     { id:'w1-evan-l3', title:'Word Problems → Equations', emoji:'📝',
+      curriculum: oc('Grade 7', 'Math — C. Algebra', ['C2.2','C2.3'], 'Translate word problems into algebraic equations; define a variable and use it to model an unknown quantity.'),
       lesson:{title:'Turning English Into Algebra',intro:'Word problems tell you a situation. Your job is to turn the words into an equation and solve it. Key: label the unknown as X, write what you know, and write the relationship as an equation.',example:'"A number plus 7 is 15. What is the number?" Let the number = x. Equation: x + 7 = 15 → x = 8. "Three times a number is 21." → 3x = 21 → x = 7.',steps:[
         '<b>Read the problem twice.</b> What is it asking for?',
         '<b>Let X</b> = the unknown thing.',
@@ -5410,6 +5583,7 @@ evan: {
         {type:'mcq',q:'"A number divided by 4 is 9." The number is...',choices:['13','24','32','36'],answer:3},
       ]},
     { id:'w1-evan-l4', title:'Venn Diagrams', emoji:'🔵',
+      curriculum: oc('Grade 7', 'Math — D. Data', ['D1.1','D1.4'], 'Use Venn diagrams to sort and classify data sets; identify elements of intersection, union, and difference between sets.'),
       lesson:{title:'Two Circles, Three Zones',intro:'A VENN DIAGRAM uses overlapping circles to show how groups share members. The OVERLAP (middle) = things in BOTH groups. The outer parts = things in only ONE group. The outside of all circles = things in NEITHER.',example:'In a class, 18 students play soccer, 12 play basketball, and 7 play BOTH. How many play ONLY soccer? 18 − 7 = 11. Only basketball: 12 − 7 = 5. Overlap: 7. Total playing at least one sport: 11 + 5 + 7 = 23.',steps:[
         '<b>Start with the OVERLAP</b> (people in both groups). Write that number in the middle first.',
         '<b>Subtract the overlap from each circle\'s total</b> to get the "only this" number.',
@@ -5424,6 +5598,7 @@ evan: {
         {type:'mcq',q:'If 25 students total, and 21 play at least one sport, how many play NEITHER?',choices:['0','4','21','25'],answer:1},
       ]},
     { id:'w1-evan-l5', title:'Multi-Step Reasoning', emoji:'🎯',
+      curriculum: oc('Grade 7', 'Math — B. Number', ['B2.4','B2.5'], 'Solve multi-step word problems involving rational numbers; plan a solution strategy and verify reasonableness.'),
       lesson:{title:'Combining Clues',intro:'Some puzzles need TWO OR MORE steps. You combine facts, eliminate options, and narrow down to one answer. This is the core skill of every logic puzzle, mystery, and science investigation.',example:'Three friends — Ali, Ben, Carla — each have one pet: a dog, a cat, or a bird. Ali does NOT have a cat. Ben has the dog. Who has the bird? Step 1: Ben = dog (given). Step 2: Ali ≠ cat, so Ali = bird. Step 3: Carla = cat.',steps:[
         '<b>Write down all the clues</b> in a list.',
         '<b>Make a chart</b> — people along one side, items along the other.',
@@ -5441,6 +5616,7 @@ evan: {
   ],
   french: [
     { id:'w1-evan-f1', title:'Verbes Réguliers (−ER)', emoji:'🇫🇷',
+      curriculum: oc('Grade 7', 'FSL (Core French) — Writing', ['B3.2','D2.1'], 'Conjugate regular −ER verbs in the present tense (parler, manger, habiter) and apply correct subject-verb endings.'),
       lesson:{title:'Conjugating Regular −ER Verbs',intro:'Most French verbs follow a pattern. For regular −ER verbs (parler = to speak), drop the −er and add these endings: je −e, tu −es, il/elle −e, nous −ons, vous −ez, ils/elles −ent.',example:'PARLER (to speak): je parle, tu parles, il parle, nous parlons, vous parlez, ils parlent. MANGER (to eat): je mange, tu manges, elle mange, nous mangeons, vous mangez, elles mangent.',steps:[
         '<b>Identify the infinitive:</b> a verb ending in −ER, like parler (speak), manger (eat), regarder (watch).',
         '<b>Drop the −ER ending</b> to find the stem: parl−.',
@@ -5455,6 +5631,7 @@ evan: {
         {type:'mcq',q:'"Tu ___" (to work — travailler)',choices:['travaille','travailles','travaillons','travaillent'],answer:1},
       ]},
     { id:'w1-evan-f2', title:'Passé Composé (Intro)', emoji:'⏪',
+      curriculum: oc('Grade 7', 'FSL (Core French) — Writing', ['B3.2','D2.1'], 'Introduction to the passé composé: form the past tense using auxiliary avoir + past participle (j\'ai parlé, tu as mangé).'),
       lesson:{title:'Talking About the Past',intro:'PASSÉ COMPOSÉ = the main past tense in French. Formula: AVOIR (to have) or ÊTRE (to be) + past participle. Most verbs use AVOIR. The past participle of regular −ER verbs ends in −É.',example:'PARLER (to speak) → past participle = parlé. "J\'ai parlé" = I spoke. "Tu as mangé" = You ate. "Nous avons regardé" = We watched. A few verbs use ÊTRE (mostly movement verbs like aller, venir, partir, arriver): "Je suis allé" = I went.',steps:[
         '<b>Decide: AVOIR or ÊTRE?</b> Most verbs = avoir. Movement/state verbs = être.',
         '<b>Conjugate the helper verb</b> in the present: j\'ai, tu as, il a, nous avons, vous avez, ils ont.',
@@ -5469,6 +5646,7 @@ evan: {
         {type:'mcq',q:'The past participle of FINIR (to finish) is...',choices:['finé','fini','finu','finir'],answer:1},
       ]},
     { id:'w1-evan-f3', title:'Adjective Agreement', emoji:'🔀',
+      curriculum: oc('Grade 7', 'FSL (Core French) — Writing', ['B3.2','D2.1'], 'Apply gender and number agreement of adjectives with nouns (grand/grande, grands/grandes) in French writing.'),
       lesson:{title:'Adjectives Match the Noun',intro:'In French, ADJECTIVES change their ending to match the noun they describe. A masculine noun → masculine adjective. A feminine noun → usually +e. Plural → usually +s.',example:'PETIT (small): masculine singular = petit (un petit chien). Feminine singular = petite (une petite maison). Masculine plural = petits. Feminine plural = petites. GRAND (big): grand / grande / grands / grandes.',steps:[
         '<b>Identify the noun:</b> masculine (un, le) or feminine (une, la)? Singular or plural?',
         '<b>Start with the masculine singular</b> form of the adjective (dictionary form).',
@@ -5484,6 +5662,7 @@ evan: {
         {type:'mcq',q:'"Un livre ___" (interesting — intéressant, masc singular)',choices:['intéressant','intéressante','intéressants','intéressantes'],answer:0},
       ]},
     { id:'w1-evan-f4', title:'Question Words', emoji:'❓',
+      curriculum: oc('Grade 7', 'FSL (Core French) — Speaking', ['B2.1','B3.2'], 'Use French question words (qui, quoi, où, quand, pourquoi, comment) to ask and answer questions in spoken and written interaction.'),
       lesson:{title:'Asking Questions in French',intro:'Learn the 6 main QUESTION WORDS to ask about anything: QUI = who, QUE / QU\'EST-CE QUE = what, QUAND = when, OÙ = where, POURQUOI = why, COMMENT = how.',example:'"Qui es-tu?" = Who are you? "Qu\'est-ce que tu fais?" = What are you doing? "Quand?" = When? "Où habites-tu?" = Where do you live? "Pourquoi?" = Why? "Comment ça va?" = How are you?',steps:[
         '<b>QUI</b> = who (people). "Qui est-ce?" = Who is it?',
         '<b>QUE / QU\'EST-CE QUE</b> = what. "Que fais-tu?" = What are you doing?',
@@ -5500,6 +5679,7 @@ evan: {
         {type:'mcq',q:'"Pourquoi?" means...',choices:['What?','When?','Where?','Why?'],answer:3},
       ]},
     { id:'w1-evan-f5', title:'Short Reading Passage', emoji:'📖',
+      curriculum: oc('Grade 7', 'FSL (Core French) — Reading', ['C1.2','C2.2'], 'Read and demonstrate understanding of short French texts by identifying main ideas, supporting details, and key vocabulary.'),
       lesson:{title:'Understanding Intermediate French',intro:'Read short French texts to build comfort with the language. You don\'t need to understand every word — use the same context-clue strategies as English.',example:'« Bonjour ! Je m\'appelle Marie. J\'ai treize ans. J\'habite à Montréal avec ma famille. Ma matière préférée est la science. Après l\'école, je joue au soccer avec mes amis. » Hello! My name is Marie. I am 13 years old. I live in Montreal with my family. My favourite subject is science. After school, I play soccer with my friends.',hint:'Look for cognates (French words that look like English): famille = family, musique = music, important = important. They\'re free vocabulary!'},
       questions:[
         {type:'passage',passage:'« Je m\'appelle Louis. J\'ai douze ans. J\'habite à Toronto avec mes parents et ma sœur. J\'adore jouer au hockey. »',q:'Where does Louis live?',choices:['Montreal','Toronto','Paris','Quebec'],answer:1},
@@ -5511,6 +5691,7 @@ evan: {
   ],
   science: [
     { id:'w1-evan-s1', title:'Pure Substances & Mixtures', emoji:'⚗️',
+      curriculum: oc('Grade 7', 'Science — C. Matter and Energy: Pure Substances and Mixtures', ['C2.1','C2.2','C3.1'], 'Distinguish between pure substances (elements, compounds) and mixtures (solutions, mechanical mixtures); investigate properties of each.'),
       lesson:{title:'What Matter Is Made Of',intro:'All MATTER is either a PURE SUBSTANCE (made of one type of particle) or a MIXTURE (two or more substances physically combined). Pure substances can be ELEMENTS (one kind of atom, like oxygen) or COMPOUNDS (two+ elements chemically bonded, like water H₂O).',example:'Pure substance: gold (element), water (compound), salt (compound NaCl). Mixture: salad dressing, air, sea water, sand + salt. Mixtures can be separated physically (filtering, evaporating). Compounds can only be broken apart chemically.',steps:[
         '<b>Atom</b> = the tiniest particle of an element.',
         '<b>Element</b> = one kind of atom. Gold (Au), oxygen (O), iron (Fe).',
@@ -5526,6 +5707,7 @@ evan: {
         {type:'mcq',q:'Mixtures can be separated by...',choices:['Only chemical reactions','Physical methods (filtering, evaporating)','Nothing','Magic'],answer:1},
       ]},
     { id:'w1-evan-s2', title:'Cells: Plant vs Animal', emoji:'🔬',
+      curriculum: oc('Grade 8', 'Science — B. Life Systems: Cells', ['B2.1','B2.4','B3.2'], 'Grade 8 bridge: Identify and compare structures of plant and animal cells (nucleus, cell membrane, cytoplasm, chloroplasts, cell wall).'),
       lesson:{title:'The Building Blocks of Life',intro:'All living things are made of CELLS. Plant and animal cells share many parts but have some differences. Plant cells have a CELL WALL, CHLOROPLASTS (for photosynthesis), and a large central VACUOLE. Animal cells do NOT.',example:'BOTH have: cell membrane, nucleus (control centre with DNA), cytoplasm, mitochondria (energy). ONLY plants have: cell wall (stiff outer layer), chloroplasts (green, make food from sunlight), large vacuole (water storage).',steps:[
         '<b>Cell membrane</b> (both) — thin outer boundary, controls what enters/leaves.',
         '<b>Nucleus</b> (both) — the "brain" of the cell, holds DNA.',
@@ -5542,6 +5724,7 @@ evan: {
         {type:'mcq',q:'The CELL WALL is made of...',choices:['Fat','Cellulose (tough fibre)','Water','Bone'],answer:1},
       ]},
     { id:'w1-evan-s3', title:'Heat Transfer', emoji:'🔥',
+      curriculum: oc('Grade 7', 'Science — E. Earth and Space Systems: Heat in the Environment', ['E2.1','E2.3','E3.1'], 'Describe heat transfer by conduction, convection, and radiation; analyze how heat moves through different materials and environments.'),
       lesson:{title:'How Heat Moves',intro:'HEAT (thermal energy) moves in three ways: CONDUCTION (through a solid by touch), CONVECTION (through a liquid or gas by moving particles), and RADIATION (through empty space by waves).',example:'CONDUCTION: a metal spoon in hot soup — the handle gets hot as heat travels through the metal. CONVECTION: hot air rising from a heater, cooler air sinking → a cycle. RADIATION: feeling the Sun\'s warmth on your skin, even though space is empty.',steps:[
         '<b>Conduction</b> — direct contact, solid to solid. Metals are great conductors.',
         '<b>Convection</b> — moving currents in fluids (liquids + gases). Hot rises, cool sinks.',
@@ -5557,6 +5740,7 @@ evan: {
         {type:'mcq',q:'Radiation works even in...',choices:['Only solids','Only water','Only air','Empty space (vacuum)'],answer:3},
       ]},
     { id:'w1-evan-s4', title:'Ecosystems', emoji:'🌿',
+      curriculum: oc('Grade 7', 'Science — B. Life Systems: Interactions in the Environment', ['B2.1','B2.4','B3.3'], 'Analyze interactions between biotic (living) and abiotic (non-living) components of ecosystems; trace energy flow through food webs.'),
       lesson:{title:'Producers, Consumers, Decomposers',intro:'An ECOSYSTEM is all the living things in an area + their non-living environment. Living things play three roles: PRODUCERS (plants — make food from sunlight), CONSUMERS (animals — eat other things), and DECOMPOSERS (fungi, bacteria — break down dead matter).',example:'In a forest: grass (producer) → rabbit (consumer, herbivore) → fox (consumer, carnivore) → when the fox dies, mushrooms + bacteria (decomposers) break it down and return nutrients to the soil, feeding new grass. This is the cycle of life.',steps:[
         '<b>Producer</b> = makes its own food. Plants, algae. Base of every food chain.',
         '<b>Consumer</b> = eats other living things. Herbivore (plants only), carnivore (meat only), omnivore (both).',
@@ -5572,6 +5756,7 @@ evan: {
         {type:'mcq',q:'Why are decomposers important?',choices:['They eat plants','They return nutrients to the soil','They make sunlight','They attack animals'],answer:1},
       ]},
     { id:'w1-evan-s5', title:'Simple Machines', emoji:'⚙️',
+      curriculum: oc('Grade 7', 'Science — D. Structures and Mechanisms: Form and Function', ['D2.3','D3.3'], 'Investigate simple and compound machines (lever, pulley, inclined plane, wheel & axle) and calculate mechanical advantage.'),
       lesson:{title:'Levers, Pulleys, Ramps',intro:'A SIMPLE MACHINE makes work easier by changing the SIZE or DIRECTION of a force. Six classic ones: LEVER (seesaw), PULLEY (raising a flag), WEDGE (axe), SCREW (bolt), INCLINED PLANE (ramp), WHEEL AND AXLE (bicycle wheel).',example:'LEVER: a crowbar lifts a heavy rock — your small push on the long handle becomes a big lift on the short side. RAMP: pushing a heavy box up a gentle ramp is easier than lifting it straight up — you push over a longer distance for less force.',steps:[
         '<b>Lever:</b> bar + fulcrum. Seesaw, crowbar, scissors, wheelbarrow.',
         '<b>Pulley:</b> wheel + rope. Changes direction (pull down to lift up).',
@@ -5591,6 +5776,7 @@ evan: {
   ],
   social: [
     { id:'w1-evan-c1', title:'New France (1500s-1700s)', emoji:'⛵',
+      curriculum: oc('Grade 7', 'Social Studies (History) — A. New France and British North America, 1713–1800', ['A2.1','A3.3'], 'Describe the founding of New France: French exploration, the fur trade, seigneurial system, and relationships with Indigenous Peoples.'),
       lesson:{title:'Early French Settlement in Canada',intro:'NEW FRANCE was the name for the French colony in North America from the 1500s to 1763. Key figures: JACQUES CARTIER (claimed the land for France in 1534), SAMUEL DE CHAMPLAIN (founded Quebec City in 1608), COUREURS DES BOIS (French fur traders who lived with and learned from First Nations). The economy ran on the FUR TRADE.',example:'Cartier sailed up the St. Lawrence River in 1534 and called the land "Canada" (from the Iroquois word "kanata" = village). Champlain founded Quebec as a trading post in 1608 — the first permanent French settlement. For the next 150 years, French settlers, missionaries, and fur traders built a small but important colony along the St. Lawrence.',hint:'The St. Lawrence River was the highway of New France — everyone, every trade, moved along it.'},
       questions:[
         {type:'mcq',q:'Who claimed Canada for France in 1534?',choices:['Champlain','Cartier','Columbus','Cabot'],answer:1},
@@ -5600,6 +5786,7 @@ evan: {
         {type:'mcq',q:'COUREURS DES BOIS were...',choices:['Soldiers','French fur traders in the forests','Priests','Farmers'],answer:1},
       ]},
     { id:'w1-evan-c2', title:'British North America', emoji:'🇬🇧',
+      curriculum: oc('Grade 7', 'Social Studies (History) — A. New France and British North America, 1713–1800', ['A1.2','A2.3','A3.5'], 'Analyze the transition from New France to British rule (Seven Years\' War, Treaty of Paris 1763) and the emergence of British North America.'),
       lesson:{title:'From Conquest to the War of 1812',intro:'In 1759, British forces defeated the French on the PLAINS OF ABRAHAM. In 1763, the Treaty of Paris gave New France to Britain — the colony was renamed the PROVINCE OF QUEBEC (later split into Upper and Lower Canada in 1791). The WAR OF 1812 was a British-American conflict fought partly on Canadian soil — Canadian militia, British soldiers, and First Nations allies (led by TECUMSEH) defended the colony.',example:'The Plains of Abraham battle (Sept 13, 1759) lasted about 15 minutes but changed North American history. In 1812, Laura Secord famously walked 30 km through enemy territory to warn the British of an American attack.',hint:'1759 = French lose to British. 1812 = British + Canadians defend against Americans.'},
       questions:[
         {type:'mcq',q:'The Plains of Abraham battle (1759) was won by...',choices:['The French','The British','The Americans','The Iroquois'],answer:1},
@@ -5609,6 +5796,7 @@ evan: {
         {type:'mcq',q:'Laura Secord is remembered for...',choices:['Founding Quebec','Warning the British of an American attack in 1812','Signing Confederation','Leading the 1837 rebellion'],answer:1},
       ]},
     { id:'w1-evan-c3', title:'Rebellions of 1837', emoji:'⚔️',
+      curriculum: oc('Grade 7', 'Social Studies (History) — B. Canada, 1800–1850: Conflict and Challenges', ['B1.2','B2.1','B3.4'], 'Analyze causes and consequences of the 1837 Rebellions in Upper and Lower Canada (reformers vs. Family Compact / Château Clique).'),
       lesson:{title:'Colonists Demand Change',intro:'In 1837, rebellions broke out in both UPPER CANADA (led by WILLIAM LYON MACKENZIE) and LOWER CANADA (led by LOUIS-JOSEPH PAPINEAU). Colonists were angry about: small ruling groups ("the Family Compact" in Upper Canada, "Château Clique" in Lower Canada), no real democracy, and unfair land/tax rules. Both rebellions FAILED militarily — but forced Britain to send LORD DURHAM, whose 1839 Report led to real democratic reforms (responsible government by 1848).',example:'Mackenzie led a small force down Toronto\'s Yonge Street in Dec 1837. They were defeated quickly. Papineau\'s Lower Canada rebellion was larger and more violent — hundreds died. Both leaders fled to the U.S. But the REBELLIONS WORKED in the long run: Britain realized it had to give the colonies more self-rule.',hint:'Failed in battle, succeeded in history: the rebellions pushed Canada toward responsible government.'},
       questions:[
         {type:'mcq',q:'Who led the Upper Canada rebellion of 1837?',choices:['Papineau','Macdonald','Mackenzie','Cartier'],answer:2},
@@ -5618,6 +5806,7 @@ evan: {
         {type:'mcq',q:'The rebellions of 1837...',choices:['Won easily','Failed in battle, but forced political change','Were invented in textbooks','Were led by Americans'],answer:1},
       ]},
     { id:'w1-evan-c4', title:'Confederation (1867)', emoji:'🍁',
+      curriculum: oc('Grade 8', 'Social Studies (History) — A. Creating Canada, 1850–1890', ['A1.2','A2.1','A3.3'], 'Grade 8 stretch: Describe the causes, events, and consequences of Confederation (1867): Charlottetown, Quebec, London conferences and the British North America Act.'),
       lesson:{title:'Four Colonies Become One Country',intro:'By the 1860s, British North America was several separate colonies. Leaders from CANADA (Ontario + Quebec), NEW BRUNSWICK, and NOVA SCOTIA met at three conferences — CHARLOTTETOWN (1864), QUEBEC (1864), and LONDON (1866) — to plan a union. The BRITISH NORTH AMERICA ACT (July 1, 1867) created the DOMINION OF CANADA with four provinces: Ontario, Quebec, New Brunswick, Nova Scotia.',example:'SIR JOHN A. MACDONALD became Canada\'s first Prime Minister. GEORGE-ÉTIENNE CARTIER led Quebec into Confederation. Reasons for union: defence (against a possible U.S. invasion after the American Civil War), trade (the British dropped trade deals with the colonies), and building a railway across the continent. Other provinces joined later: Manitoba (1870), BC (1871), PEI (1873), Alberta + Saskatchewan (1905), Newfoundland (1949).',hint:'July 1, 1867 = Canada\'s birthday. Four original provinces: ON, QC, NB, NS.'},
       questions:[
         {type:'mcq',q:'On what date did Canada become a country?',choices:['July 1, 1867','May 24, 1867','November 11, 1867','December 25, 1867'],answer:0},
@@ -5627,6 +5816,7 @@ evan: {
         {type:'mcq',q:'Which was a main REASON for Confederation?',choices:['They just liked each other','Defence, trade, and a national railway','To fight France','To ban immigration'],answer:1},
       ]},
     { id:'w1-evan-c5', title:'Building the Nation', emoji:'🚂',
+      curriculum: oc('Grade 8', 'Social Studies (History) — A. Creating Canada, 1850–1890', ['A2.3','A3.5','A3.6'], 'Grade 8 stretch: Analyze nation-building projects (Canadian Pacific Railway, westward expansion) and their impact on Indigenous Peoples and settlers.'),
       lesson:{title:'Post-Confederation Growth (Stretch!)',intro:'After 1867, Canada grew fast. The CANADIAN PACIFIC RAILWAY (completed 1885) connected east and west — built with huge contributions from Chinese labourers, many of whom died in the dangerous work. New provinces joined the Dominion. Indigenous Peoples, however, were pushed off their lands by NUMBERED TREATIES and the RESIDENTIAL SCHOOL SYSTEM — a dark chapter Canada is still reckoning with today.',example:'1870: Manitoba joins (after the Red River Resistance led by LOUIS RIEL, a Métis leader). 1871: BC joins on the promise of a railway. 1885: the railway is completed — the "last spike" driven at Craigellachie, BC. 1876: the Indian Act passes, assimilating First Nations. Residential schools continued until 1996. The Truth and Reconciliation Commission (2008-2015) documented their abuses.',hint:'The railway was a triumph of engineering — and built on tremendous human cost, especially for Chinese workers and First Nations communities.'},
       questions:[
         {type:'mcq',q:'The Canadian Pacific Railway was completed in...',choices:['1867','1870','1885','1914'],answer:2},
