@@ -1,0 +1,96 @@
+# KidQuest AI Proxy — Cloudflare Worker config
+# ------------------------------------------------------------------
+# Fronts Anthropic / OpenAI / etc. for every AI feature on the site.
+# All secrets (API keys) live in `wrangler secret`, NOT here. See
+# README.md for the activation ladder.
+#
+# Default state: AI_ENABLED = "false", every FEATURE_* flag = "false".
+# Nothing calls a paid API until a human flips a flag and redeploys.
+# You can deploy this Worker right now and it will cost $0/month
+# until then.
+
+name = "kidquest-ai-proxy"
+main = "worker.js"
+compatibility_date = "2025-01-01"
+
+[vars]
+# ----- MASTER SWITCH --------------------------------------------
+# When "false", every endpoint returns 503 "ai_globally_disabled"
+# regardless of the per-feature flags below. This is the one-line
+# kill switch for "something's going wrong, shut it all off now".
+AI_ENABLED = "false"
+
+# ----- PER-FEATURE FLAGS ----------------------------------------
+# Flip to "true" one at a time as you activate each phase.
+# Order matches the phasing plan in README.md.
+
+# Phase A (cheap, high-value, ship first)
+FEATURE_PLAN_PARSE         = "false"  # tutor notes → toggle JSON
+FEATURE_EXPLAIN            = "false"  # "why was I wrong?" on quizzes
+FEATURE_FEEDBACK           = "false"  # rubric-based writing feedback
+FEATURE_SIMPLIFY           = "false"  # ESL / early-reader rewrites
+
+# Phase B (content depth, reuses Phase A infra)
+FEATURE_GENERATE_QUESTIONS = "false"  # stretch-mode harder variants
+FEATURE_WORKED_EXAMPLE     = "false"  # step-by-step walkthroughs
+
+# Phase C (parent/teacher facing)
+FEATURE_TEACHER_SUMMARY    = "false"  # weekly teacher dashboard card
+FEATURE_PARENT_REPORT      = "false"  # weekly parent email/PDF
+FEATURE_VOICE_CLONE        = "false"  # ElevenLabs parent-voice clone
+
+# Phase D (high-effort, high-risk — do last)
+FEATURE_SIDEKICK           = "false"  # chat buddy (heavily capped)
+FEATURE_PHOTO_EXTRACT      = "false"  # homework photo → quiz
+
+# ----- CORS / SECURITY ------------------------------------------
+# Same allow-list shape as tts-proxy. Update when you add a custom
+# domain. Comma-separated, no spaces required.
+ALLOWED_ORIGINS = "https://rhahavy.github.io,https://kidquest.rhahavy.com,http://localhost:8080,http://127.0.0.1:8080"
+
+# ----- COST CAPS ------------------------------------------------
+# Per-student daily call ceiling. Once a kid hits this, every AI
+# endpoint returns 429 for the rest of the UTC day. This is the
+# single most important knob for bounding cost per student — a
+# runaway kid can't cost more than DAILY_CAP_PER_STUDENT * avg
+# per-call cost per day. Start conservative; raise only if real
+# usage shows you need to.
+DAILY_CAP_PER_STUDENT = "50"
+
+# Max request body length in characters. Prevents runaway prompts
+# and megabyte uploads. Most real requests are well under 2000.
+MAX_INPUT_CHARS = "4000"
+
+# ----- MODEL SELECTION ------------------------------------------
+# Which Claude model the text handlers should call. Surfaced here as
+# an env var so you can swap to a newer/cheaper Haiku (or move to
+# Sonnet for a given endpoint via code branching) without editing
+# worker.js. The worker falls back to "claude-haiku-4-5" if unset.
+ANTHROPIC_MODEL = "claude-haiku-4-5"
+
+# ----- OBSERVABILITY --------------------------------------------
+# Free Cloudflare dashboard metrics. No log body persistence.
+[observability]
+enabled = true
+
+# ----- KV BINDING (OPTIONAL BUT RECOMMENDED) --------------------
+# Used for: per-student daily cap counter, audit log (30-day TTL),
+# response cache (saves real money on repeated questions).
+#
+# Before first activation:
+#   cd workers/ai-proxy
+#   wrangler kv:namespace create AI_CACHE
+# Paste the returned id below, then uncomment the block.
+#
+# If KV is not bound:
+#   - /health reports kv_bound: false
+#   - daily cap is fail-open (no enforcement)
+#   - no audit log is written
+#   - no response cache (every call hits the paid API)
+# For Phase A flag-on usage this is fine — the first few weeks of
+# traffic are low enough that KV isn't strictly required. But bind
+# it before turning on SIDEKICK or anything with sustained volume.
+#
+# [[kv_namespaces]]
+# binding = "KV"
+# id = "<paste-from-wrangler-kv-namespace-create-output>"

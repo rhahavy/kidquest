@@ -1485,6 +1485,44 @@ body.nova-tour-active{scroll-padding-top:40px}
   .t-acc-body{padding:14px 14px 16px}
 }
 
+/* ---- AI-POWERED UI ENTRY POINTS ----
+   Every element in this block is HIDDEN until its feature flag reports
+   "on" via /health from the ai-proxy Worker (see
+   workers/ai-proxy/README.md). They use an indigo palette to distinguish
+   "AI-generated content" from the teal plan-adjustment palette and the
+   primary purple. If you see one of these visible on the site, it means
+   the flag is lit + the call succeeded. */
+.ai-hidden{display:none !important}
+.ai-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:999px;background:rgba(87,94,232,.1);color:#4f56d4;font-size:10px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;flex-shrink:0}
+.ai-btn{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:8px;background:linear-gradient(135deg,#6c5ce7 0%,#5046e5 100%);color:#fff;font-family:var(--font);font-size:12px;font-weight:800;border:none;cursor:pointer;transition:transform .12s,box-shadow .12s;box-shadow:0 2px 6px rgba(80,70,229,.25)}
+.ai-btn:hover{transform:translateY(-1px);box-shadow:0 4px 10px rgba(80,70,229,.35)}
+.ai-btn:disabled{opacity:.6;cursor:not-allowed;transform:none;box-shadow:none}
+.ai-btn .ai-btn-spin{display:inline-block;width:10px;height:10px;border:2px solid rgba(255,255,255,.35);border-top-color:#fff;border-radius:50%;animation:ai-spin .8s linear infinite}
+@keyframes ai-spin{to{transform:rotate(360deg)}}
+.ai-explain-out{margin-top:10px;padding:12px 14px;background:rgba(87,94,232,.06);border:1px solid rgba(87,94,232,.22);border-left:4px solid #5046e5;border-radius:10px;font-size:14px;line-height:1.55;color:var(--ink);font-weight:500}
+.ai-explain-out .ai-explain-head{display:flex;align-items:center;gap:8px;margin-bottom:6px;font-size:12px;color:#4f56d4;font-weight:800;text-transform:uppercase;letter-spacing:.04em}
+.ai-fb-box{margin-top:12px;padding:14px 16px;background:rgba(87,94,232,.05);border:1px solid rgba(87,94,232,.22);border-radius:12px}
+.ai-fb-box .ai-fb-head{display:flex;align-items:center;gap:8px;margin-bottom:8px;font-weight:800;color:#4f56d4;font-size:13px}
+.ai-fb-box .ai-fb-body{font-size:14px;line-height:1.55;color:var(--ink);font-weight:500}
+.ai-parse-row{display:flex;align-items:center;gap:10px;margin-top:6px;flex-wrap:wrap}
+.ai-parse-row .ai-parse-hint{font-size:11px;color:var(--ink3);font-weight:600}
+.ai-parse-row .ai-parse-msg{font-size:12px;font-weight:700}
+.ai-parse-row .ai-parse-msg.ok{color:#16a085}
+.ai-parse-row .ai-parse-msg.err{color:#c0392b}
+.ai-status-card{background:var(--card);border:1px solid rgba(87,94,232,.3);border-radius:var(--r);padding:14px 16px;margin:14px 0;box-shadow:var(--shadow)}
+.ai-status-card h3{margin:0 0 4px;font-size:14px;font-weight:800;color:var(--ink);display:flex;align-items:center;gap:8px}
+.ai-status-card .ai-status-sub{font-size:12px;color:var(--ink3);font-weight:600;line-height:1.4;margin-bottom:10px}
+.ai-status-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px}
+.ai-status-cell{display:flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;background:rgba(0,0,0,.03);font-size:11px;font-weight:700;color:var(--ink2)}
+.ai-status-cell.on{background:rgba(22,160,133,.12);color:#0e6b5a}
+.ai-status-cell.off{background:rgba(0,0,0,.04);color:var(--ink3)}
+.ai-status-cell .ai-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.ai-status-cell.on .ai-dot{background:#16a085}
+.ai-status-cell.off .ai-dot{background:rgba(0,0,0,.2)}
+.ai-status-master{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;font-size:11px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;margin-left:auto}
+.ai-status-master.on{background:rgba(22,160,133,.15);color:#0e6b5a}
+.ai-status-master.off{background:rgba(0,0,0,.06);color:var(--ink3)}
+
 /* ---- CURRICULUM EDITOR ----
    Full-screen teacher page for editing activity content. Reachable via a
    link from the teacher dashboard. Edits are stored as JSON patches in
@@ -11377,6 +11415,271 @@ function updateOrderStatus(orderId, status, refund){
   saveState();
 }
 
+/* ==========================================================================
+   AI PROXY — client-side glue for the ai-proxy Cloudflare Worker
+   ==========================================================================
+   Sibling to the TTS proxy above, same pattern: the frontend never sees
+   the AI provider API key; all calls go through our Worker, which
+   enforces origin allow-list, per-student daily caps, and feature
+   flags. See workers/ai-proxy/README.md for the server side.
+
+   Everything in this section is designed so the site stays IDENTICAL
+   to today when either (a) AI_PROXY_URL is blank, (b) the Worker is
+   down, (c) AI_ENABLED is off server-side, or (d) any specific
+   FEATURE_* flag is off. UI entry points hide themselves; runtime
+   callers see `{disabled:true}` and fall back. Zero behaviour change
+   until a human flips a flag.
+
+   Contract:
+     AI_PROXY_URL          — paste the deployed Worker URL here.
+                             Empty = client-side AI is globally off.
+     AI_HEALTH             — cached /health response. Null until the
+                             first fetchAiHealth() resolves.
+     aiFeatureOn(flag)     — cheap sync check, safe to call in render
+                             hot paths. Returns false unless the master
+                             switch + the specific feature flag are
+                             both lit.
+     callAI(endpoint, body, opts)
+                           — async. Resolves to one of:
+                               {ok:true, data:...}   — use the payload
+                               {disabled:true, ...}  — 503; fall back
+                               {capped:true, ...}    — 429; fall back,
+                                                       optionally tell
+                                                       the kid to come
+                                                       back tomorrow
+                               {error:true, ...}     — anything else;
+                                                       fall back silently
+                             Every endpoint handler in the Worker uses
+                             this same shape, so callers only need one
+                             set of branches.
+   ========================================================================== */
+
+// Paste the deployed Cloudflare Worker URL after running
+//   cd workers/ai-proxy && wrangler deploy
+// Leave blank to disable every AI feature on the frontend — the site
+// falls back gracefully everywhere (same pattern as TTS_PROXY_URL).
+const AI_PROXY_URL = '';
+
+// Health-check cache. Populated by fetchAiHealth() at page load and
+// re-polled every AI_HEALTH_TTL_MS so a tutor flipping a flag
+// server-side takes effect within a few minutes without a full page
+// reload. The shape matches what workers/ai-proxy/worker.js returns.
+let AI_HEALTH = null;
+let AI_HEALTH_FETCHED_AT = 0;
+const AI_HEALTH_TTL_MS = 5 * 60 * 1000;
+
+// Per-call request timeout. AI endpoints can take longer than TTS
+// (a Claude response might be 1-3s). 8s is a generous ceiling that
+// still feels responsive when things are healthy.
+const AI_PROXY_TIMEOUT_MS = 8000;
+
+// After a Worker failure (network/5xx), skip the proxy for this long
+// so a single outage doesn't bog down the UI with repeated timeouts.
+// Same pattern as _ttsProxyCooldownUntil above.
+const AI_PROXY_COOLDOWN_MS = 2 * 60 * 1000;
+let _aiProxyCooldownUntil = 0;
+
+// Pull /health from the Worker. Returns the parsed body on success
+// or null on any failure. Safe to call repeatedly — callers should
+// guard with aiFeatureOn() or the cached AI_HEALTH object rather
+// than awaiting this directly on every render.
+async function fetchAiHealth(){
+  if(!AI_PROXY_URL){ AI_HEALTH = null; return null; }
+  try{
+    const ctrl = new AbortController();
+    const to = setTimeout(()=>ctrl.abort(), AI_PROXY_TIMEOUT_MS);
+    const r = await fetch(AI_PROXY_URL + '/health', { signal: ctrl.signal });
+    clearTimeout(to);
+    if(!r.ok){ AI_HEALTH = null; return null; }
+    AI_HEALTH = await r.json();
+    AI_HEALTH_FETCHED_AT = Date.now();
+    // Persist to localStorage so the next page load has an instant
+    // baseline for which UI to render (then we re-poll in the
+    // background to catch flag changes). Small blob, safe to cache.
+    try{
+      localStorage.setItem('kidquest-ai-health', JSON.stringify({
+        t: AI_HEALTH_FETCHED_AT, h: AI_HEALTH,
+      }));
+    }catch(_){}
+    return AI_HEALTH;
+  }catch(_){
+    AI_HEALTH = null;
+    return null;
+  }
+}
+
+// Sync check used by render code to decide whether to show an AI
+// UI element. Reads the cached /health blob — zero cost in the hot
+// path. Defaults to false so the UI is invisible until we've
+// confirmed the flag is lit.
+function aiFeatureOn(flagName){
+  if(!AI_PROXY_URL) return false;
+  if(!AI_HEALTH) return false;
+  if(!AI_HEALTH.ai_enabled) return false;
+  if(!AI_HEALTH.features) return false;
+  return !!AI_HEALTH.features[flagName];
+}
+
+// POST to an ai-proxy endpoint with unified error handling. Returns
+// one of {ok, data} | {disabled,...} | {capped,...} | {error,...}.
+// Callers branch on the shape — never on HTTP status directly —
+// because the Worker normalizes 503/429/5xx into structured bodies.
+//
+// opts:
+//   studentId  — X-Student-Id header value. Defaults to currentUser.
+//                Pass explicitly for tutor-side calls (e.g. plan-parse
+//                targets a specific student that isn't the logged-in
+//                user, since the logged-in "user" is the teacher).
+//   timeoutMs  — override AI_PROXY_TIMEOUT_MS for endpoints known to
+//                take longer (teacher-summary, generate-questions).
+async function callAI(endpoint, body, opts){
+  opts = opts || {};
+  if(!AI_PROXY_URL){
+    return { disabled:true, reason:'no_proxy_url' };
+  }
+  if(_aiProxyCooldownUntil && Date.now() < _aiProxyCooldownUntil){
+    return { error:true, reason:'cooldown' };
+  }
+  const studentId = typeof opts.studentId === 'string'
+    ? opts.studentId
+    : (currentUser || '');
+  const url = AI_PROXY_URL.replace(/\/$/, '') + endpoint;
+  const timeoutMs = typeof opts.timeoutMs === 'number' ? opts.timeoutMs : AI_PROXY_TIMEOUT_MS;
+  try{
+    const ctrl = new AbortController();
+    const to = setTimeout(()=>ctrl.abort(), timeoutMs);
+    const r = await fetch(url, {
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        ...(studentId ? {'X-Student-Id': studentId} : {}),
+      },
+      body: JSON.stringify(body || {}),
+      signal: ctrl.signal,
+    });
+    clearTimeout(to);
+    // 503 is the Worker's "feature disabled / not implemented"
+    // signal. Treat as a graceful no-op so callers fall back.
+    if(r.status === 503){
+      const j = await r.json().catch(()=>({}));
+      return { disabled:true, ...j };
+    }
+    // 429 is the daily cap. Surface separately so callers can tell
+    // the kid "come back tomorrow" vs. the generic fallback path.
+    if(r.status === 429){
+      const j = await r.json().catch(()=>({}));
+      return { capped:true, ...j };
+    }
+    if(!r.ok){
+      // Trip the cooldown on a 5xx so we don't hammer a sick Worker.
+      if(r.status >= 500) _aiProxyCooldownUntil = Date.now() + AI_PROXY_COOLDOWN_MS;
+      const j = await r.json().catch(()=>({}));
+      return { error:true, status:r.status, ...j };
+    }
+    const data = await r.json();
+    return { ok:true, data };
+  }catch(err){
+    // Network / timeout / abort — trip the cooldown and fall back.
+    _aiProxyCooldownUntil = Date.now() + AI_PROXY_COOLDOWN_MS;
+    return { error:true, reason:'network', message:String(err && err.message || err) };
+  }
+}
+
+// On page load, hydrate AI_HEALTH from localStorage (instant),
+// then fire a fresh fetch in the background to catch flag changes
+// without blocking the first render. Wrapped in setTimeout so it
+// runs AFTER module init (some `let` state above still in TDZ
+// otherwise). Re-polls on a slow interval to pick up server-side
+// flag flips without a hard reload.
+(function initAiHealth(){
+  try{
+    const raw = localStorage.getItem('kidquest-ai-health');
+    if(raw){
+      const parsed = JSON.parse(raw);
+      if(parsed && parsed.h && (Date.now() - (parsed.t||0)) < 60*60*1000){
+        AI_HEALTH = parsed.h;
+        AI_HEALTH_FETCHED_AT = parsed.t || 0;
+      }
+    }
+  }catch(_){}
+  // Fresh fetch in the background. Timeout/failure is fine — we just
+  // keep whatever was cached.
+  setTimeout(()=>{ fetchAiHealth(); }, 50);
+  // Re-poll occasionally so a tutor flipping a flag takes effect
+  // without a page refresh. Visibility-gated so inactive tabs don't
+  // spam /health.
+  setInterval(()=>{
+    if(document.visibilityState === 'visible'){ fetchAiHealth(); }
+  }, AI_HEALTH_TTL_MS);
+})();
+
+/* Teacher-facing status card for the AI proxy. Shows the master flag
+   + each feature flag as on/off chips. Built dynamically from the
+   cached AI_HEALTH blob so it reflects reality without a page reload
+   (the background re-poll refreshes AI_HEALTH every 5 min).
+   Returns null when AI_HEALTH hasn't been fetched yet — caller
+   should skip rendering rather than show a flash-of-empty. */
+function buildAiStatusCard(){
+  const card = h('div',{class:'ai-status-card'});
+  const header = h('h3',{},[
+    h('span',{},'🤖 AI Features'),
+    h('span',{
+      class:'ai-status-master '+((AI_HEALTH && AI_HEALTH.ai_enabled)?'on':'off'),
+    }, (AI_HEALTH && AI_HEALTH.ai_enabled) ? 'Live' : 'Dormant'),
+  ]);
+  card.appendChild(header);
+  if(!AI_HEALTH){
+    card.appendChild(h('div',{class:'ai-status-sub'},
+      'Checking the AI proxy… If this persists, verify AI_PROXY_URL in index.html and that the Worker is deployed.'));
+    return card;
+  }
+  const sub = (AI_HEALTH.ai_enabled)
+    ? 'Master switch is on. Lit features below are active for all students. Change flags in workers/ai-proxy/wrangler.toml and redeploy.'
+    : 'Master switch is off (AI_ENABLED="false"). No AI features are active. Everything below is what would be available if you flipped it on.';
+  card.appendChild(h('div',{class:'ai-status-sub'}, sub));
+
+  // Friendly names for each flag — matches the endpoint table in the
+  // Worker README. Keep synced when new flags are added.
+  const LABELS = {
+    FEATURE_PLAN_PARSE:         '📝 Plan notes → toggles',
+    FEATURE_EXPLAIN:            '🤔 Why was I wrong?',
+    FEATURE_FEEDBACK:           '✏️ Writing coach',
+    FEATURE_SIMPLIFY:           '🌐 Simpler wording',
+    FEATURE_GENERATE_QUESTIONS: '🎯 Stretch questions',
+    FEATURE_WORKED_EXAMPLE:     '📐 Show me how',
+    FEATURE_TEACHER_SUMMARY:    '📊 Weekly teacher summary',
+    FEATURE_PARENT_REPORT:      '👨‍👩‍👧 Parent report',
+    FEATURE_VOICE_CLONE:        '🎤 Parent voice cloning',
+    FEATURE_SIDEKICK:           '💬 Chat sidekick',
+    FEATURE_PHOTO_EXTRACT:      '📸 Homework photo',
+  };
+  const grid = h('div',{class:'ai-status-grid'});
+  const feats = AI_HEALTH.features || {};
+  Object.keys(LABELS).forEach(flag => {
+    const on = !!feats[flag];
+    const cell = h('div',{class:'ai-status-cell '+(on?'on':'off'), title: flag+' = '+(on?'true':'false')},[
+      h('span',{class:'ai-dot'}),
+      h('span',{}, LABELS[flag]),
+    ]);
+    grid.appendChild(cell);
+  });
+  card.appendChild(grid);
+
+  // Small footer line telling the tutor where to go to flip flags.
+  // Intentionally not a clickable link — this is a status display, not
+  // a remote control. Giving the tutor a false sense that they can
+  // click a chip to toggle a flag would be worse than no UI.
+  const footer = h('div',{class:'ai-status-sub', style:'margin:10px 0 0'}, [
+    'Want more on? Edit ',
+    h('code',{style:'background:rgba(0,0,0,.04);padding:1px 6px;border-radius:4px;font-size:11px'},'workers/ai-proxy/wrangler.toml'),
+    ' and run ',
+    h('code',{style:'background:rgba(0,0,0,.04);padding:1px 6px;border-radius:4px;font-size:11px'},'wrangler deploy'),
+    '. See the README for the activation ladder.',
+  ]);
+  card.appendChild(footer);
+  return card;
+}
+
 /* ========== TOPBAR ========== */
 // Cached prev coin count so we can detect increases and bump the pill.
 // Per-user so a profile switch doesn't accidentally fire a bump.
@@ -13819,6 +14122,14 @@ function renderWrite(card,q){
     result.checks.forEach(c=>{tags.appendChild(h('span',{class:'rubric-tag '+(c.pass?'pass':'miss')},(c.pass?'✓ ':'✗ ')+c.label))});
     rubric.appendChild(tags);
     area.appendChild(rubric);
+    // AI: enriched writing feedback. Hidden/skipped unless
+    // FEATURE_FEEDBACK is lit. The rubric above is the baseline (always
+    // shown); the AI panel adds specific coaching on top — what's
+    // working, what to try next time, an example sentence. Appears
+    // async below the rubric when the Worker replies.
+    if(aiFeatureOn('FEATURE_FEEDBACK')){
+      attachAiWritingFeedback(area, text, q, result);
+    }
     quiz.locked=true;
     showNext();
   }},'Submit Writing ✏️');
@@ -13955,7 +14266,150 @@ function setFB(ok){
   const fb=$('#fb');if(!fb)return;
   fb.className='feedback '+(ok?'ok':'no');
   fb.textContent=ok?PRAISE[Math.floor(Math.random()*PRAISE.length)]:ENCOUR[Math.floor(Math.random()*ENCOUR.length)];
+  // AI: "Why was this wrong?" button. Appears only on wrong answers
+  // when FEATURE_EXPLAIN is lit. Textcontent-replace above wipes old
+  // children, so we append AFTER — next question rerenders the card,
+  // which rebuilds #fb from scratch, so cleanup is automatic.
+  if(!ok && quiz && aiFeatureOn('FEATURE_EXPLAIN')){
+    attachAiExplainButton(fb);
+  }
 }
+
+/* Appends a "Why was this wrong?" button to the feedback banner.
+   Separated from setFB() so the hot path stays tiny and so individual
+   question types (short-answer, dictation, etc.) can call it directly
+   if they don't route through setFB(false). */
+function attachAiExplainButton(fb){
+  if(!fb || !quiz) return;
+  const q = quiz.questions && quiz.questions[quiz.idx];
+  if(!q) return;
+  const wrap = document.createElement('div');
+  wrap.style.marginTop = '8px';
+  const btn = h('button',{type:'button', class:'ai-btn', title:'Ask for a kid-friendly explanation.'},[
+    h('span',{},'🤔'),
+    h('span',{},'Why was this wrong?'),
+  ]);
+  wrap.appendChild(btn);
+  fb.appendChild(wrap);
+  btn.addEventListener('click', async ()=>{
+    btn.disabled = true;
+    const origLabel = btn.textContent;
+    btn.innerHTML = '';
+    btn.appendChild(h('span',{class:'ai-btn-spin'}));
+    btn.appendChild(h('span',{style:'margin-left:6px'},'Thinking…'));
+    const payload = {
+      // Minimal payload — don't ship PII. Worker only needs to
+      // reason about the question and the nature of the miss.
+      questionType: q.type || 'unknown',
+      prompt: q.q || q.prompt || '',
+      choices: Array.isArray(q.choices) ? q.choices.slice(0,6) : null,
+      correctAnswer: (typeof q.answer !== 'undefined') ? q.answer : null,
+      // Grade context helps the model pitch its vocabulary level.
+      // Pull from the logged-in kid's profile, not a name.
+      gradeContext: (function(){
+        try{
+          const me = STUDENTS.find(x=>x.id===currentUser);
+          return me ? me.grade : '';
+        }catch(_){ return ''; }
+      })(),
+    };
+    const res = await callAI('/explain', payload, { timeoutMs: 10000 });
+    btn.remove();
+    const out = h('div',{class:'ai-explain-out'});
+    out.appendChild(h('div',{class:'ai-explain-head'},[
+      h('span',{class:'ai-badge'},'AI'),
+      h('span',{},'Here\'s what I think'),
+    ]));
+    if(res.ok && res.data && res.data.explanation){
+      out.appendChild(h('div',{}, String(res.data.explanation)));
+    } else if(res.capped){
+      out.appendChild(h('div',{}, 'You\'ve used all your AI helps for today — come back tomorrow!'));
+    } else {
+      // disabled or error: silently fall back to a generic nudge
+      // rather than showing a scary technical message.
+      out.appendChild(h('div',{}, 'Keep trying — you\'ve got this!'));
+    }
+    wrap.appendChild(out);
+  });
+}
+
+/* Appends an AI writing-feedback panel below the rubric. The rubric
+   is mechanical (word count, keywords, sentence count); the AI adds
+   qualitative coaching — what's working, one specific thing to try,
+   optionally a rewrite of one sentence. Non-blocking: the rubric +
+   Next button are already visible; this panel fills in when ready.
+   Silent fail on error so a Worker hiccup doesn't ruin the moment. */
+function attachAiWritingFeedback(area, text, q, rubric){
+  if(!area || !text) return;
+  const box = h('div',{class:'ai-fb-box'});
+  box.appendChild(h('div',{class:'ai-fb-head'},[
+    h('span',{class:'ai-badge'},'AI'),
+    h('span',{},'Coach\'s notes'),
+  ]));
+  const body = h('div',{class:'ai-fb-body'});
+  const spin = h('div',{},[
+    h('span',{class:'ai-btn-spin',style:'border-color:rgba(80,70,229,.25);border-top-color:#5046e5'}),
+    h('span',{style:'margin-left:8px;color:#4f56d4;font-weight:700'},'Reading your writing…'),
+  ]);
+  body.appendChild(spin);
+  box.appendChild(body);
+  area.appendChild(box);
+  (async ()=>{
+    const payload = {
+      text: String(text).slice(0, 3000), // hard cap irrespective of Worker limit
+      prompt: q.prompt || q.q || '',
+      minWords: q.minWords || 0,
+      goodWords: q.goodWords || 0,
+      rubricLevel: rubric && rubric.level || 0,
+      rubricNotes: rubric && rubric.feedback || '',
+      gradeContext: (function(){
+        try{
+          const me = STUDENTS.find(x=>x.id===currentUser);
+          return me ? me.grade : '';
+        }catch(_){ return ''; }
+      })(),
+    };
+    const res = await callAI('/feedback', payload, { timeoutMs: 15000 });
+    if(res.ok && res.data){
+      body.innerHTML = '';
+      // Shape we expect from the real handler:
+      //   { strength: "...", suggestion: "...", exampleRewrite?: "..." }
+      // Be defensive about missing fields.
+      const d = res.data;
+      if(d.strength){
+        body.appendChild(h('div',{style:'margin-bottom:6px'},[
+          h('b',{style:'color:#0e6b5a'},'What\'s working: '),
+          h('span',{}, String(d.strength)),
+        ]));
+      }
+      if(d.suggestion){
+        body.appendChild(h('div',{style:'margin-bottom:6px'},[
+          h('b',{style:'color:#4f56d4'},'Try next time: '),
+          h('span',{}, String(d.suggestion)),
+        ]));
+      }
+      if(d.exampleRewrite){
+        body.appendChild(h('div',{style:'margin-top:8px;padding:8px 10px;background:rgba(87,94,232,.08);border-radius:8px;font-style:italic'},[
+          h('b',{style:'font-style:normal'},'Example: '),
+          h('span',{}, '"'+String(d.exampleRewrite)+'"'),
+        ]));
+      }
+      if(!d.strength && !d.suggestion && !d.exampleRewrite){
+        // Empty body — remove the whole box rather than show an empty
+        // header. Keeps the screen clean.
+        box.remove();
+      }
+    } else if(res.capped){
+      body.innerHTML = '';
+      body.appendChild(h('div',{style:'color:var(--ink3)'},'AI cap reached for today — your rubric above still counts!'));
+    } else {
+      // disabled / network / error — remove the whole box so the kid
+      // only sees the baseline rubric. No scary error messages.
+      box.remove();
+    }
+  })();
+}
+
 function showNext(){const b=$('#nextBtn');if(!b)return;b.style.display='inline-flex';b.textContent=(quiz.idx+1<quiz.questions.length)?'Next →':'Finish 🎉'}
 
 /* ---- Adaptive-down: easier question on a wrong streak ----
@@ -16517,6 +16971,95 @@ function renderTeacher(root){
       body.appendChild(h('label',{class:'sp-label'}, 'Notes / accommodations'));
       body.appendChild(notesInput);
 
+      /* ---- AI: Parse notes → toggles ----
+         Hidden until the ai-proxy Worker's FEATURE_PLAN_PARSE flag is
+         lit. When a tutor types prose into notesInput, tapping this
+         button sends the text to /plan-parse; the Worker replies with
+         a mapping of our adjustment keys to proposed on/off states,
+         which we apply to the checkboxes (the tutor still has to hit
+         Save). The manual toggles remain the source of truth — AI just
+         prefills. */
+      const aiParseRow = h('div',{class:'ai-parse-row ai-hidden'});
+      const aiParseBtn = h('button',{type:'button', class:'ai-btn', title:'Map these notes to the toggles below using AI.'},[
+        h('span',{},'✨'),
+        h('span',{},'Parse notes → toggles'),
+      ]);
+      const aiParseMsg = h('div',{class:'ai-parse-msg'});
+      const aiParseHint = h('div',{class:'ai-parse-hint'}, 'Fills the toggles below from your prose. You still Save.');
+      aiParseRow.appendChild(aiParseBtn);
+      aiParseRow.appendChild(aiParseMsg);
+      aiParseRow.appendChild(aiParseHint);
+      body.appendChild(aiParseRow);
+      // Only show the row when the server flag is lit. Checked on
+      // render + re-checked whenever /health refreshes (via the
+      // setInterval in initAiHealth). Worst case: tutor has to refresh
+      // the editor to pick up a just-flipped flag.
+      if(aiFeatureOn('FEATURE_PLAN_PARSE')) aiParseRow.classList.remove('ai-hidden');
+      aiParseBtn.addEventListener('click', async ()=>{
+        const prose = (notesInput.value||'').trim();
+        if(!prose){
+          aiParseMsg.className = 'ai-parse-msg err';
+          aiParseMsg.textContent = 'Add some notes first.';
+          return;
+        }
+        aiParseBtn.disabled = true;
+        aiParseMsg.className = 'ai-parse-msg';
+        aiParseMsg.innerHTML = '';
+        aiParseMsg.appendChild(h('span',{class:'ai-btn-spin'}));
+        aiParseMsg.appendChild(h('span',{style:'margin-left:6px'},'Parsing…'));
+        const res = await callAI('/plan-parse', {
+          notes: prose,
+          planType: typeSel.value || 'none',
+          // We don't send the student's name — anonymise at the edge.
+          // The Worker only needs the prose + the plan type to pick
+          // sensible defaults. See planAdjustments() for the key set.
+          availableKeys: Object.keys(PLAN_TYPE_DEFAULTS.custom),
+        }, { studentId: s.id, timeoutMs: 12000 });
+        aiParseBtn.disabled = false;
+        if(res.disabled){
+          aiParseMsg.className = 'ai-parse-msg err';
+          aiParseMsg.textContent = 'AI plan-parse is off right now.';
+          return;
+        }
+        if(res.capped){
+          aiParseMsg.className = 'ai-parse-msg err';
+          aiParseMsg.textContent = 'Daily AI cap reached — try again tomorrow.';
+          return;
+        }
+        if(res.error || !res.ok){
+          aiParseMsg.className = 'ai-parse-msg err';
+          aiParseMsg.textContent = 'Could not parse notes.';
+          return;
+        }
+        // Expected response shape (set by the real handler when it
+        // ships): { toggles: { shortSessions:true, noTimer:true, ... },
+        //           extendedTime: 1.3, reasoning: "short string" }.
+        // Defensive about missing fields — only apply what we recognise.
+        const t = (res.data && res.data.toggles) || {};
+        let applied = 0;
+        Object.keys(adjCells).forEach(k=>{
+          if(typeof t[k] === 'boolean'){
+            adjCells[k].input.checked = t[k];
+            adjCells[k].root.classList.toggle('is-active', t[k]);
+            applied++;
+          }
+        });
+        if(typeof (res.data && res.data.extendedTime) === 'number'){
+          let best = 0, dist = Infinity;
+          EXT_STEPS.forEach((step, i) => {
+            const d = Math.abs(step - res.data.extendedTime);
+            if(d < dist){ dist = d; best = i; }
+          });
+          extRange.value = String(best);
+          extValEl.textContent = EXT_STEPS[best].toFixed(1)+'×';
+          applied++;
+        }
+        aiParseMsg.className = 'ai-parse-msg ok';
+        aiParseMsg.textContent = applied > 0
+          ? '✓ Filled '+applied+' setting'+(applied===1?'':'s')+' — review + Save.'
+          : 'Nothing actionable found in these notes.';
+      });
+
       // ---- Lesson adjustments (the toggles that actually shape the quiz) ----
       // Each toggle reads + writes back to `plan.adjustments.<key>`. When a
       // tutor flips one, the kid's next activity picks it up immediately —
@@ -16902,6 +17445,17 @@ function renderTeacher(root){
     acc.appendChild(section);
   });
   dash.appendChild(acc);
+
+  // AI Features status card. Only rendered when AI_PROXY_URL is set
+  // (otherwise there's nothing to report). Shows the master AI_ENABLED
+  // state and each per-feature flag as a compact on/off chip, so a
+  // tutor glancing at the dashboard knows exactly which AI powers are
+  // live right now. Read-only — flipping flags still means editing
+  // wrangler.toml and running `wrangler deploy`.
+  if(AI_PROXY_URL){
+    const aiCard = buildAiStatusCard();
+    if(aiCard) dash.appendChild(aiCard);
+  }
   root.appendChild(dash);
 
   // Sync the browser tab title "(N)" prefix and fire a desktop notification
