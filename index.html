@@ -744,6 +744,13 @@ img{max-width:100%}
 /* Lesson card */
 .lesson-card{background:linear-gradient(180deg,#faf9ff,#fff)!important;border:2px dashed rgba(253,203,110,.5)!important;text-align:left!important;padding:clamp(22px,3vw,32px)!important}
 .lesson-badge{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;background:linear-gradient(135deg,#ffeaa7,var(--sun));color:#5b3e00;border-radius:999px;font-size:11px;font-weight:800;letter-spacing:.06em}
+/* AI-rewrite pill — appears on a lesson card AFTER swapLessonContentInPlace
+   hot-swaps the Intro / Example text for a student whose plan has
+   simpleLanguage:true. Purposefully quiet (purple tint, small, pill-shaped)
+   so parents can tell AI touched the copy without it screaming "AI!!" at
+   the kid. Sits just below the QUICK LESSON badge + curriculum chip, above
+   the Nova mascot — a sibling inserted by swapLessonContentInPlace. */
+.lesson-ai-badge{display:inline-flex;align-items:center;gap:6px;margin-top:8px;margin-left:8px;padding:4px 11px;background:linear-gradient(135deg,rgba(108,92,231,.14),rgba(87,94,232,.14));color:#4f56d4;border:1px solid rgba(108,92,231,.35);border-radius:999px;font-size:11px;font-weight:700;letter-spacing:.03em;cursor:help;animation:popIn .45s var(--spring)}
 /* Nova cameo on the lesson card — bigger/friendlier so kids actually read
    the pep talk. Was tiny (13px/180px) which felt like a footnote next to
    the 26px lesson title — now matches the hero-card Nova scale. */
@@ -8116,7 +8123,14 @@ const defaultAll = () => ({
   // (per-lesson YT video id lists) because the lifecycle and merge
   // semantics are different — curriculum overrides are JSON patches, not
   // full replacements or flags. See applyCurriculumOverride below.
-  curriculum: { overrides: {}, updatedAt: 0 },
+  // - overrides: tutor edits from the Course Editor (per-activity patch)
+  // - studentOverrides: AI-generated per-student content, driven by plan
+  //   toggles (simpleLanguage today; autoStretch + avoidPassages in Phase 2).
+  //   Shape: studentOverrides[sid][activityId] = {
+  //     lesson:{intro,example,hint}, _source:'ai-simplify', _baseHash, _generatedAt
+  //   }. A miss on first lesson open → background /simplify call → save +
+  //   hot-swap DOM. See ensureStudentPlanContent / applyStudentPlanOverride.
+  curriculum: { overrides: {}, studentOverrides: {}, updatedAt: 0 },
   // Maintenance mode — teacher toggles from dashboard, synced via cloud.
   maintenance: { active: false, message: DEFAULT_MAINTENANCE_MESSAGE, updatedAt: 0 },
   // Weekly co-op goal — a shared family target the whole squad is pulling
@@ -8502,6 +8516,7 @@ async function pullCloud(init){
     if(d.curriculum&&typeof d.curriculum==='object'){
       allData.curriculum={
         overrides: (d.curriculum.overrides && typeof d.curriculum.overrides==='object') ? d.curriculum.overrides : {},
+        studentOverrides: (d.curriculum.studentOverrides && typeof d.curriculum.studentOverrides==='object') ? d.curriculum.studentOverrides : {},
         updatedAt: typeof d.curriculum.updatedAt==='number' ? d.curriculum.updatedAt : 0,
       };
     }
@@ -8693,6 +8708,7 @@ function applySnapshotToAllData(snap){
   if(parsed.curriculum && typeof parsed.curriculum==='object'){
     allData.curriculum = {
       overrides: (parsed.curriculum.overrides && typeof parsed.curriculum.overrides==='object') ? parsed.curriculum.overrides : {},
+      studentOverrides: (parsed.curriculum.studentOverrides && typeof parsed.curriculum.studentOverrides==='object') ? parsed.curriculum.studentOverrides : {},
       updatedAt: typeof parsed.curriculum.updatedAt==='number' ? parsed.curriculum.updatedAt : 0,
     };
   }
@@ -11525,6 +11541,237 @@ function applyCurriculumOverride(activity){
   return Object.assign({}, activity, ov, { id: activity.id });
 }
 
+/* ---- Per-student AI override merge ----
+   Second layer on top of tutor overrides. Driven by the student's plan
+   toggles (simpleLanguage today). The cache shape is:
+
+     allData.curriculum.studentOverrides[sid][activityId] = {
+       lesson: { intro, example, hint },
+       _source: 'ai-simplify',   // which toggle generated this
+       _baseHash: <hash>,        // hash of the base lesson fields we rewrote
+       _generatedAt: <ts>,
+     }
+
+   `_baseHash` is the key to staleness: when we re-check the cache, we
+   hash the CURRENT base lesson fields (after tutor override) and compare.
+   A mismatch means the tutor has edited the base since the AI rewrote it;
+   we discard the stale rewrite and regenerate.
+
+   Shallow merge on the `lesson` field: AI rewrites replace individual text
+   fields, but anything we didn't rewrite (stack, pictures, steps) falls
+   through from the base. Non-lesson fields (questions, emoji, etc.) are
+   currently never rewritten by this path — future phases can extend.
+
+   Pure function. Does not fire network calls — that's ensureStudentPlanContent.
+   Safe to call on every activity read; fast path is a straight pass-through. */
+function applyStudentPlanOverride(activity, sid){
+  if(!activity || !activity.id || !sid) return activity;
+  const bucket = allData && allData.curriculum && allData.curriculum.studentOverrides;
+  if(!bucket) return activity;
+  const perStudent = bucket[sid];
+  if(!perStudent) return activity;
+  const ov = perStudent[activity.id];
+  if(!ov) return activity;
+  // Staleness check — skip if base has changed since this rewrite.
+  try{
+    const liveHash = hashLessonBase(activity.lesson || {});
+    if(ov._baseHash && ov._baseHash !== liveHash){
+      return activity; // stale — caller (ensureStudentPlanContent) will refresh
+    }
+  }catch(_){/* hash failure → use as-is; defensive, never throws render */}
+  if(!ov.lesson) return activity;
+  // Stash the pre-overlay lesson as `_baseLesson` so downstream code
+  // (ensureStudentPlanContent, tutor review panels) can recover the
+  // original. Without this, the staleness hash re-hashes the rewritten
+  // text on every call and triggers a spurious re-fetch loop.
+  return Object.assign({}, activity, {
+    lesson: Object.assign({}, activity.lesson || {}, ov.lesson),
+    _baseLesson: activity.lesson || {},
+    _aiRewritten: true,
+  });
+}
+
+// Cheap, stable hash of the lesson fields we rewrite. Not cryptographic —
+// just enough to detect "the tutor edited the base since we generated."
+// FNV-1a 32-bit; base-36 to keep the stored string short.
+function hashLessonBase(lesson){
+  const s = String(lesson && lesson.intro || '') + '|'
+          + String(lesson && lesson.example || '') + '|'
+          + String(lesson && lesson.hint || '');
+  let h = 0x811c9dc5;
+  for(let i=0;i<s.length;i++){
+    h ^= s.charCodeAt(i);
+    h = (h + ((h<<1) + (h<<4) + (h<<7) + (h<<8) + (h<<24))) >>> 0;
+  }
+  return h.toString(36);
+}
+
+/* ---- Lazy AI rewrite trigger (plan-driven) ----
+   Called from renderLesson when a lesson paints. For students whose plan
+   has `simpleLanguage: true`, this fires /simplify in the background on
+   each populated lesson text field, saves the result to
+   allData.curriculum.studentOverrides[sid][activityId], and hot-swaps the
+   DOM nodes that were just rendered with the base text.
+
+   Design decisions:
+   - FIRE-AND-FORGET from the render path. The kid sees the base lesson
+     immediately (no blocking spinner). On slower networks or cold caches
+     the rewrite may land a second or two later — when it does, the intro
+     text crossfades to the simpler version and a tiny "rewritten for you"
+     badge appears.
+   - PARALLEL calls for intro + example + hint. 1 daily-cap unit per call;
+     a kid opening 10 lessons in a row costs ~30 units. The cap is 50/day.
+   - IN-FLIGHT DEDUPE. If the kid navigates back to the same lesson while
+     the first rewrite is still pending, the second call awaits the first
+     promise instead of double-charging.
+   - HASH-BASED STALENESS. If the tutor has edited the base since the
+     rewrite was stored, the cached rewrite is skipped by
+     applyStudentPlanOverride and regenerated here.
+   - SILENT FALLBACK on any error. The kid always sees the base lesson —
+     no error messages, no scary UI. The tutor sees the result (or its
+     absence) in the per-student override review panel later.
+
+   Returns the new record object, or null on any no-op / failure. Safe to
+   call from any render path; all guards are inside. */
+const _aiPlanInFlight = new Map(); // key = sid + ':' + activityId
+
+async function ensureStudentPlanContent(activity, sid){
+  if(!activity || !activity.id || !sid) return null;
+  // Plan gate: only run for students whose plan requests simpler language.
+  const adj = (typeof planAdjustments === 'function') ? planAdjustments(sid) : null;
+  if(!adj || !adj.simpleLanguage) return null;
+  // Feature gate: /simplify has to be flag-on on the Worker.
+  if(!aiFeatureOn('FEATURE_SIMPLIFY')) return null;
+
+  const key = sid + ':' + activity.id;
+  if(_aiPlanInFlight.has(key)) return _aiPlanInFlight.get(key);
+
+  // Anchor to the POST-tutor-override, PRE-student-override base. The
+  // activity we're called with may already have the cached rewrite merged
+  // in by applyStudentPlanOverride (which stamps `_baseLesson` on the
+  // object for exactly this reason). Preferring `_baseLesson` avoids a
+  // re-fetch loop where /simplify keeps simplifying its own output. If
+  // there's no cached override yet, the incoming activity.lesson IS the
+  // true post-tutor base.
+  const baseLesson = (activity && activity._baseLesson) || (activity && activity.lesson) || {};
+  const baseActivity = applyCurriculumOverride(Object.assign({}, activity, { lesson: baseLesson })) || activity;
+  const effectiveBaseLesson = (baseActivity && baseActivity.lesson) || baseLesson;
+  const baseHash = hashLessonBase(effectiveBaseLesson);
+
+  // Cache lookup. If fresh, nothing to do — applyStudentPlanOverride
+  // already merged the stored rewrite in when the kid opened the page.
+  if(!allData.curriculum) allData.curriculum = { overrides:{}, studentOverrides:{}, updatedAt:0 };
+  if(!allData.curriculum.studentOverrides) allData.curriculum.studentOverrides = {};
+  if(!allData.curriculum.studentOverrides[sid]) allData.curriculum.studentOverrides[sid] = {};
+  const existing = allData.curriculum.studentOverrides[sid][activity.id];
+  if(existing && existing._baseHash === baseHash && existing.lesson){
+    return existing;
+  }
+
+  const promise = (async ()=>{
+    const curriculum = baseActivity.curriculum || null;
+    const fieldsToRewrite = ['intro','example','hint'];
+    // Short, near-empty fields aren't worth the API call. "10 chars" is a
+    // cheap heuristic: one-word hints like "Think." don't need simplifying.
+    const jobs = fieldsToRewrite
+      .filter(f => typeof effectiveBaseLesson[f] === 'string' && effectiveBaseLesson[f].trim().length >= 10)
+      .map(async f => {
+        const res = await callAI('/simplify', {
+          text: effectiveBaseLesson[f],
+          curriculum,
+          gradeContext: (curriculum && curriculum.grade) || '',
+        }, { timeoutMs: 15000, studentId: sid });
+        return { f, res };
+      });
+    if(!jobs.length) return null;
+    const results = await Promise.all(jobs);
+    const rewritten = {};
+    for(const { f, res } of results){
+      if(res && res.ok && res.data && typeof res.data.simplified === 'string' && res.data.simplified.trim()){
+        rewritten[f] = res.data.simplified.trim();
+      }
+      // If res.disabled / .capped / .error → just skip that field. The
+      // kid keeps seeing the base for that field. No error banner.
+    }
+    if(!Object.keys(rewritten).length) return null;
+    const record = {
+      lesson: rewritten,
+      _source: 'ai-simplify',
+      _baseHash: baseHash,
+      _generatedAt: Date.now(),
+    };
+    allData.curriculum.studentOverrides[sid][activity.id] = record;
+    allData.curriculum.updatedAt = Date.now();
+    try { saveState(); }catch(_){}
+    // Hot-swap the currently-visible lesson card, if the kid is still
+    // looking at it. querySelector falls through to null if the page has
+    // since navigated — harmless.
+    try { swapLessonContentInPlace(rewritten); }catch(_){}
+    // Update the live quiz object so subsequent re-renders + hint reads
+    // reflect the new text. CRITICAL: we must NOT mutate quiz.activity.lesson
+    // in place — on a fresh rewrite, quiz.activity is still the same object
+    // reference as WEEKS[week][sid][subj][n], so assigning to .lesson would
+    // overwrite the shared source. That pollution breaks the next cache-hit
+    // hash comparison ("why does it say [EASY] twice?" — because /simplify
+    // would re-fire on already-simplified text). Clone everything instead.
+    try {
+      if(typeof quiz !== 'undefined' && quiz && quiz.activity && quiz.activity.id === activity.id){
+        const preLesson = quiz.activity.lesson || {};
+        const freshLesson = Object.assign({}, preLesson, rewritten);
+        quiz.activity = Object.assign({}, quiz.activity, {
+          lesson: freshLesson,
+          // Preserve the ORIGINAL pre-overlay lesson so staleness checks +
+          // future /simplify calls anchor to the right baseline. If the
+          // activity already had a _baseLesson (cache-hit path), keep it;
+          // otherwise this is the first rewrite and preLesson IS the base.
+          _baseLesson: quiz.activity._baseLesson || preLesson,
+          _aiRewritten: true,
+        });
+        // quiz.questions[0] is the lesson card — keep its lesson ref in
+        // sync with the cloned activity so any re-render picks up the
+        // rewritten copy from the clone, not the shared source.
+        if(Array.isArray(quiz.questions) && quiz.questions[0] && quiz.questions[0].type === 'lesson'){
+          quiz.questions[0] = Object.assign({}, quiz.questions[0], { lesson: freshLesson });
+        }
+      }
+    }catch(_){}
+    return record;
+  })();
+
+  _aiPlanInFlight.set(key, promise);
+  try { return await promise; }
+  finally { _aiPlanInFlight.delete(key); }
+}
+
+/* DOM hot-swap for a currently-rendered lesson card. Targets only the
+   specific text nodes (.lesson-intro <p>, .lesson-example-text <div>) so
+   we don't disturb surrounding widgets (TTS buttons, math stacks, video
+   embeds). Adds a small "✨ rewritten for you" badge on the first swap so
+   parents can tell AI touched the copy. Silent no-op if the kid has
+   navigated away since. */
+function swapLessonContentInPlace(rewritten){
+  const card = document.querySelector('.lesson-card');
+  if(!card) return;
+  let touched = false;
+  if(rewritten.intro){
+    const p = card.querySelector('.lesson-intro');
+    if(p){ p.textContent = rewritten.intro; touched = true; }
+  }
+  if(rewritten.example){
+    const e = card.querySelector('.lesson-example-text');
+    if(e){ e.textContent = rewritten.example; touched = true; }
+  }
+  // Hint is read lazy from q.lesson when the Hint button is clicked — no
+  // DOM swap needed; the q.lesson mutation above handles it.
+  if(touched && !card.querySelector('.lesson-ai-badge')){
+    const badge = h('div',{class:'lesson-ai-badge', title:'This lesson was rewritten in simpler words based on this student\'s plan.'},'✨ rewritten for you');
+    // Insert right after the curriculum chip if present, else at the top.
+    const anchor = card.querySelector('.curriculum-chip') || card.firstElementChild;
+    if(anchor && anchor.nextSibling) card.insertBefore(badge, anchor.nextSibling);
+    else card.appendChild(badge);
+  }
+}
+
 function getWeekActivities(sid,subj){
   // Demo profiles reuse an existing student's curriculum via curriculumSid
   // so we don't duplicate the big WEEKS data structure. Real students hit
@@ -11532,9 +11779,15 @@ function getWeekActivities(sid,subj){
   const demo = DEMO_GRADES.find(d=>d.id===sid);
   const resolved = demo ? demo.curriculumSid : sid;
   const acts = (WEEKS[currentWeek] && WEEKS[currentWeek][resolved] && WEEKS[currentWeek][resolved][subj]) || [];
-  // Apply teacher overrides at read time — demos see them too, because the
-  // whole point of the demo preview is "what students will experience."
-  const merged = acts.map(applyCurriculumOverride).filter(Boolean);
+  // Layered merge at read time:
+  //   base WEEKS → tutor override (Course Editor) → student AI override
+  // Tutor overrides apply to every student. Student AI overrides (from
+  // simpleLanguage etc.) are keyed by sid — demos use the resolved id so
+  // the preview reflects what the target student actually sees.
+  const merged = acts
+    .map(applyCurriculumOverride)
+    .filter(Boolean)
+    .map(a => applyStudentPlanOverride(a, resolved));
   // Activities marked demoOnly are previews of upcoming content — parents
   // browsing a demo profile see them so they can gauge depth/progression,
   // but real students don't, because they haven't earned their way there yet.
@@ -14411,6 +14664,35 @@ function renderLesson(card,q){
   // (Curriculum chip is now rendered at the TOP of the lesson card — see
   // the top of renderLesson — so parents demoing the product see it
   // before scrolling.)
+  // ---- Badge for cache-hit renders. When the activity arrives already
+  // carrying a student AI override (set by applyStudentPlanOverride at
+  // read time), the parent should still see a "rewritten for you" pill —
+  // not just on the initial hot-swap, but on every return visit. The
+  // hot-swap path detects an existing badge and won't duplicate. ----
+  try{
+    const alreadyRewritten = !!(quiz && quiz.activity && quiz.activity._aiRewritten);
+    if(alreadyRewritten && !card.querySelector('.lesson-ai-badge')){
+      const badge = h('div',{class:'lesson-ai-badge', title:'This lesson was rewritten in simpler words based on this student\'s plan.'},'✨ rewritten for you');
+      const anchor = card.querySelector('.curriculum-chip') || card.firstElementChild;
+      if(anchor && anchor.nextSibling) card.insertBefore(badge, anchor.nextSibling);
+      else card.appendChild(badge);
+    }
+  }catch(_){}
+  // ---- Per-student AI content adjustment (Phase 1 — simpleLanguage) ----
+  // Fire a lazy background rewrite if this student's plan says their
+  // lessons should be in simpler language. The call is idempotent + cached:
+  // first open = one /simplify round-trip → subsequent opens are instant
+  // because applyStudentPlanOverride (in getWeekActivities) already merged
+  // the cached text into `quiz.activity.lesson` before we got here.
+  // Nothing blocks — the base lesson is already on screen. If the rewrite
+  // succeeds, swapLessonContentInPlace hot-swaps the Intro/Example text and
+  // drops a small "✨ rewritten for you" badge. If it fails (AI off, cap
+  // hit, network), the kid just sees the base lesson — graceful.
+  try{
+    if(typeof currentUser === 'string' && currentUser && quiz && quiz.activity){
+      ensureStudentPlanContent(quiz.activity, currentUser);
+    }
+  }catch(e){ console.warn('[KidQuest] student plan content hook failed:', e); }
   quiz.locked=false;
   setTimeout(()=>{const b=$('#nextBtn');if(b){b.style.display='inline-flex';b.textContent="Let's practice! →"}},0);
 }
