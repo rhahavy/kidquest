@@ -42,6 +42,7 @@
 // ALLOWED_ORIGINS var in wrangler.toml if the domain changes.
 const DEFAULT_ALLOWED_ORIGINS = [
   'https://rhahavy.github.io',
+  'https://kidquest.fun',
   'https://kidquest.rhahavy.com',
   'http://localhost:8080',
   'http://127.0.0.1:8080',

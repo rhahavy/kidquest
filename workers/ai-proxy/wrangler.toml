@@ -46,7 +46,7 @@ FEATURE_PHOTO_EXTRACT      = "false"  # homework photo → quiz
 # ----- CORS / SECURITY ------------------------------------------
 # Same allow-list shape as tts-proxy. Update when you add a custom
 # domain. Comma-separated, no spaces required.
-ALLOWED_ORIGINS = "https://rhahavy.github.io,https://kidquest.rhahavy.com,http://localhost:8080,http://127.0.0.1:8080"
+ALLOWED_ORIGINS = "https://rhahavy.github.io,https://kidquest.fun,https://kidquest.rhahavy.com,http://localhost:8080,http://127.0.0.1:8080"
 
 # ----- COST CAPS ------------------------------------------------
 # Per-student daily call ceiling. Once a kid hits this, every AI

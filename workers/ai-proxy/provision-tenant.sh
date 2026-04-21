@@ -115,7 +115,7 @@ if pin:
 print(json.dumps(payload))
 ' "$LABEL" "$TEACHER_PW" "$IS_DEMO" "$PIN")"
 
-ORIGIN="https://kidquest.rhahavy.com"
+ORIGIN="https://kidquest.fun"
 
 RESP="$(printf '%s' "$JSON_BODY" | curl -sS -X POST "$WORKER_URL/provision" \
   -H "Authorization: Bearer $ADMIN_TOKEN" \
@@ -150,7 +150,7 @@ cat <<EOF
   ├─────────────────────────────────────────────────────────────┤
   │  Send this to the family/teacher:                           │
   │                                                             │
-  │    "Visit https://kidquest.rhahavy.com and type $CODE        "
+  │    "Visit https://kidquest.fun and type $CODE              "
   │     on the welcome PIN gate.                                 "
   │     Use $TEACHER_PW for teacher mode."
   └─────────────────────────────────────────────────────────────┘

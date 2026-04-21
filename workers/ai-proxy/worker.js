@@ -93,6 +93,7 @@
 // ALLOWED_ORIGINS in wrangler.toml when you add a custom domain.
 const DEFAULT_ALLOWED_ORIGINS = [
   'https://rhahavy.github.io',
+  'https://kidquest.fun',
   'https://kidquest.rhahavy.com',
   'http://localhost:8080',
   'http://127.0.0.1:8080',

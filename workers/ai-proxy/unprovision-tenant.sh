@@ -53,7 +53,7 @@ print(json.dumps({"code": sys.argv[1]}))
 RESP="$(printf '%s' "$JSON_BODY" | curl -sS -X POST "$WORKER_URL/unprovision" \
   -H "Authorization: Bearer $ADMIN_TOKEN" \
   -H "Content-Type: application/json" \
-  -H "Origin: https://kidquest.rhahavy.com" \
+  -H "Origin: https://kidquest.fun" \
   --data-binary @- 2>&1)" || die "Unprovision request failed. Response: $RESP"
 
 OK="$(echo "$RESP" | python3 -c 'import json,sys

@@ -35,8 +35,8 @@ DEFAULT_MODEL_ID = "eleven_flash_v2_5"     # default: speed + quota-friendly
 
 # Origin allow-list for CORS. Only these sites can call /tts.
 # Comma-separated, no spaces required. Update when you add a custom
-# domain (e.g. https://kidquest.rhahavy.com).
-ALLOWED_ORIGINS = "https://rhahavy.github.io,https://kidquest.rhahavy.com,http://localhost:8080,http://127.0.0.1:8080"
+# domain (e.g. https://kidquest.fun).
+ALLOWED_ORIGINS = "https://rhahavy.github.io,https://kidquest.fun,https://kidquest.rhahavy.com,http://localhost:8080,http://127.0.0.1:8080"
 
 # Observability — free, shows request counts + errors in the
 # Cloudflare dashboard. No log body persistence.
