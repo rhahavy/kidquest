@@ -357,7 +357,7 @@ footer{padding:48px 0;border-top:1px solid var(--line);margin-top:72px}
           <li>Works offline on phones, tablets, Chromebooks</li>
           <li>Cancel anytime</li>
         </ul>
-        <button class="btn btn-primary" onclick="startTrial('family')">Start free trial</button>
+        <button class="btn btn-primary" data-trial-btn onclick="startTrial('family')">Start free trial</button>
       </div>
 
       <!-- CLASSROOM -->
@@ -378,7 +378,7 @@ footer{padding:48px 0;border-top:1px solid var(--line);margin-top:72px}
           <li>"View as student" for quick previews</li>
           <li>Cancel anytime</li>
         </ul>
-        <button class="btn btn-primary" onclick="startTrial('classroom')">Start free trial</button>
+        <button class="btn btn-primary" data-trial-btn onclick="startTrial('classroom')">Start free trial</button>
       </div>
     </div>
   </div>
@@ -441,15 +441,88 @@ footer{padding:48px 0;border-top:1px solid var(--line);margin-top:72px}
 </footer>
 
 <script>
+// Where /stripe/checkout lives. Same Worker as the app uses for state.
+// Keep in sync with DATA_BACKEND_URL in app/index.html.
+var CHECKOUT_BACKEND_URL = 'https://kidquest-ai-proxy.rhahavy-b.workers.dev';
+
+// Track which pricing period the user is looking at. `startTrial` reads
+// this to pick the right Stripe price id (plan-monthly vs plan-yearly).
+var BILLING_MODE = 'monthly';
+
 function switchBilling(mode){
-  document.getElementById('tabMonthly').classList.toggle('on', mode==='monthly');
-  document.getElementById('tabYearly').classList.toggle('on', mode==='yearly');
+  BILLING_MODE = (mode === 'yearly') ? 'yearly' : 'monthly';
+  document.getElementById('tabMonthly').classList.toggle('on', BILLING_MODE==='monthly');
+  document.getElementById('tabYearly').classList.toggle('on', BILLING_MODE==='yearly');
   document.querySelectorAll('[data-monthly]').forEach(el=>{
-    el.textContent = el.dataset[mode];
+    el.textContent = el.dataset[BILLING_MODE];
   });
 }
-function startTrial(plan){
-  alert("Public signup launches in the next couple of weeks!\n\nFor early access, email hello@kidquest.fun with \"" + plan + " waitlist\" as the subject. We'll send your classroom PIN the moment billing is live.");
+
+// Kick off a Stripe Checkout session for the chosen plan + billing period.
+// Flow:
+//   1) Ask for a name (label) — becomes the classroom/family display name
+//      and seeds the Stripe customer record.
+//   2) POST { plan, label, email? } to the Worker; it creates a Checkout
+//      Session with a 7-day trial and returns { url }.
+//   3) Redirect to Stripe. On success, Stripe sends the user to our
+//      /thank-you page (see STRIPE_SUCCESS_URL) which looks up the newly
+//      provisioned PIN and shows it. On cancel, they come back to #pricing.
+// Network errors fall back to a friendly "email us" message so nobody is
+// stranded with a dead button.
+async function startTrial(planFamily){
+  var period = BILLING_MODE === 'yearly' ? 'yearly' : 'monthly';
+  var plan = planFamily + '-' + period;
+  var niceName = planFamily === 'family' ? 'family' : 'classroom';
+  var label = prompt(
+    'What would you like to name your ' + niceName + '?\n\n' +
+    '(Kids and parents will see this name in the app. You can change it later.)',
+    planFamily === 'family' ? 'My Family' : 'My Classroom'
+  );
+  if(label === null) return; // user cancelled
+  label = (label || '').trim().slice(0, 80);
+  if(!label){
+    alert('Please enter a name for your ' + niceName + '.');
+    return;
+  }
+  // Disable every "Start free trial" button while we talk to Stripe so an
+  // impatient double-click doesn't create two sessions.
+  var buttons = document.querySelectorAll('button[data-trial-btn]');
+  buttons.forEach(function(b){ b.disabled = true; b.dataset.originalLabel = b.textContent; b.textContent = 'Opening Stripe…'; });
+  var restore = function(){
+    buttons.forEach(function(b){ b.disabled = false; if(b.dataset.originalLabel) b.textContent = b.dataset.originalLabel; });
+  };
+  var res;
+  try {
+    res = await fetch(CHECKOUT_BACKEND_URL.replace(/\/+$/,'') + '/stripe/checkout', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ plan: plan, label: label }),
+    });
+  } catch(e){
+    restore();
+    alert("We couldn't reach the billing server. Please check your connection and try again — or email hello@kidquest.fun and we'll get you set up manually.");
+    return;
+  }
+  if(res.status === 429){
+    restore();
+    alert('Too many signup attempts from this network — wait a minute and try again.');
+    return;
+  }
+  if(!res.ok){
+    restore();
+    var detail = '';
+    try { var j = await res.json(); detail = j && j.error ? ' ('+j.error+')' : ''; } catch(e){}
+    alert('Signup is temporarily unavailable'+detail+'. Please email hello@kidquest.fun and we\'ll set you up.');
+    return;
+  }
+  var data; try { data = await res.json(); } catch(e){ data = null; }
+  if(!data || !data.ok || !data.url){
+    restore();
+    alert('Signup is temporarily unavailable. Please email hello@kidquest.fun and we\'ll set you up.');
+    return;
+  }
+  // Off to Stripe's hosted checkout. No restore() — the page is leaving.
+  window.location.assign(data.url);
 }
 
 // Wrap every text occurrence of "Solvix" in a rainbow-styled span, and keep

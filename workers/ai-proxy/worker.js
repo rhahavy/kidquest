@@ -570,6 +570,12 @@ function sanitizeTenantForClient(tenant) {
     planType: tenant.planType || 'classroom',
     storeEnabled: tenant.storeEnabled !== false,
     hasTeacherPassword: !!(tenant.teacherPasswordHash || tenant.teacherPassword),
+    // Does this tenant have an active Stripe subscription we can
+    // manage? Used to gate the "Manage Subscription" button in the
+    // teacher dashboard — no Stripe customer id means the tenant
+    // was provisioned manually via /provision and has no portal.
+    hasSubscription: !!tenant.stripeCustomerId,
+    suspended: !!tenant.suspended,
     createdAt: tenant.createdAt,
   };
 }
@@ -837,6 +843,409 @@ async function handleTenantSettingsRoute(request, env, corsOrigin) {
   return json({ ok: true, tenant: sanitizeTenantForClient(tenant) }, 200, corsOrigin);
 }
 
+/* ============================================================
+ * STRIPE BILLING — Checkout + Webhook + Customer Portal
+ * ============================================================
+ * End-to-end subscription flow. Prospects hit the marketing page,
+ * pick a plan, and land at a Stripe Checkout URL minted here.
+ * Stripe redirects them back with a session_id on success.
+ * A webhook then auto-provisions a tenant and emails the code.
+ * Teachers later use the portal endpoint to manage / cancel.
+ *
+ * Required secrets (wrangler secret put):
+ *   STRIPE_SECRET_KEY        — sk_live_... or sk_test_...
+ *   STRIPE_WEBHOOK_SECRET    — whsec_... (from Stripe dashboard webhook endpoint)
+ *
+ * Required env vars (wrangler.toml [vars]):
+ *   STRIPE_PRICE_FAMILY_MONTHLY     — price_...
+ *   STRIPE_PRICE_FAMILY_YEARLY      — price_...
+ *   STRIPE_PRICE_CLASSROOM_MONTHLY  — price_...
+ *   STRIPE_PRICE_CLASSROOM_YEARLY   — price_...
+ *   STRIPE_SUCCESS_URL              — e.g. https://solvix.com/welcome?session_id={CHECKOUT_SESSION_ID}
+ *   STRIPE_CANCEL_URL               — e.g. https://solvix.com/#pricing
+ *   STRIPE_PORTAL_RETURN_URL        — e.g. https://solvix.com/app/
+ *   STRIPE_TRIAL_DAYS               — integer string, e.g. "7". Default 7 if unset.
+ *
+ * If any of the above are unset, the corresponding endpoint returns
+ * 503 with a clear error. This keeps the Worker deployable even
+ * before Stripe is configured (nothing breaks — just that route).
+ */
+
+// Map the public plan id (what the marketing site sends) to the
+// env var holding the Stripe price id. Keeping this small map in
+// one place means a new plan needs just a new row here + a new
+// env var — no other code changes.
+const STRIPE_PLAN_TO_PRICE_ENV = {
+  'family-monthly':    { priceEnv: 'STRIPE_PRICE_FAMILY_MONTHLY',    planType: 'family'    },
+  'family-yearly':     { priceEnv: 'STRIPE_PRICE_FAMILY_YEARLY',     planType: 'family'    },
+  'classroom-monthly': { priceEnv: 'STRIPE_PRICE_CLASSROOM_MONTHLY', planType: 'classroom' },
+  'classroom-yearly':  { priceEnv: 'STRIPE_PRICE_CLASSROOM_YEARLY',  planType: 'classroom' },
+};
+
+// Low-level Stripe REST call. Stripe's API uses form-encoded bodies,
+// so we can't just pass JSON — we flatten the body with bracket
+// notation (key[sub]=value). Returns { ok, status, data } where
+// data is the parsed JSON response or null on non-JSON error.
+async function stripeApi(env, method, path, body) {
+  if (!env.STRIPE_SECRET_KEY) {
+    return { ok: false, status: 500, data: { error: { message: 'stripe_secret_key_missing' } } };
+  }
+  const url = 'https://api.stripe.com/v1' + path;
+  const init = {
+    method,
+    headers: {
+      'Authorization': 'Bearer ' + env.STRIPE_SECRET_KEY,
+      'Stripe-Version': '2024-06-20',
+    },
+  };
+  if (body) {
+    init.headers['Content-Type'] = 'application/x-www-form-urlencoded';
+    init.body = stripeEncodeBody(body);
+  }
+  const r = await fetch(url, init);
+  let data = null;
+  try { data = await r.json(); } catch {}
+  return { ok: r.ok, status: r.status, data };
+}
+
+// Flatten an object into Stripe's form-encoded shape.
+// { a: 1, b: [2,3], c: { d: 4 } } → "a=1&b[0]=2&b[1]=3&c[d]=4"
+function stripeEncodeBody(obj, prefix) {
+  const parts = [];
+  for (const key of Object.keys(obj)) {
+    const value = obj[key];
+    const fullKey = prefix ? `${prefix}[${key}]` : key;
+    if (value == null) continue;
+    if (Array.isArray(value)) {
+      value.forEach((v, i) => {
+        if (v && typeof v === 'object') {
+          parts.push(stripeEncodeBody(v, `${fullKey}[${i}]`));
+        } else {
+          parts.push(`${encodeURIComponent(`${fullKey}[${i}]`)}=${encodeURIComponent(String(v))}`);
+        }
+      });
+    } else if (typeof value === 'object') {
+      parts.push(stripeEncodeBody(value, fullKey));
+    } else {
+      parts.push(`${encodeURIComponent(fullKey)}=${encodeURIComponent(String(value))}`);
+    }
+  }
+  return parts.filter(Boolean).join('&');
+}
+
+// POST /stripe/checkout — public. Body: { plan, label?, email? }.
+// plan ∈ keys of STRIPE_PLAN_TO_PRICE_ENV. Returns { ok, url } which
+// the caller redirects to. Rate-limited per-IP so a bot can't fill
+// our Stripe dashboard with abandoned sessions.
+async function handleStripeCheckoutRoute(request, env, corsOrigin) {
+  const ip = request.headers.get('cf-connecting-ip') || '';
+  const rlKey = `ratelimit:stripe-checkout:ip:${ip}`;
+  const rl = await rateLimitHit(env, rlKey, RL.AUTH_IP.max, RL.AUTH_IP.window);
+  if (!rl.ok) return json({ error: 'rate_limited', resetAt: rl.resetAt }, 429, corsOrigin);
+
+  let body = {};
+  try { body = await request.json(); } catch { return json({ error: 'bad_json' }, 400, corsOrigin); }
+  const planKey = String(body.plan || '').trim();
+  const spec = STRIPE_PLAN_TO_PRICE_ENV[planKey];
+  if (!spec) return json({ error: 'invalid_plan', allowed: Object.keys(STRIPE_PLAN_TO_PRICE_ENV) }, 400, corsOrigin);
+
+  const priceId = env[spec.priceEnv];
+  if (!priceId) return json({ error: 'plan_not_configured', detail: `${spec.priceEnv} unset` }, 503, corsOrigin);
+
+  const successUrl = env.STRIPE_SUCCESS_URL;
+  const cancelUrl  = env.STRIPE_CANCEL_URL;
+  if (!successUrl || !cancelUrl) return json({ error: 'urls_not_configured' }, 503, corsOrigin);
+
+  // Metadata travels with the session → subscription → customer,
+  // so the webhook can read planType + label without a separate DB
+  // lookup. `label` is what the user typed on the pricing page to
+  // name their classroom / family ("Smith Family", "Room 7"); if
+  // absent we default later in the webhook.
+  const label = (body.label || '').toString().trim().slice(0, 80);
+  const email = (body.email || '').toString().trim().slice(0, 120);
+  const trialDays = parseInt(env.STRIPE_TRIAL_DAYS || '7', 10) || 7;
+
+  const params = {
+    mode: 'subscription',
+    'line_items[0][price]': priceId,
+    'line_items[0][quantity]': 1,
+    // Always collect a card, even during the trial. Kills "free
+    // trial abuse where signup rate is orders of magnitude above
+    // real intent" without blocking the kicking-the-tires demo.
+    payment_method_collection: 'always',
+    'subscription_data[trial_period_days]': String(trialDays),
+    // Capture our custom fields in BOTH places — the checkout
+    // session AND the resulting subscription — so every webhook
+    // event can read them. Stripe doesn't automatically copy
+    // session metadata to the subscription.
+    'metadata[planType]':  spec.planType,
+    'metadata[planKey]':   planKey,
+    'metadata[label]':     label,
+    'subscription_data[metadata][planType]': spec.planType,
+    'subscription_data[metadata][planKey]':  planKey,
+    'subscription_data[metadata][label]':    label,
+    success_url: successUrl,
+    cancel_url:  cancelUrl,
+    // Prefill email if provided; otherwise Stripe collects it.
+    ...(email ? { customer_email: email } : {}),
+    // Consent mode: promotional emails OFF by default. We can
+    // always re-enable through portal / account settings.
+    'consent_collection[promotions]': 'none',
+  };
+
+  const res = await stripeApi(env, 'POST', '/checkout/sessions', params);
+  if (!res.ok || !res.data || !res.data.url) {
+    return json({ error: 'stripe_error', detail: (res.data && res.data.error && res.data.error.message) || 'unknown' }, 502, corsOrigin);
+  }
+  return json({ ok: true, url: res.data.url }, 200, corsOrigin);
+}
+
+// POST /stripe/webhook — called by Stripe. Signature verified via
+// HMAC-SHA256(STRIPE_WEBHOOK_SECRET, "{timestamp}.{body}"). On
+// `checkout.session.completed` we provision a tenant; on
+// subscription updates we flip the tenant's `suspended` flag to
+// match the subscription status; on deletion we mark suspended.
+//
+// We do NOT delete tenants on cancel — data preservation matters
+// more than storage cost. The teacher can revive their tenant by
+// resubscribing; a separate sweeper can delete after N days.
+async function handleStripeWebhookRoute(request, env, corsOrigin) {
+  if (!env.STRIPE_WEBHOOK_SECRET) {
+    return json({ error: 'webhook_secret_missing' }, 503, corsOrigin);
+  }
+  const sigHeader = request.headers.get('stripe-signature') || '';
+  const rawBody = await request.text();
+  const verified = await verifyStripeSignature(rawBody, sigHeader, env.STRIPE_WEBHOOK_SECRET);
+  if (!verified) return json({ error: 'signature_invalid' }, 400, corsOrigin);
+
+  let event;
+  try { event = JSON.parse(rawBody); } catch { return json({ error: 'bad_json' }, 400, corsOrigin); }
+
+  try {
+    switch (event.type) {
+      case 'checkout.session.completed':
+        await handleStripeCheckoutCompleted(event.data.object, env);
+        break;
+      case 'customer.subscription.updated':
+      case 'customer.subscription.deleted':
+        await handleStripeSubscriptionChange(event.data.object, env);
+        break;
+      // Ignore everything else — we'd rather be silent than 400
+      // on events we haven't wired up yet. Stripe will re-send on
+      // non-2xx, which clogs the dashboard.
+      default:
+        break;
+    }
+  } catch (e) {
+    // Swallow the error back to Stripe as 500 so they retry. The
+    // idempotent pieces (tenant lookup by customer id) handle
+    // double-fire correctly.
+    return json({ error: 'webhook_handler_failed', detail: String(e && e.message || e) }, 500, corsOrigin);
+  }
+  return json({ received: true }, 200, corsOrigin);
+}
+
+// Provision a tenant from a completed checkout session. Idempotent —
+// if we already provisioned for this customer, just update the
+// stored record instead of creating a duplicate.
+async function handleStripeCheckoutCompleted(session, env) {
+  if (!env.KV) return;
+  const customerId = session.customer || '';
+  const subscriptionId = session.subscription || '';
+  if (!customerId) return; // can't correlate → skip silently
+
+  // If we already have a tenant for this customer, this is a replay
+  // — just refresh the subscription id + status and return.
+  const existingId = await env.KV.get(`customer:stripe:${customerId}`);
+  if (existingId) {
+    const raw = await env.KV.get(`tenant:${existingId}`);
+    const existing = raw ? JSON.parse(raw) : null;
+    if (existing) {
+      existing.stripeSubscriptionId = subscriptionId || existing.stripeSubscriptionId;
+      existing.suspended = false;
+      existing.updatedAt = Date.now();
+      await env.KV.put(`tenant:${existingId}`, JSON.stringify(existing));
+    }
+    return;
+  }
+
+  // New customer → fresh tenant. planType comes from metadata;
+  // label too. If metadata is missing (e.g. bare-API checkout)
+  // we fall back to sane defaults.
+  const planType = (session.metadata && session.metadata.planType) === 'family' ? 'family' : 'classroom';
+  const labelRaw = (session.metadata && session.metadata.label) || '';
+  const label    = labelRaw ? String(labelRaw).slice(0, 80) : (planType === 'family' ? 'New Family' : 'New Classroom');
+
+  // Generate a fresh code. PIN conflict is extremely rare with the
+  // word-code generator but we still retry a few times.
+  let code = '';
+  for (let i = 0; i < 5; i++) {
+    const candidate = generateTenantCode();
+    const taken = await env.KV.get(`code:${candidate}`);
+    if (!taken) { code = candidate; break; }
+  }
+  if (!code) throw new Error('code_generation_failed');
+
+  const id = generateTenantId();
+  const tenant = {
+    id, label, code,
+    teacherPasswordHash: null, // user sets this on first login
+    isDemo: false,
+    planType,
+    storeEnabled: true,
+    stripeCustomerId: customerId,
+    stripeSubscriptionId: subscriptionId,
+    suspended: false,
+    createdAt: new Date().toISOString(),
+    updatedAt: Date.now(),
+  };
+  await env.KV.put(`tenant:${id}`, JSON.stringify(tenant));
+  await env.KV.put(`code:${code}`, id);
+  await env.KV.put(`customer:stripe:${customerId}`, id);
+  // Intentionally no email send here — we keep the Worker
+  // provider-agnostic. Stripe sends its own receipt + the success
+  // URL shows the code to the user. Wire EmailJS or Resend later
+  // if we want a branded welcome email.
+}
+
+// Sync tenant.suspended with Stripe subscription status.
+// Active + trialing = not suspended. Anything else = suspended.
+async function handleStripeSubscriptionChange(subscription, env) {
+  if (!env.KV) return;
+  const customerId = subscription.customer || '';
+  if (!customerId) return;
+  const tenantId = await env.KV.get(`customer:stripe:${customerId}`);
+  if (!tenantId) return;
+  const raw = await env.KV.get(`tenant:${tenantId}`);
+  if (!raw) return;
+  let tenant;
+  try { tenant = JSON.parse(raw); } catch { return; }
+
+  const active = subscription.status === 'active' || subscription.status === 'trialing';
+  tenant.suspended = !active;
+  tenant.stripeSubscriptionStatus = subscription.status;
+  tenant.stripeSubscriptionId = subscription.id;
+  tenant.updatedAt = Date.now();
+  await env.KV.put(`tenant:${tenantId}`, JSON.stringify(tenant));
+}
+
+// Verify Stripe signature header. Format:
+//   t=<unix-ts>,v1=<sig>,v1=<sig-2>,...
+// We check all v1 signatures because Stripe rotates during
+// webhook secret cycles. Tolerance is 5 minutes against replays.
+async function verifyStripeSignature(rawBody, header, secret) {
+  if (!header) return false;
+  const parts = header.split(',').map(s => s.trim());
+  let ts = '';
+  const sigs = [];
+  for (const p of parts) {
+    const [k, v] = p.split('=');
+    if (k === 't') ts = v;
+    else if (k === 'v1') sigs.push(v);
+  }
+  if (!ts || !sigs.length) return false;
+  const now = Math.floor(Date.now() / 1000);
+  if (Math.abs(now - parseInt(ts, 10)) > 300) return false; // 5 min replay window
+
+  const enc = new TextEncoder();
+  const signed = `${ts}.${rawBody}`;
+  const key = await crypto.subtle.importKey(
+    'raw', enc.encode(secret),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false, ['sign']
+  );
+  const sigBuf = await crypto.subtle.sign('HMAC', key, enc.encode(signed));
+  const expected = bytesToHex(new Uint8Array(sigBuf));
+  // Constant-time compare against each candidate.
+  for (const s of sigs) {
+    if (s.length === expected.length && constantTimeEqualHex(s, expected)) return true;
+  }
+  return false;
+}
+
+function constantTimeEqualHex(a, b) {
+  if (a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return diff === 0;
+}
+
+// POST /stripe/portal — teacher-auth only. Bearer = code, body: { password }.
+// Returns { ok, url } — a short-lived Stripe-hosted billing portal link
+// where the teacher can update payment, download invoices, or cancel.
+async function handleStripePortalRoute(request, env, corsOrigin) {
+  if (!env.KV) return json({ error: 'kv_not_bound' }, 500, corsOrigin);
+  const ip = request.headers.get('cf-connecting-ip') || '';
+  const code = (extractBearer(request) || '').toLowerCase();
+  if (!code) return json({ error: 'missing_bearer' }, 401, corsOrigin);
+
+  const ipKey   = `ratelimit:tauth:ip:${ip}`;
+  const codeKey = `ratelimit:tauth:code:${code}`;
+  const ipPre   = await rateLimitPeek(env, ipKey,   RL.TAUTH_IP.max);
+  const codePre = await rateLimitPeek(env, codeKey, RL.TAUTH_CODE.max);
+  if (!ipPre.ok || !codePre.ok) return json({ error: 'rate_limited' }, 429, corsOrigin);
+
+  const tenant = await lookupTenantByCode(env, code);
+  if (!tenant) return json({ error: 'invalid_code' }, 401, corsOrigin);
+
+  let body = {};
+  try { body = await request.json(); } catch { return json({ error: 'bad_json' }, 400, corsOrigin); }
+  const password = (body.password || '').toString();
+  if (!password) return json({ error: 'missing_password' }, 400, corsOrigin);
+
+  let ok = false;
+  if (tenant.teacherPasswordHash) ok = await verifyPassword(password, tenant.teacherPasswordHash);
+  else if (tenant.teacherPassword) ok = (password === tenant.teacherPassword);
+  if (!ok) {
+    await rateLimitHit(env, ipKey,   RL.TAUTH_IP.max,   RL.TAUTH_IP.window);
+    await rateLimitHit(env, codeKey, RL.TAUTH_CODE.max, RL.TAUTH_CODE.window);
+    return json({ error: 'invalid_password' }, 401, corsOrigin);
+  }
+
+  if (!tenant.stripeCustomerId) return json({ error: 'no_stripe_customer' }, 400, corsOrigin);
+  const returnUrl = env.STRIPE_PORTAL_RETURN_URL;
+  if (!returnUrl) return json({ error: 'return_url_not_configured' }, 503, corsOrigin);
+
+  const res = await stripeApi(env, 'POST', '/billing_portal/sessions', {
+    customer: tenant.stripeCustomerId,
+    return_url: returnUrl,
+  });
+  if (!res.ok || !res.data || !res.data.url) {
+    return json({ error: 'stripe_error', detail: (res.data && res.data.error && res.data.error.message) || 'unknown' }, 502, corsOrigin);
+  }
+  return json({ ok: true, url: res.data.url }, 200, corsOrigin);
+}
+
+// GET /stripe/session/:id — public, read-only. The marketing
+// "thank you" page uses this to look up the code that was just
+// provisioned, so the user sees it immediately after paying
+// without needing to check email. Returns just the tenant code —
+// nothing sensitive.
+async function handleStripeSessionLookupRoute(request, env, corsOrigin) {
+  if (!env.KV || !env.STRIPE_SECRET_KEY) return json({ error: 'not_configured' }, 503, corsOrigin);
+  const url = new URL(request.url);
+  const sessionId = url.pathname.split('/').pop() || '';
+  if (!sessionId.startsWith('cs_')) return json({ error: 'bad_session_id' }, 400, corsOrigin);
+
+  // Fetch the session from Stripe to get the customer id.
+  const res = await stripeApi(env, 'GET', `/checkout/sessions/${encodeURIComponent(sessionId)}`);
+  if (!res.ok || !res.data) return json({ error: 'stripe_error' }, 502, corsOrigin);
+  const customerId = res.data.customer;
+  if (!customerId) return json({ error: 'no_customer_yet' }, 404, corsOrigin);
+
+  const tenantId = await env.KV.get(`customer:stripe:${customerId}`);
+  if (!tenantId) return json({ error: 'not_provisioned_yet' }, 404, corsOrigin);
+  const rawT = await env.KV.get(`tenant:${tenantId}`);
+  if (!rawT) return json({ error: 'tenant_gone' }, 404, corsOrigin);
+  const tenant = JSON.parse(rawT);
+  return json({
+    ok: true,
+    code: tenant.code,
+    label: tenant.label,
+    planType: tenant.planType,
+  }, 200, corsOrigin);
+}
+
 // /data and /snapshots routing table — same shape as before, but the
 // auth model is "Bearer = tenant code" and KV keys are namespaced by
 // tenantId, not by ?env=.
@@ -939,6 +1348,15 @@ export default {
       if (routeKey === 'GET /tenant')        return await handleTenantInfoRoute(request, env, corsOrigin);
       if (routeKey === 'POST /teacher-auth') return await handleTeacherAuthRoute(request, env, corsOrigin);
       if (routeKey === 'POST /tenant-settings') return await handleTenantSettingsRoute(request, env, corsOrigin);
+      // Stripe billing routes. Webhook is unauthenticated by design —
+      // signature is what we trust. Checkout is public. Portal is
+      // teacher-auth'd. Session-lookup is public (returns only code).
+      if (routeKey === 'POST /stripe/checkout')  return await handleStripeCheckoutRoute(request, env, corsOrigin);
+      if (routeKey === 'POST /stripe/webhook')   return await handleStripeWebhookRoute(request, env, corsOrigin);
+      if (routeKey === 'POST /stripe/portal')    return await handleStripePortalRoute(request, env, corsOrigin);
+      if (request.method === 'GET' && url.pathname.startsWith('/stripe/session/')) {
+        return await handleStripeSessionLookupRoute(request, env, corsOrigin);
+      }
       const dataRoute = DATA_ROUTES[routeKey];
       if (dataRoute) return await handleDataRoute(request, env, corsOrigin, dataRoute);
     } catch (err) {

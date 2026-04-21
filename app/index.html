@@ -20118,6 +20118,7 @@ function renderTeacher(root){
     { id:'backup',       icon:'💾', title:'Backup & Data',         build: buildBackupControls },
     { id:'data-export',  icon:'📊', title:'Data Export (CSV)',     build: buildDataExportPanel, classroomOnly:true },
     { id:'passwords',    icon:'🔑', title:'Passwords',             build: renderTeacherPasswords },
+    { id:'billing',      icon:'💳', title:'Subscription & Billing', build: renderBillingPortal },
     { id:'coins',        icon:'💰', title:'Coin Adjuster',         build: renderCoinAdjuster },
     { id:'resets',       icon:'🔄', title:'Resets',                build: renderResetControls },
   ].filter(s => {
@@ -22428,6 +22429,111 @@ function renderParentReports(){
     h('code',{}, REPORT_CC_EMAIL),
     ' so the business owner sees outgoing progress updates.'
   ]));
+
+  return wrap;
+}
+
+/* ==========================================================================
+   BILLING PORTAL — Manage Stripe subscription
+   --------------------------------------------------------------------------
+   Available on both family and classroom plans. Behavior depends on how the
+   tenant was provisioned:
+     • Stripe-backed (tenant_state.hasSubscription === true):
+         Shows a "Manage Subscription" button that opens Stripe's hosted
+         billing portal in a new tab. The kid-free portal lets the owner
+         swap cards, download invoices, change the plan, or cancel.
+     • Manually provisioned (hasSubscription === false):
+         Shows a friendly note — no billing attached. The only way onto a
+         paid plan for these tenants is to start a fresh checkout (handled
+         from the marketing site) or have us migrate them.
+   If Stripe flags the subscription as past_due/canceled/unpaid, the Worker's
+   subscription webhook sets tenant.suspended = true, which we surface as a
+   red warning here so the teacher/parent sees it immediately.
+   All portal opens go through confirmTeacherPassword so a kid who wandered
+   into the dashboard can't click "Cancel subscription" on the way through.
+   ========================================================================== */
+function renderBillingPortal(){
+  const t = (typeof tenant_state === 'object' && tenant_state) || {};
+  const hasSub = !!t.hasSubscription;
+  const isSuspended = !!t.suspended;
+  const wrap = h('div',{class:'t-pw-block'});
+  wrap.appendChild(h('div',{class:'t-pw-head'},[
+    h('h3',{}, '💳 Subscription & Billing'),
+    h('p',{class:'t-pw-sub'},
+      hasSub
+        ? 'Manage your plan, payment method, and invoices through Stripe\'s secure billing portal. We never see your card number.'
+        : 'This '+(isFamilyPlan()?'family account':'classroom')+' isn\'t linked to a Stripe subscription yet. If you\'d like to add billing, reply to any onboarding email or contact support — we\'ll migrate your data onto a paid plan in minutes.'),
+  ]));
+
+  // Status banner — green for active, red for suspended, gray for no sub
+  const statusWrap = h('div',{
+    style:'margin-top:12px;padding:12px 14px;border-radius:12px;display:flex;gap:10px;align-items:flex-start;'
+      + (isSuspended
+          ? 'background:#fee;border:1px solid #f99;'
+          : hasSub ? 'background:#eefce8;border:1px solid #bde5a7;'
+                   : 'background:#f4f4fa;border:1px solid var(--line);')
+  });
+  const statusIcon = isSuspended ? '⚠️' : (hasSub ? '✅' : 'ℹ️');
+  const statusTitle = isSuspended
+    ? 'Subscription inactive'
+    : (hasSub ? 'Subscription active' : 'No Stripe billing on file');
+  const statusDetail = isSuspended
+    ? 'Your payment is past due or the subscription was canceled. Open the billing portal below to update your card — your data is safe and nothing has been deleted.'
+    : (hasSub
+        ? 'Billing is handled by Stripe. Use the button below to change plan, update payment, download invoices, or cancel.'
+        : 'You\'re on a manually provisioned account with no subscription attached. There\'s nothing to manage here right now.');
+  statusWrap.appendChild(h('div',{style:'font-size:22px;line-height:1;flex-shrink:0'}, statusIcon));
+  statusWrap.appendChild(h('div',{style:'flex:1;min-width:200px'},[
+    h('div',{style:'font-weight:800;font-size:14px;margin-bottom:3px'}, statusTitle),
+    h('div',{style:'font-size:13px;color:var(--ink2);line-height:1.5'}, statusDetail),
+  ]));
+  wrap.appendChild(statusWrap);
+
+  // Manage button — only meaningful when a Stripe customer is attached.
+  if(hasSub){
+    const manageBtn = h('button',{
+      class:'btn btn-primary',
+      style:'margin-top:14px;padding:10px 18px;font-weight:700;font-size:14px',
+      onclick: async () => {
+        if(!DATA_BACKEND_URL){ alert('Billing portal is only available with the cloud backend configured.'); return; }
+        const pwOk = await confirmTeacherPassword('open the Stripe billing portal');
+        if(!pwOk) return;
+        const pw = (typeof _teacherPwCache === 'string' && _teacherPwCache) ? _teacherPwCache : '';
+        manageBtn.textContent = 'Opening…';
+        manageBtn.disabled = true;
+        let r;
+        try {
+          r = await fetch(DATA_BACKEND_URL.replace(/\/+$/,'') + '/stripe/portal', {
+            method:'POST',
+            headers:{
+              'Content-Type':'application/json',
+              'Authorization':'Bearer '+((tenant_state && tenant_state.code) || ''),
+            },
+            body: JSON.stringify({ password: pw }),
+          });
+        } catch(e){
+          manageBtn.textContent = '💳 Manage Subscription';
+          manageBtn.disabled = false;
+          alert('Could not reach the billing portal. Check your connection and try again.');
+          return;
+        }
+        manageBtn.textContent = '💳 Manage Subscription';
+        manageBtn.disabled = false;
+        if(r.status === 401){ alert('Password check failed. Please try again.'); _clearTeacherPwCache(); return; }
+        if(r.status === 429){ alert('Too many attempts — wait a minute and try again.'); return; }
+        if(!r.ok){ alert('Billing portal is temporarily unavailable (error '+r.status+'). Try again in a moment.'); return; }
+        let data; try { data = await r.json(); } catch(e){ alert('Billing portal returned an unexpected response.'); return; }
+        if(!data || !data.ok || !data.url){ alert('Billing portal did not return a valid link. Try again.'); return; }
+        // Open Stripe-hosted page. Using location.assign (not window.open)
+        // avoids popup-blocker issues on tablets/Chromebooks after the
+        // async password prompt has already consumed the user-gesture.
+        window.location.assign(data.url);
+      },
+    }, '💳 Manage Subscription');
+    wrap.appendChild(manageBtn);
+    wrap.appendChild(h('div',{style:'margin-top:10px;font-size:12px;color:var(--ink3);line-height:1.5'},
+      'You\'ll be redirected to Stripe. When you\'re done, click "Return to '+(tenant_state.label||'your classroom')+'" on the Stripe page to come back here.'));
+  }
 
   return wrap;
 }
