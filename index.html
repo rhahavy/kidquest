@@ -18381,15 +18381,62 @@ function renderTeacher(root){
     return grid;
   };
 
-  // Detailed Report Cards — per-student rich cards from renderReportCard.
-  const buildReportCardsPanel = () => {
-    const wrap = h('div',{});
-    wrap.appendChild(h('p',{style:'font-size:13px;color:var(--ink3);font-weight:600;margin:0 0 14px'},
+  // Combined Student Insights panel — merges Students Overview, Learning
+  // Analytics, and Detailed Report Cards into one accordion so the tutor
+  // has a single "how is everyone doing?" destination instead of three
+  // scattered sections. Ordering reads zoom-in: bird's-eye grid first,
+  // then family-wide patterns, then per-kid deep dive.
+  //
+  // Overview + analytics come from separate builders (buildOverviewGrid
+  // local, buildAnalyticsPanel global) so they stay reusable for other
+  // contexts (PDF export, email embed). The report-card list is inlined
+  // here — it's a simple map over renderReportCard() — rather than going
+  // through another wrapper that would just duplicate the same loop.
+  const buildStudentInsightsPanel = () => {
+    const wrap = h('div',{style:'display:flex;flex-direction:column;gap:22px'});
+
+    // Sub-section heading helper — uses the same visual weight as accordion
+    // headers but inline so the reader gets an obvious "new topic" anchor
+    // without the accordion chrome (no expand/collapse inside a section).
+    const subHead = (emoji, title, subtitle) => {
+      const head = h('div',{style:'display:flex;flex-direction:column;gap:4px;padding-bottom:10px;border-bottom:2px solid var(--line)'});
+      head.appendChild(h('div',{style:'display:flex;align-items:center;gap:8px;font-family:var(--font-display);font-size:17px;font-weight:800'},[
+        h('span',{style:'font-size:20px'}, emoji),
+        h('span',{}, title),
+      ]));
+      if(subtitle){
+        head.appendChild(h('div',{style:'font-size:12px;color:var(--ink3);font-weight:600'}, subtitle));
+      }
+      return head;
+    };
+
+    // 1️⃣  Students Overview — quick glance cards
+    const overviewBlock = h('div',{style:'display:flex;flex-direction:column;gap:12px'});
+    overviewBlock.appendChild(subHead('👥', 'Students Overview',
+      'Stars, coins, streak, and per-subject progress for each student at a glance.'));
+    overviewBlock.appendChild(buildOverviewGrid());
+    wrap.appendChild(overviewBlock);
+
+    // 2️⃣  Learning Analytics — cross-kid patterns
+    const analyticsBlock = h('div',{style:'display:flex;flex-direction:column;gap:12px'});
+    analyticsBlock.appendChild(subHead('📈', 'Learning Analytics',
+      'Family-wide patterns — 30-day wrong-answer trend, accuracy heatmap, struggle concepts, and timeout diagnostic.'));
+    try{ analyticsBlock.appendChild(buildAnalyticsPanel()); }
+    catch(e){ console.warn('[KidQuest] analytics panel failed:', e); }
+    wrap.appendChild(analyticsBlock);
+
+    // 3️⃣  Detailed Report Cards — per-student deep dive
+    const reportsBlock = h('div',{style:'display:flex;flex-direction:column;gap:12px'});
+    reportsBlock.appendChild(subHead('📊', 'Detailed Report Cards',
       'Performance level, accuracy, and auto-generated comments per student.'));
+    // buildReportCardsPanel already includes its own intro line — but
+    // the sub-head already conveys that context, so emit just the cards.
     STUDENTS.forEach(s=>{
-      try { wrap.appendChild(renderReportCard(s.id, true)); }
+      try { reportsBlock.appendChild(renderReportCard(s.id, true)); }
       catch(e){ console.warn('[KidQuest] teacher report card failed:',e); }
     });
+    wrap.appendChild(reportsBlock);
+
     return wrap;
   };
 
@@ -19383,13 +19430,15 @@ function renderTeacher(root){
   // the same place. Course Editor sits second — it's the single most
   // important tutor-authoring tool.
   const sections = [
-    { id:'students',    icon:'👥', title:'Students Overview',     build: buildOverviewGrid },
+    // Students Overview + Learning Analytics + Detailed Report Cards are
+    // merged into one "Students & Reports" panel — a tutor's "how is
+    // everyone doing?" destination. Ordered zoom-in: overview grid →
+    // family-wide analytics → per-kid deep dive.
+    { id:'students',    icon:'👥', title:'Students & Reports',    build: buildStudentInsightsPanel },
     { id:'plans',       icon:'📋', title:'Student Education Plans', build: buildStudentPlansPanel },
     { id:'curriculum',  icon:'📚', title:'Course Editor',         build: buildCourseLink },
     { id:'ai-rewrites', icon:'🤖', title:'AI Content Rewrites',   badge: countPendingAiRewrites(), badgeLabel:'AI rewrites awaiting review', build: buildAiRewritesPanel },
     { id:'messages',    icon:'💬', title:'Messages',              badge: unreadTotal,       badgeLabel:'unread messages', build: renderTeacherMessages },
-    { id:'reports',     icon:'📊', title:'Detailed Report Cards', build: buildReportCardsPanel },
-    { id:'analytics',   icon:'📈', title:'Learning Analytics',    build: buildAnalyticsPanel },
     { id:'parents',     icon:'📧', title:'Parent Reports',        badge: unreviewedReportsTotal, badgeLabel:'reports awaiting review', build: renderParentReports },
     { id:'store',       icon:'🛍️', title:'Store Management',      badge: pendingOrdersTotal, badgeLabel:'pending orders',  build: renderTeacherStore },
     { id:'maintenance', icon:'🔧', title:'Maintenance',           build: renderMaintenanceControls },
