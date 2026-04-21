@@ -2469,6 +2469,21 @@ body.has-dev-banner{padding-top:26px}
 /* --- Reward / memory-win overlay close button absent — add ESC affordance hint?
        (Skipped — tapping outside not desired; kids should read the buttons.) --- */
 
+/* --- Rainbow Solvix wordmark — applied via the IIFE near end of body.
+       Every text occurrence of "Solvix" (initial + dynamic) gets wrapped in
+       a span with this class. --- */
+.solvix-rainbow{
+  background:linear-gradient(90deg,#FF6B6B 0%,#FDCB6E 16%,#55EFC4 33%,#74B9FF 50%,#A29BFE 66%,#FD79A8 83%,#FF6B6B 100%);
+  background-size:200% auto;
+  -webkit-background-clip:text;background-clip:text;
+  color:transparent;-webkit-text-fill-color:transparent;
+  animation:solvix-rainbow-shift 8s linear infinite;
+}
+@keyframes solvix-rainbow-shift{
+  0%  {background-position:0% center}
+  100%{background-position:200% center}
+}
+
 </style>
 <!-- EmailJS SDK (optional) — only sends if keys are configured in EMAIL_CONFIG.
      Safe to leave loaded even when unconfigured: no requests fire without keys. -->
@@ -22715,6 +22730,49 @@ if(!__maintenanceActive){
     window.addEventListener('offline', update);
     update();
   }catch(e){ console.warn('[Solvix] offline chip setup failed:', e); }
+})();
+
+/* Rainbow Solvix wordmark — wraps every text occurrence of "Solvix" in a
+   span with class .solvix-rainbow so the CSS gradient animation applies.
+   Runs once on load, then a MutationObserver handles dynamically rendered
+   text (route changes, PIN gate, teacher tabs, parent emails, etc). */
+(function setupSolvixRainbow(){
+  var WORD='Solvix', CLASS='solvix-rainbow';
+  var SKIP=/^(STYLE|SCRIPT|TEXTAREA|TITLE|CODE|PRE|NOSCRIPT|INPUT)$/;
+  function processTextNode(node){
+    if(!node || node.nodeType!==3 || !node.nodeValue || node.nodeValue.indexOf(WORD)<0) return;
+    var p=node.parentElement;
+    if(!p || p.classList.contains(CLASS) || SKIP.test(p.tagName)) return;
+    var parts=node.nodeValue.split(WORD);
+    var frag=document.createDocumentFragment();
+    for(var i=0;i<parts.length;i++){
+      if(parts[i]) frag.appendChild(document.createTextNode(parts[i]));
+      if(i<parts.length-1){
+        var s=document.createElement('span');
+        s.className=CLASS; s.textContent=WORD;
+        frag.appendChild(s);
+      }
+    }
+    node.parentNode.replaceChild(frag,node);
+  }
+  function walk(root){
+    if(!root) return;
+    if(root.nodeType===3){ processTextNode(root); return; }
+    if(root.nodeType!==1) return;
+    var w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,null);
+    var list=[],n; while((n=w.nextNode())) list.push(n);
+    for(var i=0;i<list.length;i++) processTextNode(list[i]);
+  }
+  try {
+    walk(document.body);
+    new MutationObserver(function(muts){
+      for(var i=0;i<muts.length;i++){
+        var m=muts[i];
+        for(var j=0;j<m.addedNodes.length;j++) walk(m.addedNodes[j]);
+        if(m.type==='characterData') processTextNode(m.target);
+      }
+    }).observe(document.documentElement,{childList:true,subtree:true,characterData:true});
+  } catch(e){ console.warn('[Solvix] rainbow setup failed:', e); }
 })();
 </script>
 </body>

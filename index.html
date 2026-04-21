@@ -181,6 +181,22 @@ footer{padding:48px 0;border-top:1px solid var(--line);margin-top:72px}
 .footer-links{display:flex;gap:24px;flex-wrap:wrap}
 .footer-links a{color:var(--ink2);font-size:14px;font-weight:600}
 .footer-copy{color:var(--ink3);font-size:14px}
+
+/* Rainbow Solvix wordmark — applied to every on-page "Solvix" via the IIFE at
+   end of body, plus the MutationObserver for anything rendered dynamically. */
+.solvix-rainbow{
+  background:linear-gradient(90deg,#FF6B6B 0%,#FDCB6E 16%,#55EFC4 33%,#74B9FF 50%,#A29BFE 66%,#FD79A8 83%,#FF6B6B 100%);
+  background-size:200% auto;
+  -webkit-background-clip:text;
+  background-clip:text;
+  color:transparent;
+  -webkit-text-fill-color:transparent;
+  animation:solvix-rainbow-shift 8s linear infinite;
+}
+@keyframes solvix-rainbow-shift{
+  0%  {background-position:0% center}
+  100%{background-position:200% center}
+}
 </style>
 </head>
 <body>
@@ -429,6 +445,47 @@ function switchBilling(mode){
 function startTrial(plan){
   alert("Public signup launches in the next couple of weeks!\n\nFor early access, email hello@kidquest.fun with \"" + plan + " waitlist\" as the subject. We'll send your classroom PIN the moment billing is live.");
 }
+
+// Wrap every text occurrence of "Solvix" in a rainbow-styled span, and keep
+// doing it as the DOM mutates (FAQ <details> open, dynamic inserts, etc).
+(function setupSolvixRainbow(){
+  var WORD='Solvix', CLASS='solvix-rainbow';
+  var SKIP=/^(STYLE|SCRIPT|TEXTAREA|TITLE|CODE|PRE|NOSCRIPT)$/;
+  function processTextNode(node){
+    if(!node || node.nodeType!==3 || !node.nodeValue || node.nodeValue.indexOf(WORD)<0) return;
+    var p=node.parentElement;
+    if(!p || p.classList.contains(CLASS) || SKIP.test(p.tagName)) return;
+    var parts=node.nodeValue.split(WORD);
+    var frag=document.createDocumentFragment();
+    for(var i=0;i<parts.length;i++){
+      if(parts[i]) frag.appendChild(document.createTextNode(parts[i]));
+      if(i<parts.length-1){
+        var s=document.createElement('span');
+        s.className=CLASS; s.textContent=WORD;
+        frag.appendChild(s);
+      }
+    }
+    node.parentNode.replaceChild(frag,node);
+  }
+  function walk(root){
+    if(!root) return;
+    if(root.nodeType===3){ processTextNode(root); return; }
+    if(root.nodeType!==1) return;
+    var w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,null);
+    var list=[],n; while((n=w.nextNode())) list.push(n);
+    for(var i=0;i<list.length;i++) processTextNode(list[i]);
+  }
+  var run=function(){ walk(document.body); };
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',run);
+  else run();
+  new MutationObserver(function(muts){
+    for(var i=0;i<muts.length;i++){
+      var m=muts[i];
+      for(var j=0;j<m.addedNodes.length;j++) walk(m.addedNodes[j]);
+      if(m.type==='characterData') processTextNode(m.target);
+    }
+  }).observe(document.documentElement,{childList:true,subtree:true,characterData:true});
+})();
 </script>
 
 </body>
