@@ -744,12 +744,12 @@ img{max-width:100%}
 /* Lesson card */
 .lesson-card{background:linear-gradient(180deg,#faf9ff,#fff)!important;border:2px dashed rgba(253,203,110,.5)!important;text-align:left!important;padding:clamp(22px,3vw,32px)!important}
 .lesson-badge{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;background:linear-gradient(135deg,#ffeaa7,var(--sun));color:#5b3e00;border-radius:999px;font-size:11px;font-weight:800;letter-spacing:.06em}
-/* AI-rewrite pill — appears on a lesson card AFTER swapLessonContentInPlace
-   hot-swaps the Intro / Example text for a student whose plan has
-   simpleLanguage:true. Purposefully quiet (purple tint, small, pill-shaped)
-   so parents can tell AI touched the copy without it screaming "AI!!" at
-   the kid. Sits just below the QUICK LESSON badge + curriculum chip, above
-   the Nova mascot — a sibling inserted by swapLessonContentInPlace. */
+/* AI-rewrite pill — appears on a lesson card when a student's approved
+   AI rewrite is being shown (applyStudentPlanOverride has stamped
+   _aiRewritten:true on the activity, and renderLesson inserts this pill
+   right below the curriculum chip). Purposefully quiet (purple tint,
+   small, pill-shaped) so parents can tell AI touched the copy without
+   it screaming "AI!!" at the kid. */
 .lesson-ai-badge{display:inline-flex;align-items:center;gap:6px;margin-top:8px;margin-left:8px;padding:4px 11px;background:linear-gradient(135deg,rgba(108,92,231,.14),rgba(87,94,232,.14));color:#4f56d4;border:1px solid rgba(108,92,231,.35);border-radius:999px;font-size:11px;font-weight:700;letter-spacing:.03em;cursor:help;animation:popIn .45s var(--spring)}
 /* Nova cameo on the lesson card — bigger/friendlier so kids actually read
    the pep talk. Was tiny (13px/180px) which felt like a footnote next to
@@ -11599,6 +11599,51 @@ function applyStudentPlanOverride(activity, sid){
   });
 }
 
+/* Mirror of applyStudentPlanOverride but for AI-generated stretch
+   questions. The record lives in the same studentOverrides[sid][aid]
+   slot as the simpleLanguage rewrite — they share a slot because
+   they're both per-student AI overlays on the same activity — but
+   each feature has its OWN status field (`_status` for simplify,
+   `_stretchStatus` for stretch) so the tutor can approve them
+   independently.
+
+   Pure function. Merges only when `_stretchStatus === 'approved'`
+   (or missing — legacy grandfathering). Pending/rejected passes
+   through with the tutor-authored stretchQuestions (if any). */
+function applyStudentStretchOverride(activity, sid){
+  if(!activity || !activity.id || !sid) return activity;
+  const bucket = allData && allData.curriculum && allData.curriculum.studentOverrides;
+  if(!bucket) return activity;
+  const perStudent = bucket[sid];
+  if(!perStudent) return activity;
+  const ov = perStudent[activity.id];
+  if(!ov) return activity;
+  if(!Array.isArray(ov.stretchQuestions) || !ov.stretchQuestions.length) return activity;
+  // Approval gate — mirror of the simpleLanguage gate. Everything new
+  // ships pending; pending/rejected records never surface to the kid.
+  const status = ov._stretchStatus;
+  if(status === 'pending' || status === 'rejected') return activity;
+  // Staleness check — if the tutor has edited the base MCQ pool since
+  // we generated these variants, skip and let ensureStudentStretchQuestions
+  // regenerate on next render.
+  try{
+    const liveHash = hashQuestionsBase(activity);
+    if(ov._stretchBaseHash && ov._stretchBaseHash !== liveHash){
+      return activity;
+    }
+  }catch(_){/* hash failure → pass through; never throw render */}
+  // Replace stretchQuestions wholesale. Unlike simpleLanguage (a
+  // shallow merge on a few lesson text fields), stretch is an
+  // all-or-nothing pool — half AI questions + half base would produce
+  // a weird mixed-difficulty quiz. The approved record IS the stretch
+  // pool for this student.
+  return Object.assign({}, activity, {
+    stretchQuestions: ov.stretchQuestions,
+    _baseStretchQuestions: activity.stretchQuestions || [],
+    _aiStretchRewritten: true,
+  });
+}
+
 // Cheap, stable hash of the lesson fields we rewrite. Not cryptographic —
 // just enough to detect "the tutor edited the base since we generated."
 // FNV-1a 32-bit; base-36 to keep the stored string short.
@@ -11606,6 +11651,32 @@ function hashLessonBase(lesson){
   const s = String(lesson && lesson.intro || '') + '|'
           + String(lesson && lesson.example || '') + '|'
           + String(lesson && lesson.hint || '');
+  let h = 0x811c9dc5;
+  for(let i=0;i<s.length;i++){
+    h ^= s.charCodeAt(i);
+    h = (h + ((h<<1) + (h<<4) + (h<<7) + (h<<8) + (h<<24))) >>> 0;
+  }
+  return h.toString(36);
+}
+
+// Hash of the BASE MCQ pool — used by ensureStudentStretchQuestions to
+// detect "the tutor edited a question since we generated stretch variants."
+// Intentionally separate from hashLessonBase because stretch is keyed on
+// the `questions` array, not the lesson text — a tutor rewording the
+// intro shouldn't invalidate already-approved stretch questions.
+function hashQuestionsBase(activity){
+  if(!activity || !Array.isArray(activity.questions)) return '0';
+  // Only hash fields the model saw: q text, choices, answer index.
+  // type/hint/passage aren't fed to /generate-questions so they
+  // don't need to bust the stretch cache.
+  const parts = [];
+  for(const q of activity.questions){
+    if(!q || typeof q !== 'object') continue;
+    parts.push(String(q.q || q.prompt || ''));
+    if(Array.isArray(q.choices)) parts.push(q.choices.join('|'));
+    parts.push(String(q.answer == null ? '' : q.answer));
+  }
+  const s = parts.join('\n');
   let h = 0x811c9dc5;
   for(let i=0;i<s.length;i++){
     h ^= s.charCodeAt(i);
@@ -11731,54 +11802,140 @@ async function ensureStudentPlanContent(activity, sid){
   finally { _aiPlanInFlight.delete(key); }
 }
 
-/* DOM hot-swap for a currently-rendered lesson card. Targets only the
-   specific text nodes (.lesson-intro <p>, .lesson-example-text <div>) so
-   we don't disturb surrounding widgets (TTS buttons, math stacks, video
-   embeds). Adds a small "✨ rewritten for you" badge on the first swap so
-   parents can tell AI touched the copy. Silent no-op if the kid has
-   navigated away since. */
-function swapLessonContentInPlace(rewritten){
-  const card = document.querySelector('.lesson-card');
-  if(!card) return;
-  let touched = false;
-  if(rewritten.intro){
-    const p = card.querySelector('.lesson-intro');
-    if(p){ p.textContent = rewritten.intro; touched = true; }
+/* ---- Lazy AI stretch-question trigger (plan-driven) ----
+   Parallel to ensureStudentPlanContent but for autoStretch plans.
+   Called from renderLesson when a lesson paints. For students whose
+   plan has `autoStretch: true`, this fires /generate-questions in the
+   background against the activity's base MCQ pool, saves the result
+   under allData.curriculum.studentOverrides[sid][activityId] as a
+   PENDING record, and waits for tutor approval before the kid sees
+   the harder pool.
+
+   Design parallels ensureStudentPlanContent:
+   - FIRE-AND-FORGET. The kid plays the base quiz; stretch variants
+     land in the tutor review queue, not live.
+   - SEQUENTIAL NOT PARALLEL. One API call per activity (the handler
+     generates 3 questions in one shot), so no parallelization needed.
+   - IN-FLIGHT DEDUPE on (sid, activityId) via _aiStretchInFlight.
+   - HASH-BASED STALENESS on the base questions pool. If the tutor
+     has edited a question since we generated, regenerate fresh.
+   - SILENT FALLBACK on any error. Kid keeps seeing the tutor-authored
+     stretchQuestions (if any) — which is exactly what a non-autoStretch
+     kid would see in stretch mode.
+
+   Returns the new record, or null on no-op/failure. */
+const _aiStretchInFlight = new Map();
+
+async function ensureStudentStretchQuestions(activity, sid){
+  if(!activity || !activity.id || !sid) return null;
+  const adj = (typeof planAdjustments === 'function') ? planAdjustments(sid) : null;
+  if(!adj || !adj.autoStretch) return null;
+  if(!aiFeatureOn('FEATURE_GENERATE_QUESTIONS')) return null;
+  // Need a real base pool — the Worker learns shape/topic from it.
+  // Blank activity → nothing to stretch.
+  if(!Array.isArray(activity.questions) || !activity.questions.length) return null;
+
+  const key = sid + ':' + activity.id;
+  if(_aiStretchInFlight.has(key)) return _aiStretchInFlight.get(key);
+
+  // Hash the base MCQ pool — simpleLanguage doesn't touch
+  // activity.questions, so the incoming activity's questions ARE the
+  // post-tutor-override base regardless of overlay state.
+  const baseHash = hashQuestionsBase(activity);
+
+  if(!allData.curriculum) allData.curriculum = { overrides:{}, studentOverrides:{}, updatedAt:0 };
+  if(!allData.curriculum.studentOverrides) allData.curriculum.studentOverrides = {};
+  if(!allData.curriculum.studentOverrides[sid]) allData.curriculum.studentOverrides[sid] = {};
+  const existing = allData.curriculum.studentOverrides[sid][activity.id];
+  if(existing && existing._stretchBaseHash === baseHash
+     && Array.isArray(existing.stretchQuestions) && existing.stretchQuestions.length){
+    return existing; // fresh — whether pending or approved, caller is done
   }
-  if(rewritten.example){
-    const e = card.querySelector('.lesson-example-text');
-    if(e){ e.textContent = rewritten.example; touched = true; }
-  }
-  // Hint is read lazy from q.lesson when the Hint button is clicked — no
-  // DOM swap needed; the q.lesson mutation above handles it.
-  if(touched && !card.querySelector('.lesson-ai-badge')){
-    const badge = h('div',{class:'lesson-ai-badge', title:'This lesson was rewritten in simpler words based on this student\'s plan.'},'✨ rewritten for you');
-    // Insert right after the curriculum chip if present, else at the top.
-    const anchor = card.querySelector('.curriculum-chip') || card.firstElementChild;
-    if(anchor && anchor.nextSibling) card.insertBefore(badge, anchor.nextSibling);
-    else card.appendChild(badge);
-  }
+
+  const promise = (async ()=>{
+    const curriculum = activity.curriculum || null;
+    // Worker rejects calls without a grade tag. Untagged activities
+    // can't be stretched safely (no curriculum anchor = drift risk).
+    if(!curriculum || !curriculum.grade) return null;
+    const existingForModel = (activity.questions || [])
+      .filter(q => q && q.type === 'mcq'
+              && Array.isArray(q.choices) && q.choices.length === 4
+              && typeof q.answer === 'number')
+      .slice(0, 6)
+      .map(q => ({ q: String(q.q||''), choices: q.choices.slice(), answer: q.answer }));
+    // Need >=1 valid MCQ example for the model to learn from.
+    // Activities that are pure passage/write/drag don't have a
+    // stretch-able MCQ shape, so skip them silently.
+    if(!existingForModel.length) return null;
+    const res = await callAI('/generate-questions', {
+      curriculum,
+      existingQuestions: existingForModel,
+      count: 3,
+      lessonTitle: activity.title || '',
+      lessonIntro: (activity.lesson && activity.lesson.intro) || '',
+      difficulty: 'stretch',
+    }, { timeoutMs: 30000, studentId: sid });
+    if(!res || !res.ok || !res.data || !Array.isArray(res.data.questions) || !res.data.questions.length){
+      return null; // disabled / capped / parse_failed — kid keeps base stretchQuestions
+    }
+    // Merge into the EXISTING record if one is there (the kid may
+    // have both simpleLanguage + autoStretch on their plan, so a prior
+    // /simplify pass may have left a record we shouldn't clobber).
+    // First-time writes create a fresh record.
+    const prior = allData.curriculum.studentOverrides[sid][activity.id] || {};
+    const record = Object.assign({}, prior, {
+      stretchQuestions: res.data.questions,
+      _stretchSource: 'ai-generate-questions',
+      _stretchBaseHash: baseHash,
+      _stretchGeneratedAt: Date.now(),
+      _stretchStatus: 'pending', // tutor must approve before the kid sees
+    });
+    allData.curriculum.studentOverrides[sid][activity.id] = record;
+    allData.curriculum.updatedAt = Date.now();
+    try { saveState(); }catch(_){}
+    return record;
+  })();
+
+  _aiStretchInFlight.set(key, promise);
+  try { return await promise; }
+  finally { _aiStretchInFlight.delete(key); }
 }
 
-/* Teacher-facing diff modal for a single AI rewrite. Shows the base
-   text (what the WEEKS source has, with any tutor override on top)
-   side-by-side with the AI-rewritten version, field by field. Actions
-   depend on status:
+/* Teacher-facing diff modal for a single AI rewrite. Handles BOTH
+   features (per-student AI overlays):
+     • feature === 'simplify' (default)  — reviews rec.lesson (intro/
+       example/hint text rewrites). Status lives on rec._status.
+     • feature === 'stretch' — reviews rec.stretchQuestions (harder
+       MCQ pool). Status lives on rec._stretchStatus.
+
+   Each feature's status is tracked independently — a record may have
+   an approved simplify rewrite and a pending stretch pool, or vice
+   versa. Approving one does not affect the other.
+
+   Actions depend on status:
      • PENDING — [✓ Approve] lets the kid see it on next lesson open;
-                 [✕ Reject] deletes without shipping. Kid sees base in
-                 both cases until Approve runs.
-     • APPROVED — [↩ Revoke] downgrades back to pending (hidden from kid);
-                  [🗑 Delete] removes the record entirely.
+                 [✕ Reject] deletes without shipping.
+     • APPROVED — [↩ Revoke] downgrades back to pending;
+                  [🗑 Delete] removes the feature's fields from the
+                  record (preserves the other feature if present).
    This is the gating surface: kids never see AI content until it clears
    this modal. */
-function openAiRewriteReviewModal(sid, activityId){
+function openAiRewriteReviewModal(sid, activityId, feature){
+  feature = (feature === 'stretch') ? 'stretch' : 'simplify';
   const bucket = (allData && allData.curriculum && allData.curriculum.studentOverrides) || {};
   const rec = bucket[sid] && bucket[sid][activityId];
-  if(!rec || !rec.lesson) return;
-  // Normalize status. Legacy records (missing `_status`) are grandfathered
-  // as approved so current kids don't lose vetted content. Everything
-  // generated from this point forward is explicitly pending by default.
-  const status = rec._status || 'approved';
+  if(!rec) return;
+  // Feature-specific gating on the record shape + status field.
+  if(feature === 'simplify' && !rec.lesson) return;
+  if(feature === 'stretch' && (!Array.isArray(rec.stretchQuestions) || !rec.stretchQuestions.length)) return;
+  const statusField    = feature === 'stretch' ? '_stretchStatus'     : '_status';
+  const approvedField  = feature === 'stretch' ? '_stretchApprovedAt' : '_approvedAt';
+  const generatedField = feature === 'stretch' ? '_stretchGeneratedAt': '_generatedAt';
+  const hashField      = feature === 'stretch' ? '_stretchBaseHash'   : '_baseHash';
+  const sourceField    = feature === 'stretch' ? '_stretchSource'     : '_source';
+  // Normalize status. Legacy records (missing status field) are
+  // grandfathered as approved so current kids don't lose vetted content.
+  const status = rec[statusField] || 'approved';
   const isPending = status === 'pending';
   const info = (typeof getStudentInfo === 'function') ? getStudentInfo(sid) : null;
   const name = (info && info.name) || sid;
@@ -11791,6 +11948,7 @@ function openAiRewriteReviewModal(sid, activityId){
   // here — we want the pre-AI baseline for the diff.
   const baseActivity = act ? applyCurriculumOverride(act) || act : null;
   const baseLesson = (baseActivity && baseActivity.lesson) || {};
+  const baseStretch = (baseActivity && Array.isArray(baseActivity.stretchQuestions)) ? baseActivity.stretchQuestions : [];
 
   // Dismiss helper — shared by the backdrop click, close button, and
   // delete action.
@@ -11805,6 +11963,38 @@ function openAiRewriteReviewModal(sid, activityId){
     }catch(_){}
   };
 
+  // Helpers that remove ONLY this feature's fields from the record —
+  // leaving the other feature (if present) intact. If removing this
+  // feature empties the record, the whole entry is dropped.
+  const deleteThisFeature = ()=>{
+    if(feature === 'simplify'){
+      delete rec.lesson;
+      delete rec._source;
+      delete rec._baseHash;
+      delete rec._generatedAt;
+      delete rec._status;
+      delete rec._approvedAt;
+    } else {
+      delete rec.stretchQuestions;
+      delete rec._stretchSource;
+      delete rec._stretchBaseHash;
+      delete rec._stretchGeneratedAt;
+      delete rec._stretchStatus;
+      delete rec._stretchApprovedAt;
+    }
+    // If nothing left (no other feature's data), drop the whole entry.
+    const stillHasSimplify = rec.lesson && Object.keys(rec.lesson).length;
+    const stillHasStretch = Array.isArray(rec.stretchQuestions) && rec.stretchQuestions.length;
+    if(!stillHasSimplify && !stillHasStretch){
+      delete allData.curriculum.studentOverrides[sid][activityId];
+      if(!Object.keys(allData.curriculum.studentOverrides[sid]).length){
+        delete allData.curriculum.studentOverrides[sid];
+      }
+    }
+    allData.curriculum.updatedAt = Date.now();
+    try{ saveState(); }catch(_){}
+  };
+
   const overlay = h('div',{
     style:'position:fixed;inset:0;background:rgba(16,12,40,.55);z-index:9999;display:flex;align-items:flex-start;justify-content:center;padding:40px 16px;overflow-y:auto',
     onclick:(e)=>{ if(e.target === overlay) close(); },
@@ -11816,6 +12006,12 @@ function openAiRewriteReviewModal(sid, activityId){
   const statusChip = isPending
     ? h('span',{style:'padding:4px 11px;background:#fff3cd;color:#8a6d00;border:1px solid #ffd85c;border-radius:999px;font-size:11px;font-weight:800;letter-spacing:.04em'}, '⏳ PENDING REVIEW')
     : h('span',{style:'padding:4px 11px;background:#d3f9d8;color:#2b8a3e;border:1px solid #8ce99a;border-radius:999px;font-size:11px;font-weight:800;letter-spacing:.04em'}, '✅ APPROVED');
+  // Feature chip — small indicator so a tutor opening the modal mid-
+  // scroll can tell at a glance whether they're reviewing simpler
+  // language or harder questions.
+  const featureChip = feature === 'stretch'
+    ? h('span',{style:'padding:4px 11px;background:rgba(253,126,20,.12);color:#d9480f;border:1px solid rgba(253,126,20,.4);border-radius:999px;font-size:11px;font-weight:800;letter-spacing:.04em'}, '🌟 STRETCH QUESTIONS')
+    : h('span',{style:'padding:4px 11px;background:rgba(108,92,231,.12);color:#4f56d4;border:1px solid rgba(108,92,231,.4);border-radius:999px;font-size:11px;font-weight:800;letter-spacing:.04em'}, '✨ SIMPLER LANGUAGE');
 
   // Header
   modal.appendChild(h('div',{style:'display:flex;align-items:center;gap:12px;flex-wrap:wrap'},[
@@ -11823,53 +12019,102 @@ function openAiRewriteReviewModal(sid, activityId){
     h('div',{style:'flex:1;min-width:0'},[
       h('div',{style:'display:flex;align-items:center;gap:8px;flex-wrap:wrap'},[
         h('div',{style:'font-weight:800;font-size:18px'}, title),
+        featureChip,
         statusChip,
       ]),
       h('div',{style:'color:var(--ink3);font-size:13px'},
         name + (curr ? ' · '+(curr.grade||'')+' · '+((curr.codes||[]).join(', ')) : '')
-        + ' · generated '+(rec._generatedAt ? new Date(rec._generatedAt).toLocaleString() : 'unknown')),
+        + ' · generated '+(rec[generatedField] ? new Date(rec[generatedField]).toLocaleString() : 'unknown')),
     ]),
     h('button',{class:'btn btn-ghost', style:'font-size:13px;padding:6px 12px', onclick:close}, '✕ Close'),
   ]));
 
-  // Intro explainer — different wording by status so the tutor
-  // understands what action is expected here.
+  // Intro explainer — branches on (feature, status). Feature shapes
+  // the noun ("rewrite" vs "harder question pool"); status shapes the
+  // verb ("waiting for approval" vs "currently live").
+  const noun = feature === 'stretch' ? 'stretch question pool' : 'rewrite';
   const explainerText = isPending
-    ? 'Left: the base lesson the student sees right now. Right: the AI-generated rewrite, waiting for your approval. The student CANNOT see the right-hand version until you approve it. Read it, compare against the curriculum, and either ✓ Approve (ships to this student on their next lesson open) or ✕ Reject (deletes; next open will generate a fresh version).'
-    : 'Left: the base lesson (plus any Course Editor overrides). Right: what this student currently sees. If the rewrite is off-target, revoke approval to hide it again, or delete it entirely — the next lesson open will regenerate a fresh pending version.';
+    ? (feature === 'stretch'
+        ? 'Left: the stretch questions the student sees right now (tutor-authored, or empty if none). Right: the AI-generated harder pool, waiting for your approval. The student CANNOT see the right-hand pool until you approve it. Verify the math/grammar, confirm distractors are plausible-wrong, and either ✓ Approve or ✕ Reject.'
+        : 'Left: the base lesson the student sees right now. Right: the AI-generated rewrite, waiting for your approval. The student CANNOT see the right-hand version until you approve it. Read it, compare against the curriculum, and either ✓ Approve (ships to this student on their next lesson open) or ✕ Reject (deletes; next open will generate a fresh version).')
+    : (feature === 'stretch'
+        ? 'Left: the base stretch questions (tutor-authored, or empty). Right: what this student currently sees when they retry this activity. If a generated question is off-target, revoke approval to hide them again, or delete entirely — the next lesson open will regenerate a fresh pending pool.'
+        : 'Left: the base lesson (plus any Course Editor overrides). Right: what this student currently sees. If the rewrite is off-target, revoke approval to hide it again, or delete it entirely — the next lesson open will regenerate a fresh pending version.');
   modal.appendChild(h('p',{style:'color:var(--ink2);font-size:13px;line-height:1.5;margin:0;background:rgba(108,92,231,.06);border-left:3px solid rgba(108,92,231,.4);padding:10px 14px;border-radius:6px'},
     explainerText));
 
-  // Per-field diff
-  const fields = ['intro','example','hint'];
-  fields.forEach(f => {
-    const baseVal = (baseLesson[f] || '').trim();
-    const newVal = ((rec.lesson && rec.lesson[f]) || '').trim();
-    if(!baseVal && !newVal) return;
-    const section = h('div',{style:'display:flex;flex-direction:column;gap:6px'});
-    section.appendChild(h('div',{style:'font-size:11px;font-weight:800;letter-spacing:.08em;color:var(--ink3)'}, f.toUpperCase()));
-    const row = h('div',{style:'display:grid;grid-template-columns:1fr 1fr;gap:10px'});
-    row.appendChild(h('div',{style:'padding:12px;background:#fafbff;border:1px solid var(--border);border-radius:8px;font-size:13px;line-height:1.5;white-space:pre-wrap;min-height:40px'},
-      baseVal || h('span',{style:'color:var(--ink3);font-style:italic'}, '(empty)')));
-    row.appendChild(h('div',{style:'padding:12px;background:linear-gradient(180deg,rgba(108,92,231,.08),rgba(108,92,231,.02));border:1px solid rgba(108,92,231,.25);border-radius:8px;font-size:13px;line-height:1.5;white-space:pre-wrap;min-height:40px'},
-      newVal || h('span',{style:'color:var(--ink3);font-style:italic'}, '(not rewritten)')));
-    section.appendChild(row);
-    modal.appendChild(section);
-  });
+  // --- Body: feature-specific diff ---
+  if(feature === 'simplify'){
+    // Per-field lesson text diff (intro / example / hint)
+    const fields = ['intro','example','hint'];
+    fields.forEach(f => {
+      const baseVal = (baseLesson[f] || '').trim();
+      const newVal = ((rec.lesson && rec.lesson[f]) || '').trim();
+      if(!baseVal && !newVal) return;
+      const section = h('div',{style:'display:flex;flex-direction:column;gap:6px'});
+      section.appendChild(h('div',{style:'font-size:11px;font-weight:800;letter-spacing:.08em;color:var(--ink3)'}, f.toUpperCase()));
+      const row = h('div',{style:'display:grid;grid-template-columns:1fr 1fr;gap:10px'});
+      row.appendChild(h('div',{style:'padding:12px;background:#fafbff;border:1px solid var(--border);border-radius:8px;font-size:13px;line-height:1.5;white-space:pre-wrap;min-height:40px'},
+        baseVal || h('span',{style:'color:var(--ink3);font-style:italic'}, '(empty)')));
+      row.appendChild(h('div',{style:'padding:12px;background:linear-gradient(180deg,rgba(108,92,231,.08),rgba(108,92,231,.02));border:1px solid rgba(108,92,231,.25);border-radius:8px;font-size:13px;line-height:1.5;white-space:pre-wrap;min-height:40px'},
+        newVal || h('span',{style:'color:var(--ink3);font-style:italic'}, '(not rewritten)')));
+      section.appendChild(row);
+      modal.appendChild(section);
+    });
+  } else {
+    // Stretch: side-by-side MCQ diff. Left column shows the tutor-
+    // authored stretchQuestions (often empty — tutors don't always
+    // hand-author a stretch pool); right column shows the AI pool.
+    const buildQCard = (q, i, variant) => {
+      const card = h('div',{style:'padding:10px 12px;background:'
+        + (variant === 'ai' ? 'linear-gradient(180deg,rgba(253,126,20,.08),rgba(253,126,20,.02))' : '#fafbff')
+        + ';border:1px solid ' + (variant === 'ai' ? 'rgba(253,126,20,.25)' : 'var(--border)')
+        + ';border-radius:8px;font-size:13px;line-height:1.45;display:flex;flex-direction:column;gap:6px'});
+      card.appendChild(h('div',{style:'font-weight:700;font-size:12px;color:var(--ink2)'}, 'Q'+(i+1)+': '+(q.q||'')));
+      if(Array.isArray(q.choices)){
+        q.choices.forEach((c, ci)=>{
+          const correct = ci === q.answer;
+          card.appendChild(h('div',{style:'padding:3px 8px;font-size:12px;border-radius:4px;'
+            + (correct ? 'background:rgba(64,192,87,.14);color:#2b8a3e;font-weight:700' : 'color:var(--ink2)')},
+            (correct ? '✓ ' : '  ') + String(c)));
+        });
+      }
+      return card;
+    };
+    const totalRows = Math.max(baseStretch.length, rec.stretchQuestions.length);
+    if(totalRows === 0){
+      modal.appendChild(h('div',{style:'padding:12px;background:#fffdf5;border:1px dashed #ffd85c;border-radius:8px;font-size:13px;color:var(--ink2)'},
+        '(No questions on either side — this shouldn\'t normally happen. Safe to delete.)'));
+    } else {
+      for(let i=0;i<totalRows;i++){
+        const section = h('div',{style:'display:flex;flex-direction:column;gap:6px'});
+        section.appendChild(h('div',{style:'font-size:11px;font-weight:800;letter-spacing:.08em;color:var(--ink3)'}, 'QUESTION '+(i+1)));
+        const row = h('div',{style:'display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:start'});
+        const lb = baseStretch[i];
+        const rb = rec.stretchQuestions[i];
+        row.appendChild(lb ? buildQCard(lb, i, 'base') : h('div',{style:'padding:12px;background:#fafbff;border:1px solid var(--border);border-radius:8px;font-size:13px;color:var(--ink3);font-style:italic'}, '(no base question at this slot)'));
+        row.appendChild(rb ? buildQCard(rb, i, 'ai') : h('div',{style:'padding:12px;background:linear-gradient(180deg,rgba(253,126,20,.08),rgba(253,126,20,.02));border:1px solid rgba(253,126,20,.25);border-radius:8px;font-size:13px;color:var(--ink3);font-style:italic'}, '(AI did not generate a question at this slot)'));
+        section.appendChild(row);
+        modal.appendChild(section);
+      }
+    }
+  }
 
   // Column labels (subtle, above each column). Added AFTER the fields so
-  // we can place them at the top — prepending a header row. The right
-  // label changes by status so the tutor can see at a glance whether
-  // the right column is "what the kid sees now" (approved) or "what the
-  // kid COULD see if you approve" (pending).
+  // we can place them at the top — prepending a header row. The labels
+  // change by feature AND status so the tutor knows what they're comparing.
   const labels = h('div',{style:'display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:-8px'});
-  labels.appendChild(h('div',{style:'font-size:12px;color:var(--ink3);font-weight:700'}, '📚 BASE (student sees this now)'));
-  labels.appendChild(h('div',{style:'font-size:12px;color:#4f56d4;font-weight:700'},
-    isPending ? '✨ AI REWRITE (pending — needs your ✓)' : '✨ AI REWRITE (live for this student)'));
-  // Insert labels before the first field section (after the intro text).
-  // Find the first field section — the element right after the explainer.
-  const explainerIdx = 2; // header, explainer, then labels, then fields
-  // Safer: just insert before the 3rd child (the first field section).
+  const baseLabel = feature === 'stretch'
+    ? '📚 BASE stretch (tutor-authored)'
+    : '📚 BASE (student sees this now)';
+  const rightColor = feature === 'stretch' ? '#d9480f' : '#4f56d4';
+  const rightEmoji = feature === 'stretch' ? '🌟' : '✨';
+  const rightNoun  = feature === 'stretch' ? 'AI HARDER POOL' : 'AI REWRITE';
+  labels.appendChild(h('div',{style:'font-size:12px;color:var(--ink3);font-weight:700'}, baseLabel));
+  labels.appendChild(h('div',{style:'font-size:12px;color:'+rightColor+';font-weight:700'},
+    rightEmoji+' '+rightNoun+' ('+(isPending ? 'pending — needs your ✓' : 'live for this student')+')'));
+  // Insert labels before the first body section (the diff row/field).
+  // Safer: insert before the 3rd child (after header + explainer).
   if(modal.children.length >= 3){
     modal.insertBefore(labels, modal.children[2]);
   } else {
@@ -11879,31 +12124,30 @@ function openAiRewriteReviewModal(sid, activityId){
   // Footer actions — different button row by status.
   const footer = h('div',{style:'display:flex;gap:10px;justify-content:space-between;flex-wrap:wrap;border-top:1px solid var(--border);padding-top:14px;margin-top:4px'});
   footer.appendChild(h('div',{style:'color:var(--ink3);font-size:12px;align-self:center'},
-    'Base hash: '+((rec._baseHash||'?').slice(0,8))+' · Source: '+((rec._source)||'ai')));
+    'Base hash: '+((rec[hashField]||'?').slice(0,8))+' · Source: '+((rec[sourceField])||'ai')));
 
   const actionRow = h('div',{style:'display:flex;gap:10px;flex-wrap:wrap'});
 
   if(isPending){
-    // Reject = delete without ever surfacing. The tutor is saying
-    // "don't use this rewrite at all." Next open regenerates a fresh
-    // candidate (also pending).
+    // Reject = delete this feature's fields. Next open regenerates a
+    // fresh candidate (also pending).
     actionRow.appendChild(h('button',{class:'btn', style:'background:#fff;color:#c92a2a;border:1px solid #c92a2a;font-weight:700', onclick:()=>{
-      if(!confirm('Reject this rewrite for '+name+'?\n\n'+name+' will continue seeing the base lesson. The next time they open "'+title+'", the AI will generate a fresh candidate for you to review.')) return;
-      delete allData.curriculum.studentOverrides[sid][activityId];
-      if(!Object.keys(allData.curriculum.studentOverrides[sid]).length){
-        delete allData.curriculum.studentOverrides[sid];
-      }
-      allData.curriculum.updatedAt = Date.now();
-      try{ saveState(); }catch(_){}
+      const msg = feature === 'stretch'
+        ? 'Reject these stretch questions for '+name+'?\n\n'+name+' will continue seeing the base stretch pool. The next time they open "'+title+'", the AI will generate a fresh candidate pool for you to review.'
+        : 'Reject this rewrite for '+name+'?\n\n'+name+' will continue seeing the base lesson. The next time they open "'+title+'", the AI will generate a fresh candidate for you to review.';
+      if(!confirm(msg)) return;
+      deleteThisFeature();
       closeAndRefreshTeacher();
     }}, '✕ Reject'));
-    // Approve = flip status to 'approved'. Next time the kid opens this
-    // lesson, applyStudentPlanOverride will merge the rewrite in and
-    // the "✨ rewritten for you" badge will appear.
+    // Approve = flip this feature's status to 'approved'. Next render
+    // will merge it in via applyStudent*Override.
     actionRow.appendChild(h('button',{class:'btn btn-primary', style:'background:#2b8a3e;border-color:#2b8a3e;font-weight:800', onclick:()=>{
-      if(!confirm('Approve this rewrite for '+name+'?\n\nThey\'ll see the simpler version the next time they open "'+title+'". You can revoke or delete it later from this panel.')) return;
-      rec._status = 'approved';
-      rec._approvedAt = Date.now();
+      const msg = feature === 'stretch'
+        ? 'Approve these stretch questions for '+name+'?\n\nThey\'ll see the harder pool the next time they retry "'+title+'" in stretch mode. You can revoke or delete it later from this panel.'
+        : 'Approve this rewrite for '+name+'?\n\nThey\'ll see the simpler version the next time they open "'+title+'". You can revoke or delete it later from this panel.';
+      if(!confirm(msg)) return;
+      rec[statusField] = 'approved';
+      rec[approvedField] = Date.now();
       allData.curriculum.updatedAt = Date.now();
       try{ saveState(); }catch(_){}
       closeAndRefreshTeacher();
@@ -11913,21 +12157,22 @@ function openAiRewriteReviewModal(sid, activityId){
     // immediately on their next lesson open. The record is preserved
     // so the tutor can re-approve without re-generating.
     actionRow.appendChild(h('button',{class:'btn btn-ghost', style:'font-weight:700', onclick:()=>{
-      if(!confirm('Revoke approval of this rewrite for '+name+'?\n\nThey\'ll stop seeing the simpler version on their next lesson open. The rewrite stays here as a pending review so you can re-approve or delete it later.')) return;
-      rec._status = 'pending';
-      delete rec._approvedAt;
+      const msg = feature === 'stretch'
+        ? 'Revoke approval of these stretch questions for '+name+'?\n\nThey\'ll stop seeing the harder pool on their next stretch retry. The pool stays here as a pending review so you can re-approve or delete it later.'
+        : 'Revoke approval of this rewrite for '+name+'?\n\nThey\'ll stop seeing the simpler version on their next lesson open. The rewrite stays here as a pending review so you can re-approve or delete it later.';
+      if(!confirm(msg)) return;
+      rec[statusField] = 'pending';
+      delete rec[approvedField];
       allData.curriculum.updatedAt = Date.now();
       try{ saveState(); }catch(_){}
       closeAndRefreshTeacher();
     }}, '↩ Revoke'));
     actionRow.appendChild(h('button',{class:'btn', style:'background:#fff;color:#c92a2a;border:1px solid #c92a2a;font-weight:700', onclick:()=>{
-      if(!confirm('Delete this rewrite for '+name+'? The next time they open "'+title+'", the AI will regenerate it (as pending) if their plan still has simpleLanguage on.')) return;
-      delete allData.curriculum.studentOverrides[sid][activityId];
-      if(!Object.keys(allData.curriculum.studentOverrides[sid]).length){
-        delete allData.curriculum.studentOverrides[sid];
-      }
-      allData.curriculum.updatedAt = Date.now();
-      try{ saveState(); }catch(_){}
+      const msg = feature === 'stretch'
+        ? 'Delete these stretch questions for '+name+'? The next time they open "'+title+'", the AI will regenerate them (as pending) if their plan still has autoStretch on.'
+        : 'Delete this rewrite for '+name+'? The next time they open "'+title+'", the AI will regenerate it (as pending) if their plan still has simpleLanguage on.';
+      if(!confirm(msg)) return;
+      deleteThisFeature();
       closeAndRefreshTeacher();
     }}, '🗑 Delete'));
   }
@@ -11946,14 +12191,18 @@ function getWeekActivities(sid,subj){
   const resolved = demo ? demo.curriculumSid : sid;
   const acts = (WEEKS[currentWeek] && WEEKS[currentWeek][resolved] && WEEKS[currentWeek][resolved][subj]) || [];
   // Layered merge at read time:
-  //   base WEEKS → tutor override (Course Editor) → student AI override
+  //   base WEEKS → tutor override (Course Editor) → student simpleLanguage
+  //              → student autoStretch questions
   // Tutor overrides apply to every student. Student AI overrides (from
-  // simpleLanguage etc.) are keyed by sid — demos use the resolved id so
-  // the preview reflects what the target student actually sees.
+  // simpleLanguage / autoStretch) are keyed by sid — demos use the resolved
+  // id so the preview reflects what the target student actually sees. Each
+  // overlay is gated independently by its own `_status` / `_stretchStatus`
+  // so a tutor can approve one feature and leave the other pending.
   const merged = acts
     .map(applyCurriculumOverride)
     .filter(Boolean)
-    .map(a => applyStudentPlanOverride(a, resolved));
+    .map(a => applyStudentPlanOverride(a, resolved))
+    .map(a => applyStudentStretchOverride(a, resolved));
   // Activities marked demoOnly are previews of upcoming content — parents
   // browsing a demo profile see them so they can gauge depth/progression,
   // but real students don't, because they haven't earned their way there yet.
@@ -14849,14 +15098,23 @@ function renderLesson(card,q){
   // lessons should be in simpler language. The call is idempotent + cached:
   // first open = one /simplify round-trip → subsequent opens are instant
   // because applyStudentPlanOverride (in getWeekActivities) already merged
-  // the cached text into `quiz.activity.lesson` before we got here.
-  // Nothing blocks — the base lesson is already on screen. If the rewrite
-  // succeeds, swapLessonContentInPlace hot-swaps the Intro/Example text and
-  // drops a small "✨ rewritten for you" badge. If it fails (AI off, cap
-  // hit, network), the kid just sees the base lesson — graceful.
+  // any APPROVED rewrite into `quiz.activity.lesson` before we got here.
+  // Nothing blocks — the base lesson is already on screen. Fresh rewrites
+  // land as `_status:'pending'` in the tutor's AI Rewrites review panel;
+  // the kid keeps seeing the base lesson until a tutor approves. On next
+  // open after approval, the "✨ rewritten for you" badge appears above.
   try{
     if(typeof currentUser === 'string' && currentUser && quiz && quiz.activity){
       ensureStudentPlanContent(quiz.activity, currentUser);
+      // Parallel autoStretch hook: for kids on the gifted / gifted-esl
+      // plan, generate harder variants in the background. Same approval
+      // gate — stretch variants land in the tutor's AI Rewrites panel
+      // as pending, and the kid doesn't see them on their next stretch
+      // retry until a tutor approves. If generation fails (worker
+      // disabled / capped / parse_failed), the kid silently falls back
+      // to the tutor-authored stretchQuestions — same as a non-autoStretch
+      // kid would see in stretch mode.
+      ensureStudentStretchQuestions(quiz.activity, currentUser);
     }
   }catch(e){ console.warn('[KidQuest] student plan content hook failed:', e); }
   quiz.locked=false;
@@ -18302,31 +18560,51 @@ function renderTeacher(root){
     ]);
   };
 
-  // AI Rewrites Review — shows every per-student AI-generated lesson
-  // rewrite currently cached in allData.curriculum.studentOverrides.
-  // This panel is the TUTOR APPROVAL GATE: new rewrites ship as
-  // `_status:'pending'` and stay hidden from the kid until the tutor
-  // approves them here. Structure: one "⏳ Pending review" section at
-  // the top (the real worklist), a "✅ Approved" section below for
-  // visibility + revocation. Legacy rewrites (missing `_status`) are
-  // grandfathered as approved so current kids don't lose vetted content.
+  // AI Rewrites Review — shows every per-student AI-generated content
+  // item currently cached in allData.curriculum.studentOverrides. Two
+  // features share this panel:
+  //   • simpleLanguage — rewrites lesson intro/example/hint text
+  //   • autoStretch    — generates a harder MCQ pool for stretch retries
+  // Each feature on each activity is treated as a SEPARATE virtual row
+  // and has its own pending/approved status, so the tutor can approve
+  // one while leaving the other pending. Legacy records (missing the
+  // status field) are grandfathered as approved.
+  //
+  // This panel is the TUTOR APPROVAL GATE: new generations ship as
+  // pending and stay hidden from the kid until approved here.
   const buildAiRewritesPanel = () => {
     const wrap = h('div',{style:'display:flex;flex-direction:column;gap:14px'});
     const bucket = (allData && allData.curriculum && allData.curriculum.studentOverrides) || {};
 
-    // First pass — classify every record by status so we know counts
-    // before we start laying anything out.
-    const pendingList = [];   // [{sid, aid, rec}]
+    // First pass — classify every feature-record-pair by status.
+    // Each physical record may produce up to 2 virtual entries (one
+    // simplify, one stretch), each with its own status field.
+    const pendingList = [];   // [{sid, aid, rec, feature, generatedAt, approvedAt}]
     const approvedList = [];
     Object.keys(bucket).forEach(sid => {
       const perStudent = bucket[sid];
       if(!perStudent) return;
       Object.keys(perStudent).forEach(aid => {
         const rec = perStudent[aid];
-        if(!rec || !rec.lesson) return;
-        const status = rec._status || 'approved'; // legacy = approved
-        if(status === 'pending') pendingList.push({sid, aid, rec});
-        else approvedList.push({sid, aid, rec});
+        if(!rec) return;
+        // Simplify entry — keyed off rec.lesson + _status
+        if(rec.lesson && Object.keys(rec.lesson).length){
+          const entry = { sid, aid, rec, feature: 'simplify',
+            generatedAt: rec._generatedAt || 0,
+            approvedAt: rec._approvedAt || 0 };
+          const status = rec._status || 'approved'; // legacy = approved
+          if(status === 'pending') pendingList.push(entry);
+          else approvedList.push(entry);
+        }
+        // Stretch entry — keyed off rec.stretchQuestions + _stretchStatus
+        if(Array.isArray(rec.stretchQuestions) && rec.stretchQuestions.length){
+          const entry = { sid, aid, rec, feature: 'stretch',
+            generatedAt: rec._stretchGeneratedAt || 0,
+            approvedAt: rec._stretchApprovedAt || 0 };
+          const status = rec._stretchStatus || 'approved';
+          if(status === 'pending') pendingList.push(entry);
+          else approvedList.push(entry);
+        }
       });
     });
     const totalRewrites = pendingList.length + approvedList.length;
@@ -18335,22 +18613,22 @@ function renderTeacher(root){
     approvedList.forEach(r => studentsTouched.add(r.sid));
 
     // Header explainer — make it crystal clear that the kid does NOT
-    // see pending rewrites. This is the whole point of the panel.
+    // see pending content. This is the whole point of the panel.
     wrap.appendChild(h('p',{style:'color:var(--ink2);font-size:14px;line-height:1.55;margin:0'},
-      'AI rewrites simpler-word lessons for students whose plan has '+
-      'simpleLanguage on (ESL/gifted-ESL defaults, or explicit overrides). ' +
-      'NEW rewrites land in the Pending list below — students CANNOT see them until you approve each one. Approved rewrites appear on the student\'s next lesson open.'));
+      'AI generates simpler-language lessons (for simpleLanguage plans — ESL/gifted-ESL) '+
+      'and harder stretch questions (for autoStretch plans — gifted/gifted-ESL). ' +
+      'NEW output lands in the Pending list below — students CANNOT see it until you approve each one. Approved items appear on the student\'s next lesson open.'));
 
     if(totalRewrites === 0){
       wrap.appendChild(h('div',{style:'padding:18px;background:rgba(108,92,231,.06);border:1px dashed rgba(108,92,231,.3);border-radius:10px;color:var(--ink2);font-size:13px;line-height:1.5;text-align:center'},[
-        '✨ No AI rewrites yet. ',
-        'They\'ll appear here — as Pending — once a student on a simpleLanguage plan opens a lesson.',
+        '✨ No AI content yet. ',
+        'It\'ll appear here — as Pending — once a student on a simpleLanguage or autoStretch plan opens a lesson.',
       ]));
       return wrap;
     }
 
-    // Totals chip row — pending count first (it's the actionable one),
-    // then approved, then student count. "Clear all" sweeps both lists.
+    // Totals chip row — pending count first (actionable), then approved,
+    // then student count. "Clear all" sweeps everything.
     wrap.appendChild(h('div',{style:'display:flex;gap:10px;flex-wrap:wrap;align-items:center'},[
       h('span',{style:'padding:5px 12px;background:'+(pendingList.length ? '#fff3cd' : 'rgba(138,109,0,.08)')+';color:#8a6d00;border:1px solid #ffd85c;border-radius:999px;font-size:12px;font-weight:800'},
         '⏳ '+pendingList.length+' pending'),
@@ -18359,17 +18637,44 @@ function renderTeacher(root){
       h('span',{style:'padding:5px 12px;background:linear-gradient(135deg,rgba(108,92,231,.14),rgba(87,94,232,.14));color:#4f56d4;border:1px solid rgba(108,92,231,.3);border-radius:999px;font-size:12px;font-weight:700'},
         '👥 '+studentsTouched.size+' student'+(studentsTouched.size===1?'':'s')),
       h('button',{class:'btn btn-ghost', style:'font-size:12px;padding:6px 12px;margin-left:auto', onclick:()=>{
-        if(!confirm('Delete ALL '+totalRewrites+' AI rewrites (pending + approved) across every student? The next lesson open will generate fresh pending candidates for any student whose plan still says simpleLanguage — you\'ll need to review those too.')) return;
+        if(!confirm('Delete ALL '+totalRewrites+' AI items (pending + approved) across every student? The next lesson open will generate fresh pending candidates for any student whose plan still has simpleLanguage or autoStretch — you\'ll need to review those too.')) return;
         if(allData.curriculum){ allData.curriculum.studentOverrides = {}; allData.curriculum.updatedAt = Date.now(); }
         try{ saveState(); }catch(_){}
         const scr = $('#screen'); if(scr){ scr.innerHTML=''; renderTeacher(scr); }
       }}, '🗑 Clear all'),
     ]));
 
-    // Helper: build a single row for a {sid,aid,rec} entry. The actions
-    // row varies by status — pending gets a big Approve button inline
-    // + a Reject, approved gets Review + Delete.
-    const buildRow = ({sid, aid, rec}) => {
+    // Helper that mutates a record to delete just one feature's fields,
+    // and drops the entry entirely if the other feature's fields aren't
+    // there either. Mirrors the deleteThisFeature helper in the modal.
+    const deleteFeatureFromRecord = (sid, aid, rec, feature) => {
+      if(feature === 'simplify'){
+        delete rec.lesson;
+        delete rec._source;
+        delete rec._baseHash;
+        delete rec._generatedAt;
+        delete rec._status;
+        delete rec._approvedAt;
+      } else {
+        delete rec.stretchQuestions;
+        delete rec._stretchSource;
+        delete rec._stretchBaseHash;
+        delete rec._stretchGeneratedAt;
+        delete rec._stretchStatus;
+        delete rec._stretchApprovedAt;
+      }
+      const stillHasSimplify = rec.lesson && Object.keys(rec.lesson).length;
+      const stillHasStretch = Array.isArray(rec.stretchQuestions) && rec.stretchQuestions.length;
+      if(!stillHasSimplify && !stillHasStretch){
+        delete allData.curriculum.studentOverrides[sid][aid];
+        if(!Object.keys(allData.curriculum.studentOverrides[sid]).length){
+          delete allData.curriculum.studentOverrides[sid];
+        }
+      }
+    };
+
+    // Helper: build a single row for a {sid,aid,rec,feature} entry.
+    const buildRow = ({sid, aid, rec, feature}) => {
       const info = getStudentInfo(sid);
       const name = (info && info.name) || sid;
       const initial = (info && info.initial) || (name.charAt(0).toUpperCase());
@@ -18377,54 +18682,67 @@ function renderTeacher(root){
       const title = (act && act.title) || aid;
       const emoji = (act && act.emoji) || '📝';
       const curr = (act && act.curriculum) || null;
-      const when = rec && rec._generatedAt ? new Date(rec._generatedAt).toLocaleDateString() : '—';
-      const fields = (rec && rec.lesson) ? Object.keys(rec.lesson) : [];
-      const isPending = (rec._status || 'approved') === 'pending';
+      const isStretch = feature === 'stretch';
+      const statusField = isStretch ? '_stretchStatus' : '_status';
+      const approvedField = isStretch ? '_stretchApprovedAt' : '_approvedAt';
+      const generatedField = isStretch ? '_stretchGeneratedAt' : '_generatedAt';
+      const isPending = (rec[statusField] || 'approved') === 'pending';
+      const when = rec[generatedField] ? new Date(rec[generatedField]).toLocaleDateString() : '—';
+      // Feature summary text — "intro+example" for simplify, "3 questions" for stretch.
+      const summary = isStretch
+        ? (rec.stretchQuestions.length + ' stretch Q')
+        : Object.keys(rec.lesson || {}).join('+');
       const row = h('div',{style:'display:flex;align-items:center;gap:10px;padding:10px;background:'+(isPending?'#fffdf5':'#fafbff')+';border:1px solid '+(isPending?'#ffd85c':'var(--border)')+';border-radius:8px;flex-wrap:wrap'});
       // Student avatar chip so the tutor can scan by name at a glance.
       row.appendChild(h('div',{style:'width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,'+((info&&info.colorLight)||'#e9ecef')+','+((info&&info.colorDark)||'#adb5bd')+');color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0'}, initial));
       row.appendChild(h('span',{style:'font-size:18px'}, emoji));
+      // Feature tag — immediately obvious whether this row is a
+      // simpler-language rewrite or a harder stretch pool.
+      row.appendChild(h('span',{style:'font-size:10px;font-weight:800;letter-spacing:.05em;padding:2px 7px;border-radius:4px;flex-shrink:0;'
+        + (isStretch ? 'background:rgba(253,126,20,.14);color:#d9480f;border:1px solid rgba(253,126,20,.35)' : 'background:rgba(108,92,231,.12);color:#4f56d4;border:1px solid rgba(108,92,231,.3)')},
+        isStretch ? '🌟 STRETCH' : '✨ SIMPLE'));
       row.appendChild(h('div',{style:'flex:1;min-width:0;display:flex;flex-direction:column;gap:2px'},[
         h('div',{style:'font-weight:700;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap'}, name+' · '+title),
         h('div',{style:'color:var(--ink3);font-size:11px'},
           (curr ? (curr.grade||'')+' · '+((curr.codes||[]).join(', ')) : 'No curriculum tag')
-          + ' · ' + fields.join('+')
+          + ' · ' + summary
           + ' · ' + when),
       ]));
-      row.appendChild(h('button',{class:'btn btn-ghost', style:'font-size:11px;padding:5px 10px', onclick:()=>openAiRewriteReviewModal(sid, aid)}, '🔍 Review'));
+      row.appendChild(h('button',{class:'btn btn-ghost', style:'font-size:11px;padding:5px 10px', onclick:()=>openAiRewriteReviewModal(sid, aid, feature)}, '🔍 Review'));
       if(isPending){
         // Inline Approve — full review is still one click away via
         // "Review", but a confident tutor can ship without opening
-        // the diff modal. Kept disabled until confirm so a stray
-        // click doesn't accidentally ship content.
+        // the diff modal. Confirm guards against stray clicks.
         row.appendChild(h('button',{class:'btn', style:'font-size:11px;padding:5px 10px;background:#2b8a3e;color:#fff;border:none;font-weight:800', onclick:()=>{
-          if(!confirm('Approve this rewrite for '+name+'?\n\nThey\'ll see the simpler version of "'+title+'" the next time they open it.\n\n(Tip: click 🔍 Review first to read it in a side-by-side diff.)')) return;
-          rec._status = 'approved';
-          rec._approvedAt = Date.now();
+          const msg = isStretch
+            ? 'Approve these stretch questions for '+name+'?\n\nThey\'ll see the harder pool the next time they retry "'+title+'" in stretch mode.\n\n(Tip: click 🔍 Review first to read them side-by-side.)'
+            : 'Approve this rewrite for '+name+'?\n\nThey\'ll see the simpler version of "'+title+'" the next time they open it.\n\n(Tip: click 🔍 Review first to read it in a side-by-side diff.)';
+          if(!confirm(msg)) return;
+          rec[statusField] = 'approved';
+          rec[approvedField] = Date.now();
           allData.curriculum.updatedAt = Date.now();
           try{ saveState(); }catch(_){}
           const scr = $('#screen'); if(scr){ scr.innerHTML=''; renderTeacher(scr); }
         }}, '✓ Approve'));
         row.appendChild(h('button',{class:'btn btn-ghost', style:'font-size:11px;padding:5px 10px;color:#c92a2a', title:'Reject & delete', onclick:()=>{
-          if(!confirm('Reject this rewrite? '+name+' will keep seeing the base lesson for "'+title+'". The next open will generate a fresh candidate for you to review.')) return;
-          delete allData.curriculum.studentOverrides[sid][aid];
-          if(!Object.keys(allData.curriculum.studentOverrides[sid]).length){
-            delete allData.curriculum.studentOverrides[sid];
-          }
+          const msg = isStretch
+            ? 'Reject these stretch questions? '+name+' will keep seeing the base stretch pool for "'+title+'". The next open will generate a fresh candidate pool for you to review.'
+            : 'Reject this rewrite? '+name+' will keep seeing the base lesson for "'+title+'". The next open will generate a fresh candidate for you to review.';
+          if(!confirm(msg)) return;
+          deleteFeatureFromRecord(sid, aid, rec, feature);
           allData.curriculum.updatedAt = Date.now();
           try{ saveState(); }catch(_){}
           const scr = $('#screen'); if(scr){ scr.innerHTML=''; renderTeacher(scr); }
         }}, '✕'));
       } else {
-        // Approved row: the quick action is just Delete (regenerates
-        // as pending next time). Revoke-to-pending is available in
-        // the full review modal.
+        // Approved row: quick action is Delete. Revoke-to-pending lives
+        // in the full review modal.
         row.appendChild(h('button',{class:'btn btn-ghost', style:'font-size:11px;padding:5px 10px;color:#c92a2a', onclick:()=>{
-          if(!confirm('Delete this rewrite? '+name+'\'s next open of "'+title+'" will regenerate it (as pending — you\'ll review again).')) return;
-          delete allData.curriculum.studentOverrides[sid][aid];
-          if(!Object.keys(allData.curriculum.studentOverrides[sid]).length){
-            delete allData.curriculum.studentOverrides[sid];
-          }
+          const msg = isStretch
+            ? 'Delete these stretch questions? '+name+'\'s next open of "'+title+'" will regenerate them (as pending — you\'ll review again).'
+            : 'Delete this rewrite? '+name+'\'s next open of "'+title+'" will regenerate it (as pending — you\'ll review again).';
+          if(!confirm(msg)) return;
+          deleteFeatureFromRecord(sid, aid, rec, feature);
           allData.curriculum.updatedAt = Date.now();
           try{ saveState(); }catch(_){}
           const scr = $('#screen'); if(scr){ scr.innerHTML=''; renderTeacher(scr); }
@@ -18435,15 +18753,17 @@ function renderTeacher(root){
 
     // --- PENDING section ------------------------------------------------
     // Sorted oldest-first so the tutor works a FIFO queue. Bulk-approve
-    // all as a nuclear option for tutors who trust the Worker output and
-    // just want to clear the queue after spot-checking a few.
+    // all as a nuclear option for tutors who trust the Worker output.
     if(pendingList.length){
-      const pendSort = pendingList.slice().sort((a,b)=>(a.rec._generatedAt||0) - (b.rec._generatedAt||0));
+      const pendSort = pendingList.slice().sort((a,b)=>(a.generatedAt||0) - (b.generatedAt||0));
       const pendHead = h('div',{style:'display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding-top:4px'},[
         h('div',{style:'font-weight:800;font-size:14px;color:#8a6d00'}, '⏳ Pending your review ('+pendingList.length+')'),
         h('button',{class:'btn btn-ghost', style:'font-size:11px;padding:5px 10px;color:#2b8a3e;font-weight:700;margin-left:auto', onclick:()=>{
-          if(!confirm('Approve ALL '+pendingList.length+' pending rewrites without opening each one?\n\nThis is fine if you\'ve been spot-checking the output and trust the results. Otherwise, click 🔍 Review on each row first.')) return;
-          pendingList.forEach(({rec})=>{ rec._status = 'approved'; rec._approvedAt = Date.now(); });
+          if(!confirm('Approve ALL '+pendingList.length+' pending items (simpler-language rewrites + stretch questions) without opening each one?\n\nThis is fine if you\'ve been spot-checking the output and trust the results. Otherwise, click 🔍 Review on each row first.')) return;
+          pendingList.forEach(({rec, feature})=>{
+            if(feature === 'stretch'){ rec._stretchStatus = 'approved'; rec._stretchApprovedAt = Date.now(); }
+            else { rec._status = 'approved'; rec._approvedAt = Date.now(); }
+          });
           allData.curriculum.updatedAt = Date.now();
           try{ saveState(); }catch(_){}
           const scr = $('#screen'); if(scr){ scr.innerHTML=''; renderTeacher(scr); }
@@ -18456,10 +18776,9 @@ function renderTeacher(root){
     }
 
     // --- APPROVED section -----------------------------------------------
-    // Less visually loud — these are already shipped, the tutor is here
-    // for audit / revoke / delete, not for daily triage.
+    // Less visually loud — audit / revoke / delete, not daily triage.
     if(approvedList.length){
-      const appSort = approvedList.slice().sort((a,b)=>(b.rec._approvedAt||b.rec._generatedAt||0) - (a.rec._approvedAt||a.rec._generatedAt||0));
+      const appSort = approvedList.slice().sort((a,b)=>(b.approvedAt||b.generatedAt||0) - (a.approvedAt||a.generatedAt||0));
       wrap.appendChild(h('div',{style:'display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding-top:6px'},[
         h('div',{style:'font-weight:800;font-size:14px;color:#2b8a3e'}, '✅ Approved & live ('+approvedList.length+')'),
       ]));
@@ -18471,9 +18790,9 @@ function renderTeacher(root){
     return wrap;
   };
 
-  // Count pending rewrites across all students — used as the accordion
-  // badge so the tutor sees "3 waiting" without opening the section.
-  // Legacy records (no `_status`) count as approved.
+  // Count pending items across all students + both features — used as
+  // the accordion badge so the tutor sees "N waiting" without opening.
+  // Legacy records (no status field) count as approved.
   const countPendingAiRewrites = () => {
     const b = (allData && allData.curriculum && allData.curriculum.studentOverrides) || {};
     let n = 0;
@@ -18481,7 +18800,9 @@ function renderTeacher(root){
       const per = b[sid]; if(!per) return;
       Object.keys(per).forEach(aid => {
         const rec = per[aid];
-        if(rec && rec.lesson && rec._status === 'pending') n++;
+        if(!rec) return;
+        if(rec.lesson && Object.keys(rec.lesson).length && rec._status === 'pending') n++;
+        if(Array.isArray(rec.stretchQuestions) && rec.stretchQuestions.length && rec._stretchStatus === 'pending') n++;
       });
     });
     return n;

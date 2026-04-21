@@ -328,8 +328,8 @@ const ROUTES = {
   'POST /explain':            { flag: 'FEATURE_EXPLAIN',            fn: handleExplain },
   'POST /feedback':           { flag: 'FEATURE_FEEDBACK',           fn: handleFeedback },
   'POST /simplify':           { flag: 'FEATURE_SIMPLIFY',           fn: handleSimplify },
-  // Phase B — scaffolded, no handler yet.
-  'POST /generate-questions': { flag: 'FEATURE_GENERATE_QUESTIONS', fn: notYetImplemented('generate-questions') },
+  // Phase B — real handler for generate-questions; worked-example still stubbed.
+  'POST /generate-questions': { flag: 'FEATURE_GENERATE_QUESTIONS', fn: handleGenerateQuestions },
   'POST /worked-example':     { flag: 'FEATURE_WORKED_EXAMPLE',     fn: notYetImplemented('worked-example') },
   // Phase C — scaffolded.
   'POST /teacher-summary':    { flag: 'FEATURE_TEACHER_SUMMARY',    fn: notYetImplemented('teacher-summary') },
@@ -719,6 +719,145 @@ async function handleSimplify(request, env, ctx, corsOrigin) {
     ),
     postProcess: (text) => ({ simplified: (text || '').trim().slice(0, 600) }),
     auditSummary: (inputs) => `simplify → g=${(inputs.curriculum && inputs.curriculum.grade) || inputs.gradeContext || '?'} "${(inputs.prompt||'').slice(0, 40)}"`,
+  });
+}
+
+// ---- /generate-questions -----------------------------------------------
+// Generates harder MCQ variants for a student on `autoStretch`. The input
+// carries the activity's existing questions so the model learns the
+// shape, style, and difficulty floor — and its job is to push ONE STEP
+// harder without jumping out of the stated curriculum expectation.
+//
+// Strict JSON output enforced by postProcess. A malformed or
+// schema-breaking response returns parse_failed (no cache write), so the
+// frontend falls back to the tutor-authored stretchQuestions pool if
+// present.
+//
+// NOTE: every generated question is then gated through the tutor approval
+// panel before any student sees it — this handler just produces candidates.
+async function handleGenerateQuestions(request, env, ctx, corsOrigin) {
+  return runStandardHandler({
+    request, env, ctx, corsOrigin,
+    endpoint: '/generate-questions',
+    readInputs: async (body) => ({
+      // Curriculum is REQUIRED — question generation without a grade
+      // anchor is how you end up with "factor the polynomial" on a
+      // Grade 2 lesson. validate() enforces this below.
+      curriculum: (body.curriculum && typeof body.curriculum === 'object') ? body.curriculum : null,
+      // Existing base questions — 3-5 of them is plenty. The model
+      // needs shape + topic, not the whole pool.
+      existingQuestions: Array.isArray(body.existingQuestions)
+        ? body.existingQuestions.slice(0, 6).map(q => ({
+            q: String(q.q || '').slice(0, 400),
+            choices: Array.isArray(q.choices) ? q.choices.slice(0, 6).map(c => String(c).slice(0, 120)) : [],
+            answer: typeof q.answer === 'number' ? q.answer : null,
+          }))
+        : [],
+      // How many new questions to generate. Capped at 5 so a buggy
+      // frontend can't request War-and-Peace-sized outputs.
+      count: Math.max(1, Math.min(5, Number(body.count) || 3)),
+      // Lesson context — title + intro help the model stay on-topic
+      // for lessons whose questions are terse ("3 + 4 = ?" alone
+      // doesn't convey "we're learning single-digit sums").
+      lessonTitle: String(body.lessonTitle || '').slice(0, 160),
+      lessonIntro: String(body.lessonIntro || '').slice(0, 600),
+      // Difficulty hint is informational — the prompt already says
+      // "one step harder than the existing pool" — but we pass it
+      // through for audit + future tunability.
+      difficulty: String(body.difficulty || 'stretch').slice(0, 20),
+    }),
+    validate: ({ curriculum, existingQuestions }) => {
+      if (!curriculum || !curriculum.grade) return { error: 'missing_curriculum' };
+      if (!existingQuestions.length) return { error: 'missing_existing_questions' };
+      return null;
+    },
+    // Cache key folds in curriculum + a digest of the first couple of
+    // existing questions + count + difficulty. Two lessons with the
+    // same curriculum but different question styles should not collide.
+    cacheKey: ({ curriculum, existingQuestions, count, difficulty }) => hashKey(
+      'generate-questions',
+      JSON.stringify({g:curriculum.grade, s:curriculum.strand, c:curriculum.codes}),
+      JSON.stringify(existingQuestions.slice(0, 3).map(q => ({q:q.q, a:q.answer}))),
+      String(count),
+      difficulty
+    ),
+    cacheTtlSeconds: 30 * 24 * 3600,
+    maxTokens: 900,
+    buildSystemPrompt: () => (
+      'You generate harder practice questions for a child on a "stretch" / gifted plan. ' +
+      'Given the curriculum tag and an example pool of base-difficulty MCQ questions, ' +
+      'produce NEW questions that are ONE step harder — testing the same Ontario ' +
+      'Curriculum expectation at a more demanding level.\n\n' +
+      'Output STRICT JSON ONLY (no prose, no markdown fences). Shape:\n' +
+      '{\n' +
+      '  "questions": [\n' +
+      '    { "q": string, "choices": [string, string, string, string], "answer": integer }\n' +
+      '  ]\n' +
+      '}\n\n' +
+      'Hard rules:\n' +
+      '- Return the exact number of questions requested — no more, no fewer.\n' +
+      '- Every question MUST be "mcq" shape: exactly 4 choices.\n' +
+      '- `answer` is a 0-based index into `choices` and MUST be correct. Double-check arithmetic before writing it.\n' +
+      '- Distractors must be plausible wrong answers a kid might pick — common mistakes, off-by-one, sign errors. Not random text.\n' +
+      '- Do NOT reuse the example questions verbatim. Fresh problems, same concept.\n' +
+      '- Stay INSIDE the tagged curriculum expectation. Do not drift to a different strand.\n' +
+      '- No word problems that require reading at a higher grade than the tagged grade.\n' +
+      '- No culturally-specific references (names, places) the kid might not know.\n' +
+      '- No trick questions — "stretch" means harder concept, not trickier wording.'
+      + KID_SAFE_RULES
+      + CURRICULUM_ALIGNMENT_RULES
+    ),
+    buildUserPrompt: ({ curriculum, existingQuestions, count, lessonTitle, lessonIntro, difficulty }) => {
+      let p = buildCurriculumBlock(curriculum) + '\n\n';
+      if (lessonTitle) p += 'Lesson: ' + lessonTitle + '\n';
+      if (lessonIntro) p += 'Lesson intro:\n"""\n' + lessonIntro + '\n"""\n\n';
+      p += 'Base-difficulty example pool (' + existingQuestions.length + ' shown):\n';
+      existingQuestions.forEach((q, i) => {
+        p += '\n  Example ' + (i + 1) + ':\n';
+        p += '    q: ' + q.q + '\n';
+        q.choices.forEach((c, j) => {
+          const marker = (j === q.answer) ? ' ← correct' : '';
+          p += '    [' + j + '] ' + c + marker + '\n';
+        });
+      });
+      p += '\nDifficulty target: ' + difficulty + ' (one step harder than the pool above).\n';
+      p += 'Generate exactly ' + count + ' new question(s) now. Return the JSON.';
+      return p;
+    },
+    postProcess: (text) => {
+      const parsed = parseJsonFromText(text);
+      if (!parsed || typeof parsed !== 'object') {
+        return { error: 'parse_failed', raw: (text || '').slice(0, 200) };
+      }
+      if (!Array.isArray(parsed.questions)) {
+        return { error: 'parse_failed', raw: 'no questions array' };
+      }
+      const questions = [];
+      for (const raw of parsed.questions) {
+        if (!raw || typeof raw !== 'object') continue;
+        const q = String(raw.q || '').trim();
+        if (!q || q.length > 500) continue;
+        if (!Array.isArray(raw.choices) || raw.choices.length !== 4) continue;
+        const choices = raw.choices.map(c => String(c || '').trim().slice(0, 180));
+        if (choices.some(c => !c)) continue;
+        const answer = Number(raw.answer);
+        if (!Number.isInteger(answer) || answer < 0 || answer > 3) continue;
+        // Detect duplicate choices — a lazy model may emit ["12","12","14","15"]
+        // which makes the "correct" answer ambiguous.
+        const uniqChoices = new Set(choices);
+        if (uniqChoices.size !== 4) continue;
+        questions.push({ type: 'mcq', q, choices, answer });
+      }
+      if (!questions.length) {
+        return { error: 'parse_failed', raw: 'all questions failed schema check' };
+      }
+      return { questions };
+    },
+    auditSummary: (inputs, out) => {
+      const n = (out && Array.isArray(out.questions)) ? out.questions.length : 0;
+      const g = (inputs.curriculum && inputs.curriculum.grade) || '?';
+      return `generate-questions → ${n}q, ${g}, ${inputs.difficulty}`;
+    },
   });
 }
 
