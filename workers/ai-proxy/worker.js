@@ -773,6 +773,70 @@ async function handleTeacherAuthRoute(request, env, corsOrigin) {
   return json({ ok: true }, 200, corsOrigin);
 }
 
+// /tenant-settings — teacher/parent edits a small whitelist of tenant-level
+// preferences (currently storeEnabled, planType is set at provision time only).
+// Bearer = tenant code. Body: { password, storeEnabled?: boolean }.
+// Same rate limiting as /teacher-auth because it's also a password-gated
+// write endpoint. Returns the sanitized tenant so the client can refresh
+// its in-memory tenant_state.
+async function handleTenantSettingsRoute(request, env, corsOrigin) {
+  if (!env.KV) return json({ error: 'kv_not_bound' }, 500, corsOrigin);
+  const ip = request.headers.get('cf-connecting-ip') || '';
+  const code = (extractBearer(request) || '').toLowerCase();
+  if (!code) return json({ error: 'missing_bearer' }, 401, corsOrigin);
+
+  const ipKey   = `ratelimit:tauth:ip:${ip}`;
+  const codeKey = `ratelimit:tauth:code:${code}`;
+  const ipPre   = await rateLimitPeek(env, ipKey,   RL.TAUTH_IP.max);
+  const codePre = await rateLimitPeek(env, codeKey, RL.TAUTH_CODE.max);
+  if (!ipPre.ok || !codePre.ok) {
+    return json({ error: 'rate_limited', resetAt: ipPre.resetAt || codePre.resetAt }, 429, corsOrigin);
+  }
+
+  const tenant = await lookupTenantByCode(env, code);
+  if (!tenant) return json({ error: 'invalid_code' }, 401, corsOrigin);
+
+  let body = {};
+  try { body = await request.json(); } catch { return json({ error: 'bad_json' }, 400, corsOrigin); }
+  const password = (body.password || '').toString();
+  if (!password) return json({ error: 'missing_password' }, 400, corsOrigin);
+
+  // Reuse the same password-verify logic as /teacher-auth (including the
+  // legacy plaintext migration path). Anyone holding a valid code + correct
+  // password can flip settings; we DON'T treat this as admin-only because a
+  // family-plan user has no separate admin.
+  let ok = false;
+  if (tenant.teacherPasswordHash) {
+    ok = await verifyPassword(password, tenant.teacherPasswordHash);
+  } else if (tenant.teacherPassword) {
+    ok = (password === tenant.teacherPassword);
+    if (ok) {
+      tenant.teacherPasswordHash = await hashPassword(password);
+      delete tenant.teacherPassword;
+    }
+  }
+  if (!ok) {
+    await rateLimitHit(env, ipKey,   RL.TAUTH_IP.max,   RL.TAUTH_IP.window);
+    await rateLimitHit(env, codeKey, RL.TAUTH_CODE.max, RL.TAUTH_CODE.window);
+    return json({ error: 'invalid_password' }, 401, corsOrigin);
+  }
+
+  // Apply whitelisted fields only. Anything else in the body is ignored —
+  // a future bug that sends `teacherPasswordHash` or `id` from the client
+  // must NOT be honoured.
+  let mutated = false;
+  if (typeof body.storeEnabled === 'boolean') {
+    tenant.storeEnabled = body.storeEnabled;
+    mutated = true;
+  }
+
+  if (mutated) {
+    tenant.updatedAt = Date.now();
+    await env.KV.put(`tenant:${tenant.id}`, JSON.stringify(tenant));
+  }
+  return json({ ok: true, tenant: sanitizeTenantForClient(tenant) }, 200, corsOrigin);
+}
+
 // /data and /snapshots routing table — same shape as before, but the
 // auth model is "Bearer = tenant code" and KV keys are namespaced by
 // tenantId, not by ?env=.
@@ -874,6 +938,7 @@ export default {
       if (routeKey === 'POST /auth')         return await handleAuthRoute(request, env, corsOrigin);
       if (routeKey === 'GET /tenant')        return await handleTenantInfoRoute(request, env, corsOrigin);
       if (routeKey === 'POST /teacher-auth') return await handleTeacherAuthRoute(request, env, corsOrigin);
+      if (routeKey === 'POST /tenant-settings') return await handleTenantSettingsRoute(request, env, corsOrigin);
       const dataRoute = DATA_ROUTES[routeKey];
       if (dataRoute) return await handleDataRoute(request, env, corsOrigin, dataRoute);
     } catch (err) {

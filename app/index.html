@@ -8003,7 +8003,32 @@ const DATA_BACKEND_URL   = 'https://kidquest-ai-proxy.rhahavy-b.workers.dev';
 const DATA_BACKEND_TOKEN = '';  // Phase 0b: bearer is the per-tenant code, set at runtime  // Phase 0b: bearer is the per-tenant code, set at runtime  // Phase 0b: unused; bearer is the per-tenant code (set via tenant_state)
 
 const TENANT_STORAGE_KEY = 'kidquest-tenant';
-let tenant_state = null;  // {id, code, label, teacherPassword, createdAt} or null
+// {id, code, label, planType, storeEnabled, hasTeacherPassword, createdAt} or null.
+// planType is 'family' | 'classroom'. Legacy records without it default to
+// 'classroom' via tenantPlanType() so existing tenants keep the teacher UI.
+// storeEnabled defaults to true for the same reason.
+let tenant_state = null;
+
+// Which plan is this tenant on? 'family' → parent-mode (no teacher dashboard,
+// no curriculum editor, can add About-my-child context), 'classroom' → full
+// teacher dashboard + curriculum authoring. Default 'classroom' for legacy
+// records that pre-date the split.
+function tenantPlanType(){
+  const t = tenant_state;
+  if(!t) return 'classroom';
+  return t.planType === 'family' ? 'family' : 'classroom';
+}
+function isFamilyPlan(){ return tenantPlanType() === 'family'; }
+function isClassroomPlan(){ return tenantPlanType() === 'classroom'; }
+
+// Kid-facing rewards shop on/off. Defaults ON so legacy tenants aren't
+// surprised. When OFF the Shop tab and the coin chip disappear for kids,
+// but coins keep accruing silently so flipping it back ON is non-destructive.
+function isStoreEnabled(){
+  const t = tenant_state;
+  if(!t) return true;
+  return t.storeEnabled !== false;
+}
 
 // Dev-only tenant session lifetime. Production has no expiration —
 // families stay signed in until they manually Switch. On localhost
@@ -8060,6 +8085,38 @@ function dataBackendHeaders(){
     'Authorization': 'Bearer ' + ((tenant_state && tenant_state.code) || ''),
   };
 }
+// Flip a tenant-level setting via the Worker's /tenant-settings endpoint.
+// Requires the teacher/parent password — it's a password-gated write (same
+// rate-limit bucket as /teacher-auth on the server). On success we update
+// the in-memory tenant_state AND localStorage so other tabs pick it up
+// on next load. Returns { ok, error? }. Current whitelist: storeEnabled.
+async function updateTenantSettings(patch, password){
+  if(!DATA_BACKEND_URL) return { ok:false, error:'no_backend_url' };
+  if(!tenant_state || !tenant_state.code) return { ok:false, error:'no_tenant' };
+  if(!password) return { ok:false, error:'missing_password' };
+  let r;
+  try {
+    r = await fetch(DATA_BACKEND_URL.replace(/\/+$/,'') + '/tenant-settings', {
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'Authorization':'Bearer '+tenant_state.code,
+      },
+      body: JSON.stringify(Object.assign({ password }, patch)),
+    });
+  } catch(e){ return { ok:false, error:'network_error' }; }
+  if(r.status === 401) return { ok:false, error:'invalid_password' };
+  if(r.status === 429) return { ok:false, error:'rate_limited' };
+  if(!r.ok)            return { ok:false, error:'http_'+r.status };
+  let data; try { data = await r.json(); } catch(e){ return { ok:false, error:'bad_response' }; }
+  if(!data || !data.ok || !data.tenant) return { ok:false, error:'bad_response' };
+  // Merge the fresh tenant into in-memory state. The sanitized response
+  // contains only safe fields, so it's fine to spread wholesale.
+  tenant_state = Object.assign({}, tenant_state, data.tenant);
+  saveTenantToStorage(tenant_state);
+  return { ok:true, tenant: tenant_state };
+}
+
 // Validate a code with the Worker's /auth endpoint. Returns
 // {ok:true, tenant} on hit, {ok:false, error} on miss / rate-limit /
 // network failure.
@@ -8350,6 +8407,23 @@ const defaultUser = () => ({
     bestMemoryEasy: null,  // {moves, time} — lowest moves wins
     bestMemoryHard: null,
     bestMathScore: 0,      // highest correct count in a 60s Quick Math run
+  },
+  // Family-plan "About my child" context. Parents fill this in from the
+  // dashboard so Nova's explanations, practice problems, and encouragement
+  // lean into the kid's interests and accommodate their challenges. All
+  // fields optional; empty strings mean "no preference given". Used when
+  // building AI prompts and lesson adjustments (see planAdjustments). The
+  // field exists on the classroom plan too but classroom tutors use the
+  // richer Student Education Plans panel instead.
+  childContext: {
+    age: null,            // number or null — fine-grained age if grade isn't enough
+    interests: '',        // e.g. "soccer, Minecraft, drawing dragons"
+    strengths: '',        // e.g. "loves reading, strong at mental math"
+    challenges: '',       // e.g. "easily distracted, spelling is hard"
+    learningStyle: '',    // e.g. "visual learner, likes to act things out"
+    goals: '',            // e.g. "feel confident with word problems"
+    notes: '',            // free-form anything-else
+    updatedAt: 0,         // epoch ms of last edit
   }
 });
 const defaultAll = () => ({
@@ -13256,9 +13330,12 @@ function updateTopbar(screen){
   // "Switch" goes straight to the profile picker ("Who's learning today?"),
   // not the welcome hero — the kid is changing accounts, not exiting.
   nav.appendChild(h('button',{class:'nav-btn',onclick:()=>logout('profiles')},'👤 Switch'));
-  if(state){
+  if(state && isStoreEnabled()){
     // Bump only when the SAME user's value went UP since last update —
     // avoids false positives on first render / user switch.
+    // Gated by isStoreEnabled(): when the parent/teacher turns off the
+    // Rewards Shop, kids don't see the coin pill either — coins accrue
+    // silently in the background so the toggle is fully reversible.
     const sameUser   = _prevTopbarUser === currentUser;
     const coinsBump  = sameUser && state.coins > _prevTopbarCoins;
     const coinPill   = h('span',{class:'pill pill-coin'+(coinsBump?' pill-bump':'')},'💰 '+state.coins);
@@ -13347,10 +13424,25 @@ function go(screen,opts={}){
     else if(screen==='game-odd') renderOddOneOut(root, opts);
     else if(screen==='game-simon') renderSimonSays(root, opts);
     else if(screen==='game-dropsum') renderDropSum(root, opts);
-    else if(screen==='store') renderStore(root);
-    else if(screen==='orders') renderOrders(root);
+    else if(screen==='store'){
+      // Rewards Shop can be turned off by the teacher/parent. When off,
+      // silently redirect any shop navigation back to the dashboard so
+      // the student can't reach the shop via a stale link or back-button.
+      if(!isStoreEnabled()) return go('dashboard');
+      renderStore(root);
+    }
+    else if(screen==='orders'){
+      if(!isStoreEnabled()) return go('dashboard');
+      renderOrders(root);
+    }
     else if(screen==='teacher') renderTeacher(root);
-    else if(screen==='teacher-course') renderTeacherCourse(root);
+    else if(screen==='teacher-course'){
+      // Curriculum editor is classroom-plan only. Family plan users rely on
+      // the built-in course content and influence it via "About My Child"
+      // + per-student Education Plans instead of raw editing.
+      if(isFamilyPlan()) return go('teacher');
+      renderTeacherCourse(root);
+    }
     else if(screen==='parent') renderParentView(root);
     else renderHome(root); // unknown screen → safe fallback
   }catch(err){
@@ -13693,13 +13785,18 @@ function renderPinLockout(root, sid, s){
 /* ========== TEACHER LOGIN ========== */
 function renderTeacherLogin(root){
   const wrap=h('div',{class:'teacher-form'});
-  wrap.appendChild(h('h2',{},'🔑 Teacher Login'));
+  // Family plan = "Parent Login"; classroom = "Teacher Login". Same endpoint
+  // behind both — the label is purely cosmetic so parents don't feel
+  // out-of-place typing a "teacher" password at their own kitchen table.
+  const loginTitle = isFamilyPlan() ? '🔑 Parent Login' : '🔑 Teacher Login';
+  const welcomeMsg = isFamilyPlan() ? 'Welcome!' : 'Welcome, Teacher!';
+  wrap.appendChild(h('h2',{},loginTitle));
   const pw=h('input',{class:'t-field',type:'password',placeholder:'Password',onkeydown:(e)=>{if(e.key==='Enter')submit()}});
   const msg=h('div',{class:'t-msg',id:'tMsg'},'');
   async function submit(){
     msg.textContent='Checking…'; msg.style.color='';
     const ok = await verifyTeacherPasswordRemote(pw.value);
-    if(ok){ msg.textContent='Welcome, Teacher!'; msg.style.color='#00b894'; setTimeout(loginTeacher,500); }
+    if(ok){ msg.textContent=welcomeMsg; msg.style.color='#00b894'; setTimeout(loginTeacher,500); }
     else  { msg.textContent='Incorrect password. Try again.'; msg.style.color='var(--coral)'; }
   }
   const btn=h('button',{class:'t-submit',onclick:submit},'Log In');
@@ -14261,13 +14358,18 @@ function renderDashboard(root){
     hero.appendChild(mascot);
   } catch(e){ console.warn('[Solvix] Nova mascot render failed:', e); }
   root.appendChild(hero);
-  // Stats — perfect activities replaces Badges (badges feature de-emphasized)
+  // Stats — perfect activities replaces Badges (badges feature de-emphasized).
+  // Coins tile hidden when the Rewards Shop is off (see isStoreEnabled).
+  // Streak + Perfect stay visible either way — they're motivating even
+  // without a coin economy.
   const perfectCount = Object.keys(state.perfectActivities||{}).length;
-  const stats=h('div',{class:'dash-stats stagger'},[
-    h('div',{class:'d-stat'},[h('div',{class:'num'},[h('span',{class:'stat-emoji'},'💰'),h('span',{},String(state.coins))]),h('div',{class:'lbl'},'Coins')]),
-    h('div',{class:'d-stat'},[h('div',{class:'num'},[h('span',{class:'stat-emoji'},'🔥'),h('span',{},String(state.streak))]),h('div',{class:'lbl'},'Day Streak')]),
-    h('div',{class:'d-stat'},[h('div',{class:'num'},[h('span',{class:'stat-emoji'},'💯'),h('span',{},String(perfectCount))]),h('div',{class:'lbl'},'Perfect')]),
-  ]);
+  const statCells = [];
+  if(isStoreEnabled()){
+    statCells.push(h('div',{class:'d-stat'},[h('div',{class:'num'},[h('span',{class:'stat-emoji'},'💰'),h('span',{},String(state.coins))]),h('div',{class:'lbl'},'Coins')]));
+  }
+  statCells.push(h('div',{class:'d-stat'},[h('div',{class:'num'},[h('span',{class:'stat-emoji'},'🔥'),h('span',{},String(state.streak))]),h('div',{class:'lbl'},'Day Streak')]));
+  statCells.push(h('div',{class:'d-stat'},[h('div',{class:'num'},[h('span',{class:'stat-emoji'},'💯'),h('span',{},String(perfectCount))]),h('div',{class:'lbl'},'Perfect')]));
+  const stats = h('div',{class:'dash-stats stagger'}, statCells);
   root.appendChild(stats);
   // Nova Says — a daily thought / fact / tip from Nova in a small card
   // right below the stats row. Gives her presence on the dashboard even
@@ -14423,18 +14525,24 @@ function renderDashboard(root){
       ]),
     ]));
   } catch(e){ console.warn('[Solvix] renderBrainBreak failed:', e); }
-  // Store + Orders entry buttons — quick access from the dashboard
-  const pending = (allData.orders||[]).filter(o=>o.studentId===currentUser).length;
-  root.appendChild(h('div',{class:'dash-store-row'},[
-    h('button',{class:'dash-store-btn store',onclick:()=>go('store')},[
-      h('span',{class:'dsb-emoji'},'🛍️'),
-      h('span',{},'Open Solvix Store'),
-    ]),
-    h('button',{class:'dash-store-btn orders',onclick:()=>go('orders')},[
-      h('span',{class:'dsb-emoji'},'📦'),
-      h('span',{}, pending ? 'My Orders ('+pending+')' : 'My Orders'),
-    ]),
-  ]));
+  // Store + Orders entry buttons — quick access from the dashboard.
+  // Hidden entirely when the teacher/parent has turned off the Rewards Shop
+  // (isStoreEnabled() === false). Kids never see the shop or their coin
+  // counter in that mode — coins accrue silently and flipping it back on
+  // reveals them again.
+  if(isStoreEnabled()){
+    const pending = (allData.orders||[]).filter(o=>o.studentId===currentUser).length;
+    root.appendChild(h('div',{class:'dash-store-row'},[
+      h('button',{class:'dash-store-btn store',onclick:()=>go('store')},[
+        h('span',{class:'dsb-emoji'},'🛍️'),
+        h('span',{},'Open Solvix Store'),
+      ]),
+      h('button',{class:'dash-store-btn orders',onclick:()=>go('orders')},[
+        h('span',{class:'dsb-emoji'},'📦'),
+        h('span',{}, pending ? 'My Orders ('+pending+')' : 'My Orders'),
+      ]),
+    ]));
+  }
   // Report Card — personalized progress summary
   try { root.appendChild(renderReportCard(currentUser, false)); }
   catch(e){ console.warn('[Solvix] renderReportCard failed:',e); }
@@ -18807,7 +18915,10 @@ function buildDataExportPanel(){
 
 function renderTeacher(root){
   const dash = h('div',{class:'t-dash'});
-  dash.appendChild(h('h2',{},'📊 Teacher Dashboard'));
+  // Family plan: this IS the parent's dashboard — frame it that way.
+  // Classroom plan: keeps the "Teacher Dashboard" label it has always had.
+  const dashTitle = isFamilyPlan() ? '🏠 Parent Hub' : '📊 Teacher Dashboard';
+  dash.appendChild(h('h2',{},dashTitle));
 
   // Tenant chip — shows which family/classroom is active and offers a
   // "Switch" link that wipes the local code and reloads to the gate.
@@ -19986,25 +20097,34 @@ function renderTeacher(root){
 
   // the same place. Course Editor sits second — it's the single most
   // important tutor-authoring tool.
+  //
+  // Plan gating: on a FAMILY plan we hide classroom-teacher-only sections
+  // (curriculum authoring, AI rewrites, parent-report inbox, data export,
+  // maintenance). Family users still get a parent-focused "About my child"
+  // context section so they can share learning preferences with Nova.
+  // Flags: `familyOnly` → only shown to family; `classroomOnly` → only
+  // shown to classroom; no flag → both.
+  const familyMode = isFamilyPlan();
   const sections = [
-    // Students Overview + Learning Analytics + Detailed Report Cards are
-    // merged into one "Students & Reports" panel — a tutor's "how is
-    // everyone doing?" destination. Ordered zoom-in: overview grid →
-    // family-wide analytics → per-kid deep dive.
-    { id:'students',    icon:'👥', title:'Students & Reports',    build: buildStudentInsightsPanel },
-    { id:'plans',       icon:'📋', title:'Student Education Plans', build: buildStudentPlansPanel },
-    { id:'curriculum',  icon:'📚', title:'Course Editor',         build: buildCourseLink },
-    { id:'ai-rewrites', icon:'🤖', title:'AI Content Rewrites',   badge: countPendingAiRewrites(), badgeLabel:'AI rewrites awaiting review', build: buildAiRewritesPanel },
-    { id:'messages',    icon:'💬', title:'Messages',              badge: unreadTotal,       badgeLabel:'unread messages', build: renderTeacherMessages },
-    { id:'parents',     icon:'📧', title:'Parent Reports',        badge: unreviewedReportsTotal, badgeLabel:'reports awaiting review', build: renderParentReports },
-    { id:'store',       icon:'🛍️', title:'Store Management',      badge: pendingOrdersTotal, badgeLabel:'pending orders',  build: renderTeacherStore },
-    { id:'maintenance', icon:'🔧', title:'Maintenance',           build: renderMaintenanceControls },
-    { id:'backup',      icon:'💾', title:'Backup & Data',         build: buildBackupControls },
-    { id:'data-export', icon:'📊', title:'Data Export (CSV)',     build: buildDataExportPanel },
-    { id:'passwords',   icon:'🔑', title:'Passwords',             build: renderTeacherPasswords },
-    { id:'coins',       icon:'💰', title:'Coin Adjuster',         build: renderCoinAdjuster },
-    { id:'resets',      icon:'🔄', title:'Resets',                build: renderResetControls },
-  ];
+    { id:'students',     icon:'👥', title:'Students & Reports',    build: buildStudentInsightsPanel },
+    { id:'plans',        icon:'📋', title:'Student Education Plans', build: buildStudentPlansPanel },
+    { id:'about-child',  icon:'🧒', title:'About My Child',        build: renderAboutMyChild, familyOnly:true },
+    { id:'curriculum',   icon:'📚', title:'Course Editor',         build: buildCourseLink, classroomOnly:true },
+    { id:'ai-rewrites',  icon:'🤖', title:'AI Content Rewrites',   badge: countPendingAiRewrites(), badgeLabel:'AI rewrites awaiting review', build: buildAiRewritesPanel, classroomOnly:true },
+    { id:'messages',     icon:'💬', title:'Messages',              badge: unreadTotal,       badgeLabel:'unread messages', build: renderTeacherMessages },
+    { id:'parents',      icon:'📧', title:'Parent Reports',        badge: unreviewedReportsTotal, badgeLabel:'reports awaiting review', build: renderParentReports, classroomOnly:true },
+    { id:'store',        icon:'🛍️', title:'Rewards Shop',          badge: pendingOrdersTotal, badgeLabel:'pending orders',  build: renderTeacherStore },
+    { id:'maintenance',  icon:'🔧', title:'Maintenance',           build: renderMaintenanceControls, classroomOnly:true },
+    { id:'backup',       icon:'💾', title:'Backup & Data',         build: buildBackupControls },
+    { id:'data-export',  icon:'📊', title:'Data Export (CSV)',     build: buildDataExportPanel, classroomOnly:true },
+    { id:'passwords',    icon:'🔑', title:'Passwords',             build: renderTeacherPasswords },
+    { id:'coins',        icon:'💰', title:'Coin Adjuster',         build: renderCoinAdjuster },
+    { id:'resets',       icon:'🔄', title:'Resets',                build: renderResetControls },
+  ].filter(s => {
+    if(s.familyOnly)    return familyMode;
+    if(s.classroomOnly) return !familyMode;
+    return true;
+  });
 
   const acc = h('div',{class:'t-accordion'});
   sections.forEach(sec => {
@@ -21190,6 +21310,135 @@ function resetCurriculumOverride(activityId){
   go('teacher-course');
 }
 
+/* About My Child — per-student context sheet (family plan only).
+   --------------------------------------------------------------
+   Families don't run a curriculum editor — they run one or two kids through
+   Solvix's built-in lessons. What they CAN tell us is who the kid is:
+   interests, learning style, strengths, challenges, goals. That text
+   goes into every AI prompt (Nova's voice, word-problem theming, retry
+   hints, explanations) so the app feels like it was made for their kid
+   specifically.
+
+   Storage: allData.users[sid].childContext. Saved via saveState() +
+   syncToCloud() on blur/change. No password gate — the family plan
+   doesn't have a classroom-teacher distinction; whoever's on the
+   dashboard is the account holder. We still redact this from
+   student-facing screens (they never see the raw text). */
+function renderAboutMyChild(){
+  const wrap = h('div',{class:'t-pw-block'});
+  wrap.appendChild(h('div',{class:'t-pw-head'},[
+    h('h3',{},'🧒 About My Child'),
+    h('p',{class:'t-pw-sub'},
+      'Help Nova understand who your child is. Your answers go into every explanation, story problem, and encouragement — so lessons feel personal. Optional. Private: stays in your account, never shared.'),
+  ]));
+
+  const rowsWrap = h('div',{style:'display:flex;flex-direction:column;gap:18px;margin-top:12px'});
+
+  STUDENTS.forEach(s => {
+    if(!allData.users[s.id]) allData.users[s.id] = defaultUser();
+    const u = allData.users[s.id];
+    if(!u.childContext) u.childContext = defaultUser().childContext;
+    const ctx = u.childContext;
+
+    const card = h('div',{
+      style:'padding:14px 16px;background:#fafaff;border:1px solid var(--line);border-radius:14px',
+    });
+    const token = getStudentAvatarDisplay(s.id).value;
+    card.appendChild(h('div',{style:'display:flex;align-items:center;gap:10px;margin-bottom:10px'},[
+      h('div',{style:'font-size:22px'}, token),
+      h('div',{},[
+        h('div',{style:'font-weight:800;font-size:15px'}, s.name),
+        h('div',{style:'font-size:12px;color:var(--ink3)'}, s.grade),
+      ]),
+    ]));
+
+    // One field = one textarea + inline save-on-blur. We debounce saveState()
+    // so typing in one field doesn't hammer syncToCloud(). Status chip shows
+    // "Saved" briefly after a write so the parent knows nothing was lost.
+    const savedChip = h('span',{
+      style:'font-size:11px;color:var(--ok,#16a34a);font-weight:700;opacity:0;transition:opacity .2s;margin-left:8px',
+      'aria-live':'polite',
+    }, '✓ Saved');
+    let saveTimer = null;
+    const persist = () => {
+      ctx.updatedAt = Date.now();
+      saveState();
+      try { syncToCloud(); } catch(e){}
+      savedChip.style.opacity = '1';
+      clearTimeout(saveTimer);
+      saveTimer = setTimeout(()=>{ savedChip.style.opacity = '0'; }, 1400);
+    };
+
+    const field = (labelText, key, placeholder, helpText) => {
+      const wrapF = h('div',{style:'margin-top:10px'});
+      const lbl = h('label',{style:'display:flex;align-items:center;gap:6px;font-weight:700;font-size:13px;margin-bottom:4px'},[
+        h('span',{}, labelText),
+      ]);
+      wrapF.appendChild(lbl);
+      if(helpText){
+        wrapF.appendChild(h('div',{style:'font-size:11px;color:var(--ink3);margin-bottom:6px'}, helpText));
+      }
+      const ta = h('textarea',{
+        rows: '2',
+        maxlength: '500',
+        placeholder: placeholder,
+        'aria-label': labelText + ' for ' + s.name,
+        style:'width:100%;padding:8px 10px;border-radius:10px;border:1px solid var(--line);font:inherit;font-size:13px;resize:vertical;min-height:44px;box-sizing:border-box',
+      });
+      ta.value = String(ctx[key] || '');
+      ta.addEventListener('input', () => {
+        ctx[key] = ta.value;
+      });
+      ta.addEventListener('blur', persist);
+      wrapF.appendChild(ta);
+      return wrapF;
+    };
+
+    card.appendChild(field('🎨 Interests',      'interests',
+      'e.g. soccer, Minecraft, drawing dragons, dinosaurs',
+      'Nova will weave these into word problems and stories.'));
+    card.appendChild(field('💪 Strengths',      'strengths',
+      'e.g. great at mental math, loves reading chapter books',
+      'Nova will build confidence by starting from what your child already does well.'));
+    card.appendChild(field('🌱 Challenges',     'challenges',
+      'e.g. easily distracted, spelling is hard, freezes on timed tests',
+      'Nova will slow down, rephrase, and skip pressure cues in these areas.'));
+    card.appendChild(field('🧠 Learning style', 'learningStyle',
+      'e.g. visual, likes hands-on, learns best with music',
+      'Changes how Nova explains things and what examples get used.'));
+    card.appendChild(field('🎯 Goals',          'goals',
+      'e.g. feel confident with word problems by end of year',
+      'Nova mentions progress toward these in encouragement.'));
+    card.appendChild(field('📝 Anything else',  'notes',
+      'e.g. English is their second language, has an IEP for dyslexia',
+      'Anything you want Nova to keep in mind.'));
+
+    // Age (optional numeric). Not a textarea — separate row with small input.
+    const ageWrap = h('div',{style:'margin-top:10px;display:flex;align-items:center;gap:8px'});
+    ageWrap.appendChild(h('label',{style:'font-weight:700;font-size:13px'},'🎂 Age'));
+    const ageIn = h('input',{
+      type:'number', min:'3', max:'21', step:'1',
+      style:'width:72px;padding:8px 10px;border-radius:10px;border:1px solid var(--line);font-weight:700;font-size:13px',
+      'aria-label':'Age for '+s.name,
+      placeholder:'—',
+    });
+    ageIn.value = ctx.age == null ? '' : String(ctx.age);
+    ageIn.addEventListener('input', () => {
+      const n = parseInt(ageIn.value, 10);
+      ctx.age = Number.isFinite(n) ? n : null;
+    });
+    ageIn.addEventListener('blur', persist);
+    ageWrap.appendChild(ageIn);
+    ageWrap.appendChild(savedChip);
+    card.appendChild(ageWrap);
+
+    rowsWrap.appendChild(card);
+  });
+
+  wrap.appendChild(rowsWrap);
+  return wrap;
+}
+
 /* Coin adjuster — per-student +/- coin control for the teacher dashboard.
    We added this after a kid (Axel) ended up with an inflated balance from
    the old challenge-coin rule (flat bonus on Finish). The tutor needed a
@@ -22298,6 +22547,61 @@ function renderTeacherStore(){
   const byItem = {};
   orders.forEach(o=>{ byItem[o.itemName]=(byItem[o.itemName]||0)+1; });
   const topItem = Object.entries(byItem).sort((a,b)=>b[1]-a[1])[0];
+
+  // --- Rewards Shop on/off toggle ---
+  // Top of the panel so parents/teachers see it FIRST and understand this
+  // is a feature they control. Hiding the shop hides the Shop tab + coin
+  // chip for kids; coins keep accruing silently so flipping it back on
+  // is non-destructive. Password-gated write (rate-limited server-side).
+  const toggleCard = h('div',{
+    style:'padding:14px 16px;margin-bottom:16px;background:#fff;border:1px solid var(--line);border-radius:14px;display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap',
+  });
+  const currentlyOn = isStoreEnabled();
+  const toggleIcon = h('div',{style:'font-size:28px;flex-shrink:0'}, currentlyOn ? '🛍️' : '🚫');
+  const toggleInfo = h('div',{style:'flex:1;min-width:240px'});
+  toggleInfo.appendChild(h('div',{style:'font-weight:800;font-size:15px;margin-bottom:3px'},
+    currentlyOn ? 'Rewards Shop: ON' : 'Rewards Shop: OFF'));
+  toggleInfo.appendChild(h('div',{style:'font-size:13px;color:var(--ink3);line-height:1.5'},
+    currentlyOn
+      ? 'Kids can browse prizes and spend their coins. You approve or deny each request. Turn OFF if you don\'t want coin-based rewards in your home/classroom — coins will still accrue silently so you can turn it back on anytime.'
+      : 'The shop is hidden from students. The coin counter is hidden too. Coins still accrue in the background, so if you turn this back on, nothing is lost.'
+  ));
+  const toggleBtn = h('button',{
+    class:'btn ' + (currentlyOn ? 'btn-ghost' : 'btn-primary'),
+    style:'padding:9px 16px;font-weight:700;font-size:13px;flex-shrink:0;min-width:120px',
+    onclick: async () => {
+      const want = !currentlyOn;
+      const verb = want ? 'turn ON the Rewards Shop for kids' : 'turn OFF the Rewards Shop (kids won\'t see the shop or coin counter)';
+      const pwOk = await confirmTeacherPassword(verb);
+      if(!pwOk) return;
+      // confirmTeacherPassword caches the verified password in memory for
+      // a short grace window — reuse it for the settings write so we don't
+      // re-prompt immediately after. _teacherPwCache is set by the same
+      // path that confirmTeacherPassword uses.
+      const pw = (typeof _teacherPwCache === 'string' && _teacherPwCache) ? _teacherPwCache : '';
+      toggleBtn.textContent = 'Saving…';
+      toggleBtn.disabled = true;
+      const res = await updateTenantSettings({ storeEnabled: want }, pw);
+      toggleBtn.disabled = false;
+      if(!res.ok){
+        if(res.error === 'invalid_password'){
+          alert('Password check failed. Please try again.');
+          _clearTeacherPwCache();
+        } else if(res.error === 'rate_limited'){
+          alert('Too many attempts — wait a minute and try again.');
+        } else {
+          alert('Could not save: '+res.error);
+        }
+        try { renderTeacher(document.getElementById('screen')); } catch(e){}
+        return;
+      }
+      try { renderTeacher(document.getElementById('screen')); } catch(e){}
+    },
+  }, currentlyOn ? 'Turn OFF' : 'Turn ON');
+  toggleCard.appendChild(toggleIcon);
+  toggleCard.appendChild(toggleInfo);
+  toggleCard.appendChild(toggleBtn);
+  wrap.appendChild(toggleCard);
 
   // --- Stats ---
   const statsWrap = h('div',{class:'t-orders'},[
