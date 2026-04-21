@@ -377,11 +377,33 @@ const TENANT_WORDS = (
 // per-tenant blob is bounded by this — runaway client can't bloat KV.
 const DATA_MAX_BYTES = 5 * 1024 * 1024;
 
-// Auth rate limit: per IP, max N failed code attempts per hour. Beyond
-// that, return 429 for the rest of the window. Doesn't apply to /auth
-// successes (a real user shouldn't get throttled for typing slowly).
-const AUTH_RATE_LIMIT_MAX     = 10;
-const AUTH_RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000;
+// Rate limit windows. Each bucket has its own (max, window) tuple so
+// we can throttle different abuse vectors at different cadences.
+//   AUTH_IP     — per-IP /auth failures. 10/hr blocks a single host
+//                 from churning through PINs.
+//   AUTH_CODE   — per-code /auth failures. 5/hr locks THAT code if
+//                 attackers distribute across IPs (botnet). This is
+//                 what stops a realistic 4-digit PIN brute force.
+//   ADMIN_IP    — per-IP /provision + /unprovision. 30/hr caps the
+//                 damage if the admin token leaks.
+//   TAUTH_IP    — per-IP /teacher-auth failures. 20/hr.
+//   TAUTH_CODE  — per-code /teacher-auth failures. 10/hr.
+const RL = {
+  AUTH_IP:    { max: 10, window: 60 * 60 * 1000 },
+  AUTH_CODE:  { max: 5,  window: 60 * 60 * 1000 },
+  ADMIN_IP:   { max: 30, window: 60 * 60 * 1000 },
+  TAUTH_IP:   { max: 20, window: 60 * 60 * 1000 },
+  TAUTH_CODE: { max: 10, window: 60 * 60 * 1000 },
+};
+// Kept as an alias so existing callers that reference this constant
+// (if any linger) don't break. Prefer RL.AUTH_IP.
+const AUTH_RATE_LIMIT_MAX     = RL.AUTH_IP.max;
+const AUTH_RATE_LIMIT_WINDOW_MS = RL.AUTH_IP.window;
+
+// PBKDF2 iterations for teacher-password hashing. 100k ≈ 100ms on a
+// Worker CPU — plenty slow for offline brute-force attackers, fast
+// enough that a teacher clicking "login" doesn't notice.
+const PBKDF2_ITERATIONS = 100000;
 
 // Generate a fresh tenant code. crypto.getRandomValues is unbiased
 // enough for 128-word selection (modulo bias is ~2^-25, undetectable).
@@ -439,14 +461,16 @@ async function lookupTenantByCode(env, code) {
   try { return JSON.parse(raw); } catch { return null; }
 }
 
-// Per-IP sliding-window failure counter. Read → decide → write. Not
-// transactional (KV doesn't support that), but the worst case is two
-// concurrent bad attempts get counted as one — acceptable.
-async function rateLimitAuthFailure(env, ip) {
-  if (!env.KV || !ip) return { ok: true, remaining: AUTH_RATE_LIMIT_MAX };
-  const key = `ratelimit:auth:${ip}`;
+// Generic KV-backed sliding-window counter. Pass the bucket key
+// (e.g. `ratelimit:auth:ip:1.2.3.4`) plus max + window — this function
+// is bucket-agnostic so the same machinery serves every endpoint's
+// abuse-throttling needs. Read→decide→write is not transactional
+// (KV doesn't support that), but the worst case is two concurrent
+// attempts get counted as one — acceptable for abuse-prevention.
+async function rateLimitHit(env, key, max, windowMs) {
+  if (!env.KV || !key) return { ok: true, remaining: max };
   const now = Date.now();
-  let state = { n: 0, resetAt: now + AUTH_RATE_LIMIT_WINDOW_MS };
+  let state = { n: 0, resetAt: now + windowMs };
   try {
     const raw = await env.KV.get(key);
     if (raw) {
@@ -455,36 +479,131 @@ async function rateLimitAuthFailure(env, ip) {
     }
   } catch {}
   state.n += 1;
-  // KV TTL ensures the key auto-deletes when the window passes — no
-  // accumulation of stale per-IP keys.
+  // KV TTL auto-evicts stale buckets when the window passes — no
+  // unbounded key growth.
   const ttl = Math.max(60, Math.ceil((state.resetAt - now) / 1000));
   await env.KV.put(key, JSON.stringify(state), { expirationTtl: ttl });
-  return { ok: state.n <= AUTH_RATE_LIMIT_MAX, remaining: Math.max(0, AUTH_RATE_LIMIT_MAX - state.n), resetAt: state.resetAt };
+  return { ok: state.n <= max, remaining: Math.max(0, max - state.n), resetAt: state.resetAt };
 }
 
-async function rateLimitCheck(env, ip) {
-  if (!env.KV || !ip) return { ok: true };
+// Read-only peek at a rate-limit bucket. Used pre-auth to reject
+// requests from a tripped bucket without incrementing it further.
+async function rateLimitPeek(env, key, max) {
+  if (!env.KV || !key) return { ok: true };
   try {
-    const raw = await env.KV.get(`ratelimit:auth:${ip}`);
+    const raw = await env.KV.get(key);
     if (!raw) return { ok: true };
     const parsed = JSON.parse(raw);
     if (parsed.resetAt < Date.now()) return { ok: true };
-    return { ok: parsed.n < AUTH_RATE_LIMIT_MAX, resetAt: parsed.resetAt };
+    return { ok: parsed.n < max, resetAt: parsed.resetAt };
   } catch { return { ok: true }; }
 }
 
-// POST /provision — admin-only. Body: { label, teacherPassword? }.
-// Returns: { ok, tenant: {id, label, code, teacherPassword, createdAt} }.
-// No idempotency: re-calling with the same label creates a SECOND
-// tenant. CLI script handles "is this what you meant?" UX.
+// PBKDF2(SHA-256) password hashing via WebCrypto — the only KDF
+// available in Workers runtime without pulling a WASM dep. Output
+// shape is a JSON-safe record; verifyPassword reads the iterations
+// from the record so we can bump the work factor later without
+// breaking old hashes.
+async function hashPassword(password) {
+  const salt = new Uint8Array(16);
+  crypto.getRandomValues(salt);
+  const bits = await pbkdf2Bits(password, salt, PBKDF2_ITERATIONS);
+  return {
+    alg: 'pbkdf2-sha256',
+    iterations: PBKDF2_ITERATIONS,
+    salt: bytesToHex(salt),
+    hash: bytesToHex(new Uint8Array(bits)),
+  };
+}
+
+async function verifyPassword(password, record) {
+  if (!record || record.alg !== 'pbkdf2-sha256' || !record.salt || !record.hash) return false;
+  const salt = hexToBytes(record.salt);
+  const iterations = record.iterations || PBKDF2_ITERATIONS;
+  const bits = await pbkdf2Bits(password, salt, iterations);
+  const got = new Uint8Array(bits);
+  const expected = hexToBytes(record.hash);
+  if (got.length !== expected.length) return false;
+  // Constant-time compare — prevents timing-based password leaks.
+  let diff = 0;
+  for (let i = 0; i < got.length; i++) diff |= got[i] ^ expected[i];
+  return diff === 0;
+}
+
+async function pbkdf2Bits(password, salt, iterations) {
+  const key = await crypto.subtle.importKey(
+    'raw',
+    new TextEncoder().encode(password),
+    { name: 'PBKDF2' },
+    false,
+    ['deriveBits']
+  );
+  return crypto.subtle.deriveBits(
+    { name: 'PBKDF2', salt, iterations, hash: 'SHA-256' },
+    key,
+    256
+  );
+}
+
+function bytesToHex(bytes) {
+  return Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('');
+}
+function hexToBytes(hex) {
+  const out = new Uint8Array(hex.length / 2);
+  for (let i = 0; i < out.length; i++) out[i] = parseInt(hex.slice(i*2, i*2+2), 16);
+  return out;
+}
+
+// Whitelists the tenant fields that are safe to return to an
+// authenticated client. Secrets (password hashes) and anything the
+// frontend doesn't legitimately need stay server-side. Default
+// `planType: 'classroom'` and `storeEnabled: true` so legacy
+// tenants (pre-schema-update) behave like classrooms with the
+// rewards shop on — matching today's behavior.
+function sanitizeTenantForClient(tenant) {
+  if (!tenant) return null;
+  return {
+    id: tenant.id,
+    label: tenant.label,
+    code: tenant.code,
+    isDemo: !!tenant.isDemo,
+    planType: tenant.planType || 'classroom',
+    storeEnabled: tenant.storeEnabled !== false,
+    hasTeacherPassword: !!(tenant.teacherPasswordHash || tenant.teacherPassword),
+    createdAt: tenant.createdAt,
+  };
+}
+
+// POST /provision — admin-only. Body: { label, teacherPassword?, pin?,
+// isDemo?, planType?, storeEnabled? }. Returns sanitized tenant record
+// (no password material ever leaves the server after provisioning).
+//
+// planType: 'family' | 'classroom' (default 'classroom'). Family plans
+// hide the teacher dashboard and content editor; classrooms get the
+// full admin surface.
+//
+// storeEnabled: default true. When false the kid-facing rewards shop
+// is hidden and coins don't show — coins still accumulate so flipping
+// it back on restores the pile.
+//
+// Rate-limited per-IP even though this is admin-gated: if the admin
+// token ever leaks (CI log, stolen laptop), the attacker can't wipe
+// KV with 10k provisions in 10 seconds.
 async function handleProvisionRoute(request, env, corsOrigin) {
   if (!env.KV) return json({ error: 'kv_not_bound' }, 500, corsOrigin);
   if (!checkAdminAuth(request, env)) return json({ error: 'admin_unauthorized' }, 401, corsOrigin);
+  const ip = request.headers.get('cf-connecting-ip') || '';
+  const rlKey = `ratelimit:provision:ip:${ip}`;
+  const rl = await rateLimitHit(env, rlKey, RL.ADMIN_IP.max, RL.ADMIN_IP.window);
+  if (!rl.ok) return json({ error: 'rate_limited', resetAt: rl.resetAt }, 429, corsOrigin);
+
   let body = {};
   try { body = await request.json(); } catch { return json({ error: 'bad_json' }, 400, corsOrigin); }
   const label = (body.label || '').toString().trim().slice(0, 80) || 'Untitled';
-  const teacherPassword = (body.teacherPassword || '').toString().slice(0, 64);
+  const teacherPasswordRaw = (body.teacherPassword || '').toString().slice(0, 64);
   const isDemo = body.isDemo === true;
+  const planType = (body.planType === 'family') ? 'family' : 'classroom';
+  const storeEnabled = body.storeEnabled !== false; // default ON
 
   // If the caller supplied a specific PIN (4 digits), use that as the code.
   // This is the common path for classroom/family onboarding: the operator
@@ -511,74 +630,147 @@ async function handleProvisionRoute(request, env, corsOrigin) {
     if (!code) return json({ error: 'code_generation_failed' }, 500, corsOrigin);
   }
 
+  // Hash the teacher password if provided. Plaintext is never stored.
+  // Family plans typically don't set one (parent is the admin by default).
+  const teacherPasswordHash = teacherPasswordRaw
+    ? await hashPassword(teacherPasswordRaw)
+    : null;
+
   const id = generateTenantId();
-  const tenant = { id, label, code, teacherPassword, isDemo, createdAt: new Date().toISOString() };
+  const tenant = {
+    id, label, code,
+    teacherPasswordHash,
+    isDemo, planType, storeEnabled,
+    createdAt: new Date().toISOString(),
+  };
   await env.KV.put(`tenant:${id}`, JSON.stringify(tenant));
   await env.KV.put(`code:${code}`, id);
-  return json({ ok: true, tenant }, 200, corsOrigin);
+  // Return the sanitized tenant (no hash, no password material) PLUS
+  // the raw code — the admin CLI needs to print the code to the
+  // operator so they can hand it off to the family/teacher.
+  return json({ ok: true, tenant: sanitizeTenantForClient(tenant) }, 200, corsOrigin);
 }
 
-// POST /unprovision — admin only. Body: { code } or { tenantId }.
+// POST /unprovision — admin only. Body: { code }.
 // Wipes the tenant record, its code alias, and its data+snapshots blobs.
-// Intentionally exposed via POST (with body) rather than DELETE on a
-// REST path so we don't have to route on path segments and so curl
-// examples stay symmetric with /provision.
+// Intentionally takes `code` (not `tenantId`) to reduce the blast radius
+// of an admin-token leak — an attacker who learns a tenantId via some
+// other channel can't unprovision it without also knowing the code.
+// Rate-limited per-IP for the same reason /provision is.
 async function handleUnprovisionRoute(request, env, corsOrigin) {
   if (!env.KV) return json({ error: 'kv_not_bound' }, 500, corsOrigin);
   if (!checkAdminAuth(request, env)) return json({ error: 'admin_unauthorized' }, 401, corsOrigin);
-  let body = {};
-  try { body = await request.json(); } catch { return json({ error: 'bad_json' }, 400, corsOrigin); }
-  const code = (body.code || '').toString().trim().toLowerCase();
-  let tenantId = (body.tenantId || '').toString().trim();
-  if (!tenantId && code) {
-    tenantId = (await env.KV.get(`code:${code}`)) || '';
-  }
-  if (!tenantId) return json({ error: 'not_found' }, 404, corsOrigin);
-
-  // Fetch the current record so we can clean up the code alias even
-  // if the caller only passed us a tenantId.
-  const raw = await env.KV.get(`tenant:${tenantId}`);
-  const existing = raw ? (() => { try { return JSON.parse(raw); } catch { return null; } })() : null;
-  const codeToWipe = (existing && existing.code) || code;
-
-  await env.KV.delete(`tenant:${tenantId}`);
-  await env.KV.delete(`tenant:${tenantId}:data`);
-  await env.KV.delete(`tenant:${tenantId}:snapshots`);
-  if (codeToWipe) await env.KV.delete(`code:${codeToWipe}`);
-  return json({ ok: true, removed: { id: tenantId, code: codeToWipe || null } }, 200, corsOrigin);
-}
-
-// POST /auth — body: { code }. Returns full tenant metadata on hit, 401
-// on miss. Failed attempts increment the per-IP rate-limit counter so
-// brute-force attempts get throttled. Successful attempts do NOT
-// reset the counter (avoid letting an attacker burn their counter via
-// known-good codes).
-async function handleAuthRoute(request, env, corsOrigin) {
-  if (!env.KV) return json({ error: 'kv_not_bound' }, 500, corsOrigin);
   const ip = request.headers.get('cf-connecting-ip') || '';
-  const pre = await rateLimitCheck(env, ip);
-  if (!pre.ok) return json({ error: 'rate_limited', resetAt: pre.resetAt }, 429, corsOrigin);
+  const rlKey = `ratelimit:unprovision:ip:${ip}`;
+  const rl = await rateLimitHit(env, rlKey, RL.ADMIN_IP.max, RL.ADMIN_IP.window);
+  if (!rl.ok) return json({ error: 'rate_limited', resetAt: rl.resetAt }, 429, corsOrigin);
+
   let body = {};
   try { body = await request.json(); } catch { return json({ error: 'bad_json' }, 400, corsOrigin); }
   const code = (body.code || '').toString().trim().toLowerCase();
   if (!code) return json({ error: 'missing_code' }, 400, corsOrigin);
-  const tenant = await lookupTenantByCode(env, code);
-  if (!tenant) {
-    const after = await rateLimitAuthFailure(env, ip);
-    return json({ error: 'invalid_code', remaining: after.remaining }, 401, corsOrigin);
-  }
-  return json({ ok: true, tenant }, 200, corsOrigin);
+  const tenantId = (await env.KV.get(`code:${code}`)) || '';
+  if (!tenantId) return json({ error: 'not_found' }, 404, corsOrigin);
+
+  await env.KV.delete(`tenant:${tenantId}`);
+  await env.KV.delete(`tenant:${tenantId}:data`);
+  await env.KV.delete(`tenant:${tenantId}:snapshots`);
+  await env.KV.delete(`code:${code}`);
+  return json({ ok: true, removed: { id: tenantId, code } }, 200, corsOrigin);
 }
 
-// GET /tenant — Bearer = code. Returns the tenant metadata. Used by
-// the client on boot to refresh teacherPassword/label without
-// requiring re-entry of the code.
+// POST /auth — body: { code }. Returns sanitized tenant metadata on
+// hit, 401 on miss. Failed attempts increment BOTH a per-IP counter
+// (blocks a single host from churning through codes) AND a per-code
+// counter (locks that code if attackers distribute the brute force
+// across IPs). The per-code lockout is the key defense against
+// botnet-distributed PIN brute forcing — a 4-digit keyspace is too
+// small to rely on per-IP limits alone.
+async function handleAuthRoute(request, env, corsOrigin) {
+  if (!env.KV) return json({ error: 'kv_not_bound' }, 500, corsOrigin);
+  const ip = request.headers.get('cf-connecting-ip') || '';
+  let body = {};
+  try { body = await request.json(); } catch { return json({ error: 'bad_json' }, 400, corsOrigin); }
+  const code = (body.code || '').toString().trim().toLowerCase();
+  if (!code) return json({ error: 'missing_code' }, 400, corsOrigin);
+
+  const ipKey   = `ratelimit:auth:ip:${ip}`;
+  const codeKey = `ratelimit:auth:code:${code}`;
+  const ipPre   = await rateLimitPeek(env, ipKey,   RL.AUTH_IP.max);
+  const codePre = await rateLimitPeek(env, codeKey, RL.AUTH_CODE.max);
+  if (!ipPre.ok || !codePre.ok) {
+    return json({ error: 'rate_limited', resetAt: ipPre.resetAt || codePre.resetAt }, 429, corsOrigin);
+  }
+
+  const tenant = await lookupTenantByCode(env, code);
+  if (!tenant) {
+    await rateLimitHit(env, ipKey,   RL.AUTH_IP.max,   RL.AUTH_IP.window);
+    await rateLimitHit(env, codeKey, RL.AUTH_CODE.max, RL.AUTH_CODE.window);
+    return json({ error: 'invalid_code' }, 401, corsOrigin);
+  }
+  return json({ ok: true, tenant: sanitizeTenantForClient(tenant) }, 200, corsOrigin);
+}
+
+// GET /tenant — Bearer = code. Returns sanitized tenant metadata so the
+// client can refresh label / planType / storeEnabled without re-entering
+// the code. No password material in the response.
 async function handleTenantInfoRoute(request, env, corsOrigin) {
   if (!env.KV) return json({ error: 'kv_not_bound' }, 500, corsOrigin);
   const code = (extractBearer(request) || '').toLowerCase();
   const tenant = await lookupTenantByCode(env, code);
   if (!tenant) return json({ error: 'invalid_code' }, 401, corsOrigin);
-  return json({ ok: true, tenant }, 200, corsOrigin);
+  return json({ ok: true, tenant: sanitizeTenantForClient(tenant) }, 200, corsOrigin);
+}
+
+// POST /teacher-auth — Bearer = tenant code. Body: { password }.
+// Returns { ok: true } on match, 401 otherwise. Replaces the
+// client-side plaintext compare that leaked the teacher password in
+// every /auth and /tenant response. Rate-limited per-IP and per-code.
+// Auto-migrates legacy tenants (those still carrying plaintext
+// `teacherPassword` from before the hashing change) on first
+// successful login.
+async function handleTeacherAuthRoute(request, env, corsOrigin) {
+  if (!env.KV) return json({ error: 'kv_not_bound' }, 500, corsOrigin);
+  const ip = request.headers.get('cf-connecting-ip') || '';
+  const code = (extractBearer(request) || '').toLowerCase();
+  if (!code) return json({ error: 'missing_bearer' }, 401, corsOrigin);
+
+  const ipKey   = `ratelimit:tauth:ip:${ip}`;
+  const codeKey = `ratelimit:tauth:code:${code}`;
+  const ipPre   = await rateLimitPeek(env, ipKey,   RL.TAUTH_IP.max);
+  const codePre = await rateLimitPeek(env, codeKey, RL.TAUTH_CODE.max);
+  if (!ipPre.ok || !codePre.ok) {
+    return json({ error: 'rate_limited', resetAt: ipPre.resetAt || codePre.resetAt }, 429, corsOrigin);
+  }
+
+  const tenant = await lookupTenantByCode(env, code);
+  if (!tenant) return json({ error: 'invalid_code' }, 401, corsOrigin);
+
+  let body = {};
+  try { body = await request.json(); } catch { return json({ error: 'bad_json' }, 400, corsOrigin); }
+  const password = (body.password || '').toString();
+  if (!password) return json({ error: 'missing_password' }, 400, corsOrigin);
+
+  let ok = false;
+  if (tenant.teacherPasswordHash) {
+    ok = await verifyPassword(password, tenant.teacherPasswordHash);
+  } else if (tenant.teacherPassword) {
+    // Legacy plaintext record — compare, then migrate on success so
+    // the next login runs the PBKDF2 path and plaintext disappears.
+    ok = (password === tenant.teacherPassword);
+    if (ok) {
+      tenant.teacherPasswordHash = await hashPassword(password);
+      delete tenant.teacherPassword;
+      await env.KV.put(`tenant:${tenant.id}`, JSON.stringify(tenant));
+    }
+  }
+
+  if (!ok) {
+    await rateLimitHit(env, ipKey,   RL.TAUTH_IP.max,   RL.TAUTH_IP.window);
+    await rateLimitHit(env, codeKey, RL.TAUTH_CODE.max, RL.TAUTH_CODE.window);
+    return json({ error: 'invalid_password' }, 401, corsOrigin);
+  }
+  return json({ ok: true }, 200, corsOrigin);
 }
 
 // /data and /snapshots routing table — same shape as before, but the
@@ -613,7 +805,10 @@ async function handleDataRoute(request, env, corsOrigin, route) {
     return json({ error: 'payload_too_large', max_bytes: DATA_MAX_BYTES }, 413, corsOrigin);
   }
   await env.KV.put(key, body);
-  return json({ ok: true, bytes: body.length, tenantId: tenant.id }, 200, corsOrigin);
+  // Intentionally don't echo tenantId back — caller already has their
+  // code, and exposing internal IDs widens the surface for future bugs
+  // that might trust a tenantId from untrusted input.
+  return json({ ok: true, bytes: body.length }, 200, corsOrigin);
 }
 
 // Routing table. Each entry binds a method+path to (feature flag,
@@ -674,10 +869,11 @@ export default {
     // per route — see each handler.
     try {
       const routeKey = `${request.method} ${url.pathname}`;
-      if (routeKey === 'POST /provision')   return await handleProvisionRoute(request, env, corsOrigin);
-      if (routeKey === 'POST /unprovision') return await handleUnprovisionRoute(request, env, corsOrigin);
-      if (routeKey === 'POST /auth')        return await handleAuthRoute(request, env, corsOrigin);
-      if (routeKey === 'GET /tenant')       return await handleTenantInfoRoute(request, env, corsOrigin);
+      if (routeKey === 'POST /provision')    return await handleProvisionRoute(request, env, corsOrigin);
+      if (routeKey === 'POST /unprovision')  return await handleUnprovisionRoute(request, env, corsOrigin);
+      if (routeKey === 'POST /auth')         return await handleAuthRoute(request, env, corsOrigin);
+      if (routeKey === 'GET /tenant')        return await handleTenantInfoRoute(request, env, corsOrigin);
+      if (routeKey === 'POST /teacher-auth') return await handleTeacherAuthRoute(request, env, corsOrigin);
       const dataRoute = DATA_ROUTES[routeKey];
       if (dataRoute) return await handleDataRoute(request, env, corsOrigin, dataRoute);
     } catch (err) {
@@ -1507,7 +1703,11 @@ function buildHealthPayload(env) {
     // here so the deploy checklist can curl /health and confirm
     // everything is wired before provisioning the first tenant.
     tenant_backend_ready: !!env.KV,
-    admin_provision_ready: !!(env.KV && env.ADMIN_TOKEN),
+    // admin_provision_ready intentionally omitted — fingerprinting the
+    // admin-token state from an unauthenticated endpoint lets attackers
+    // watch for freshly deployed Workers with misconfigured secrets.
+    // deploy.sh verifies admin-token state by POSTing to /provision
+    // with a bogus bearer and checking for 401.
     features,
     caps: {
       max_input_chars: intEnv(env.MAX_INPUT_CHARS, DEFAULT_MAX_INPUT_CHARS),
@@ -1532,6 +1732,13 @@ function corsHeaders(origin) {
     'access-control-allow-headers': 'content-type, x-student-id, authorization',
     'access-control-max-age': '86400',
     'vary': 'Origin',
+    // Defense-in-depth: even though this Worker returns JSON, these
+    // headers protect against sniffing, clickjacking, and referrer
+    // leakage in case a response is ever rendered in a browser context.
+    'x-content-type-options': 'nosniff',
+    'x-frame-options': 'DENY',
+    'referrer-policy': 'no-referrer',
+    'strict-transport-security': 'max-age=31536000; includeSubDomains',
   };
   if (origin) h['access-control-allow-origin'] = origin;
   return h;

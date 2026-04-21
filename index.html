@@ -3,6 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<!-- Baseline CSP: blocks <object>/<embed>, <base href> hijacking, cross-origin
+     <form action>, and iframing of our site. We keep 'unsafe-inline' on
+     script/style because the app ships inline handlers + the rainbow IIFE;
+     tightening further would require a bigger refactor. XSS surface in the
+     curriculum preview is handled by a DOM-level sanitizer in app/index.html. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' https: data:; script-src 'self' 'unsafe-inline' https:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: https:; connect-src 'self' https:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none';">
 <meta name="theme-color" content="#6C5CE7">
 <title>Solvix — AI-powered learning adventures for kids</title>
 <meta name="description" content="Where learning becomes an adventure. AI-guided quests across reading, math, logic, and 5 more subjects — with real progress dashboards for parents and teachers. Start a 7-day free trial.">

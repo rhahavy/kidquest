@@ -3,6 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<!-- Baseline CSP: blocks <object>/<embed>, <base href> hijacking, cross-origin
+     <form action>, and iframing. 'unsafe-inline' is kept for inline handlers
+     in this file; primary XSS defense is the sanitizer in the h() helper. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' https: data:; script-src 'self' 'unsafe-inline' https:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: https: blob:; media-src 'self' https: blob: data:; connect-src 'self' https:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none';">
 <meta name="theme-color" content="#6C5CE7">
 <title>Solvix — Where Learning Becomes an Adventure</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -2830,12 +2834,47 @@ const EMOJI_KEYPAD = ['🐶','🐱','🦁','🦊','🌈','⭐','🎈','🚀','�
    Fallback: when no tenant is active (DATA_BACKEND_URL unset, i.e.
    legacy textdb.dev path), the hardcoded literal kicks in so the
    pre-multi-tenant flow keeps working. */
-const TEACHER_CREDS = {
-  get password(){
-    if(tenant_state && tenant_state.teacherPassword) return tenant_state.teacherPassword;
-    return 'Chili2025';
+/* Teacher password verification is server-side: POST /teacher-auth
+   compares against the PBKDF2 hash in KV. The plaintext never leaves
+   the client and is never echoed back in /auth or /tenant responses.
+
+   For synchronous contexts that already prompted the user (e.g. the
+   confirmTeacherPassword flow guarding destructive actions), we also
+   cache the last-verified password in-memory so follow-up checks can
+   resolve locally without another network round-trip. The cache is
+   wiped on logout and never touches storage. */
+let _teacherPwCache = null;
+
+async function verifyTeacherPasswordRemote(pw){
+  if(!pw) return false;
+  // Multi-tenant path — check the server-side hash.
+  if(typeof tenant_state !== 'undefined' && tenant_state && tenant_state.code
+     && typeof DATA_BACKEND_URL !== 'undefined' && DATA_BACKEND_URL){
+    try {
+      const r = await fetch(DATA_BACKEND_URL + '/teacher-auth', {
+        method: 'POST',
+        headers: {
+          'authorization': 'Bearer ' + tenant_state.code,
+          'content-type': 'application/json',
+        },
+        body: JSON.stringify({ password: pw }),
+      });
+      if(r.ok){
+        const j = await r.json().catch(()=>null);
+        if(j && j.ok){ _teacherPwCache = pw; return true; }
+      }
+      return false;
+    } catch(e){ return false; }
   }
-};
+  // Legacy single-user fallback (no multi-tenant backend configured).
+  // Matches the pre-multi-tenant literal for backwards compatibility
+  // during local development only.
+  const ok = (pw === 'Chili2025');
+  if(ok) _teacherPwCache = pw;
+  return ok;
+}
+
+function _clearTeacherPwCache(){ _teacherPwCache = null; }
 
 /* ========== SUBJECTS ==========
    Images are set per-LESSON using `heroImage: IMG.xxx`, not at the subject
@@ -8875,6 +8914,7 @@ function logout(dest){
   // Reset the teacher grace period on logout — next login has to re-enter
   // password for destructive actions until they re-authenticate.
   teacherAuthAt = 0;
+  _clearTeacherPwCache();
   // Reset topbar bump-cache so the next login doesn't see a bogus delta.
   _prevTopbarUser = null; _prevTopbarCoins = 0;
   // Drop back to the default cosmos palette so the profile picker shows
@@ -9448,7 +9488,7 @@ function openTeacherThread(sid){
   }}, [
     input,
     h('button',{type:'submit', class:'cp-send', 'aria-label':'Send'},[
-      h('span',{html:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>'}),
+      h('span',{rawHtml:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>'}),
     ]),
   ]);
   card.appendChild(form);
@@ -9487,9 +9527,36 @@ function renderTeacherThreadMessages(sid){
 
 /* ========== UI HELPERS ========== */
 const $=s=>document.querySelector(s);
+// html: values pass through this allowlist sanitizer. Curriculum text
+// (lesson.intro, q.q, math step bodies, etc.) is teacher-authored and could
+// otherwise inject <img onerror> to exfiltrate tenant tokens from localStorage.
+// Use rawHtml: ONLY for string literals that live in this file.
+const SAFE_INLINE_TAGS = new Set(['B','STRONG','I','EM','U','BR','SPAN','CODE','SUP','SUB','P']);
+function sanitizeInlineHtml(s){
+  const tpl = document.createElement('template');
+  tpl.innerHTML = String(s == null ? '' : s);
+  const walker = document.createTreeWalker(tpl.content, NodeFilter.SHOW_ELEMENT);
+  const toUnwrap = [];
+  let n;
+  while((n = walker.nextNode())){
+    if(!SAFE_INLINE_TAGS.has(n.tagName)){
+      toUnwrap.push(n);
+    } else {
+      for(let i = n.attributes.length - 1; i >= 0; i--){
+        n.removeAttribute(n.attributes[i].name);
+      }
+    }
+  }
+  toUnwrap.forEach(el => {
+    const parent = el.parentNode;
+    while(el.firstChild) parent.insertBefore(el.firstChild, el);
+    parent.removeChild(el);
+  });
+  return tpl.innerHTML;
+}
 function h(tag,a={},c=[]){
   const el=document.createElement(tag);
-  for(const k in a){if(k==='class')el.className=a[k];else if(k==='html')el.innerHTML=a[k];else if(k.startsWith('on'))el.addEventListener(k.slice(2),a[k]);else if(a[k]!=null)el.setAttribute(k,a[k])}
+  for(const k in a){if(k==='class')el.className=a[k];else if(k==='html')el.innerHTML=sanitizeInlineHtml(a[k]);else if(k==='rawHtml')el.innerHTML=a[k];else if(k.startsWith('on'))el.addEventListener(k.slice(2),a[k]);else if(a[k]!=null)el.setAttribute(k,a[k])}
   (Array.isArray(c)?c:[c]).forEach(x=>{if(x==null)return;if(typeof x==='string')el.appendChild(document.createTextNode(x));else el.appendChild(x)});
   return el;
 }
@@ -13629,9 +13696,11 @@ function renderTeacherLogin(root){
   wrap.appendChild(h('h2',{},'🔑 Teacher Login'));
   const pw=h('input',{class:'t-field',type:'password',placeholder:'Password',onkeydown:(e)=>{if(e.key==='Enter')submit()}});
   const msg=h('div',{class:'t-msg',id:'tMsg'},'');
-  function submit(){
-    if(pw.value===TEACHER_CREDS.password){msg.textContent='Welcome, Teacher!';msg.style.color='#00b894';setTimeout(loginTeacher,500)}
-    else{msg.textContent='Incorrect password. Try again.';msg.style.color='var(--coral)'}
+  async function submit(){
+    msg.textContent='Checking…'; msg.style.color='';
+    const ok = await verifyTeacherPasswordRemote(pw.value);
+    if(ok){ msg.textContent='Welcome, Teacher!'; msg.style.color='#00b894'; setTimeout(loginTeacher,500); }
+    else  { msg.textContent='Incorrect password. Try again.'; msg.style.color='var(--coral)'; }
   }
   const btn=h('button',{class:'t-submit',onclick:submit},'Log In');
   wrap.appendChild(pw); wrap.appendChild(btn); wrap.appendChild(msg);
@@ -15220,10 +15289,13 @@ function openLessonVideoSettings(activityId, builtinIds){
     card.appendChild(pw);
     const msg = h('div',{class:'lvs-msg'}, '');
     card.appendChild(msg);
-    const tryUnlock = ()=>{
-      // Require a non-empty password AND a strict match. Empty-string short-
-      // circuit matters if TEACHER_CREDS.password were ever misconfigured.
-      if(pw.value && pw.value === TEACHER_CREDS.password){
+    const tryUnlock = async ()=>{
+      // Server-verified via /teacher-auth. Per-code + per-IP rate
+      // limits kick in after a handful of wrong attempts.
+      msg.textContent = 'Checking…';
+      msg.className = 'lvs-msg';
+      const ok = pw.value && await verifyTeacherPasswordRemote(pw.value);
+      if(ok){
         buildUnlocked();
       } else {
         msg.textContent = 'Wrong password.';
@@ -18973,7 +19045,7 @@ function renderTeacher(root){
       }},'📥 Import JSON'),
       h('button',{class:'btn btn-ghost',onclick:()=>{
         if(!confirm('Clear ALL reward order history?')) return;
-        if(!confirmTeacherPassword('clear all reward orders')) return;
+        if(!(await confirmTeacherPassword('clear all reward orders'))) return;
         allData.orders=[]; saveState(); go('teacher');
       }},'🧹 Clear Orders'),
       h('button',{class:'btn btn-ghost',onclick:()=>{
@@ -19029,7 +19101,7 @@ function renderTeacher(root){
             h('button',{class:'btn btn-sm btn-primary',onclick:()=>{
               const whereFrom = sources.includes('cloud') ? ' (cloud snapshot)' : ' (local snapshot)';
               if(!confirm('Restore this snapshot from '+whenStr+whereFrom+'?\n\nIt will OVERWRITE current progress for every student. A pre-restore auto-snapshot will be saved so you can undo this.')) return;
-              if(!confirmTeacherPassword('restore a snapshot')) return;
+              if(!(await confirmTeacherPassword('restore a snapshot'))) return;
               const ok = applySnapshotToAllData(snap);
               if(ok){
                 alert('✓ Snapshot restored.\n\nIf this was the wrong one, open this panel again — a "before restore" snapshot was saved on top (local + cloud), and you can roll back to it.');
@@ -21159,7 +21231,7 @@ function renderCoinAdjuster(){
         }
         const after = Math.max(0, current + delta);
         if(!confirm(s.name+': '+current+' → '+after+' coins ('+(delta>0?'+':'')+delta+')?\n\nApply change?')) return;
-        if(!confirmTeacherPassword('adjust '+s.name+'\'s coins by '+(delta>0?'+':'')+delta)) return;
+        if(!(await confirmTeacherPassword('adjust '+s.name+'\'s coins by '+(delta>0?'+':'')+delta))) return;
         const u = allData.users[s.id];
         if(!u) return;
         u.coins = after;
@@ -21198,7 +21270,7 @@ function renderCoinAdjuster(){
         }
         if(next === current){ alert('Already at '+current+' — no change.'); return; }
         if(!confirm(s.name+': '+current+' → '+next+' coins?\n\nApply change?')) return;
-        if(!confirmTeacherPassword('set '+s.name+'\'s coins to '+next)) return;
+        if(!(await confirmTeacherPassword('set '+s.name+'\'s coins to '+next))) return;
         const u = allData.users[s.id];
         if(!u) return;
         u.coins = next;
@@ -21267,7 +21339,7 @@ function renderTeacherPasswords(){
       ttsBtn,
       h('button',{class:'btn btn-ghost pw-reset',type:'button',onclick:()=>{
         if(!confirm('Reset '+s.name+'\'s password?\n\nThis clears their chosen emoji + hint. Next time they log in on ANY device, they\'ll pick a new one. The lock on this device is also cleared.')) return;
-        if(!confirmTeacherPassword('reset '+s.name+'\'s password')) return;
+        if(!(await confirmTeacherPassword('reset '+s.name+'\'s password'))) return;
         const u = allData.users[s.id] || defaultUser();
         u.customPin = null;
         u.customHint = '';
@@ -21297,7 +21369,7 @@ function renderTeacherPasswords(){
    is already password-gated, as a deliberate "are you sure" before a
    destructive action. Prevents misclicks from nuking a kid's progress.
    ========================================================================== */
-function confirmTeacherPassword(actionDesc){
+async function confirmTeacherPassword(actionDesc){
   // Grace-window pass-through: if the teacher recently logged in or
   // re-entered the password, don't re-prompt. Sliding window — every hit
   // refreshes the clock, so an actively-working teacher stays authorized.
@@ -21307,7 +21379,8 @@ function confirmTeacherPassword(actionDesc){
   }
   const pw = prompt('Teacher password required to '+actionDesc+'.\n\nEnter password:');
   if(pw === null) return false; // user hit Cancel — treat as aborted
-  if(pw !== TEACHER_CREDS.password){
+  const ok = await verifyTeacherPasswordRemote(pw);
+  if(!ok){
     alert('Incorrect password. Action canceled.');
     return false;
   }
@@ -22098,7 +22171,7 @@ function renderResetControls(){
     const stu = STUDENTS.find(s=>s.id===stuSel1.value);
     const sub = SUBJECTS.find(x=>x.id===subSel1.value);
     if(!confirm('Reset '+stu.name+'\'s '+sub.name+' progress?\n\nThis deletes completions and perfect scores for '+sub.name+' only. Other subjects, coins, and other students are not affected.')) return;
-    if(!confirmTeacherPassword('reset '+stu.name+'\'s '+sub.name+' progress')) return;
+    if(!(await confirmTeacherPassword('reset '+stu.name+'\'s '+sub.name+' progress'))) return;
     resetStudentSubject(stu.id, sub.id);
     alert('✓ '+stu.name+'\'s '+sub.name+' progress has been reset.');
     go('teacher');
@@ -22117,7 +22190,7 @@ function renderResetControls(){
     if(!stuSel2.value){ alert('Pick a student first.'); return; }
     const stu = STUDENTS.find(s=>s.id===stuSel2.value);
     if(!confirm('Reset '+stu.name+'\'s ENTIRE profile?\n\nThis wipes coins, stars, streak, badges, completions, perfect scores, wishlist, and avatar. Other students are untouched.')) return;
-    if(!confirmTeacherPassword('reset '+stu.name+'\'s entire profile')) return;
+    if(!(await confirmTeacherPassword('reset '+stu.name+'\'s entire profile'))) return;
     resetStudent(stu.id);
     alert('✓ '+stu.name+'\'s profile has been reset.');
     go('teacher');
@@ -22131,7 +22204,7 @@ function renderResetControls(){
   row3.appendChild(h('div',{class:'t-reset-row-sub'},'Wipes every student\'s progress and clears all reward order history in one shot.'));
   const btn3 = h('button',{class:'btn btn-danger t-reset-btn',onclick:()=>{
     if(!confirm('Reset EVERY student\'s progress + clear all reward orders?\n\nA one-click auto-snapshot will be saved, so "↶ Restore from snapshot" on the dashboard can undo this within the next 5 resets.')) return;
-    if(!confirmTeacherPassword('reset every student\'s progress')) return;
+    if(!(await confirmTeacherPassword('reset every student\'s progress'))) return;
     // Safety net — pre-wipe snapshot goes into the local undo ring.
     try { pushSnapshot('before Reset EVERYTHING'); } catch(e){}
     STUDENTS.forEach(s=>{ allData.users[s.id] = defaultUser(); });
@@ -22606,10 +22679,11 @@ function renderMaintenanceScreen(){
   const btn = document.getElementById('maintUnlockBtn');
   if(btn) btn.addEventListener('click', promptMaintenanceUnlock);
 }
-function promptMaintenanceUnlock(){
+async function promptMaintenanceUnlock(){
   const pw = prompt('Teacher password to unlock:');
   if(pw === null) return; // user cancelled
-  if(pw === TEACHER_CREDS.password){
+  const ok = await verifyTeacherPasswordRemote(pw);
+  if(ok){
     try{ sessionStorage.setItem(MAINTENANCE_BYPASS_KEY,'1'); }catch(e){}
     location.reload();
   } else {

@@ -1,0 +1,28 @@
+# Node
+node_modules/
+
+# Env files — secrets live in `wrangler secret`, never in the repo.
+.env
+.env.*
+!.env.example
+.dev.vars
+
+# Wrangler local state
+.wrangler/
+
+# Admin token for the ai-proxy Worker (written by deploy.sh, chmod 600).
+# NEVER commit. The worker-local .gitignore also excludes it;
+# this is a second layer in case someone drops a copy at the root.
+.admin-token
+
+# OS + editor detritus
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+npm-debug.log*
