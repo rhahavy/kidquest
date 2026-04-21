@@ -103,6 +103,10 @@ html[data-theme="candy"] {
 *,*::before,*::after{box-sizing:border-box}
 html,body{margin:0;padding:0;scroll-behavior:smooth}
 body{font-family:var(--font);color:var(--ink);background:var(--bg);min-height:100vh;overflow-x:hidden;-webkit-font-smoothing:antialiased;font-weight:600}
+/* Teacher "view as student" preview — reserve space so the fixed amber
+   banner (#impersonationBanner) never covers the topbar. Class is added
+   by renderImpersonationBanner() and removed on exit. */
+body.has-impersonation-banner{padding-top:48px}
 button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
 button:focus-visible{outline:3px solid var(--primary);outline-offset:3px}
 h1,h2,h3,h4,p{margin:0}
@@ -8354,6 +8358,24 @@ try{
 let isTeacher = false;
 let state = currentUser ? allData.users[currentUser] : null;
 
+/* ---- TEACHER "VIEW AS STUDENT" STATE ----
+   When true, a teacher is previewing the app through a specific student's
+   session. We swap `allData.users[sid]` with a deep clone at enter time
+   (see enterImpersonation) so any quiz-time mutations during preview
+   stay isolated on the clone and never corrupt the real student blob.
+   On exit, we restore the pre-impersonation data from the stash and
+   drop the clone.
+
+   Two additional guards make this bulletproof:
+     • saveState() returns early while impersonating — no localStorage
+       writes, no cloud push, so other devices never see the preview.
+     • pullCloud() returns early while impersonating — prevents a fresh
+       cloud pull from overwriting our clone mid-preview (which would
+       both break the preview and invalidate the stash).
+   Both guards are lifted automatically on exitImpersonation. */
+let impersonating = false;
+let _impersonationStash = null; // { sid, realUserData } — set on enter
+
 /* ---- PARENT VIEW ----
    A parent can get a read-only snapshot of their kid's progress via a
    shareable URL like `?parent=isaiah`. No login, no PIN, no mutations —
@@ -8402,6 +8424,13 @@ let currentScreen = null;
 let currentOpts = {};
 
 function saveState(){
+  // Teacher "view as student" preview mode — block ALL persistence so
+  // the teacher's exploration through a kid's session never leaks to
+  // storage, never syncs to other devices, and never bumps the kid's
+  // real streak/completion/coins. In-memory mutations still happen on
+  // the deep-cloned state so the quiz + activity UIs work normally,
+  // but everything gets discarded on exitImpersonation.
+  if(impersonating) return;
   if(currentUser && state) allData.users[currentUser]=state;
   allData.updatedAt=Date.now();
   // Demo profiles live in memory only — we skip localStorage AND cloud
@@ -8467,11 +8496,137 @@ function teacherGraceActive(){
 
 function loginTeacher(){
   isTeacher=true; currentUser=null; state=null;
+  // Belt & suspenders: if a prior impersonation never cleanly exited
+  // (e.g. devtools refresh mid-preview), loginTeacher re-enters the
+  // tutor dashboard with a clean slate. The stash goes with it since
+  // the underlying allData.users[sid] blob may have been clobbered by
+  // a cloud pull that fired before the guard landed.
+  impersonating = false; _impersonationStash = null;
   allData.teacher.lastLogin=Date.now();
   // Start (or reset) the destructive-action grace window.
   teacherAuthAt = Date.now();
   saveState();
   go('teacher');
+}
+
+/* ---- TEACHER "VIEW AS STUDENT" — enter / exit ----
+   enterImpersonation(sid) swaps the student's live data blob with a
+   DEEP CLONE, then signs in as that student. Any mutations during
+   preview (quiz progress, coins earned, streak bumps) hit the clone
+   only — the real blob is safely stashed and restored on exit.
+
+   Why deep-clone instead of just gating writes? Because quiz code
+   mutates `state` (which is `allData.users[currentUser]`) in-memory
+   before saveState() ever runs. A write-only guard would still leave
+   the real student's data dirty in the current tab until the next
+   pullCloud. Swapping the reference up front keeps isolation airtight.
+
+   The "real" teacher session is reconstructed on exit by:
+     1. Restoring allData.users[sid] from the stash.
+     2. Flipping impersonating=false → saveState + pullCloud resume.
+     3. Bumping teacherAuthAt so the grace window is fresh.
+     4. Navigating to 'teacher'. */
+function enterImpersonation(sid){
+  const real = allData.users[sid];
+  if(!real){ alert('No data found for that student.'); return; }
+  if(impersonating){
+    // Already previewing someone — exit cleanly first so we don't
+    // stack stashes or clobber the current one.
+    try{ exitImpersonation(); }catch(e){ console.warn('[KidQuest] exit before re-enter failed:', e); }
+  }
+  // Deep clone via JSON round-trip. Student state is pure JSON
+  // (numbers, strings, arrays, plain objects) — no Dates, Maps, or
+  // functions — so this is both safe and faster than a manual walk.
+  let clone;
+  try{ clone = JSON.parse(JSON.stringify(real)); }
+  catch(e){ console.error('[KidQuest] impersonation clone failed:', e); alert('Could not start preview — data is in an unexpected shape.'); return; }
+  _impersonationStash = { sid, realUserData: real };
+  allData.users[sid] = clone;
+  impersonating = true;
+  // Flip into "student mode" with the clone as the live state. We
+  // intentionally do NOT bump streak, lastActiveDate, or joinedAt here
+  // — that's real-student-login behaviour; a preview must not alter
+  // those markers even on the clone (they surface in UI the teacher
+  // is about to view, and would confuse next-session deltas if the
+  // clone were ever accidentally persisted).
+  currentUser = sid;
+  state = clone;
+  isTeacher = false;
+  // Don't write LOCAL_USER_KEY — a page refresh during preview should
+  // drop back to the home screen (the boot guard clears it anyway),
+  // not silently keep the teacher "logged in" as the student.
+  currentWeek = computeWeekForUser(state);
+  go('dashboard');
+}
+
+function exitImpersonation(){
+  if(!impersonating || !_impersonationStash){
+    // Nothing to restore — just bounce back to the tutor dashboard.
+    isTeacher = true; currentUser = null; state = null;
+    impersonating = false; _impersonationStash = null;
+    teacherAuthAt = Date.now();
+    go('teacher');
+    return;
+  }
+  const { sid, realUserData } = _impersonationStash;
+  // Restore the real blob — readers (getStudentData, pullCloud diffs,
+  // the tutor dashboard cards) see the untouched data again.
+  allData.users[sid] = realUserData;
+  _impersonationStash = null;
+  impersonating = false;
+  // Back into tutor mode.
+  isTeacher = true; currentUser = null; state = null;
+  // Refresh the teacher grace window so the teacher doesn't get
+  // re-prompted for the password immediately after exiting preview.
+  teacherAuthAt = Date.now();
+  go('teacher');
+}
+
+/* Fixed-position amber banner visible whenever a teacher is previewing
+   a student's session. Mounted into document.body (not the per-screen
+   render root) so it survives every go() and sits above the app chrome.
+   The banner is torn down the moment `impersonating` flips false. */
+function renderImpersonationBanner(){
+  const EXISTING_ID = 'impersonationBanner';
+  const prior = document.getElementById(EXISTING_ID);
+  if(!impersonating || !_impersonationStash){
+    if(prior) prior.remove();
+    document.body.classList.remove('has-impersonation-banner');
+    return;
+  }
+  const sid = _impersonationStash.sid;
+  const student = STUDENTS.find(s=>s.id===sid);
+  const name = student ? student.name : sid;
+  if(prior){
+    // Banner already exists — just refresh the name (defensive, in case
+    // enter was called mid-preview with a different sid).
+    const label = prior.querySelector('[data-imp-name]');
+    if(label) label.textContent = name;
+    return;
+  }
+  const bar = document.createElement('div');
+  bar.id = EXISTING_ID;
+  bar.setAttribute('role','status');
+  bar.setAttribute('aria-live','polite');
+  bar.style.cssText = [
+    'position:fixed','top:0','left:0','right:0','z-index:10000',
+    'background:linear-gradient(90deg,#ffd166,#fca311)',
+    'color:#1a1a2e','font-family:var(--font-display,system-ui)','font-weight:800',
+    'padding:10px 16px','display:flex','align-items:center','justify-content:center','gap:14px',
+    'box-shadow:0 2px 8px rgba(0,0,0,.15)','font-size:14px','flex-wrap:wrap'
+  ].join(';');
+  const icon = document.createElement('span'); icon.textContent = '👁️'; icon.style.fontSize='18px';
+  const text = document.createElement('span');
+  text.innerHTML = 'Previewing as <b data-imp-name style="font-weight:900"></b> — changes here will <u>not</u> be saved';
+  text.querySelector('[data-imp-name]').textContent = name;
+  const btn = document.createElement('button');
+  btn.textContent = '← Exit to tutor dashboard';
+  btn.style.cssText = 'background:#1a1a2e;color:#fff;border:none;border-radius:10px;padding:6px 14px;font-weight:700;cursor:pointer;font-size:13px';
+  btn.onclick = () => { try{ exitImpersonation(); }catch(e){ console.error('[KidQuest] exitImpersonation failed:', e); } };
+  bar.appendChild(icon); bar.appendChild(text); bar.appendChild(btn);
+  document.body.appendChild(bar);
+  // Push the app content down so the banner never covers the topbar.
+  document.body.classList.add('has-impersonation-banner');
 }
 
 // Optional `dest` so callers can control the landing screen after clearing
@@ -8480,6 +8635,17 @@ function loginTeacher(){
 // not exiting). The teacher "🚪 Log Out" uses the default 'home' since
 // that's a real exit back to the public landing.
 function logout(dest){
+  // If a teacher is previewing a student and hits "log out" via any
+  // kid-facing menu, we must restore the real student data BEFORE
+  // wiping session state. Skipping exitImpersonation would leave
+  // allData.users[sid] pointed at the discarded clone until the next
+  // pullCloud — which the guard has been blocking.
+  if(impersonating && _impersonationStash){
+    const { sid, realUserData } = _impersonationStash;
+    allData.users[sid] = realUserData;
+    _impersonationStash = null;
+    impersonating = false;
+  }
   currentUser=null; isTeacher=false; state=null;
   // Reset the teacher grace period on logout — next login has to re-enter
   // password for destructive actions until they re-authenticate.
@@ -8501,6 +8667,13 @@ function initCloud(){
   document.addEventListener('visibilitychange',()=>{if(!document.hidden)pullCloud(false)});
 }
 async function pullCloud(init){
+  // Teacher "view as student" preview mode — skip cloud pulls entirely.
+  // If we refreshed allData.users[sid] from the cloud mid-preview, we'd
+  // overwrite the deep-cloned state the teacher is exploring, which
+  // would both break the preview (state rewinds mid-quiz) and invalidate
+  // the _impersonationStash (restore-on-exit would write the clone, not
+  // the real data, to allData). The guard auto-lifts on exitImpersonation.
+  if(impersonating) return;
   try{
     const r=await fetch(CLOUD_URL+'?_='+Date.now(),{cache:'no-store'});if(!r.ok)throw 0;
     const t=await r.text();if(!t)return;
@@ -12793,6 +12966,12 @@ function go(screen,opts={}){
   const rew = $('#reward'); if(rew){rew.classList.remove('show'); rew.style.display='none'}
 
   try{ updateTopbar(screen); }catch(e){ console.warn('[KidQuest] updateTopbar failed:',e); }
+
+  // Teacher "view as student" banner — always on top of the page so the
+  // teacher cannot forget they're in preview mode. Rendered (or removed)
+  // on every navigation so it follows them through Dashboard → Week →
+  // Activity → Quiz → Report Card and back.
+  try { renderImpersonationBanner(); } catch(e){ console.warn('[KidQuest] impersonation banner failed:',e); }
 
   // FAB visibility
   const fab=$('#fab');
@@ -18376,6 +18555,23 @@ function renderTeacher(root){
         ]));
       });
       card.appendChild(bars);
+      // "View as" button — drops the teacher into this student's session
+      // so they can see exactly what the kid sees (dashboard, activities,
+      // quiz flow). Uses a deep-cloned state + saveState/pullCloud guards
+      // so nothing the teacher does during the preview mutates the real
+      // student data. See enterImpersonation() for the full design.
+      const viewAsRow = h('div',{style:'margin-top:12px;display:flex;justify-content:flex-end'});
+      const viewAsBtn = h('button',{
+        class:'btn btn-ghost',
+        style:'font-size:12px;padding:6px 12px;border-radius:10px',
+        title:'Log in as '+s.name+' to preview their experience. Nothing you do here is saved.',
+        onclick: () => {
+          try{ enterImpersonation(s.id); }
+          catch(e){ console.error('[KidQuest] enterImpersonation failed:',e); alert('Preview failed to start — see console.'); }
+        }
+      }, '👁️ View as '+s.name);
+      viewAsRow.appendChild(viewAsBtn);
+      card.appendChild(viewAsRow);
       grid.appendChild(card);
     });
     return grid;
