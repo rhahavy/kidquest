@@ -541,6 +541,7 @@ img{max-width:100%}
 .subj-card.science::before{background:linear-gradient(180deg,#5eead4,#16a085)}
 .subj-card.social::before{background:linear-gradient(180deg,#ff9f9f,#c0392b)}
 .subj-card.spelling::before{background:linear-gradient(180deg,#c299f5,#8e44ad)}
+.subj-card.coding::before{background:linear-gradient(180deg,#5feeff,#0abde3)}
 .subj-card .s-info{flex:1;min-width:0}
 .subj-card .s-name{font-family:var(--font-display);font-size:18px;font-weight:700;letter-spacing:-.01em}
 .subj-card .s-prog{font-size:13px;color:var(--ink3);font-weight:600;margin-top:3px}
@@ -1757,9 +1758,15 @@ body.has-dev-banner{padding-top:26px}
 .rc-title{font-size:22px;font-weight:800;display:flex;align-items:center;gap:10px}
 .rc-title .rc-emoji{font-size:26px}
 .rc-sub{font-size:13px;color:var(--ink3);font-weight:600;margin-bottom:18px}
-.rc-overall{display:flex;align-items:center;gap:12px;padding:12px 16px;background:linear-gradient(135deg,rgba(108,92,231,.08),rgba(9,132,227,.08));border-radius:14px;margin-bottom:20px;flex-wrap:wrap}
+.rc-overall{display:flex;align-items:center;gap:12px;padding:12px 16px;background:linear-gradient(135deg,rgba(108,92,231,.08),rgba(9,132,227,.08));border-radius:14px;margin-bottom:10px;flex-wrap:wrap}
 .rc-overall-lbl{font-size:13px;color:var(--ink3);font-weight:700;text-transform:uppercase;letter-spacing:.5px}
 .rc-overall-lvl{font-size:16px;font-weight:800;display:flex;align-items:center;gap:6px}
+/* "What you need to unlock the next level" callout — sits between the
+   overall badge and the subject grid, so the unlock mechanic is read
+   right next to the level it applies to. Soft amber so it reads as a
+   helpful tip, not an alert. */
+.rc-next-level{padding:10px 14px;background:linear-gradient(135deg,#fff8e1,#fff3d6);border:1px solid #ffe6a8;border-radius:12px;font-size:13px;font-weight:600;color:#7c5c00;line-height:1.45;margin-bottom:20px}
+.rc-next-level .rc-next-bold{font-weight:800;color:#5e4400}
 .rc-subjects{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
 .rc-subject{background:#fafaff;border:1px solid var(--line);border-radius:16px;padding:16px;transition:all .3s var(--spring);position:relative;overflow:hidden}
 .rc-subject:hover{transform:translateY(-3px);box-shadow:var(--shadow)}
@@ -2687,7 +2694,9 @@ function icon(name,size){
    ADD NEW SUBJECTS
    ────────────────
    Edit SUBJECTS array. If you add a new subject with a new letter prefix,
-   also update the regex in finishActivity (search for "r|w|m|l|f|s|c").
+   also update the regex in finishActivity (search for "r|w|m|l|f|s|c|p").
+   Letters in use: r=reading, w=writing, m=math, l=logic, f=french,
+   s=science, c=social, p=coding (programming).
 
    DATA SAFETY
    ───────────
@@ -2890,6 +2899,10 @@ const SUBJECTS = [
   { id:'french',   name:'French',         emoji:'🇫🇷', iconName:'globe',  color:'#e84393', bg:'#ffe4ef' },
   { id:'science',  name:'Science',        emoji:'🔬', iconName:'flask',  color:'#16a085', bg:'#d1f2eb' },
   { id:'social',   name:'Social Studies', emoji:'🍁', iconName:'maple',  color:'#c0392b', bg:'#fde8e6' },
+  // Coding uses activity-letter `p` (for "programming") — NOT `c`, which is
+  // already claimed by social studies in the activity-id parser at
+  // finishActivity (line ~16777). Activity IDs look like `w1-akshayan-p1`.
+  { id:'coding',   name:'Coding',         emoji:'💻', iconName:'code',   color:'#0abde3', bg:'#d6f4fb' },
 ];
 
 /* ========== VIDEO LINKS (YouTube search queries per activity) ==========
@@ -2961,6 +2974,7 @@ const BADGES = [
   { id:'math-pro',      name:'Math Master',    icon:'🔢', desc:'Complete 5 Math activities' },
   { id:'logic-pro',     name:'Logic Legend',   icon:'🧩', desc:'Complete 5 Logic activities' },
   { id:'french-pro',    name:'French Friend',  icon:'🇫🇷', desc:'Complete 5 French activities' },
+  { id:'coding-pro',    name:'Code Cadet',     icon:'💻', desc:'Complete 5 Coding activities' },
   { id:'streak-3',      name:'On Fire',        icon:'🔥', desc:'3-day streak' },
   { id:'coin-50',       name:'Coin Collector', icon:'💰', desc:'Earn 50 coins' },
   { id:'coin-200',      name:'Coin Hoarder',   icon:'💎', desc:'Earn 200 coins' },
@@ -3584,6 +3598,82 @@ nishan: {
         {type:'mcq',q:'At night we can see...',choices:['Only the sun','Stars and moon','A rainbow','Nothing at all'],answer:1},
       ]},
   ],
+  coding: [
+    { id:'w1-nishan-p1', title:'What is Code?', emoji:'💻',
+      curriculum: oc('Senior Kindergarten', 'Frame 4 — Demonstrating Literacy and Mathematics Behaviours', ['OE.16','OE.18'], 'Develop early computational thinking — recognize that computers follow human instructions step by step.'),
+      lesson:{title:'Computers Need Instructions',intro:'A COMPUTER is a machine that follows INSTRUCTIONS. CODE is just a list of instructions a person writes to tell the computer what to do. Computers do EXACTLY what you tell them — no more, no less!',pictures:[
+        {emoji:'💻', word:'Computer', label:'follows instructions'},
+        {emoji:'📝', word:'Code', label:'a list of steps'},
+        {emoji:'👧', word:'Coder', label:'the person who writes the code'},
+        {emoji:'🤖', word:'Robot', label:'a computer that moves'},
+      ],hint:'Computers are like a friend who only does EXACTLY what you say.'},
+      questions:[
+        {type:'mcq',q:'What is CODE?',choices:['A snack','A list of instructions','A type of pet','A color'],answer:1},
+        {type:'mcq',q:'A computer does...',choices:['Whatever it wants','Exactly what you tell it','Nothing at all','Magic'],answer:1},
+        {type:'mcq',q:'Who writes code?',choices:['Trees','Computers themselves','People (coders)','Animals'],answer:2},
+        {type:'mcq',q:'What is a ROBOT?',choices:['A type of food','A computer that can move','A book','A song'],answer:1},
+        {type:'mcq',q:'If you tell a robot ONLY "walk", it will...',choices:['Walk','Sing','Sleep','Eat'],answer:0},
+      ]},
+    { id:'w1-nishan-p2', title:'Step by Step', emoji:'🚶',
+      curriculum: oc('Senior Kindergarten', 'Frame 4 — Demonstrating Literacy and Mathematics Behaviours', ['OE.16'], 'Sequence familiar daily routines into ordered steps (a key computational-thinking precursor).'),
+      lesson:{title:'Order Matters!',intro:'Code is a list of steps in ORDER. If you mix up the order, things go wrong! Putting on socks BEFORE shoes makes sense. Shoes first, then socks, would be silly.',pictures:[
+        {emoji:'1️⃣', word:'First'},
+        {emoji:'2️⃣', word:'Then'},
+        {emoji:'3️⃣', word:'Last'},
+      ],hint:'Always think: what comes FIRST? What comes NEXT?'},
+      questions:[
+        {type:'mcq',q:'To eat cereal, what do you do FIRST?',choices:['Eat it','Get a bowl','Put away the spoon','Wash dishes'],answer:1},
+        {type:'mcq',q:'To brush teeth: 1) wet brush  2) ___  3) brush. What is step 2?',choices:['Eat dinner','Add toothpaste','Go to bed','Read a book'],answer:1},
+        {type:'mcq',q:'If shoes go BEFORE socks, what happens?',choices:['Works fine','Socks won\'t fit','You get coins','Nothing'],answer:1},
+        {type:'mcq',q:'Putting steps in the right ORDER is called...',choices:['Coloring','Sequencing','Sleeping','Singing'],answer:1},
+        {type:'mcq',q:'To make a sandwich, what comes LAST?',choices:['Get bread','Put on toppings','Close the bread together','Open the fridge'],answer:2},
+      ]},
+    { id:'w1-nishan-p3', title:'Tell the Robot', emoji:'🤖',
+      curriculum: oc('Senior Kindergarten', 'Frame 4 — Demonstrating Literacy and Mathematics Behaviours', ['OE.16'], 'Use directional language (forward, back, left, right) to give precise instructions.'),
+      lesson:{title:'Robot Words',intro:'When you tell a robot to move, you use special action words: FORWARD (go ahead), BACK (go behind), LEFT, RIGHT, STOP. The robot only knows the words YOU teach it.',pictures:[
+        {emoji:'⬆️', word:'Forward'},
+        {emoji:'⬇️', word:'Back'},
+        {emoji:'⬅️', word:'Left'},
+        {emoji:'➡️', word:'Right'},
+        {emoji:'🛑', word:'Stop'},
+      ],hint:'Picture YOURSELF moving the way you want the robot to move.'},
+      questions:[
+        {type:'mcq',q:'To make a robot move ahead, you say...',choices:['Forward','Sleep','Sing','Eat'],answer:0},
+        {type:'mcq',q:'To make a robot stop, you say...',choices:['Go','Stop','Run','Hop'],answer:1},
+        {type:'mcq',q:'A robot is at a wall. Telling it "forward" will make it...',choices:['Bump the wall','Fly','Disappear','Turn around'],answer:0},
+        {type:'mcq',q:'If the robot is on your left and the cookie is on your right, tell it...',choices:['Left','Right','Up','Down'],answer:1},
+        {type:'mcq',q:'Robots only do what you...',choices:['Think','Wish','Tell them','Sing'],answer:2},
+      ]},
+    { id:'w1-nishan-p4', title:'Find the Bug', emoji:'🐛',
+      curriculum: oc('Senior Kindergarten', 'Frame 4 — Demonstrating Literacy and Mathematics Behaviours', ['OE.16'], 'Identify the missing or out-of-order step in a familiar sequence.'),
+      lesson:{title:'A Bug is a Mistake',intro:'In coding, a BUG is a mistake in the steps. Coders DEBUG (fix bugs) by reading the steps and finding what is wrong. The first step is to spot the mistake!',pictures:[
+        {emoji:'🐛', word:'Bug', label:'a mistake'},
+        {emoji:'🔍', word:'Find', label:'look closely'},
+        {emoji:'🛠️', word:'Fix', label:'make it right'},
+      ],hint:'Read each step in order — does each one make sense?'},
+      questions:[
+        {type:'mcq',q:'A BUG in code is a...',choices:['Tiny insect','Mistake','Toy','Color'],answer:1},
+        {type:'mcq',q:'Steps: 1) put on shoes  2) put on socks  3) tie shoes. What is the BUG?',choices:['No bug','Socks should be FIRST','Shoes are wrong','Tying is wrong'],answer:1},
+        {type:'mcq',q:'Steps to make toast: 1) get bread  2) eat it  3) toast it. What is wrong?',choices:['Eating before toasting','Bread is wrong','Toaster is broken','No bug'],answer:0},
+        {type:'mcq',q:'Fixing a bug is called...',choices:['Debugging','Eating','Sleeping','Coloring'],answer:0},
+        {type:'mcq',q:'When you find a bug you should...',choices:['Cry','Fix it','Hide it','Ignore it'],answer:1},
+      ]},
+    { id:'w1-nishan-p5', title:'Keyboard Friends', emoji:'⌨️',
+      curriculum: oc('Senior Kindergarten', 'Frame 4 — Demonstrating Literacy and Mathematics Behaviours', ['OE.16','OE.17'], 'Recognize basic computer parts (keyboard, mouse, screen) and their functions.'),
+      lesson:{title:'Parts of a Computer',intro:'A computer has parts that work together. The KEYBOARD is for typing letters and numbers. The MOUSE moves a little arrow on the SCREEN. The SCREEN is where we see things.',pictures:[
+        {emoji:'⌨️', word:'Keyboard', label:'for typing'},
+        {emoji:'🖱️', word:'Mouse', label:'moves the arrow'},
+        {emoji:'🖥️', word:'Screen', label:'shows pictures'},
+        {emoji:'🔋', word:'Power', label:'turns it on'},
+      ],hint:'Keyboard = type. Mouse = point. Screen = look.'},
+      questions:[
+        {type:'mcq',q:'Which part is for TYPING letters?',choices:['Mouse','Screen','Keyboard','Wall'],answer:2},
+        {type:'mcq',q:'Which part SHOWS what the computer is doing?',choices:['Screen','Floor','Sky','Mouse'],answer:0},
+        {type:'mcq',q:'The MOUSE moves a little...',choices:['Arrow','Cat','Bug','Letter'],answer:0},
+        {type:'mcq',q:'To turn the computer on, you press the...',choices:['Letter A','Power button','Spacebar','Number 9'],answer:1},
+        {type:'mcq',q:'Which is NOT a computer part?',choices:['Keyboard','Mouse','Banana','Screen'],answer:2},
+      ]},
+  ],
 },
 
 /* ---- AKARAN (Grade 1) ---- */
@@ -4043,6 +4133,58 @@ akaran: {
         {type:'mcq',q:'A neighborhood is...',choices:['A big country','A part of a community','A cloud','A song'],answer:1},
       ]},
   ],
+  coding: [
+    { id:'w1-akaran-p1', title:'Steps in Order', emoji:'📋',
+      curriculum: oc('Grade 1', 'Mathematics — E. Algebra (Coding)', ['E2.1','E2.2'], 'Solve problems and create computational representations of mathematical situations by writing and executing code (sequential events).'),
+      lesson:{title:'A Program is a List of Steps',intro:'A PROGRAM is a list of instructions a computer follows in order, top to bottom. The order MATTERS — if you switch two steps, the result might be wrong.',example:'Steps to brush teeth: 1) wet brush  2) add toothpaste  3) brush  4) rinse. If you swap 1 and 3, you brush with a dry brush!',hint:'Read the steps from TOP to BOTTOM, like reading a list.'},
+      questions:[
+        {type:'mcq',q:'A PROGRAM is a list of...',choices:['Toys','Instructions','Snacks','Songs'],answer:1},
+        {type:'mcq',q:'Computers read steps from...',choices:['Top to bottom','Bottom to top','Random order','Right to left'],answer:0},
+        {type:'mcq',q:'Steps to make cereal: 1) get bowl  2) ___  3) eat. What is step 2?',choices:['Sleep','Pour cereal and milk','Brush teeth','Wash hands'],answer:1},
+        {type:'mcq',q:'If you swap two steps in a recipe, what might happen?',choices:['It works fine','It might fail','You get coins','Nothing changes'],answer:1},
+        {type:'mcq',q:'Steps to walk outside: 1) put on coat  2) open door  3) ___. What is step 3?',choices:['Sleep','Walk outside','Cook dinner','Read'],answer:1},
+      ]},
+    { id:'w1-akaran-p2', title:'Robot Commands', emoji:'🤖',
+      curriculum: oc('Grade 1', 'Mathematics — E. Algebra (Coding)', ['E2.1','E2.2'], 'Read and execute simple sequential code to move an object on a grid (forward, turn).'),
+      lesson:{title:'Move the Robot',intro:'A robot only knows the words you teach it. Common commands: FORWARD (move 1 step), TURN LEFT, TURN RIGHT. To get the robot somewhere, you give it a list of these commands in order.',example:'Robot needs to go FORWARD, then TURN RIGHT, then FORWARD: that\'s 3 steps. Each FORWARD moves it one square.',hint:'Picture the robot. Pretend you ARE the robot following each step.'},
+      questions:[
+        {type:'mcq',q:'A robot is on square A. "FORWARD" moves it to...',choices:['Stays on A','The next square','Square Z','It flies'],answer:1},
+        {type:'mcq',q:'To go ahead 3 squares, you say FORWARD how many times?',choices:['1','2','3','5'],answer:2},
+        {type:'mcq',q:'You want the robot to face right. You say...',choices:['Turn left','Turn right','Forward','Sleep'],answer:1},
+        {type:'mcq',q:'The robot is facing UP. You say "FORWARD". It goes...',choices:['Down','Up','Left','Right'],answer:1},
+        {type:'mcq',q:'After "TURN LEFT", the robot is now facing a NEW...',choices:['Color','Direction','Number','Friend'],answer:1},
+      ]},
+    { id:'w1-akaran-p3', title:'Find the Bug', emoji:'🐛',
+      curriculum: oc('Grade 1', 'Mathematics — E. Algebra (Coding)', ['E2.2'], 'Read and alter existing code (debugging) by identifying which step is incorrect.'),
+      lesson:{title:'Bugs and How to Fix Them',intro:'A BUG is a mistake in your code. The robot did the wrong thing because the steps are wrong. DEBUGGING means reading each step and fixing the broken one. Real coders spend a LOT of time debugging!',example:'Steps: 1) get milk  2) drink milk  3) pour into glass. Bug: step 2 and 3 are SWAPPED — you can\'t drink it before you pour it!',hint:'Walk through the steps slowly. Where does it stop making sense?'},
+      questions:[
+        {type:'mcq',q:'A BUG is a...',choices:['Animal','Mistake in code','Coin','Color'],answer:1},
+        {type:'mcq',q:'DEBUGGING means...',choices:['Eating bugs','Fixing mistakes','Adding bugs','Sleeping'],answer:1},
+        {type:'mcq',q:'Steps: 1) put on shoes  2) tie laces  3) put on socks. The BUG is...',choices:['No bug','Socks should be FIRST','Shoes are wrong','Tying is wrong'],answer:1},
+        {type:'mcq',q:'Steps to make tea: 1) boil water  2) drink it  3) add tea bag. The BUG is...',choices:['No bug','Drinking before adding tea','Boiling is wrong','Order is correct'],answer:1},
+        {type:'mcq',q:'When you find a bug, you should...',choices:['Hide it','Fix it','Cry','Ignore it'],answer:1},
+      ]},
+    { id:'w1-akaran-p4', title:'Doing It Again', emoji:'🔁',
+      curriculum: oc('Grade 1', 'Mathematics — E. Algebra (Coding)', ['E2.1'], 'Recognize repetition of identical steps as a precursor to loops.'),
+      lesson:{title:'Repeating Steps',intro:'Sometimes you need to do the SAME step many times. Instead of writing FORWARD, FORWARD, FORWARD, FORWARD, FORWARD, coders use a shortcut: "REPEAT 5 times: FORWARD". That\'s called a LOOP.',example:'To clap 4 times: REPEAT 4: clap. To draw a square (4 sides): REPEAT 4: forward, turn right.',hint:'If you find yourself writing the same step over and over, use REPEAT.'},
+      questions:[
+        {type:'mcq',q:'"REPEAT 3: jump" means...',choices:['Jump 1 time','Jump 3 times','Don\'t jump','Sit down'],answer:1},
+        {type:'mcq',q:'A shortcut for doing the same step many times is called a...',choices:['Loop','Bug','Color','Letter'],answer:0},
+        {type:'mcq',q:'"REPEAT 5: clap" makes you clap how many times?',choices:['1','3','5','10'],answer:2},
+        {type:'mcq',q:'Why do coders use loops?',choices:['Less typing','It looks nice','For coins','No reason'],answer:0},
+        {type:'mcq',q:'To go forward 4 squares, you can write "REPEAT 4: ___". Fill it in.',choices:['Sleep','Forward','Eat','Stop'],answer:1},
+      ]},
+    { id:'w1-akaran-p5', title:'Make a Pattern', emoji:'🎨',
+      curriculum: oc('Grade 1', 'Mathematics — E. Algebra (Coding)', ['E2.1','E2.2'], 'Read and predict the output of a simple sequence (pattern recognition with code).'),
+      lesson:{title:'Patterns in Code',intro:'Code can make patterns. If you tell the computer "RED, BLUE, RED, BLUE...", you get a stripe pattern. Patterns repeat! Spotting the pattern helps you predict what comes next.',example:'Code: REPEAT 3: print "🔴", print "🔵". Output: 🔴🔵🔴🔵🔴🔵 (6 things total).',hint:'Find what REPEATS, then count how many times.'},
+      questions:[
+        {type:'mcq',q:'Code: REPEAT 2: print "⭐". Output is...',choices:['⭐','⭐⭐','⭐⭐⭐','Nothing'],answer:1},
+        {type:'mcq',q:'Pattern: 🔴🔵🔴🔵🔴___ . Next is...',choices:['🔴','🔵','🟡','🟢'],answer:1},
+        {type:'mcq',q:'Code: REPEAT 3: print "A", print "B". How many letters in total?',choices:['3','5','6','9'],answer:2},
+        {type:'mcq',q:'Pattern: 1, 2, 1, 2, 1, ___ . Next is...',choices:['1','2','3','0'],answer:1},
+        {type:'mcq',q:'If a pattern is 🟦🟥🟦🟥, what REPEATS?',choices:['Just 🟦','Just 🟥','🟦🟥 together','Nothing'],answer:2},
+      ]},
+  ],
 },
 
 /* ---- RUSHAN (Grade 2) ---- */
@@ -4441,6 +4583,58 @@ rushan: {
         {type:'mcq',q:'Who must follow Canada\'s laws?',choices:['Only adults','Only children','Everyone','Just police'],answer:2},
         {type:'mcq',q:'A stop sign is a...',choices:['Decoration','Rule to keep us safe','Joke','Art'],answer:1},
         {type:'mcq',q:'Being fair means...',choices:['Only one person wins','Everyone gets a fair chance','Cheating','Ignoring rules'],answer:1},
+      ]},
+  ],
+  coding: [
+    { id:'w1-rushan-p1', title:'Sequencing & Order', emoji:'📋',
+      curriculum: oc('Grade 2', 'Mathematics — E. Algebra (Coding)', ['E2.1','E2.2'], 'Solve problems and create computational representations using sequential and concurrent events.'),
+      lesson:{title:'Steps Run in Order',intro:'In code, instructions run TOP to BOTTOM, one at a time. The order is critical — line 1 finishes before line 2 starts. Coders call this SEQUENTIAL execution.',example:'1) cup = empty\n2) pour milk into cup\n3) drink from cup\n→ Try swapping 2 and 3: you\'d drink from an empty cup!',hint:'When you read code, point at each line in order. That\'s how the computer reads it too.'},
+      questions:[
+        {type:'mcq',q:'Computers run code from...',choices:['Bottom to top','Top to bottom','Random order','Right side only'],answer:1},
+        {type:'mcq',q:'"Sequential" means...',choices:['All at once','In order, one at a time','Backwards','Skipping around'],answer:1},
+        {type:'mcq',q:'Steps: 1) open jar  2) eat jam  3) get spoon. The BUG is...',choices:['Eating before getting spoon','Opening is wrong','No bug','Jam is wrong'],answer:0},
+        {type:'mcq',q:'Code runs each line...',choices:['Twice','Once, in order','Random times','Never'],answer:1},
+        {type:'mcq',q:'If line 1 fails, what should line 2 do?',choices:['Run anyway','Wait — it usually doesn\'t run','Skip the program','Run twice'],answer:1},
+      ]},
+    { id:'w1-rushan-p2', title:'Loops: Repeat It!', emoji:'🔁',
+      curriculum: oc('Grade 2', 'Mathematics — E. Algebra (Coding)', ['E2.1','E2.2'], 'Read and alter code that involves repeating events (loops).'),
+      lesson:{title:'Why Loops Save Time',intro:'A LOOP is a shortcut for doing the same step many times. Instead of writing FORWARD 10 times, you write "REPEAT 10: FORWARD". Less typing, fewer mistakes.',example:'Long way: clap, clap, clap, clap, clap (5 lines)\nLoop way: REPEAT 5: clap (1 line — same result!)',hint:'If you see the same step more than 2 or 3 times, switch to a loop.'},
+      questions:[
+        {type:'mcq',q:'A LOOP is for...',choices:['Going fast','Repeating steps','Counting backwards','Stopping code'],answer:1},
+        {type:'mcq',q:'"REPEAT 4: jump" makes you jump how many times?',choices:['1','2','4','8'],answer:2},
+        {type:'mcq',q:'"REPEAT 3: clap, stomp" — how many TOTAL actions?',choices:['3','5','6','9'],answer:2},
+        {type:'mcq',q:'A robot facing up runs "REPEAT 5: forward". It moves forward how many squares?',choices:['1','3','5','10'],answer:2},
+        {type:'mcq',q:'Why use loops instead of writing every step?',choices:['Less typing & fewer bugs','To make code longer','To confuse people','For coins'],answer:0},
+      ]},
+    { id:'w1-rushan-p3', title:'Variables: Storing Stuff', emoji:'📦',
+      curriculum: oc('Grade 2', 'Mathematics — E. Algebra (Coding)', ['E2.1'], 'Use a name to store and retrieve a value (variables as labelled boxes).'),
+      lesson:{title:'A Variable is a Labelled Box',intro:'A VARIABLE is a labelled box where you store a number, a word, or anything else. You can put a value in the box, then later use the box\'s NAME to get the value back. You can also CHANGE what\'s inside.',example:'score = 0    ← the box "score" holds 0\nscore = score + 1    ← now score holds 1\nscore = score + 1    ← now score holds 2',hint:'Read "=" as "becomes" or "is now". The right side runs FIRST, then the answer goes into the box.'},
+      questions:[
+        {type:'mcq',q:'A VARIABLE is like a...',choices:['Song','Labelled box','Color','Letter'],answer:1},
+        {type:'mcq',q:'After "coins = 5", the box "coins" holds...',choices:['0','5','10','Nothing'],answer:1},
+        {type:'mcq',q:'After "x = 3" then "x = 7", x holds...',choices:['3','7','10','Both'],answer:1},
+        {type:'mcq',q:'After "lives = 3" then "lives = lives - 1", lives holds...',choices:['1','2','3','4'],answer:1},
+        {type:'mcq',q:'You use a variable\'s NAME to...',choices:['Eat it','Get the value back','Delete it','Change colors'],answer:1},
+      ]},
+    { id:'w1-rushan-p4', title:'Reading Code: What Does It Print?', emoji:'🖨️',
+      curriculum: oc('Grade 2', 'Mathematics — E. Algebra (Coding)', ['E2.2'], 'Read and trace code to predict its output.'),
+      lesson:{title:'Trace the Code',intro:'TRACING means pretending to BE the computer. You read each line and write down what changes. The PRINT command shows something on the screen.',example:'a = 4\nb = 2\nprint a + b\n→ Output: 6 (because 4 + 2 = 6)',hint:'Keep a list of every variable. Update it line by line.'},
+      questions:[
+        {type:'mcq',q:'Code: print "hi". Output is...',choices:['"hi"','hi','HI','nothing'],answer:1},
+        {type:'mcq',q:'Code: a = 5; print a. Output is...',choices:['a','5','0','Error'],answer:1},
+        {type:'mcq',q:'Code: a = 3; b = 4; print a + b. Output is...',choices:['3','4','7','34'],answer:2},
+        {type:'mcq',q:'Code: REPEAT 3: print "x". Output is...',choices:['x','xx','xxx','3'],answer:2},
+        {type:'mcq',q:'Code: a = 2; a = a + 5; print a. Output is...',choices:['2','5','7','25'],answer:2},
+      ]},
+    { id:'w1-rushan-p5', title:'Debugging Practice', emoji:'🛠️',
+      curriculum: oc('Grade 2', 'Mathematics — E. Algebra (Coding)', ['E2.2'], 'Read and alter existing code (debugging) to fix sequence and loop errors.'),
+      lesson:{title:'Find and Fix Bugs',intro:'When code does the wrong thing, the bug is usually one of: WRONG ORDER, MISSING STEP, or WRONG NUMBER. Read the code line by line and ask "does this make sense?"',example:'Goal: clap 5 times.\nBuggy code: REPEAT 3: clap.\nFix: change 3 → 5.',hint:'Compare what the code DOES with what it SHOULD do. The difference points to the bug.'},
+      questions:[
+        {type:'mcq',q:'Goal: jump 4 times. Code: REPEAT 2: jump. The fix is...',choices:['Change 2 to 4','Add another step','Delete the line','No bug'],answer:0},
+        {type:'mcq',q:'Goal: print "AB" 3 times. Code: REPEAT 3: print "BA". The bug is...',choices:['REPEAT 3 is wrong','Letters are SWAPPED','No bug','Code is empty'],answer:1},
+        {type:'mcq',q:'Code: a = 3; a = a + 1; print a. Goal output is 5. The fix is...',choices:['Add another "a = a + 1"','Change print','Delete a','No fix needed'],answer:0},
+        {type:'mcq',q:'Goal: walk forward 3 squares. Code: forward, forward. The bug is...',choices:['MISSING a forward','Extra step','Wrong direction','No bug'],answer:0},
+        {type:'mcq',q:'When you find a bug, the FIRST thing to do is...',choices:['Cry','Read the code','Delete everything','Restart'],answer:1},
       ]},
   ],
 },
@@ -4859,6 +5053,58 @@ akshayan: {
         {type:'mcq',q:'Samuel de Champlain founded...',choices:['Toronto','Quebec City','Vancouver','Halifax'],answer:1},
         {type:'mcq',q:'The explorers came to Canada...',choices:['Before Indigenous Peoples','After Indigenous Peoples','At the same time','Last year'],answer:1},
         {type:'mcq',q:'Who helped explorers survive harsh winters?',choices:['No one','Indigenous Peoples','Cats','The ocean'],answer:1},
+      ]},
+  ],
+  coding: [
+    { id:'w1-akshayan-p1', title:'Variables & Assignment', emoji:'📦',
+      curriculum: oc('Grade 3', 'Mathematics — E. Algebra (Coding)', ['E2.1','E2.2'], 'Solve problems and create computational representations of mathematical situations by writing and executing code, including variables.'),
+      lesson:{title:'A Variable is a Named Box',intro:'A VARIABLE is a named box that holds a value. The "=" symbol is called ASSIGNMENT — it puts a value INTO the box. The right side is calculated FIRST, then the answer is stored in the box on the left.',example:'score = 0          ← box "score" now holds 0\nscore = score + 5  ← right side is 0+5 = 5; now score holds 5\nscore = score * 2  ← right side is 5*2 = 10; now score holds 10',hint:'Read "=" as "becomes". The box on the LEFT gets whatever the RIGHT side calculates to.'},
+      questions:[
+        {type:'mcq',q:'After "x = 7", x holds the value...',choices:['0','1','7','x'],answer:2},
+        {type:'mcq',q:'After "a = 4" then "a = a + 6", a holds...',choices:['4','6','10','46'],answer:2},
+        {type:'mcq',q:'After "n = 3" then "n = n * 4", n holds...',choices:['3','4','7','12'],answer:3},
+        {type:'mcq',q:'In "score = score - 1", which side is calculated FIRST?',choices:['The left','The right','Both at once','Neither'],answer:1},
+        {type:'mcq',q:'After "x = 5" then "y = x" then "x = 9", y holds...',choices:['5','9','14','x'],answer:0},
+      ]},
+    { id:'w1-akshayan-p2', title:'If / Else: Making Decisions', emoji:'🤔',
+      curriculum: oc('Grade 3', 'Mathematics — E. Algebra (Coding)', ['E2.1','E2.2'], 'Solve problems and create computational representations using conditional statements.'),
+      lesson:{title:'Code That Makes Choices',intro:'IF/ELSE lets code make a choice. The IF runs only when its condition is TRUE. ELSE runs when it\'s FALSE. Conditions use comparisons like > (greater than), < (less than), == (equal to).',example:'age = 8\nif age >= 8:\n    print "You can ride!"\nelse:\n    print "Sorry, too young."\n→ Output: "You can ride!" (because 8 >= 8 is TRUE)',hint:'== is "is equal to" (compare). = is "store this" (assign). Two different things!'},
+      questions:[
+        {type:'mcq',q:'IF runs its block when the condition is...',choices:['False','True','Both','Neither'],answer:1},
+        {type:'mcq',q:'Code: if 5 > 3: print "yes". Output is...',choices:['"no"','"yes"','5','3'],answer:1},
+        {type:'mcq',q:'Code: if 2 > 7: print "A" else: print "B". Output is...',choices:['"A"','"B"','"AB"','Nothing'],answer:1},
+        {type:'mcq',q:'"==" is used to...',choices:['Store a value','Compare two values','Add numbers','Loop'],answer:1},
+        {type:'mcq',q:'Code: x = 10; if x == 10: print "match". Output is...',choices:['"match"','10','Nothing','Error'],answer:0},
+      ]},
+    { id:'w1-akshayan-p3', title:'Loops with Counters', emoji:'🔁',
+      curriculum: oc('Grade 3', 'Mathematics — E. Algebra (Coding)', ['E2.1','E2.2'], 'Read and alter code that involves repetition with counters.'),
+      lesson:{title:'Counted Repetition',intro:'A LOOP repeats steps. A COUNTER variable tracks how many times. The loop variable usually starts at 1 and goes up by 1 each time. You can use the counter inside the loop!',example:'total = 0\nfor i from 1 to 4:\n    total = total + i\nprint total\n→ Output: 10 (because 1+2+3+4 = 10)',hint:'Trace it: write down i and total at each step.'},
+      questions:[
+        {type:'mcq',q:'Code: for i from 1 to 3: print i. Output is...',choices:['1','1 2','1 2 3','3'],answer:2},
+        {type:'mcq',q:'Code: total = 0; for i from 1 to 3: total = total + 1. Then print total. Output is...',choices:['1','2','3','6'],answer:2},
+        {type:'mcq',q:'Code: total = 0; for i from 1 to 3: total = total + i. Output of total is...',choices:['3','6','9','1'],answer:1},
+        {type:'mcq',q:'In a loop "for i from 1 to 5", how many TIMES does the body run?',choices:['1','4','5','6'],answer:2},
+        {type:'mcq',q:'Code: for i from 1 to 4: print "x". Output has how many x\'s?',choices:['1','3','4','10'],answer:2},
+      ]},
+    { id:'w1-akshayan-p4', title:'Functions: Reusable Steps', emoji:'🧰',
+      curriculum: oc('Grade 3', 'Mathematics — E. Algebra (Coding)', ['E2.1'], 'Group steps into a named procedure for reuse (introduction to functions).'),
+      lesson:{title:'Naming a Group of Steps',intro:'A FUNCTION is a named group of steps you can run any time by using its name. You DEFINE the function once, then CALL it as many times as you like. Functions help you reuse code without copying it.',example:'function greet():\n    print "Hello!"\n    print "Welcome!"\n\ngreet()    ← prints both lines\ngreet()    ← prints both lines AGAIN',hint:'Defining a function does NOT run its code yet — it just teaches the computer what the function does. Calling it (with parentheses) runs it.'},
+      questions:[
+        {type:'mcq',q:'A FUNCTION is a...',choices:['Box for values','Named group of steps','Loop','Comparison'],answer:1},
+        {type:'mcq',q:'Defining a function is like...',choices:['Running it','Teaching the computer a recipe','Deleting it','Loop'],answer:1},
+        {type:'mcq',q:'To run a function, you...',choices:['Define it again','Call it by its name','Wait','Restart'],answer:1},
+        {type:'mcq',q:'Code: function bark(): print "woof". Then bark() bark(). Output is...',choices:['"woof"','"woof woof"','"bark bark"','Nothing'],answer:1},
+        {type:'mcq',q:'Functions help you avoid...',choices:['Loops','Copying the same code over','Variables','Reading code'],answer:1},
+      ]},
+    { id:'w1-akshayan-p5', title:'Debugging: Trace and Fix', emoji:'🛠️',
+      curriculum: oc('Grade 3', 'Mathematics — E. Algebra (Coding)', ['E2.2'], 'Read and alter existing code (debugging) using systematic trace-the-code strategies.'),
+      lesson:{title:'Trace the Code Like a Detective',intro:'When code doesn\'t work, TRACE it: pretend to be the computer and write down every variable\'s value as the code runs. The bug is wherever the actual value differs from what you expected.',example:'Goal: count = 5 at the end.\nCode: count = 0; for i from 1 to 4: count = count + 1\nTrace: count = 0,1,2,3,4. Output 4 — should be 5! BUG: loop only runs 4 times. FIX: change "1 to 4" to "1 to 5".',hint:'Make a 2-column table: line number | variable values. Update it every line.'},
+      questions:[
+        {type:'mcq',q:'TRACING means...',choices:['Drawing pictures','Pretending to BE the computer','Erasing code','Copying it'],answer:1},
+        {type:'mcq',q:'Goal: print 5 stars. Code: REPEAT 4: print "*". The bug is...',choices:['REPEAT count is 1 too low','print is wrong','* is wrong','No bug'],answer:0},
+        {type:'mcq',q:'Code: x = 5; x = x - 1; x = x - 1; print x. Output is...',choices:['5','4','3','1'],answer:2},
+        {type:'mcq',q:'Code: if 4 == 5: print "yes" else: print "no". Output is...',choices:['"yes"','"no"','4','5'],answer:1},
+        {type:'mcq',q:'The BEST first step when code is broken is to...',choices:['Delete everything','Trace it line by line','Restart computer','Add more lines'],answer:1},
       ]},
   ],
 },
@@ -5359,6 +5605,60 @@ isaiah: {
         {type:'mcq',q:'Equality means...',choices:['Everyone must be the same','Everyone deserves fair treatment','Only some people have rights','Rules don\'t apply'],answer:1},
         {type:'mcq',q:'At what age can Canadians vote?',choices:['12','16','18','25'],answer:2},
         {type:'mcq',q:'Rights come with...',choices:['More rights only','Responsibilities','Nothing','Money'],answer:1},
+      ]},
+  ],
+  coding: [
+    // Isaiah is Grade 5 (working at G4). ADHD-friendly: short intros, one
+    // concept per lesson, every example traceable in 3-5 lines.
+    { id:'w1-isaiah-p1', title:'Variables & Math Operators', emoji:'📦',
+      curriculum: oc('Grade 5', 'Mathematics — E. Algebra (Coding)', ['E2.1','E2.2'], 'Solve problems and create computational representations using variables and math operators.'),
+      lesson:{title:'Boxes That Hold Values',intro:'A VARIABLE is a named box for a value. The operators +, -, *, / work just like in math. The "=" sign is ASSIGNMENT — it stores the right side INTO the box on the left.',example:'price = 10\ntax = price * 0.1   ← tax = 1\ntotal = price + tax  ← total = 11\nprint total          ← 11',hint:'Trace it line by line. Write each variable\'s value as it changes — this beats trying to hold it in your head.'},
+      questions:[
+        {type:'mcq',q:'After "x = 5; x = x * 3", x holds...',choices:['5','3','15','8'],answer:2},
+        {type:'mcq',q:'After "a = 20; b = a / 4", b holds...',choices:['4','5','16','24'],answer:1},
+        {type:'mcq',q:'Code: a = 7; b = 3; print a - b. Output is...',choices:['4','10','21','73'],answer:0},
+        {type:'mcq',q:'Code: a = 4; a = a + a. After this, a is...',choices:['4','8','16','0'],answer:1},
+        {type:'mcq',q:'Which symbol means "store this value"?',choices:['==','=','+','>'],answer:1},
+      ]},
+    { id:'w1-isaiah-p2', title:'Conditionals: If / Elif / Else', emoji:'🤔',
+      curriculum: oc('Grade 5', 'Mathematics — E. Algebra (Coding)', ['E2.1','E2.2'], 'Read and alter code that includes conditional statements with multiple branches.'),
+      lesson:{title:'Multi-Way Choices',intro:'IF runs when its condition is TRUE. ELIF (else-if) tries another condition. ELSE catches everything else. Only ONE branch runs — the first one whose condition is true.',example:'score = 85\nif score >= 90:\n    print "A"\nelif score >= 80:\n    print "B"\nelse:\n    print "C"\n→ Output: "B" (85 isn\'t ≥90, but IS ≥80)',hint:'Read top-to-bottom. As soon as one condition is true, that block runs and the rest are SKIPPED.'},
+      questions:[
+        {type:'mcq',q:'In if/elif/else, how many branches actually run?',choices:['All','At most one','Always two','None'],answer:1},
+        {type:'mcq',q:'Code: x = 5; if x > 10: print "big" elif x > 3: print "med" else: print "small". Output is...',choices:['"big"','"med"','"small"','Nothing'],answer:1},
+        {type:'mcq',q:'Code: n = 0; if n > 0: print "+" elif n < 0: print "-" else: print "0". Output is...',choices:['"+"','"-"','"0"','Error'],answer:2},
+        {type:'mcq',q:'"==" compares — what does "!=" do?',choices:['Same as ==','Tests "not equal"','Adds','Stores'],answer:1},
+        {type:'mcq',q:'Code: age = 8; if age >= 13: print "teen" else: print "kid". Output is...',choices:['"teen"','"kid"','8','Error'],answer:1},
+      ]},
+    { id:'w1-isaiah-p3', title:'Loops: For and While', emoji:'🔁',
+      curriculum: oc('Grade 5', 'Mathematics — E. Algebra (Coding)', ['E2.1','E2.2'], 'Read and alter code that uses for-loops (counted) and while-loops (conditional repetition).'),
+      lesson:{title:'Two Kinds of Loops',intro:'A FOR loop runs a known number of times (from N to M). A WHILE loop runs until its condition becomes FALSE. Use FOR when you know the count, WHILE when you\'re waiting for something to change.',example:'# for-loop\ntotal = 0\nfor i from 1 to 5:\n    total = total + i\nprint total   ← 15 (= 1+2+3+4+5)\n\n# while-loop\nn = 1\nwhile n < 10:\n    n = n * 2\nprint n   ← 16',hint:'For a WHILE loop, check the condition BEFORE each repeat. If you forget to update the variable, you get an INFINITE loop — the program never stops.'},
+      questions:[
+        {type:'mcq',q:'Code: total = 0; for i from 1 to 4: total = total + i. After loop, total is...',choices:['4','6','10','24'],answer:2},
+        {type:'mcq',q:'Code: n = 1; while n < 8: n = n * 2. After loop, n is...',choices:['4','8','16','32'],answer:1},
+        {type:'mcq',q:'A WHILE loop that NEVER updates its condition is called a(n)...',choices:['Done loop','Infinite loop','Empty loop','Smart loop'],answer:1},
+        {type:'mcq',q:'Use FOR when you...',choices:['Know how many times','Don\'t know how many times','Want a bug','Want it slow'],answer:0},
+        {type:'mcq',q:'Code: count = 0; for i from 1 to 10: if i > 5: count = count + 1. After loop, count is...',choices:['4','5','6','10'],answer:1},
+      ]},
+    { id:'w1-isaiah-p4', title:'Functions with Inputs', emoji:'🧰',
+      curriculum: oc('Grade 5', 'Mathematics — E. Algebra (Coding)', ['E2.1','E2.2'], 'Define and call functions that accept parameters and return values.'),
+      lesson:{title:'Functions That Take Inputs',intro:'A FUNCTION can accept INPUTS (called parameters) and give back an OUTPUT (called the return value). This makes one function reusable for different inputs.',example:'function double(n):\n    return n * 2\n\nprint double(3)   ← 6\nprint double(7)   ← 14\nprint double(0)   ← 0',hint:'Same function, different inputs, different outputs. The parameter is just a placeholder name for whatever you pass in.'},
+      questions:[
+        {type:'mcq',q:'A PARAMETER is...',choices:['A bug','An input the function accepts','A loop','A comparison'],answer:1},
+        {type:'mcq',q:'Code: function add(a,b): return a+b. Then add(3,4) gives...',choices:['7','12','34','Error'],answer:0},
+        {type:'mcq',q:'Code: function triple(n): return n*3. Then triple(5) gives...',choices:['8','15','35','3'],answer:1},
+        {type:'mcq',q:'Why use a function with a parameter (vs writing the code 3 times)?',choices:['Slower','Less code, fewer bugs','Looks fancy','For coins'],answer:1},
+        {type:'mcq',q:'Code: function isEven(n): return n%2 == 0. Then isEven(4) returns...',choices:['true','false','4','2'],answer:0},
+      ]},
+    { id:'w1-isaiah-p5', title:'Lists & Counting', emoji:'📋',
+      curriculum: oc('Grade 5', 'Mathematics — E. Algebra (Coding)', ['E2.1','E2.2'], 'Read and alter code that processes a list of values (basic data-structure use).'),
+      lesson:{title:'A List Holds Many Values',intro:'A LIST holds many values in ONE variable. You can loop through every item with FOR EACH. The first item is at position 0 (most coding languages start counting from 0!).',example:'scores = [80, 95, 70, 88]\ntotal = 0\nfor each s in scores:\n    total = total + s\nprint total   ← 333 (= 80+95+70+88)\nprint scores[0]   ← 80 (the first item)',hint:'Position 0 is the FIRST item. Position 1 is the second. This 0-indexing trips up everyone the first time — it\'s normal.'},
+      questions:[
+        {type:'mcq',q:'In list [10, 20, 30, 40], position 0 is...',choices:['10','20','40','None'],answer:0},
+        {type:'mcq',q:'In list [5, 8, 13, 21], position 2 is...',choices:['5','8','13','21'],answer:2},
+        {type:'mcq',q:'Code: nums = [1, 2, 3]; total = 0; for each n in nums: total = total + n. Output of total is...',choices:['3','6','9','123'],answer:1},
+        {type:'mcq',q:'Most coding languages start counting list positions from...',choices:['0','1','2','100'],answer:0},
+        {type:'mcq',q:'Code: words = ["hi","bye"]. To print "bye", you write...',choices:['print words[0]','print words[1]','print words[2]','print words'],answer:1},
       ]},
   ],
 },
@@ -5948,6 +6248,62 @@ evan: {
         {type:'mcq',q:'Residential schools aimed to...',choices:['Support Indigenous languages','Forcibly assimilate Indigenous children','Teach French','Build railways'],answer:1},
         {type:'mcq',q:'Which group suffered heavy loss of life building the railway?',choices:['British officers','Chinese labourers','French explorers','American tourists'],answer:1},
         {type:'mcq',q:'The Truth and Reconciliation Commission (2008-2015) documented...',choices:['Weather records','The harms of the residential school system','Railway accidents','Parliament debates'],answer:1},
+      ]},
+  ],
+  coding: [
+    // Evan is G7 ESL. Code blocks are written plainly with each command on
+    // its own line and English explanations next to every example. No idioms,
+    // no jargon without a definition. Real Python-style syntax so this is
+    // genuine prep for any "intro to programming" course he hits next.
+    { id:'w1-evan-p1', title:'Variables, Types & Operators', emoji:'📦',
+      curriculum: oc('Grade 7', 'Mathematics — E. Algebra (Coding)', ['E2.1','E2.2'], 'Solve problems using variables, data types (int, float, string), and standard operators.'),
+      lesson:{title:'Storing and Combining Values',intro:'A VARIABLE is a named container for a value. Every value has a TYPE: an INTEGER (whole number, like 7), a FLOAT (decimal, like 3.14), or a STRING (text in quotes, like "hello"). Operators (+, -, *, /, %) combine values. The "%" operator is MODULO — it gives the remainder after division.',example:'name = "Evan"        # string\nage = 13             # integer\nheight = 1.62        # float\n\nbirthday = age + 1   # integer arithmetic → 14\ngreeting = "Hi " + name   # string concatenation → "Hi Evan"\nremainder = 10 % 3   # 10 ÷ 3 = 3 remainder 1 → 1',hint:'+ on numbers ADDS them. + on strings GLUES them together. The same symbol does different things depending on the type — this is normal.'},
+      questions:[
+        {type:'mcq',q:'After "x = 10; y = 3; print x % y", the output is...',choices:['3','1','7','30'],answer:1},
+        {type:'mcq',q:'Which of these is a STRING?',choices:['42','3.14','"hello"','true'],answer:2},
+        {type:'mcq',q:'Code: a = "cat"; b = "fish"; print a + b. Output is...',choices:['"cat fish"','"catfish"','"cat+fish"','Error'],answer:1},
+        {type:'mcq',q:'After "n = 7; n = n + 3; n = n * 2", n holds...',choices:['10','13','17','20'],answer:3},
+        {type:'mcq',q:'The MODULO operator (%) returns...',choices:['The product','The remainder after dividing','The percent','The square'],answer:1},
+      ]},
+    { id:'w1-evan-p2', title:'Conditionals & Boolean Logic', emoji:'🤔',
+      curriculum: oc('Grade 7', 'Mathematics — E. Algebra (Coding)', ['E2.1','E2.2'], 'Read and alter code that uses conditional statements with boolean operators (and, or, not).'),
+      lesson:{title:'If, Elif, Else with And / Or / Not',intro:'A condition is anything that is TRUE or FALSE (a "boolean"). You can combine conditions with AND (both must be true), OR (at least one is true), and NOT (flips true/false). The first branch whose condition is true wins; the rest are skipped.',example:'age = 15\nhas_ticket = True\n\nif age >= 13 and has_ticket:\n    print "Welcome to the show!"\nelif age >= 13 and not has_ticket:\n    print "Buy a ticket first."\nelse:\n    print "Sorry, the show is for ages 13+."\n→ Output: "Welcome to the show!"',hint:'Read AND as "BOTH must be true". Read OR as "at least one is true". This trips ESL learners up because everyday English uses "or" loosely.'},
+      questions:[
+        {type:'mcq',q:'(5 > 2) AND (3 < 1) is...',choices:['True','False','Both','Error'],answer:1},
+        {type:'mcq',q:'(5 > 2) OR (3 < 1) is...',choices:['True','False','Both','Error'],answer:0},
+        {type:'mcq',q:'NOT (5 > 2) is...',choices:['True','False','5','2'],answer:1},
+        {type:'mcq',q:'Code: age = 20; if age >= 18 and age < 65: print "adult". Output is...',choices:['"adult"','Nothing','20','Error'],answer:0},
+        {type:'mcq',q:'Code: x = 5; if x > 10: print "A" elif x > 0: print "B" else: print "C". Output is...',choices:['"A"','"B"','"C"','"AB"'],answer:1},
+      ]},
+    { id:'w1-evan-p3', title:'Loops: For-Range and While', emoji:'🔁',
+      curriculum: oc('Grade 7', 'Mathematics — E. Algebra (Coding)', ['E2.1','E2.2'], 'Read and alter code involving for-range loops and while loops, including accumulator patterns.'),
+      lesson:{title:'Counted vs. Conditional Repetition',intro:'A FOR loop runs a known number of times. range(1, 6) gives 1,2,3,4,5 (the END number is NOT included — a classic gotcha). A WHILE loop repeats while a condition is TRUE. Forgetting to update the variable in a while-loop creates an INFINITE LOOP that never ends.',example:'# accumulator pattern with for-range\ntotal = 0\nfor i in range(1, 6):    # i = 1,2,3,4,5\n    total = total + i\nprint total              # 15\n\n# while loop\nn = 100\nwhile n > 1:\n    n = n / 2\nprint n                  # 0.78125 (after halving 100 seven times)',hint:'range(a, b) goes from a UP TO b but NOT INCLUDING b. So range(1,4) is just 1,2,3 (three numbers, not four).'},
+      questions:[
+        {type:'mcq',q:'range(1, 6) produces which numbers?',choices:['1,2,3,4,5,6','1,2,3,4,5','0,1,2,3,4,5','1,6'],answer:1},
+        {type:'mcq',q:'Code: total = 0; for i in range(1,5): total = total + i. After loop, total is...',choices:['5','6','10','15'],answer:2},
+        {type:'mcq',q:'Code: n = 1; while n < 10: n = n * 3. After loop, n is...',choices:['3','9','27','30'],answer:2},
+        {type:'mcq',q:'A WHILE loop with a condition that NEVER becomes false is called...',choices:['A smart loop','An infinite loop','A finished loop','Empty loop'],answer:1},
+        {type:'mcq',q:'Code: count = 0; for i in range(1,11): if i % 2 == 0: count = count + 1. After loop, count is (how many EVEN numbers from 1-10)...',choices:['4','5','6','10'],answer:1},
+      ]},
+    { id:'w1-evan-p4', title:'Functions: Parameters & Return', emoji:'🧰',
+      curriculum: oc('Grade 7', 'Mathematics — E. Algebra (Coding)', ['E2.1','E2.2'], 'Define and call functions with parameters and return values; understand local vs global scope at an introductory level.'),
+      lesson:{title:'Functions — Inputs and Outputs',intro:'A FUNCTION takes INPUTS (parameters), runs steps, and gives back an OUTPUT (the return value). Once you DEFINE a function, you can CALL it many times with different inputs. This is the #1 way to avoid copying the same code over and over.',example:'def area_of_rectangle(width, height):\n    return width * height\n\nprint area_of_rectangle(5, 3)    # 15\nprint area_of_rectangle(10, 4)   # 40\n\ndef is_teen(age):\n    return age >= 13 and age <= 19\n\nprint is_teen(15)   # True\nprint is_teen(8)    # False',hint:'A function with NO return gives back "nothing" (called None or null). A function WITH return hands back a value you can store in a variable: total = area_of_rectangle(5, 3).'},
+      questions:[
+        {type:'mcq',q:'A function\'s INPUTS are called...',choices:['Returns','Parameters','Bugs','Loops'],answer:1},
+        {type:'mcq',q:'Code: def add(a,b): return a+b. Then print add(7,8). Output is...',choices:['7','8','15','78'],answer:2},
+        {type:'mcq',q:'Code: def square(n): return n*n. Then print square(6). Output is...',choices:['12','36','66','6'],answer:1},
+        {type:'mcq',q:'Code: def greet(name): return "Hi " + name. Then print greet("Evan"). Output is...',choices:['"Hi"','"Evan"','"Hi Evan"','"HiEvan"'],answer:2},
+        {type:'mcq',q:'A function with NO return statement gives back...',choices:['1','0','Nothing (None)','An error'],answer:2},
+      ]},
+    { id:'w1-evan-p5', title:'Lists, Indexing & Iteration', emoji:'📋',
+      curriculum: oc('Grade 7', 'Mathematics — E. Algebra (Coding)', ['E2.1','E2.2'], 'Read and alter code that processes lists using indexing, len(), and iteration with for-each loops.'),
+      lesson:{title:'Lists — Many Values, One Variable',intro:'A LIST is an ordered collection of values stored in one variable. You access an item by its INDEX. The first item is at index 0 (zero-indexing — universal in coding). len(list) returns the number of items. You can loop through every item with "for x in list:".',example:'scores = [80, 95, 70, 88, 92]\n\nprint scores[0]      # 80 (FIRST item)\nprint scores[-1]     # 92 (LAST item — negative index counts from the end)\nprint len(scores)    # 5\n\n# accumulator: find the average\ntotal = 0\nfor s in scores:\n    total = total + s\naverage = total / len(scores)\nprint average        # 85.0',hint:'scores[0] is the FIRST item, NOT scores[1]. This 0-indexing trips up everyone the first time. Negative indexes (scores[-1]) count from the END.'},
+      questions:[
+        {type:'mcq',q:'In list [10, 20, 30, 40], position 0 holds...',choices:['10','20','30','40'],answer:0},
+        {type:'mcq',q:'In list [5, 8, 13, 21, 34], position 3 holds...',choices:['8','13','21','34'],answer:2},
+        {type:'mcq',q:'Code: nums = [4, 7, 2, 9]; print len(nums). Output is...',choices:['4','7','9','22'],answer:0},
+        {type:'mcq',q:'Code: nums = [3,5,2]; total = 0; for n in nums: total = total + n. After loop, total is...',choices:['3','8','10','35'],answer:2},
+        {type:'mcq',q:'In list [1, 2, 3, 4, 5], position -1 holds...',choices:['1','5','-1','Error'],answer:1},
       ]},
   ],
 },
@@ -6680,6 +7036,28 @@ evan: {
       ['Taking turns is fair because...',['only one plays','everyone gets a chance','no one plays','it\'s slow'],1],
       ['If a friend is using a toy you...',['snatch','wait your turn','cry','run'],1]]),
   ]);
+  push('nishan','coding',[
+    P('w1-nishan-p6','Click and Drag','🖱️','A mouse helps us click and drag things on the screen.',[
+      ['What does the mouse do?',['eats cheese','moves an arrow','sings songs','sleeps'],1],
+      ['To "click" you press the mouse...',['button','wheel','wire','color'],0],
+      ['To DRAG something we hold the button and...',['close eyes','move the mouse','let go','sit'],1]]),
+    P('w1-nishan-p7','Bigger Patterns','🟦','Patterns repeat — find what comes next!',[
+      ['Pattern: 🟦🟧🟦🟧🟦___ . Next is...',['🟦','🟧','🟩','🟥'],1],
+      ['Pattern: 🐶🐶🐱🐶🐶🐱🐶🐶___. Next is...',['🐶','🐱','🐭','🐰'],1],
+      ['What\'s the rule? 1, 2, 1, 2, 1, 2',['add 5','keep flipping 1 and 2','count up forever','no rule'],1]]),
+    P('w1-nishan-p8','Pretend to be a Robot','🤖','When you BE the robot, you only do EXACTLY what is said.',[
+      ['Instruction: "raise your hand". A robot would...',['raise its hand','dance','sleep','sing'],0],
+      ['Instruction: "step forward". A robot would...',['step back','step forward','sit','run'],1],
+      ['A robot only does what you...',['wish','say','draw','dream'],1]]),
+    P('w1-nishan-p9','Yes or No?','❓','Computers ask yes/no questions to make choices.',[
+      ['"Is it raining?" answer can be...',['only blue','yes or no','only food','only red'],1],
+      ['If "yes" → take umbrella. If raining is YES, you...',['leave umbrella','take umbrella','sleep','sing'],1],
+      ['Yes/no questions help computers make...',['art','choices','noise','snacks'],1]]),
+    P('w1-nishan-p10','Save and Share','💾','Computers save our work so we can use it later!',[
+      ['Why do we SAVE our work?',['to keep it safe','to delete it','to lose it','no reason'],0],
+      ['If we don\'t save and the power goes off, our work is...',['safe','lost','bigger','colored'],1],
+      ['SHARING work means showing it to...',['no one','others','only walls','only floor'],1]]),
+  ]);
 
   /* ===== AKARAN (Grade 1 / 2) ===== */
   push('akaran','reading',[
@@ -6836,6 +7214,28 @@ evan: {
       ['Neighbors are...',['enemies','people near your home','animals','strangers always'],1],
       ['A park is where we can...',['shop','play','sleep','read books only'],1]]),
   ]);
+  push('akaran','coding',[
+    P('w1-akaran-p6','Repeat & Save Time','🔁','Loops save typing! "REPEAT 5: clap" claps 5 times.',[
+      ['"REPEAT 4: hop" makes you hop how many times?',['1','2','4','7'],2],
+      ['"REPEAT 6: shout" — how many shouts?',['1','3','6','12'],2],
+      ['Loops let us write LESS but DO...',['less','more','nothing','same'],1]]),
+    P('w1-akaran-p7','Robot on a Grid','🤖','Tell the robot directions: forward, turn left, turn right.',[
+      ['Robot at start. "FORWARD, FORWARD" — moves how many squares?',['1','2','3','0'],1],
+      ['Robot facing right. "TURN LEFT" makes it face...',['right','up','left','down'],1],
+      ['"FORWARD" with no direction works because the robot uses...',['the floor','its own facing direction','its color','noise'],1]]),
+    P('w1-akaran-p8','Spot the Bug','🐛','A bug is a wrong step. Read carefully and find it!',[
+      ['Steps: 1) get bowl  2) eat cereal  3) pour milk. The bug is...',['no bug','eating before pouring','pouring is wrong','bowl is wrong'],1],
+      ['Goal: clap 3 times. Code: "REPEAT 5: clap". Bug?',['number is wrong (5 not 3)','clap is wrong','no bug','REPEAT is wrong'],0],
+      ['Steps: 1) wake up  2) sleep  3) brush teeth. The bug is...',['no bug','sleep is in wrong place','wake is wrong','brush is wrong'],1]]),
+    P('w1-akaran-p9','True or False','✅','Conditions are true or false — like questions with only those answers.',[
+      ['"5 is bigger than 3" — true or false?',['true','false','maybe','none'],0],
+      ['"7 is smaller than 2" — true or false?',['true','false','sometimes','never'],1],
+      ['"A cat is a dog" — true or false?',['true','false','maybe','depends'],1]]),
+    P('w1-akaran-p10','My Name as a Variable','📦','A variable is a labelled box. Name = "Akaran" puts your name in the box.',[
+      ['After "name = Sam", the box "name" holds...',['name','box','Sam','nothing'],2],
+      ['After "age = 6", the box "age" holds...',['age','6','number','letter'],1],
+      ['You change a variable by...',['putting in a new value','breaking it','closing eyes','asking nicely'],0]]),
+  ]);
 
   /* ===== RUSHAN (Grade 2 / 3) ===== */
   push('rushan','reading',[
@@ -6991,6 +7391,28 @@ evan: {
       ['Multiculturalism means...',['one culture','many cultures valued','no culture','one language'],1],
       ['Canada has __ official languages',['1','2','5','10'],1],
       ['Canada\'s two official languages are...',['English & French','French & Spanish','English only','French only'],0]]),
+  ]);
+  push('rushan','coding',[
+    P('w1-rushan-p6','Nested Loops','🔁','A LOOP inside a LOOP! Outer loop runs, then inner loop runs all the way each time.',[
+      ['REPEAT 3: { REPEAT 2: print "x" } — how many x\'s total?',['3','5','6','9'],2],
+      ['Outer loop runs 4 times. Inner loop runs 5 times each. Total inner steps?',['9','15','20','25'],2],
+      ['Nested loops are useful for...',['saving time','grids and patterns','sleeping','colors only'],1]]),
+    P('w1-rushan-p7','Boolean Conditions','✅','Conditions are TRUE or FALSE. We use them in if-statements.',[
+      ['Is "5 > 3" true or false?',['true','false','maybe','5'],0],
+      ['Is "10 == 2" true or false?',['true','false','same','none'],1],
+      ['Is "7 != 4" true or false? (!= means not equal)',['true','false','7','4'],0]]),
+    P('w1-rushan-p8','Counting Variables','🔢','Use a variable to keep score! score = score + 1 adds 1 each time.',[
+      ['After "score = 5; score = score + 3", score is...',['3','5','8','15'],2],
+      ['After "lives = 3; lives = lives - 1; lives = lives - 1", lives is...',['1','2','3','5'],0],
+      ['"score = score * 2" doubles the...',['screen','score','time','color'],1]]),
+    P('w1-rushan-p9','Trace the Output','🖨️','Trace = pretend to BE the computer. Write down what each line does.',[
+      ['Code: a = 4; b = a + 2; print b. Output is...',['4','2','6','42'],2],
+      ['Code: x = 10; x = x / 2; print x. Output is...',['10','5','2','15'],1],
+      ['Code: REPEAT 3: print "go". Output has the word "go" how many times?',['1','2','3','9'],2]]),
+    P('w1-rushan-p10','Drawing with Code','🎨','Code can DRAW shapes! Move forward, turn, repeat.',[
+      ['To draw a SQUARE: REPEAT 4: forward, turn 90°. The 4 is for...',['no reason','the 4 sides','the colour','the size'],1],
+      ['To draw a TRIANGLE you would REPEAT...',['2','3','4','6'],1],
+      ['Drawing with code uses the same TURN amount each time? Yes or no.',['no','yes','sometimes','never'],1]]),
   ]);
 
   /* ===== AKSHAYAN (Grade 3 / 4) ===== */
@@ -7152,6 +7574,54 @@ evan: {
       ['Canada\'s biggest trade partner is...',['UK','USA','China','France'],1],
       ['Canada is a founding member of...',['UN & NATO','only UN','only NATO','none'],0]]),
   ]);
+  push('akshayan','coding',[
+    P('w1-akshayan-p6','Functions with Inputs','🧰','A function can take an INPUT and give back an OUTPUT.',[
+      ['Code: function double(n): return n*2. Then double(5) gives...',['5','10','25','2'],1],
+      ['Code: function square(n): return n*n. Then square(4) gives...',['4','8','16','24'],2],
+      ['A function INPUT is also called a...',['return','parameter','bug','loop'],1]]),
+    P('w1-akshayan-p7','Compound Conditions','🤝','Conditions can be joined with AND (both true) and OR (at least one true).',[
+      ['(5 > 2) AND (3 > 1) is...',['true','false','both','none'],0],
+      ['(5 > 2) OR (1 > 9) is...',['true','false','both','none'],0],
+      ['(5 < 2) AND (3 > 1) is...',['true','false','sometimes','none'],1]]),
+    P('w1-akshayan-p8','While Loops','♾️','A WHILE loop runs while a condition is TRUE. Stop updating it = infinite loop!',[
+      ['Code: n = 1; while n < 5: n = n + 1. After loop, n is...',['1','4','5','6'],2],
+      ['A loop that NEVER stops is called...',['lazy','infinite','smart','quick'],1],
+      ['Use WHILE when you...',['know exact count','don\'t know how many times','sleep','draw'],1]]),
+    P('w1-akshayan-p9','Lists','📋','A LIST holds many values. Position 0 is the FIRST item!',[
+      ['In list [10, 20, 30], position 0 is...',['10','20','30','0'],0],
+      ['In list ["a","b","c"], position 2 is...',['a','b','c','2'],2],
+      ['Most languages count list positions starting from...',['0','1','-1','100'],0]]),
+    P('w1-akshayan-p10','Algorithm Thinking','🧩','An ALGORITHM is a step-by-step recipe for solving a problem.',[
+      ['Steps to find the BIGGEST number: compare each one to...',['the smallest so far','the biggest so far','color','itself'],1],
+      ['An algorithm is just a clear list of...',['colors','steps','sounds','foods'],1],
+      ['Recipes are everyday...',['poems','algorithms','songs','games'],1]]),
+  ]);
+  // Axel (G3) is cloned from Akshayan in addAxelCurriculum, but that IIFE runs
+  // BEFORE this previews IIFE — so the cloned axel.coding only has activities
+  // 1-5. Explicitly push the same preview content with axel-prefixed IDs so his
+  // progress tracks separately from Akshayan's. Same content, same grade.
+  push('axel','coding',[
+    P('w1-axel-p6','Functions with Inputs','🧰','A function can take an INPUT and give back an OUTPUT.',[
+      ['Code: function double(n): return n*2. Then double(5) gives...',['5','10','25','2'],1],
+      ['Code: function square(n): return n*n. Then square(4) gives...',['4','8','16','24'],2],
+      ['A function INPUT is also called a...',['return','parameter','bug','loop'],1]]),
+    P('w1-axel-p7','Compound Conditions','🤝','Conditions can be joined with AND (both true) and OR (at least one true).',[
+      ['(5 > 2) AND (3 > 1) is...',['true','false','both','none'],0],
+      ['(5 > 2) OR (1 > 9) is...',['true','false','both','none'],0],
+      ['(5 < 2) AND (3 > 1) is...',['true','false','sometimes','none'],1]]),
+    P('w1-axel-p8','While Loops','♾️','A WHILE loop runs while a condition is TRUE. Stop updating it = infinite loop!',[
+      ['Code: n = 1; while n < 5: n = n + 1. After loop, n is...',['1','4','5','6'],2],
+      ['A loop that NEVER stops is called...',['lazy','infinite','smart','quick'],1],
+      ['Use WHILE when you...',['know exact count','don\'t know how many times','sleep','draw'],1]]),
+    P('w1-axel-p9','Lists','📋','A LIST holds many values. Position 0 is the FIRST item!',[
+      ['In list [10, 20, 30], position 0 is...',['10','20','30','0'],0],
+      ['In list ["a","b","c"], position 2 is...',['a','b','c','2'],2],
+      ['Most languages count list positions starting from...',['0','1','-1','100'],0]]),
+    P('w1-axel-p10','Algorithm Thinking','🧩','An ALGORITHM is a step-by-step recipe for solving a problem.',[
+      ['Steps to find the BIGGEST number: compare each one to...',['the smallest so far','the biggest so far','color','itself'],1],
+      ['An algorithm is just a clear list of...',['colors','steps','sounds','foods'],1],
+      ['Recipes are everyday...',['poems','algorithms','songs','games'],1]]),
+  ]);
 
   /* ===== ISAIAH (Grade 4 / 5 stretch) ===== */
   push('isaiah','reading',[
@@ -7307,6 +7777,28 @@ evan: {
       ['Reliable news comes from...',['random social media','established sources','rumors','memes'],1],
       ['Critical thinking means...',['accepting anything','questioning & checking','ignoring news','being negative'],1],
       ['Multiple sources help us...',['get confused','find the truth','waste time','ignore news'],1]]),
+  ]);
+  push('isaiah','coding',[
+    P('w1-isaiah-p6','Functions That Return','🧰','A function does work and gives back a value with RETURN.',[
+      ['Code: def half(n): return n/2. Then print half(20). Output is...',['5','10','20','40'],1],
+      ['Code: def add3(n): return n+3. Then print add3(7). Output is...',['3','7','10','73'],2],
+      ['A function with NO return gives back...',['1','an error always','None (nothing)','itself'],2]]),
+    P('w1-isaiah-p7','Lists with Loops','📋','Loop through a list and do something with each item.',[
+      ['Code: nums=[2,4,6]; total=0; for n in nums: total=total+n. Output of total is...',['6','8','10','12'],3],
+      ['Code: nums=[5,10,15]; for n in nums: print n*2. First number printed is...',['5','10','15','20'],1],
+      ['len([3, 5, 8, 13]) returns...',['3','4','5','13'],1]]),
+    P('w1-isaiah-p8','String Operations','🔤','Strings are text. You can JOIN them with + and find length with len().',[
+      ['Code: a = "hi"; b = "there"; print a + " " + b. Output is...',['hithere','"hi there"','hi there','error'],2],
+      ['len("code") returns...',['1','2','4','5'],2],
+      ['"abc" + "123" gives...',['abc123','"abc123"','25','error'],0]]),
+    P('w1-isaiah-p9','Modulo & Even/Odd','🔢','The % (modulo) operator returns the REMAINDER. n % 2 == 0 means n is EVEN.',[
+      ['10 % 3 equals...',['0','1','3','7'],1],
+      ['Which is true: a number is EVEN when n % 2 equals...',['0','1','2','n'],0],
+      ['7 % 7 equals...',['0','1','7','14'],0]]),
+    P('w1-isaiah-p10','Algorithms: Find the Max','🏆','Step-by-step plan to find the LARGEST number in a list.',[
+      ['Start by setting "best" to the FIRST item. Then for each item, if it\'s bigger than "best", update best. After list [3,7,2,9,4], best is...',['3','7','9','13'],2],
+      ['An algorithm is...',['random steps','clear repeatable steps','a guess','luck'],1],
+      ['Why update "best" only when bigger?',['random','to track largest seen','to confuse','for color'],1]]),
   ]);
 
   /* ===== SPELLING previews (6-10) — one grade-appropriate set per student.
@@ -7593,6 +8085,28 @@ evan: {
       ['A global citizen cares about...',['only their town','the whole world','no one','one country'],1],
       ['Climate change is an example of a ___ issue.',['local only','national only','global','fictional'],2],
       ['The UN stands for...',['United Nations','Universal News','Urban Network','Unified North'],0]]),
+  ]);
+  push('evan','coding',[
+    P('w1-evan-p6','Recursion: Functions That Call Themselves','🌀','RECURSION = a function that calls itself with a smaller version of the problem. Always needs a BASE CASE (a stop condition) or it loops forever.',[
+      ['Code: def f(n): if n<=1: return 1 else: return n*f(n-1). Then f(4) returns... (4*3*2*1)',['4','12','24','64'],2],
+      ['Why does recursion need a BASE CASE?',['for color','to stop the calls','to be fast','for points'],1],
+      ['Recursion is a function that...',['calls itself','calls another','never runs','prints once'],0]]),
+    P('w1-evan-p7','Dictionaries / Maps','🗝️','A DICTIONARY stores key-value pairs. d = {"name":"Evan","age":13}. Look up by key: d["name"] → "Evan".',[
+      ['Code: d = {"a":1,"b":2}. d["a"] returns...',['"a"','1','"b"','2'],1],
+      ['Code: d = {"x":10,"y":20}. d["y"] returns...',['"x"','10','"y"','20'],3],
+      ['A dictionary stores ___ pairs.',['number-only','key-value','letter-letter','no'],1]]),
+    P('w1-evan-p8','Sorting & Searching','🔎','Sorting puts a list in order. Searching finds an item. Linear search checks each item; binary search needs a sorted list and is much faster.',[
+      ['Sorted [3,1,4,1,5] becomes...',['[3,1,4,1,5]','[1,1,3,4,5]','[5,4,3,1,1]','[1,3,4,5,1]'],1],
+      ['Linear search checks items...',['one by one','randomly','only first','only last'],0],
+      ['Binary search needs the list to be...',['empty','sorted','random','reversed'],1]]),
+    P('w1-evan-p9','File I/O & Errors','📁','Code reads from and writes to files. Errors (exceptions) happen when something goes wrong — try/except handles them so the program doesn\'t crash.',[
+      ['"Reading from a file" means...',['typing','loading data from disk','printing','painting'],1],
+      ['try/except is for...',['styling','catching errors safely','sleeping','sorting'],1],
+      ['If a file doesn\'t exist and you try to read it, you get a(n)...',['success','error','warning','sound'],1]]),
+    P('w1-evan-p10','Object-Oriented Basics','🏗️','A CLASS is a blueprint. An OBJECT is a thing built from that blueprint. Class = "Dog". Object = "your specific dog Rex".',[
+      ['A CLASS is like a...',['toy','blueprint','meal','song'],1],
+      ['An OBJECT is...',['a blueprint','a thing built from a blueprint','only text','none'],1],
+      ['You can build many objects from one...',['object','class','number','letter'],1]]),
   ]);
   push('evan','spelling',[
     P('w1-evan-sp6','Tricky Plurals','🌀','Most plurals add S, but: -f → -ves (leaf/leaves), -y after consonant → -ies (baby/babies), some stay the same (sheep/sheep).',[
@@ -10162,6 +10676,7 @@ function pickRewardPepTalk(tier, ctx){
 const NOVA_SUBJECT_TONE = {
   reading:'cheerful', writing:'cheerful', math:'cheerful',
   logic:'cheerful', french:'cheerful', science:'cheerful', social:'cheerful',
+  coding:'cheerful',
 };
 const NOVA_LESSON_OPENERS = {
   reading: [
@@ -10233,6 +10748,16 @@ const NOVA_LESSON_OPENERS = {
     "Every place has a name AND a story. We learn both.",
     "I've visited 17 planets. Earth is top 3.",
     "The past is where the clues are.",
+  ],
+  coding: [
+    "Let's write some code! 💻",
+    "Bugs are just puzzles in disguise.",
+    "Every great coder Googled it. Promise.",
+    "Loops, logic, lift-off. 🚀",
+    "On Learnia we code with light. Same rules though.",
+    "Read it twice. Then run it.",
+    "If it breaks, you learned something. That's the deal.",
+    "Computers are stubborn — they only do EXACTLY what you say.",
   ],
 };
 function pickNovaLessonOpener(subId){
@@ -13979,6 +14504,7 @@ const RC_SKILL_NOTES = {
   french:  ['Recognizes French words','Understands simple phrases'],
   science: ['Observes and explains natural world','Connects cause and effect in experiments'],
   social:  ['Knows Canadian geography and symbols','Understands communities and rules'],
+  coding:  ['Reads and writes simple code','Debugs problems step by step'],
 };
 
 function computeSubjectStats(sid, subjId){
@@ -14096,9 +14622,34 @@ function interpretEffort(name, totalAttempts, activitiesTouched, activitiesDone,
   return { headline, detail };
 }
 
+// Per-subject comment shown on the report card (both kid + teacher views).
+// Picks tone from TWO axes so the message reflects what actually happened,
+// not just the badge level:
+//   • lv          — Growing (1) / Developing (2) / Strong (3) / Excellent (4)
+//   • intensity   — totalAttempts / activitiesTouched
+//                   ≤1.3 = "first try" — got it without much retry
+//                   1.3–2.0 = "normal" — typical retry-to-mastery rhythm
+//                   >2.0 = "persistent" — lots of retries to land it
+// Without the attempts axis, a kid who breezed through to Level 3 and a
+// kid who ground out 4 retries per lesson to reach Level 3 would get the
+// same comment — which misses the real story (one is ready for harder
+// material, the other earned it through grit and could use a confidence
+// boost). Comments stay kid-friendly because this string also renders in
+// the kid-facing report (isTeacher === false path).
 function generateSubjectComment(name, subjId, stats){
-  const subjName = {reading:'reading',writing:'writing',math:'math',logic:'logic',french:'French',science:'science',social:'social studies'}[subjId] || subjId;
+  const subjName = {reading:'reading',writing:'writing',math:'math',logic:'logic',french:'French',science:'science',social:'social studies',coding:'coding'}[subjId] || subjId;
   if(stats.done === 0){
+    // Two flavours of "haven't completed anything yet":
+    //   • Tried but nothing passed → acknowledge the effort
+    //   • Truly hasn't opened it → invite them in
+    if(stats.totalAttempts > 0){
+      const opts = [
+        `${name} has been trying ${subjName} (${stats.totalAttempts} attempt${stats.totalAttempts===1?'':'s'} so far) — keep going, the next try might be the one!`,
+        `${name} is putting in the work on ${subjName} — ${stats.totalAttempts} attempt${stats.totalAttempts===1?'':'s'} logged. One full pass and you'll have your first win!`,
+        `Effort matters, ${name}! ${stats.totalAttempts} ${subjName} attempt${stats.totalAttempts===1?'':'s'} so far — finishing one all the way through is the next step.`,
+      ];
+      return opts[Math.floor(Math.random()*opts.length)];
+    }
     const opts = [
       `${name} hasn't started ${subjName} this week — a fresh adventure awaits!`,
       `Ready to dive into ${subjName}, ${name}? Start any lesson to begin growing.`,
@@ -14106,7 +14657,31 @@ function generateSubjectComment(name, subjId, stats){
     ];
     return opts[Math.floor(Math.random()*opts.length)];
   }
+  // Compute attempt intensity (tries per touched activity). Defaults to 1
+  // if nothing has been touched (shouldn't happen here since done > 0,
+  // but defensive — avoids divide-by-zero and picks the "first try" pool).
+  const intensity = stats.touched ? (stats.totalAttempts / stats.touched) : 1;
+  const effortTier = intensity <= 1.3 ? 'firstTry' : intensity <= 2.0 ? 'normal' : 'persistent';
   if(stats.lv === 4){
+    // Level 4 + high persistence is a different story than Level 4 first-try:
+    // the persistent kid earned it through retries — call that out so they
+    // feel seen, not lumped in with the "natural mastery" framing.
+    if(effortTier === 'persistent'){
+      const opts = [
+        `${name} earned every bit of this — ${stats.perfect} perfect score${stats.perfect===1?'':'s'} in ${subjName} after ${stats.totalAttempts} attempts. That's grit paying off!`,
+        `Incredible persistence, ${name}! You retried until you nailed ${subjName} — ${stats.pct}% complete with the kind of accuracy that comes from real practice.`,
+        `${name} kept at it and crushed ${subjName} — ${stats.totalAttempts} tries across ${stats.touched} activit${stats.touched===1?'y':'ies'} and now ${stats.perfect} perfect. Hard work wins.`,
+      ];
+      return opts[Math.floor(Math.random()*opts.length)];
+    }
+    if(effortTier === 'firstTry'){
+      const opts = [
+        `${name} is acing ${subjName} on the first try — ${stats.perfect} perfect score${stats.perfect===1?'':'s'} with barely any retries. Ready for harder material!`,
+        `${subjName} is clicking fast for ${name} — ${stats.pct}% complete and most lessons nailed first time. Time to stretch with bigger challenges!`,
+        `Wow, ${name}! ${subjName} is coming naturally — ${stats.touched} activit${stats.touched===1?'y':'ies'} done in just ${stats.totalAttempts} tries. Excellent!`,
+      ];
+      return opts[Math.floor(Math.random()*opts.length)];
+    }
     const opts = [
       `Wow, ${name}! ${stats.perfect} perfect score${stats.perfect===1?'':'s'} in ${subjName} — truly excellent work!`,
       `${name} is shining in ${subjName} — ${stats.pct}% complete with amazing accuracy!`,
@@ -14115,6 +14690,22 @@ function generateSubjectComment(name, subjId, stats){
     return opts[Math.floor(Math.random()*opts.length)];
   }
   if(stats.lv === 3){
+    if(effortTier === 'persistent'){
+      const opts = [
+        `${name} is earning ${subjName} through real persistence — ${stats.totalAttempts} attempts across ${stats.touched} activit${stats.touched===1?'y':'ies'} and it's working!`,
+        `Hard work is paying off in ${subjName}, ${name}! Lots of retries, lots of progress. Keep that grit going.`,
+        `${name} doesn't quit on ${subjName} — ${stats.done} of ${stats.total} done after ${stats.totalAttempts} tries. Every retry built real skill.`,
+      ];
+      return opts[Math.floor(Math.random()*opts.length)];
+    }
+    if(effortTier === 'firstTry'){
+      const opts = [
+        `${name} is breezing through ${subjName} — ${stats.done} of ${stats.total} done in just ${stats.totalAttempts} tries. Smooth and confident!`,
+        `Strong ${subjName} skills, ${name}! Mostly first-try wins across ${stats.done} activit${stats.done===1?'y':'ies'}. Ready to push harder?`,
+        `${name} is moving through ${subjName} fast and clean — keep that momentum!`,
+      ];
+      return opts[Math.floor(Math.random()*opts.length)];
+    }
     const opts = [
       `Great job, ${name}! You're doing ${subjName} all by yourself — keep it up!`,
       `${name} is showing strong ${subjName} skills — ${stats.done} of ${stats.total} done!`,
@@ -14123,10 +14714,42 @@ function generateSubjectComment(name, subjId, stats){
     return opts[Math.floor(Math.random()*opts.length)];
   }
   if(stats.lv === 2){
+    if(effortTier === 'persistent'){
+      // Persistent + Level 2 is the classic "trying hard but the concept
+      // hasn't fully clicked" pattern — frame as supportive, not failure.
+      const opts = [
+        `${name} is putting in real effort on ${subjName} — ${stats.totalAttempts} attempts shows determination. A quick review of the tricky parts could turn that grit into a Strong-level jump.`,
+        `Lots of practice in ${subjName}, ${name}! ${stats.totalAttempts} tries means you're not giving up — let's pair that with a fresh look at the parts that are giving you trouble.`,
+        `${name} is grinding through ${subjName} — that effort is great, and a short re-explanation of the trickiest bits would make the next round feel easier.`,
+      ];
+      return opts[Math.floor(Math.random()*opts.length)];
+    }
+    if(effortTier === 'firstTry'){
+      // Level 2 with low intensity often means "rushing through" — gently
+      // suggest slowing down for accuracy.
+      const opts = [
+        `${name} is moving through ${subjName} quickly — ${stats.totalAttempts} attempts for ${stats.done} activit${stats.done===1?'y':'ies'}. Slowing down a touch could turn good into great!`,
+        `Nice pace in ${subjName}, ${name}! Try one extra read-through on each question — that small change usually bumps Developing → Strong.`,
+        `${name} is making progress in ${subjName} — fast moves, a little more checking and you'll be at Strong in no time.`,
+      ];
+      return opts[Math.floor(Math.random()*opts.length)];
+    }
     const opts = [
       `${name} is making steady progress in ${subjName} — keep practicing to get even stronger!`,
       `Nice start in ${subjName}, ${name}! A few more lessons and you'll feel super confident.`,
       `${name} is building ${subjName} skills step by step — every try counts.`,
+    ];
+    return opts[Math.floor(Math.random()*opts.length)];
+  }
+  // Level 1 — Growing
+  if(effortTier === 'persistent'){
+    // Level 1 + persistent = the kid is genuinely struggling. Be warm
+    // and route the parent/teacher toward changing the approach (not
+    // "more practice" — the kid is already practicing a lot).
+    const opts = [
+      `${name} is trying really hard at ${subjName} — ${stats.totalAttempts} attempts shows real effort. Sometimes a different explanation (a video, a hands-on example) makes the lightbulb finally click.`,
+      `${stats.totalAttempts} ${subjName} attempts, ${name}! That's serious effort. Let's switch up the approach — a short walk-through together on the trickiest part could change everything.`,
+      `${name} isn't giving up on ${subjName} — and that matters most. The next step is finding the explanation that finally makes it click.`,
     ];
     return opts[Math.floor(Math.random()*opts.length)];
   }
@@ -14151,6 +14774,64 @@ function computeOverallLevel(sid){
   return RC_LEVELS[lv-1];
 }
 
+// "What does this kid need to do to reach the next overall level?"
+// The overall level is round(avg(subject levels)) — so the next level
+// unlocks when the average crosses 0.5 above the current floor. In
+// practice that means lifting enough subjects above the current level
+// to swing the average. Kids don't get this without it being said
+// explicitly: "If you're Strong in math but Growing in everything
+// else, your overall is still Developing — finish more subjects to
+// climb." Returns { nextLvl, laggingSubjects, summary } or null when
+// the kid is already at the top, hasn't started anything, or has only
+// one subject with content (where the math is trivial).
+//
+// nextLvl       — RC_LEVELS entry for the level above current overall
+// laggingSubjects — array of subject names that are BELOW nextLvl
+// summary       — kid-friendly sentence; ready to render as-is.
+function computeNextLevelHint(sid, name){
+  const nm = name || 'you';
+  const subjStats = [];
+  SUBJECTS.forEach(sub => {
+    const acts = getWeekActivities(sid, sub.id);
+    if(acts.length){
+      const st = computeSubjectStats(sid, sub.id);
+      subjStats.push({ id: sub.id, name: sub.name, lv: st.lv, done: st.done, total: st.total });
+    }
+  });
+  if(subjStats.length === 0) return null;
+  const avg = subjStats.reduce((a,b)=>a+b.lv,0) / subjStats.length;
+  const currentLv = Math.max(1, Math.min(4, Math.round(avg)));
+  if(currentLv >= 4){
+    // Already at the top — frame as "keep it up across all subjects".
+    return {
+      nextLvl: null,
+      laggingSubjects: [],
+      summary: `🏆 ${nm} reached the top level — Excellent! Keep every subject strong to stay there.`
+    };
+  }
+  const nextLvl = RC_LEVELS[currentLv]; // 0-indexed; nextLvl.lv === currentLv+1
+  const lagging = subjStats.filter(s => s.lv < nextLvl.lv);
+  // Subjects with NOTHING done are the most actionable nudge — single
+  // them out so kids see the easy wins ("you haven't started science yet").
+  const untouched = lagging.filter(s => s.done === 0);
+  const partial   = lagging.filter(s => s.done > 0);
+  let summary;
+  const lagNames = lagging.map(s=>s.name);
+  if(untouched.length && partial.length){
+    summary = `${nextLvl.emoji} To unlock **${nextLvl.name}** overall, ${nm} needs every subject working at that level. Start ${untouched.map(s=>s.name).join(' and ')}, and keep building ${partial.map(s=>s.name).join(', ')}.`;
+  } else if(untouched.length){
+    summary = `${nextLvl.emoji} To unlock **${nextLvl.name}** overall, ${nm} still needs to start ${untouched.length===1?'a subject':'these subjects'}: ${untouched.map(s=>s.name).join(', ')}. Every subject counts!`;
+  } else if(partial.length){
+    summary = `${nextLvl.emoji} To unlock **${nextLvl.name}** overall, ${nm} needs to push ${partial.length===1?'one more subject':lagging.length+' more subjects'} up — focus on ${partial.map(s=>s.name).join(', ')}.`;
+  } else {
+    // No lagging subjects but still not at next level — math edge case
+    // (e.g., 4 subjects at lv 2 averages exactly 2 → still Developing).
+    // Practical advice: get at least one to the next level.
+    summary = `${nextLvl.emoji} ${nm} is right on the edge of **${nextLvl.name}** overall! One more subject pushed up will unlock it.`;
+  }
+  return { nextLvl, laggingSubjects: lagNames, summary };
+}
+
 function renderReportCard(sid, isTeacher){
   const s = getStudentInfo(sid);
   const ud = getStudentData(sid);
@@ -14167,6 +14848,23 @@ function renderReportCard(sid, isTeacher){
     h('span',{class:'rc-overall-lbl'},'Overall'),
     h('span',{class:'rc-overall-lvl'},[h('span',{},overall.emoji),h('span',{},overall.name)]),
   ]));
+  // "Next-level unlock" hint — explains how the overall level works
+  // ("you have to finish all subjects before the next level unlocks")
+  // and points the kid at the specific subjects holding them back.
+  // Rendered in BOTH kid and teacher views: kids get the call to action,
+  // teachers get a one-glance summary of which subjects need attention.
+  // Markdown-style **bold** spans get split out so we can style the
+  // level name without dropping in raw HTML.
+  const nextHint = computeNextLevelHint(sid, isTeacher ? s.name : 'you');
+  if(nextHint){
+    const parts = nextHint.summary.split(/(\*\*[^*]+\*\*)/g).filter(Boolean).map(seg => {
+      if(seg.startsWith('**') && seg.endsWith('**')){
+        return h('strong',{class:'rc-next-bold'}, seg.slice(2,-2));
+      }
+      return h('span',{}, seg);
+    });
+    wrap.appendChild(h('div',{class:'rc-next-level'}, parts));
+  }
   const grid = h('div',{class:'rc-subjects'});
   SUBJECTS.forEach(sub=>{
     const st = computeSubjectStats(sid, sub.id);
@@ -14211,9 +14909,26 @@ function renderReportCard(sid, isTeacher){
   });
   wrap.appendChild(grid);
   if(!isTeacher){
+    // Footer rotates between two messages so the same line doesn't
+    // dominate every report. The "all-subjects" reminder shows up half
+    // the time when the kid hasn't yet maxed every subject — keeps the
+    // unlock mechanic top-of-mind without nagging on every single view.
+    const allMaxed = SUBJECTS.every(sub => {
+      const acts = getWeekActivities(sid, sub.id);
+      if(!acts.length) return true;
+      return computeSubjectStats(sid, sub.id).lv >= 4;
+    });
+    let footerMsg;
+    if(allMaxed){
+      footerMsg = "You're crushing every subject, "+s.name+" — true all-rounder!";
+    } else if(Math.random() < 0.5){
+      footerMsg = "Tip: every subject counts toward your overall level — "+s.name+", don't forget the ones you haven't tried yet!";
+    } else {
+      footerMsg = "You're improving every day, "+s.name+" — keep up the awesome work!";
+    }
     wrap.appendChild(h('div',{class:'rc-encourage'},[
       h('span',{class:'rc-en-emoji'},'💫'),
-      h('span',{},"You're improving every day, "+s.name+" — keep up the awesome work!"),
+      h('span',{}, footerMsg),
     ]));
   }
   wrap.appendChild(renderLegend());
@@ -16578,8 +17293,8 @@ function finishActivity(){
   // Badges
   const td=Object.keys(state.completedActivities).length;
   const pd=Object.keys(state.perfectActivities).length;
-  const sc={reading:0,writing:0,math:0,logic:0,french:0,science:0,social:0};
-  Object.keys(state.completedActivities).forEach(id=>{const m=id.match(/w\d+-\w+-(r|w|m|l|f|s|c)\d/);if(m){const k={r:'reading',w:'writing',m:'math',l:'logic',f:'french',s:'science',c:'social'}[m[1]];if(k)sc[k]++}});
+  const sc={reading:0,writing:0,math:0,logic:0,french:0,science:0,social:0,coding:0};
+  Object.keys(state.completedActivities).forEach(id=>{const m=id.match(/w\d+-\w+-(r|w|m|l|f|s|c|p)\d/);if(m){const k={r:'reading',w:'writing',m:'math',l:'logic',f:'french',s:'science',c:'social',p:'coding'}[m[1]];if(k)sc[k]++}});
   if(td>=3)state.badges['first-steps']=true;
   if(correct===scorable)state.badges['perfect-score']=true;
   if(sc.reading>=5)state.badges['reading-pro']=true;
@@ -16587,6 +17302,7 @@ function finishActivity(){
   if(sc.math>=5)state.badges['math-pro']=true;
   if(sc.logic>=5)state.badges['logic-pro']=true;
   if(sc.french>=5)state.badges['french-pro']=true;
+  if(sc.coding>=5)state.badges['coding-pro']=true;
   if(state.streak>=3)state.badges['streak-3']=true;
   if(state.coins>=50)state.badges['coin-50']=true;
   if(state.coins>=200)state.badges['coin-200']=true;
@@ -19068,6 +19784,87 @@ function renderTeacher(root){
       }, 'Switch')
     ]);
     dash.appendChild(chip);
+
+    // Quick-access "Billing" pill, sitting next to the tenant chip. Always
+    // visible (so parents can find it without scrolling through 11 accordion
+    // sections) — clicking it expands the Subscription & Billing section
+    // and scrolls it into view, identical to the unreviewed-reports banner
+    // pattern below. The actual Stripe portal launch is still gated by the
+    // teacher password inside renderBillingPortal — this pill is just a
+    // shortcut, not a security bypass.
+    const billingPill = h('button',{
+      type:'button',
+      class:'t-tenant-billing',
+      title: (tenant_state && tenant_state.suspended)
+        ? 'Subscription is inactive — open Billing to fix it.'
+        : 'Manage your subscription, payment method, and invoices.',
+      style:'display:inline-flex;align-items:center;gap:6px;padding:6px 12px;margin:0 0 14px 8px;background:'
+        + ((tenant_state && tenant_state.suspended) ? '#fee' : '#eef2ff')
+        + ';border:1px solid '
+        + ((tenant_state && tenant_state.suspended) ? '#f99' : '#c7d2fe')
+        + ';border-radius:999px;font-size:13px;font-weight:700;color:'
+        + ((tenant_state && tenant_state.suspended) ? '#b00020' : '#3730a3')
+        + ';cursor:pointer;font-family:inherit;',
+      onclick: () => {
+        teacherTabOpen['billing'] = true;
+        const scr = document.getElementById('screen');
+        if(scr){ scr.innerHTML = ''; renderTeacher(scr); }
+        setTimeout(()=>{
+          try {
+            const headings = document.querySelectorAll('.t-acc-head .t-acc-title');
+            headings.forEach(el => {
+              if(el.textContent && el.textContent.trim() === 'Subscription & Billing'){
+                el.scrollIntoView({behavior:'smooth', block:'start'});
+              }
+            });
+          } catch(e){}
+        }, 50);
+      }
+    }, [
+      h('span',{'aria-hidden':'true'}, '💳'),
+      h('span',{}, (tenant_state && tenant_state.suspended) ? 'Fix Billing' : 'Billing'),
+    ]);
+    dash.appendChild(billingPill);
+  }
+
+  // Dashboard-level subscription alert — promotes the in-accordion red
+  // warning to the top of the dashboard so a parent whose payment is past
+  // due (or whose subscription was canceled) can't miss it. Only shown when
+  // the Worker's Stripe webhook has flagged tenant.suspended = true. Tap
+  // jumps straight to the Billing section. Sits under the tenant chip but
+  // above all other dashboard cards so it's the first thing the eye hits.
+  if(tenant_state && tenant_state.suspended){
+    const alertBanner = h('div',{
+      role:'alert',
+      style:'background:#fff1f2;border:2px solid #f43f5e;border-radius:14px;padding:14px 16px;margin-bottom:16px;display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap;'
+    });
+    alertBanner.appendChild(h('div',{style:'font-size:26px;flex-shrink:0;line-height:1'}, '⚠️'));
+    alertBanner.appendChild(h('div',{style:'flex:1;min-width:240px'},[
+      h('div',{style:'font-weight:800;font-size:15px;margin-bottom:4px;color:#9f1239'},
+        'Subscription needs attention'),
+      h('div',{style:'font-size:13px;color:#881337;line-height:1.5'},
+        'Your payment is past due or the subscription was canceled. All student data is safe — open Billing to update your card and resume your plan.'),
+    ]));
+    alertBanner.appendChild(h('button',{
+      type:'button',
+      style:'background:#f43f5e;color:#fff;border:0;border-radius:10px;padding:10px 16px;font-weight:800;font-size:13px;cursor:pointer;font-family:inherit;flex-shrink:0',
+      onclick: () => {
+        teacherTabOpen['billing'] = true;
+        const scr = document.getElementById('screen');
+        if(scr){ scr.innerHTML = ''; renderTeacher(scr); }
+        setTimeout(()=>{
+          try {
+            const headings = document.querySelectorAll('.t-acc-head .t-acc-title');
+            headings.forEach(el => {
+              if(el.textContent && el.textContent.trim() === 'Subscription & Billing'){
+                el.scrollIntoView({behavior:'smooth', block:'start'});
+              }
+            });
+          } catch(e){}
+        }, 50);
+      }
+    }, '💳 Open Billing ▸'));
+    dash.appendChild(alertBanner);
   }
 
   // ------------------------------------------------------------------
