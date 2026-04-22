@@ -479,8 +479,9 @@ footer{padding:48px 0;border-top:1px solid var(--line);margin-top:72px}
 }
 
 /* "Try it" section — two side-by-side dashboards on a tinted band.
-   Tiles deeplink to /app/?demo=parent|teacher; same PIN (2228) unlocks
-   both. Mobile collapses to a single column for thumbable tap targets. */
+   Tiles deeplink to /app/?demo=parent|teacher; visitors must email
+   the operator for the shared demo PIN before they can enter.
+   Mobile collapses to a single column for thumbable tap targets. */
 .demo-section{background:linear-gradient(135deg,#FFF8E1 0%,#F0EEFF 100%)}
 .demo-intro{max-width:680px;margin:0 auto 32px;text-align:center}
 .demo-intro h2{font-size:clamp(24px,3vw,32px);font-weight:800;margin-bottom:10px;line-height:1.15}
@@ -493,15 +494,13 @@ footer{padding:48px 0;border-top:1px solid var(--line);margin-top:72px}
 .demo-tile h3{font-size:22px;font-weight:800;margin:0;line-height:1.2}
 .demo-tile p{color:var(--ink2);font-size:14.5px;line-height:1.55;margin:0;flex:1}
 .demo-tile-meta{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:6px;flex-wrap:wrap}
-.demo-pin-chip{display:inline-flex;align-items:center;gap:6px;background:#f1f3f5;color:var(--ink);font-size:12.5px;font-weight:600;padding:6px 12px;border-radius:999px;letter-spacing:.02em}
-.demo-pin-chip strong{font-family:ui-monospace,'SF Mono',Menlo,monospace;font-weight:800;letter-spacing:.06em}
+.demo-pin-chip{display:inline-flex;align-items:center;gap:6px;background:#f1f3f5;color:var(--ink2);font-size:12.5px;font-weight:600;padding:6px 12px;border-radius:999px;letter-spacing:.02em}
 .demo-tile-cta{font-size:13.5px;font-weight:700;color:var(--primary);letter-spacing:.01em}
 /* Subtle accent stripe so each tile reads as its own dashboard at a glance. */
 .demo-tile-parent{border-top:4px solid #e84393}
 .demo-tile-teacher{border-top:4px solid #6c5ce7}
 .demo-fineprint{text-align:center;font-size:13px;color:var(--ink3);margin-top:24px;line-height:1.55;max-width:680px;margin-left:auto;margin-right:auto}
 .demo-fineprint a{color:var(--primary);font-weight:700}
-.demo-fineprint strong{font-family:ui-monospace,'SF Mono',Menlo,monospace;color:var(--ink);letter-spacing:.04em}
 </style>
 </head>
 <body>
@@ -867,7 +866,7 @@ footer{padding:48px 0;border-top:1px solid var(--line);margin-top:72px}
   <div class="container">
     <div class="demo-intro">
       <h2>🎮 Try it before you buy it</h2>
-      <p class="sub">Two live demos, no signup. Pick the dashboard you'd actually use and explore — every screen, every feature. Demo data resets when you refresh.</p>
+      <p class="sub">Two live demos, no signup. Pick the dashboard you'd actually use and explore — every screen, every feature. Email me for the demo PIN.</p>
     </div>
     <div class="demo-grid">
       <a href="/app/?demo=parent" class="demo-tile demo-tile-parent" aria-label="Try the parent demo — opens the Parent Hub with 5 demo kids">
@@ -875,7 +874,7 @@ footer{padding:48px 0;border-top:1px solid var(--line);margin-top:72px}
         <h3>Parents</h3>
         <p>Walk through the <strong>Parent Hub</strong> with 5 demo kids — each in a different grade, so you see what siblings sharing one household looks like.</p>
         <div class="demo-tile-meta">
-          <span class="demo-pin-chip">PIN <strong>2228</strong></span>
+          <span class="demo-pin-chip">🔒 PIN required</span>
           <span class="demo-tile-cta">Open parent demo →</span>
         </div>
       </a>
@@ -884,12 +883,12 @@ footer{padding:48px 0;border-top:1px solid var(--line);margin-top:72px}
         <h3>Teachers</h3>
         <p>Walk through the <strong>Teacher Dashboard</strong> with one demo student per grade — full SK→Grade 5 sweep so you can preview every level.</p>
         <div class="demo-tile-meta">
-          <span class="demo-pin-chip">PIN <strong>2228</strong></span>
+          <span class="demo-pin-chip">🔒 PIN required</span>
           <span class="demo-tile-cta">Open teacher demo →</span>
         </div>
       </a>
     </div>
-    <p class="demo-fineprint">Both demos use the same PIN <strong>2228</strong> — pick a tile and the app opens straight to the right dashboard. Questions? <a href="mailto:solvixadmin@kidquest.fun">solvixadmin@kidquest.fun</a></p>
+    <p class="demo-fineprint">Both demos are gated by a short PIN. <a href="mailto:solvixadmin@kidquest.fun?subject=Solvix%20demo%20PIN%20request">Email me at solvixadmin@kidquest.fun</a> and I'll send it back within a few hours.</p>
   </div>
 </section>
 

@@ -24013,8 +24013,8 @@ function showTenantGate(){
   const subline = !isDemoFlow
     ? 'Enter your classroom PIN to begin.'
     : (demoMode === 'parent'
-        ? 'Type PIN <strong>2228</strong> to preview the Parent Hub.'
-        : 'Type PIN <strong>2228</strong> to preview the Teacher Dashboard.');
+        ? 'Enter the demo PIN to preview the Parent Hub.'
+        : 'Enter the demo PIN to preview the Teacher Dashboard.');
   // 4-digit PIN input. `inputmode=numeric` pops a number pad on mobile;
   // `pattern=[0-9]*` gives iOS the numeric keyboard (the pattern is
   // checked client-side only — the worker enforces 4 digits). We render
@@ -24031,7 +24031,7 @@ function showTenantGate(){
     +   '<div id="kq-tg-msg" style="margin-top:14px;font-size:13px;color:#d63031;min-height:1em;line-height:1.4;" aria-live="polite"></div>'
     +   '<div style="margin-top:20px;padding-top:18px;border-top:1px solid #f1f3f5;font-size:12px;color:#b2bec3;line-height:1.5;">'
     +     (isDemoFlow
-            ? 'No card, no account. Demo data resets when you refresh.'
+            ? 'Don\'t have the demo PIN? <a href="mailto:solvixadmin@kidquest.fun?subject=Solvix%20demo%20PIN%20request" style="color:#667eea;font-weight:700;text-decoration:none;">Email solvixadmin@kidquest.fun</a> and I\'ll send it within a few hours.'
             : "Don't have a PIN? Ask the parent or teacher who set up your classroom.")
     +   '</div>'
     + '</div>';
