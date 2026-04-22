@@ -9000,6 +9000,50 @@ function logout(dest){
 
 /* ========== CLOUD SYNC ========== */
 let cloudReady=false, cloudBusy=false, pendingWrite=null;
+
+/* Anti-wipe trip wire ----------------------------------------------------
+   "Meaningful progress" = anything we can lose. Used by pullCloud and
+   syncToCloud to refuse writes that would silently nuke a kid's history.
+   Includes: any coins, any completed activity, any star, any badge, any
+   wrong answer logged, any stretch goal in flight, or a populated
+   childContext (parent typed something into "About my child"). joinedAt
+   alone doesn't count — fresh defaultUser() doesn't set it.
+   Cheap: O(1) field checks, no JSON walks. Returns true on the FIRST hit
+   so the common case (active student) short-circuits immediately. */
+function userHasMeaningfulProgress(u){
+  if(!u || typeof u !== 'object') return false;
+  if(Number(u.coins||0) > 0) return true;
+  if(u.completedActivities && Object.keys(u.completedActivities).length) return true;
+  if(Array.isArray(u.stars) && u.stars.length) return true;
+  if(Array.isArray(u.badges) && u.badges.length) return true;
+  if(u.perfectScores && Object.keys(u.perfectScores).length) return true;
+  if(u.wrongAnswers && Object.keys(u.wrongAnswers).length) return true;
+  if(Array.isArray(u.wishlist) && u.wishlist.length) return true;
+  if(Number(u.streak||0) > 0) return true;
+  if(u.joinedAt) return true; // any login at all
+  if(u.childContext && (
+       u.childContext.interests || u.childContext.strengths ||
+       u.childContext.challenges || u.childContext.learningStyle ||
+       u.childContext.goals || u.childContext.notes ||
+       (u.childContext.age != null))) return true;
+  return false;
+}
+
+/* Snapshot trip wire — call BEFORE we're about to do something that could
+   wipe a non-empty kid. Cheap to call; only takes a snapshot if the
+   transition actually looks destructive. The reason string ends up in the
+   teacher's "Restore from snapshot" picker so they can find it later. */
+function snapshotIfWipeImminent(reason, victims){
+  try {
+    if(!Array.isArray(victims) || !victims.length) return;
+    const names = victims.map(v => {
+      const s = STUDENTS.find(x=>x.id===v); return s ? s.name : v;
+    }).join(', ');
+    pushSnapshot('🛡️ auto: ' + reason + ' (would wipe: ' + names + ')');
+    try { console.warn('[Solvix] Anti-wipe snapshot taken:', reason, 'victims:', victims); } catch(e){}
+  } catch(e){}
+}
+
 function initCloud(){
   pullCloud(true).then(()=>{cloudReady=true}).catch(()=>{});
   setInterval(()=>pullCloud(false),POLL_MS);
@@ -9024,7 +9068,37 @@ async function pullCloud(init){
     const t=await r.text();if(!t)return;
     const d=JSON.parse(t);if(!d||!d.users)return;
     if((d.updatedAt||0)<=(allData.updatedAt||0))return;
-    STUDENTS.forEach(s=>{allData.users[s.id]=Object.assign(defaultUser(),d.users[s.id]||{})});
+    // Anti-wipe guard: if cloud is missing a student or has them as an
+    // empty/wiped record, but local has real progress, REFUSE to overwrite.
+    // Take an auto-snapshot first so the teacher can recover if the local
+    // copy is the corrupt one. This protects against the scenario where a
+    // partial/buggy write from another device left individual students as
+    // {} in the cloud blob — a single sync would otherwise nuke local data
+    // permanently. (Fixed Apr 2026 after akaran/akashayan got wiped.)
+    const wipeVictims = [];
+    STUDENTS.forEach(s => {
+      const cloudU = d.users[s.id];
+      const localU = allData.users[s.id];
+      const cloudIsEmpty = !cloudU || typeof cloudU !== 'object' || !userHasMeaningfulProgress(cloudU);
+      if(cloudIsEmpty && userHasMeaningfulProgress(localU)){
+        wipeVictims.push(s.id);
+      }
+    });
+    if(wipeVictims.length){
+      snapshotIfWipeImminent('cloud pull would wipe local progress', wipeVictims);
+    }
+    STUDENTS.forEach(s => {
+      const cloudU = d.users[s.id];
+      const localU = allData.users[s.id];
+      const cloudIsEmpty = !cloudU || typeof cloudU !== 'object' || !userHasMeaningfulProgress(cloudU);
+      if(cloudIsEmpty && userHasMeaningfulProgress(localU)){
+        // Keep local. Touch updatedAt so syncToCloud below (if anything
+        // else triggers it) re-publishes our richer copy and heals the
+        // bad cloud blob.
+        return;
+      }
+      allData.users[s.id] = Object.assign(defaultUser(), cloudU || {});
+    });
     if(Array.isArray(d.orders))allData.orders=d.orders;
     if(d.catalogOverrides&&typeof d.catalogOverrides==='object')allData.catalogOverrides=d.catalogOverrides;
     if(d.videoOverrides &&typeof d.videoOverrides ==='object')allData.videoOverrides =d.videoOverrides;
@@ -9116,9 +9190,56 @@ async function pullCloud(init){
     if(!init&&currentScreen&&currentScreen!=='activity')go(currentScreen,currentOpts);
   }catch(e){if(init)throw e}
 }
+/* High-water mark of the richest user shape we've EVER seen on this device.
+   syncToCloud consults it before publishing — if a student went from
+   "had progress" to "empty" without an explicit reset (which would clear
+   the high-water entry via clearMeaningfulHighWater), we treat it as a
+   bug and refuse the write. This stops a transient defaultAll() / fresh
+   tenant boot from accidentally publishing zeros over a real kid. */
+const _meaningfulHighWater = {}; // sid -> true
+function refreshMeaningfulHighWater(){
+  try {
+    if(!allData || !allData.users) return;
+    for(const sid in allData.users){
+      if(userHasMeaningfulProgress(allData.users[sid])) _meaningfulHighWater[sid] = true;
+    }
+  } catch(e){}
+}
+function clearMeaningfulHighWater(sid){
+  // Called from intentional resets so the next syncToCloud is allowed to
+  // publish the zero state for that student.
+  if(sid) delete _meaningfulHighWater[sid];
+  else for(const k in _meaningfulHighWater) delete _meaningfulHighWater[k];
+}
+// Seed from current state so a freshly-booted tab that loaded real data
+// doesn't immediately get tripped if pendingWrite races.
+try { refreshMeaningfulHighWater(); } catch(e){}
+
 async function syncToCloud(){
   if(cloudBusy){pendingWrite=true;return}cloudBusy=true;
   try{
+    // Anti-wipe guard: refuse to publish a blob that would zero out any
+    // student we've ever seen with real progress. Snapshot first so the
+    // teacher can recover even if their next action would have re-saved
+    // the empty state. Skips during impersonation (already guarded above)
+    // and only blocks if AT LEAST ONE student would be wiped — partial
+    // resets via the password-gated reset UI clear the high-water entry
+    // for the affected student before calling saveState, so legitimate
+    // resets sail through.
+    const wipeVictims = [];
+    for(const sid in _meaningfulHighWater){
+      const cur = allData.users && allData.users[sid];
+      if(!userHasMeaningfulProgress(cur)) wipeVictims.push(sid);
+    }
+    if(wipeVictims.length){
+      snapshotIfWipeImminent('syncToCloud blocked — local progress disappeared', wipeVictims);
+      try { console.error('[Solvix] syncToCloud REFUSED — would wipe:', wipeVictims, '. Restore from snapshot if needed.'); } catch(e){}
+      cloudBusy=false; pendingWrite=false;
+      return;
+    }
+    // Refresh the high-water before writing so newly-progressed students
+    // get protected on the very next call.
+    refreshMeaningfulHighWater();
     if(isWorkerBackendActive()){
       await fetch(dataBackendUrl('data'), { method:'POST', headers:dataBackendHeaders(), body:JSON.stringify(allData) });
     } else {
@@ -9238,6 +9359,12 @@ function applySnapshotToAllData(snap){
   }
   allData.updatedAt = Date.now();
   try { saveLocalVideoOverrides(allData.videoOverrides); } catch(e){}
+  // Refresh the anti-wipe high-water mark so a restored snapshot's richer
+  // shape is what gets protected on the next syncToCloud — without this,
+  // restoring a snapshot of a student whose CURRENT state is empty would
+  // be blocked from publishing because the high-water from before the
+  // restore (which was empty too) would still be stale.
+  try { refreshMeaningfulHighWater(); } catch(e){}
   saveState();
   return true;
 }
@@ -18943,6 +19070,72 @@ function renderTeacher(root){
     dash.appendChild(chip);
   }
 
+  // ------------------------------------------------------------------
+  // Wipe-detection banner — surfaced ABOVE all tabs so a teacher who
+  // opens the dashboard immediately sees "you have snapshots that
+  // contain data you've lost." We compare each student's current state
+  // to the most recent snapshot: if the student is empty now but had
+  // real progress in a snapshot from the last 30 days, we list them
+  // and offer one-click navigation to the Backup & Data section.
+  // Pure read — never mutates state, never auto-restores.
+  // ------------------------------------------------------------------
+  try {
+    const wipedSids = STUDENTS
+      .map(s => s.id)
+      .filter(sid => !userHasMeaningfulProgress(allData.users[sid]));
+    if(wipedSids.length){
+      const snaps = readSnapshots();
+      const cutoff = Date.now() - 30 * 24 * 60 * 60 * 1000;
+      const recoverable = wipedSids.map(sid => {
+        let bestSnap = null;
+        for(const snap of snaps){
+          if(!snap || (snap.at||0) < cutoff) continue;
+          let parsed; try { parsed = JSON.parse(snap.data||'{}'); } catch(e){ continue; }
+          const u = parsed && parsed.users && parsed.users[sid];
+          if(userHasMeaningfulProgress(u)){
+            if(!bestSnap || (snap.at > bestSnap.at)) bestSnap = snap;
+          }
+        }
+        return bestSnap ? { sid, snap: bestSnap } : null;
+      }).filter(Boolean);
+
+      if(recoverable.length){
+        const names = recoverable.map(r => {
+          const s = STUDENTS.find(x=>x.id===r.sid);
+          return s ? s.name : r.sid;
+        }).join(', ');
+        const banner = h('div',{
+          style:'background:#fff7e6;border:2px solid #f59e0b;border-radius:14px;padding:14px 16px;margin-bottom:16px;display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap',
+          role:'alert',
+        });
+        banner.appendChild(h('div',{style:'font-size:26px;flex-shrink:0;line-height:1'}, '⚠️'));
+        banner.appendChild(h('div',{style:'flex:1;min-width:240px'},[
+          h('div',{style:'font-weight:800;font-size:15px;margin-bottom:4px;color:#92400e'},
+            'Lost progress detected: ' + names),
+          h('div',{style:'font-size:13px;color:#78350f;line-height:1.5'},
+            recoverable.length === 1
+              ? 'A recent snapshot still has this student\'s data. Click below to open the snapshot picker — restoring is non-destructive (it takes a "before restore" snapshot first, so you can always undo).'
+              : 'Recent snapshots still have this data. Click below to open the snapshot picker — restoring is non-destructive (it takes a "before restore" snapshot first, so you can always undo).'),
+        ]));
+        banner.appendChild(h('button',{
+          class:'btn btn-primary',
+          style:'padding:10px 18px;font-weight:700;font-size:13px;flex-shrink:0;background:#f59e0b;box-shadow:0 4px 12px rgba(245,158,11,.3)',
+          onclick: () => {
+            // Open the Backup & Data section and scroll to it.
+            try { teacherTabOpen = teacherTabOpen || {}; teacherTabOpen.backup = true; } catch(e){}
+            const scr = document.getElementById('screen');
+            if(scr){ scr.innerHTML = ''; renderTeacher(scr); }
+            setTimeout(() => {
+              const sec = document.querySelector('[data-section-id="backup"]');
+              if(sec) sec.scrollIntoView({ behavior:'smooth', block:'start' });
+            }, 50);
+          },
+        }, '↶ Open snapshot restore →'));
+        dash.appendChild(banner);
+      }
+    }
+  } catch(e){ try{ console.warn('[Solvix] wipe-detection banner failed:', e); }catch(_){} }
+
   // Total unread messages across all students — drives the red badge on
   // the Messages tab header so the tutor sees "someone's waiting for a
   // reply" at a glance without having to open the panel.
@@ -20130,7 +20323,7 @@ function renderTeacher(root){
   const acc = h('div',{class:'t-accordion'});
   sections.forEach(sec => {
     const isOpen = teacherTabOpen[sec.id] === true;
-    const section = h('div',{class:'t-acc-section'+(isOpen?' open':'')});
+    const section = h('div',{class:'t-acc-section'+(isOpen?' open':''),'data-section-id':sec.id});
     const headChildren = [
       h('span',{class:'t-acc-icon','aria-hidden':'true'}, sec.icon),
       h('span',{class:'t-acc-title'}, sec.title),
@@ -21368,8 +21561,13 @@ function renderAboutMyChild(){
   const rowsWrap = h('div',{style:'display:flex;flex-direction:column;gap:18px;margin-top:12px'});
 
   STUDENTS.forEach(s => {
-    if(!allData.users[s.id]) allData.users[s.id] = defaultUser();
+    // SAFETY: do NOT init a missing user with defaultUser() here. If
+    // allData.users[s.id] is unexpectedly missing (race with cloud pull,
+    // localStorage corruption), writing defaults would persist a wipe via
+    // the next saveState/syncToCloud. Instead, skip rendering this card
+    // and let the user re-login (which has its own safe init path).
     const u = allData.users[s.id];
+    if(!u || typeof u !== 'object') return;
     if(!u.childContext) u.childContext = defaultUser().childContext;
     const ctx = u.childContext;
 
@@ -21676,6 +21874,9 @@ function resetStudent(sid){
   // teacher can roll back with one click from the dashboard.
   try { pushSnapshot('before reset: '+sid); } catch(e){}
   allData.users[sid] = defaultUser();
+  // Tell the syncToCloud anti-wipe guard this is intentional, otherwise
+  // it would refuse to publish the zeroed-out state.
+  try { clearMeaningfulHighWater(sid); } catch(e){}
   saveState();
 }
 function resetStudentSubject(sid, subjId){
@@ -22595,6 +22796,9 @@ function renderResetControls(){
     // Safety net — pre-wipe snapshot goes into the local undo ring.
     try { pushSnapshot('before Reset EVERYTHING'); } catch(e){}
     STUDENTS.forEach(s=>{ allData.users[s.id] = defaultUser(); });
+    // Tell the syncToCloud anti-wipe guard this is intentional, otherwise
+    // it would refuse to publish the zeroed-out state for everyone.
+    try { clearMeaningfulHighWater(); } catch(e){}
     allData.orders = [];
     saveState();
     alert('✓ All student progress has been reset.\n\nTip: if that was a mistake, open the teacher dashboard → Backup & Data → "↶ Restore from snapshot" to roll it back.');
