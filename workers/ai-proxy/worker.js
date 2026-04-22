@@ -424,29 +424,67 @@ const PBKDF2_ITERATIONS = 100000;
 // be embarrassing if it stopped working because someone accidentally
 // ran a cleanup script.
 //
-// Tenant id is deterministic (`reserved-{code}`) so that even after a
+// Tenant id is deterministic (`reserved-{slug}`) so that even after a
 // full KV wipe + self-heal, the data namespace is the same — kids who
 // used PIN 2228 a month ago still see their progress when they come
 // back. Different reserved PINs get different deterministic ids, so
 // they don't share data with each other.
 //
+// DUAL-DEMO MODEL — same PIN, two dashboards:
+// PIN 2228 powers BOTH the parent demo and the teacher demo. The user
+// types `2228`; the marketing page / app appends `:parent` or `:teacher`
+// to disambiguate before calling /auth. Each variant lives in its own
+// KV namespace (`reserved-2228-parent` vs `reserved-2228-teacher`) so
+// the rosters never collide. Bare `2228` is kept as a back-compat
+// alias for old builds and resolves to the teacher demo (matches what
+// shipped before the dual-demo split).
+//
 // Settings used on self-heal:
-//   isDemo: true            — flagged as demo in admin UI / CSS
-//   planType: 'classroom'   — full feature set, since these are "show
-//                             everything Solvix can do" demos
+//   isDemo: true             — flagged as demo in admin UI / CSS
+//   planType: 'family'/'classroom' — drives the parent vs teacher dashboard
 //   teacherPasswordHash:null — no teacher gate; the PIN is the only secret
-//   storeEnabled: true      — rewards shop visible
+//   storeEnabled: true       — rewards shop visible
 //
 // To add another reserved PIN: add an entry below + redeploy. To change
 // settings: bump the entry, then once-off `wrangler kv key delete
-// tenant:reserved-{code}` (the next /auth re-creates from the template).
+// tenant:reserved-{slug}` (the next /auth re-creates from the template).
 const RESERVED_TENANTS = {
+  // Parent demo — family plan → Parent Hub dashboard, 5-kid roster.
+  '2228:parent': {
+    id: 'reserved-2228-parent',
+    label: 'Solvix Family Demo',
+    code: '2228:parent',
+    teacherPasswordHash: null,
+    isDemo: true,
+    demoMode: 'parent',
+    planType: 'family',
+    storeEnabled: true,
+    createdAt: '2026-04-22T00:00:00.000Z',
+    reserved: true,
+  },
+  // Teacher demo — classroom plan → Teacher Dashboard, full grade roster.
+  '2228:teacher': {
+    id: 'reserved-2228-teacher',
+    label: 'Solvix Classroom Demo',
+    code: '2228:teacher',
+    teacherPasswordHash: null,
+    isDemo: true,
+    demoMode: 'teacher',
+    planType: 'classroom',
+    storeEnabled: true,
+    createdAt: '2026-04-22T00:00:00.000Z',
+    reserved: true,
+  },
+  // Back-compat: bare `2228` from pre-dual-demo app builds resolves to
+  // the teacher demo (the original behavior). Kept as a real entry so
+  // self-heal still works for any legacy bookmarks.
   '2228': {
-    id: 'reserved-2228',
-    label: 'Solvix Demo (PIN 2228)',
+    id: 'reserved-2228-teacher',
+    label: 'Solvix Classroom Demo',
     code: '2228',
     teacherPasswordHash: null,
     isDemo: true,
+    demoMode: 'teacher',
     planType: 'classroom',
     storeEnabled: true,
     createdAt: '2026-04-22T00:00:00.000Z',
@@ -975,6 +1013,10 @@ function sanitizeTenantForClient(tenant) {
     label: tenant.label,
     code: tenant.code,
     isDemo: !!tenant.isDemo,
+    // demoMode: 'parent' | 'teacher' for dual-demo tenants. Lets the
+    // app render a friendly "Parent Demo" / "Teacher Demo" banner and
+    // pick the right canned roster. Undefined for non-demo tenants.
+    demoMode: tenant.demoMode || undefined,
     planType: tenant.planType || 'classroom',
     storeEnabled: tenant.storeEnabled !== false,
     hasTeacherPassword: !!(tenant.teacherPasswordHash || tenant.teacherPassword),

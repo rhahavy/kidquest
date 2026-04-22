@@ -478,30 +478,30 @@ footer{padding:48px 0;border-top:1px solid var(--line);margin-top:72px}
   .mg-tile-1 .mg-tile-face,.mg-tile-5 .mg-tile-face{opacity:1;color:#2D2356}
 }
 
-/* "Request a demo" section. Friendly form on a tinted card so it
-   visually distinguishes itself from the pricing/FAQ blocks above. */
+/* "Try it" section — two side-by-side dashboards on a tinted band.
+   Tiles deeplink to /app/?demo=parent|teacher; same PIN (2228) unlocks
+   both. Mobile collapses to a single column for thumbable tap targets. */
 .demo-section{background:linear-gradient(135deg,#FFF8E1 0%,#F0EEFF 100%)}
-.demo-card{max-width:600px;margin:0 auto;background:var(--card);border-radius:var(--r-lg);padding:40px;box-shadow:var(--shadow-lg);border:1px solid var(--line)}
-.demo-card h2{font-size:clamp(24px,3vw,32px);font-weight:800;margin-bottom:10px;text-align:center;line-height:1.15}
-.demo-card .sub{color:var(--ink2);font-size:15px;line-height:1.55;text-align:center;margin-bottom:28px}
-.demo-form{display:flex;flex-direction:column;gap:14px}
-.demo-form label{font-size:13px;font-weight:700;color:var(--ink);display:block;margin-bottom:6px}
-.demo-form label .opt{color:var(--ink3);font-weight:500;font-size:12px;margin-left:4px}
-.demo-form input,
-.demo-form textarea{width:100%;padding:13px 16px;border-radius:14px;border:1.5px solid var(--line);font-size:15px;font-family:inherit;background:#fafafa;color:var(--ink);transition:border-color .15s ease,background .15s ease}
-.demo-form input:focus,
-.demo-form textarea:focus{outline:none;border-color:var(--primary);background:#fff}
-.demo-form textarea{min-height:80px;resize:vertical}
-/* Honeypot — visually hidden but not display:none (bots skip those). */
-.demo-form .hp{position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden}
-.demo-form button{margin-top:6px;width:100%}
-.demo-form .err{color:var(--coral);font-size:13px;font-weight:600;text-align:center;min-height:18px}
-.demo-success{text-align:center;padding:24px 8px}
-.demo-success .check{font-size:48px;margin-bottom:10px}
-.demo-success h3{font-size:22px;font-weight:800;margin-bottom:8px}
-.demo-success p{color:var(--ink2);font-size:15px;line-height:1.55;margin-bottom:18px}
-.demo-success .where{font-family:'SF Mono',Menlo,monospace;font-size:14px;color:var(--primary);font-weight:700}
-.demo-fineprint{text-align:center;font-size:12px;color:var(--ink3);margin-top:18px;line-height:1.55}
+.demo-intro{max-width:680px;margin:0 auto 32px;text-align:center}
+.demo-intro h2{font-size:clamp(24px,3vw,32px);font-weight:800;margin-bottom:10px;line-height:1.15}
+.demo-intro .sub{color:var(--ink2);font-size:15px;line-height:1.55}
+.demo-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;max-width:880px;margin:0 auto}
+@media (max-width:680px){.demo-grid{grid-template-columns:1fr}}
+.demo-tile{display:flex;flex-direction:column;gap:14px;background:var(--card);border-radius:var(--r-lg);padding:28px 24px;text-decoration:none;color:var(--ink);box-shadow:var(--shadow);border:1.5px solid var(--line);transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease}
+.demo-tile:hover,.demo-tile:focus-visible{transform:translateY(-3px);box-shadow:var(--shadow-lg);border-color:var(--primary)}
+.demo-tile-emoji{font-size:42px;line-height:1}
+.demo-tile h3{font-size:22px;font-weight:800;margin:0;line-height:1.2}
+.demo-tile p{color:var(--ink2);font-size:14.5px;line-height:1.55;margin:0;flex:1}
+.demo-tile-meta{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:6px;flex-wrap:wrap}
+.demo-pin-chip{display:inline-flex;align-items:center;gap:6px;background:#f1f3f5;color:var(--ink);font-size:12.5px;font-weight:600;padding:6px 12px;border-radius:999px;letter-spacing:.02em}
+.demo-pin-chip strong{font-family:ui-monospace,'SF Mono',Menlo,monospace;font-weight:800;letter-spacing:.06em}
+.demo-tile-cta{font-size:13.5px;font-weight:700;color:var(--primary);letter-spacing:.01em}
+/* Subtle accent stripe so each tile reads as its own dashboard at a glance. */
+.demo-tile-parent{border-top:4px solid #e84393}
+.demo-tile-teacher{border-top:4px solid #6c5ce7}
+.demo-fineprint{text-align:center;font-size:13px;color:var(--ink3);margin-top:24px;line-height:1.55;max-width:680px;margin-left:auto;margin-right:auto}
+.demo-fineprint a{color:var(--primary);font-weight:700}
+.demo-fineprint strong{font-family:ui-monospace,'SF Mono',Menlo,monospace;color:var(--ink);letter-spacing:.04em}
 </style>
 </head>
 <body>
@@ -865,40 +865,31 @@ footer{padding:48px 0;border-top:1px solid var(--line);margin-top:72px}
 
 <section id="demo" class="tight demo-section">
   <div class="container">
-    <div class="demo-card">
-      <div id="demoFormWrap">
-        <h2>🎮 Want to try it first?</h2>
-        <p class="sub">Drop your email and we'll send you a one-time demo PIN. No card. No commitment. Demo data wipes after 24 hours.</p>
-        <form class="demo-form" id="demoForm" onsubmit="requestDemoPin(event)" novalidate>
-          <div>
-            <label for="demoName">Your name <span class="opt">(optional)</span></label>
-            <input type="text" id="demoName" name="name" autocomplete="name" maxlength="80" placeholder="Sarah from Lincoln Elementary">
-          </div>
-          <div>
-            <label for="demoEmail">Email <span class="opt">(we send the PIN here)</span></label>
-            <input type="email" id="demoEmail" name="email" autocomplete="email" required maxlength="200" placeholder="you@example.com">
-          </div>
-          <div>
-            <label for="demoMessage">Anything we should know? <span class="opt">(optional)</span></label>
-            <textarea id="demoMessage" name="message" maxlength="500" placeholder="My 2nd-grader struggles with reading. Looking for something that adapts."></textarea>
-          </div>
-          <!-- Honeypot — real users leave this blank; bots fill every field. -->
-          <div class="hp" aria-hidden="true">
-            <label>Website (leave empty)</label>
-            <input type="text" name="website" id="demoHoneypot" tabindex="-1" autocomplete="off">
-          </div>
-          <button type="submit" id="demoSubmit" class="btn btn-primary btn-lg">📧 Email me a demo PIN</button>
-          <div class="err" id="demoErr" role="alert"></div>
-        </form>
-        <p class="demo-fineprint">We'll email Rhahavy too so we can follow up if you have questions. We don't sell your address — ever.</p>
-      </div>
-      <div id="demoSuccessWrap" style="display:none;" class="demo-success">
-        <div class="check">📬</div>
-        <h3>Check your inbox!</h3>
-        <p>We just sent a 24-hour demo PIN to <span class="where" id="demoSentTo">your email</span>.</p>
-        <p style="font-size:13px;color:var(--ink3);">Don't see it? Check spam, or <a href="#" onclick="resetDemoForm(event)" style="color:var(--primary);font-weight:700;">try again</a>.</p>
-      </div>
+    <div class="demo-intro">
+      <h2>🎮 Try it before you buy it</h2>
+      <p class="sub">Two live demos, no signup. Pick the dashboard you'd actually use and explore — every screen, every feature. Demo data resets when you refresh.</p>
     </div>
+    <div class="demo-grid">
+      <a href="/app/?demo=parent" class="demo-tile demo-tile-parent" aria-label="Try the parent demo — opens the Parent Hub with 5 demo kids">
+        <div class="demo-tile-emoji">👨‍👩‍👧‍👦</div>
+        <h3>Parents</h3>
+        <p>Walk through the <strong>Parent Hub</strong> with 5 demo kids — each in a different grade, so you see what siblings sharing one household looks like.</p>
+        <div class="demo-tile-meta">
+          <span class="demo-pin-chip">PIN <strong>2228</strong></span>
+          <span class="demo-tile-cta">Open parent demo →</span>
+        </div>
+      </a>
+      <a href="/app/?demo=teacher" class="demo-tile demo-tile-teacher" aria-label="Try the teacher demo — opens the Teacher Dashboard with all grade levels">
+        <div class="demo-tile-emoji">🎓</div>
+        <h3>Teachers</h3>
+        <p>Walk through the <strong>Teacher Dashboard</strong> with one demo student per grade — full SK→Grade 5 sweep so you can preview every level.</p>
+        <div class="demo-tile-meta">
+          <span class="demo-pin-chip">PIN <strong>2228</strong></span>
+          <span class="demo-tile-cta">Open teacher demo →</span>
+        </div>
+      </a>
+    </div>
+    <p class="demo-fineprint">Both demos use the same PIN <strong>2228</strong> — pick a tile and the app opens straight to the right dashboard. Questions? <a href="mailto:solvixadmin@kidquest.fun">solvixadmin@kidquest.fun</a></p>
   </div>
 </section>
 
@@ -1008,77 +999,11 @@ async function startTrial(planFamily){
   window.location.assign(data.url);
 }
 
-// "Request a 24h demo PIN" form handler. POSTs to /demo/request — the
-// worker generates a fresh demo tenant code valid for 24h, emails the
-// PIN to the visitor, and notifies the operator. The PIN is never
-// returned to the browser (email-only) so a script kiddie can't farm
-// PINs by spamming the endpoint. We rely on:
-//   - server-side IP rate-limit (5/hr/IP)
-//   - the honeypot field below (bots fill every field; humans don't)
-async function requestDemoPin(ev){
-  ev && ev.preventDefault && ev.preventDefault();
-  var btn   = document.getElementById('demoSubmit');
-  var errEl = document.getElementById('demoErr');
-  var name  = (document.getElementById('demoName').value  || '').trim();
-  var email = (document.getElementById('demoEmail').value || '').trim();
-  var msg   = (document.getElementById('demoMessage').value || '').trim();
-  var honeypot = (document.getElementById('demoHoneypot').value || '').trim();
-  errEl.textContent = '';
-
-  if(!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
-    errEl.textContent = 'Please enter a valid email address.';
-    return;
-  }
-  btn.disabled = true;
-  var originalLabel = btn.textContent;
-  btn.textContent = 'Sending…';
-
-  var res;
-  try {
-    res = await fetch(CHECKOUT_BACKEND_URL.replace(/\/+$/,'') + '/demo/request', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({ email: email, name: name, message: msg, website: honeypot }),
-    });
-  } catch(e){
-    btn.disabled = false;
-    btn.textContent = originalLabel;
-    errEl.textContent = 'Network error. Please try again, or email solvixadmin@kidquest.fun.';
-    return;
-  }
-  var data; try { data = await res.json(); } catch(e){ data = null; }
-  if(!res.ok || !data || !data.ok){
-    btn.disabled = false;
-    btn.textContent = originalLabel;
-    var code = data && data.error || '';
-    if(code === 'rate_limited')        errEl.textContent = 'Too many requests from your IP. Try again in an hour.';
-    else if(code === 'invalid_email')  errEl.textContent = 'That email address looks malformed.';
-    else if(code === 'email_not_configured') errEl.textContent = 'Demo email is temporarily unavailable. Please email solvixadmin@kidquest.fun.';
-    else                               errEl.textContent = 'Something went wrong. Please try again or email solvixadmin@kidquest.fun.';
-    return;
-  }
-  // Success — swap the form for the "check your inbox" panel.
-  document.getElementById('demoSentTo').textContent = data.sentTo || email;
-  document.getElementById('demoFormWrap').style.display    = 'none';
-  document.getElementById('demoSuccessWrap').style.display = 'block';
-  // Restore button state in case the user clicks "try again" later.
-  btn.disabled = false;
-  btn.textContent = originalLabel;
-}
-
-// Operator-side reset — visitor clicks "try again" on the success panel
-// (e.g. they typed the wrong address). Bring the form back, blank.
-function resetDemoForm(ev){
-  ev && ev.preventDefault && ev.preventDefault();
-  var f = document.getElementById('demoForm');
-  if(f) f.reset();
-  document.getElementById('demoErr').textContent = '';
-  document.getElementById('demoSuccessWrap').style.display = 'none';
-  document.getElementById('demoFormWrap').style.display    = 'block';
-  // Move focus into the email field so a quick retype is one keystroke away.
-  var em = document.getElementById('demoEmail');
-  if(em) em.focus();
-}
+// Demo entry is now two static deeplinks (#demo section) — no email
+// gate, no /demo/request roundtrip. Visitors click Parent or Teacher
+// and the app opens straight to the right dashboard with shared PIN
+// 2228. The /demo/request worker endpoint still exists for now in case
+// we want to bring it back, but nothing on this page hits it anymore.
 
 // Autoplay-queue mock (#see, mock 4): advance the active item every
 // ~2.5s, marking finished items "done" with a green check. After the

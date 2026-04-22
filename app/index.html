@@ -2783,23 +2783,62 @@ const STUDENTS = [
 STUDENTS.forEach(s=>{ if(!s.color) s.color = s.colorDark; });
 
 /* ---- DEMO PROFILES ----
-   Prospect-facing: a parent can enter DEMO_PIN on the home screen, pick a
-   grade, and explore the student experience without affecting real data.
+   Prospect-facing: a parent or teacher can enter DEMO_PIN on the home
+   screen and explore the student experience without affecting real data.
    Each demo grade reuses an existing student's curriculum
    (`curriculumSid`) so we don't duplicate lesson data. Demo users are
    created in-memory only — saveState() skips cloud + localStorage when
    the current user is a demo id, so a refresh wipes the demo state
    clean. Change DEMO_PIN if you share the PIN with a parent and want
-   to rotate it later. */
+   to rotate it later.
+
+   DUAL-DEMO ROSTERS (new):
+   • Parent demo (planType=family) → 5 kids, each in a different grade,
+     so a parent gets a feel for what one household with siblings looks
+     like in the Parent Hub.
+   • Teacher demo (planType=classroom) → one demo student per grade
+     across the full SK→Grade 5 ladder, so a teacher can see what every
+     grade level looks like in the Teacher Dashboard.
+   Same DEMO_PIN ('2228') unlocks both — disambiguated by the `:parent`
+   or `:teacher` mode suffix appended in authenticateTenantCode below. */
 const DEMO_PIN = '2228';
-const DEMO_GRADES = [
-  { id:'demo-sk', name:'Senior Kindergarten Demo', grade:'Senior Kindergarten', initial:'SK', curriculumSid:'nishan',   colorLight:'#91c4f5', colorDark:'#0984e3' },
-  { id:'demo-g1', name:'Grade 1 Demo',              grade:'Grade 1',              initial:'1',  curriculumSid:'akaran',   colorLight:'#b6adff', colorDark:'#6c5ce7' },
-  { id:'demo-g2', name:'Grade 2 Demo',              grade:'Grade 2',              initial:'2',  curriculumSid:'rushan',   colorLight:'#81ecec', colorDark:'#00b894' },
-  { id:'demo-g3', name:'Grade 3 Demo',              grade:'Grade 3',              initial:'3',  curriculumSid:'akshayan', colorLight:'#ff9f9f', colorDark:'#d63031' },
-  { id:'demo-g4', name:'Grade 4 Demo',              grade:'Grade 4',              initial:'4',  curriculumSid:'isaiah',   colorLight:'#ffd54f', colorDark:'#f39c12' },
-  { id:'demo-g5', name:'Grade 5 Demo',              grade:'Grade 5',              initial:'5',  curriculumSid:'isaiah',   colorLight:'#ffb3ba', colorDark:'#e84393' },
+// PARENT demo: 5 siblings spread across grades. We deliberately skip
+// some grade levels here so it feels like a real family roster (you
+// rarely have one kid in every single grade) and give the showcase a
+// believable blend of early, middle, and upper grades.
+const DEMO_GRADES_PARENT = [
+  { id:'demo-p-sk', name:'Aria',   grade:'Senior Kindergarten', initial:'A', curriculumSid:'nishan',   colorLight:'#91c4f5', colorDark:'#0984e3' },
+  { id:'demo-p-g1', name:'Eli',    grade:'Grade 1',             initial:'E', curriculumSid:'akaran',   colorLight:'#b6adff', colorDark:'#6c5ce7' },
+  { id:'demo-p-g3', name:'Maya',   grade:'Grade 3',             initial:'M', curriculumSid:'akshayan', colorLight:'#ff9f9f', colorDark:'#d63031' },
+  { id:'demo-p-g4', name:'Jonah',  grade:'Grade 4',             initial:'J', curriculumSid:'isaiah',   colorLight:'#ffd54f', colorDark:'#f39c12' },
+  { id:'demo-p-g5', name:'Sienna', grade:'Grade 5',             initial:'S', curriculumSid:'isaiah',   colorLight:'#ffb3ba', colorDark:'#e84393' },
 ];
+// TEACHER demo: one student per grade — full SK→G5 sweep so a teacher
+// scrolling the dashboard sees every grade-level UI variation.
+const DEMO_GRADES_TEACHER = [
+  { id:'demo-t-sk', name:'Senior Kindergarten Demo', grade:'Senior Kindergarten', initial:'SK', curriculumSid:'nishan',   colorLight:'#91c4f5', colorDark:'#0984e3' },
+  { id:'demo-t-g1', name:'Grade 1 Demo',             grade:'Grade 1',             initial:'1',  curriculumSid:'akaran',   colorLight:'#b6adff', colorDark:'#6c5ce7' },
+  { id:'demo-t-g2', name:'Grade 2 Demo',             grade:'Grade 2',             initial:'2',  curriculumSid:'rushan',   colorLight:'#81ecec', colorDark:'#00b894' },
+  { id:'demo-t-g3', name:'Grade 3 Demo',             grade:'Grade 3',             initial:'3',  curriculumSid:'akshayan', colorLight:'#ff9f9f', colorDark:'#d63031' },
+  { id:'demo-t-g4', name:'Grade 4 Demo',             grade:'Grade 4',             initial:'4',  curriculumSid:'isaiah',   colorLight:'#ffd54f', colorDark:'#f39c12' },
+  { id:'demo-t-g5', name:'Grade 5 Demo',             grade:'Grade 5',             initial:'5',  curriculumSid:'isaiah',   colorLight:'#ffb3ba', colorDark:'#e84393' },
+];
+// Picks the right roster for the active tenant. `tenant_state.demoMode`
+// is set by the worker on /auth — 'parent' or 'teacher'. Falls back to
+// the teacher roster for legacy bare-PIN demos (matches the original
+// pre-split shipped behavior).
+function activeDemoRoster(){
+  try {
+    if(typeof tenant_state !== 'undefined' && tenant_state && tenant_state.demoMode === 'parent'){
+      return DEMO_GRADES_PARENT;
+    }
+  } catch(e){}
+  return DEMO_GRADES_TEACHER;
+}
+// Back-compat alias — older code paths (and anything using the demo
+// student set directly) get the union of both rosters so isDemoUser()
+// keeps working regardless of which mode the tenant landed in.
+const DEMO_GRADES = DEMO_GRADES_PARENT.concat(DEMO_GRADES_TEACHER);
 // Fill in name/color back-compat for demo users too — getStudentInfo
 // and buildAvatarTile both expect `color` and `pin` fields to exist.
 DEMO_GRADES.forEach(d=>{
@@ -8634,10 +8673,21 @@ async function updateTenantSettings(patch, password){
 // Validate a code with the Worker's /auth endpoint. Returns
 // {ok:true, tenant} on hit, {ok:false, error} on miss / rate-limit /
 // network failure.
-async function authenticateTenantCode(code){
+//
+// Optional `demoMode` ('parent' | 'teacher'): when the typed code is
+// the demo PIN, this picks which demo dashboard to land in. We append
+// `:parent` / `:teacher` to the code BEFORE sending — the worker keys
+// dual-demo tenants by the suffixed code. For non-demo PINs we leave
+// the code untouched so production tenants are unaffected.
+async function authenticateTenantCode(code, demoMode){
   if(!DATA_BACKEND_URL) return { ok:false, error:'no_backend_url' };
-  const normalized = (code||'').toString().trim().toLowerCase();
+  let normalized = (code||'').toString().trim().toLowerCase();
   if(!normalized) return { ok:false, error:'missing_code' };
+  // Demo-mode disambiguation: only apply the suffix for the demo PIN.
+  // Other tenants pass through unchanged so we don't break real users.
+  if(normalized === DEMO_PIN && (demoMode === 'parent' || demoMode === 'teacher')){
+    normalized = normalized + ':' + demoMode;
+  }
   let r;
   try {
     r = await fetch(DATA_BACKEND_URL.replace(/\/+$/,'') + '/auth', {
@@ -14199,19 +14249,31 @@ function renderDemoGate(root){
 }
 
 /* ========== DEMO GRADE PICKER ==========
-   After PIN unlock: parent picks which grade to preview. Each tile maps
-   to a real student's curriculum via DEMO_GRADES[n].curriculumSid. */
+   After PIN unlock: visitor picks which grade / kid to preview. Each
+   tile maps to a real student's curriculum via curriculumSid. The
+   roster shown depends on the active demo mode (parent vs teacher) —
+   activeDemoRoster() resolves the right list. */
 function renderDemoGradePicker(root){
-  root.appendChild(h('h2',{class:'demo-grade-title'},'Pick a grade to preview'));
+  const roster = activeDemoRoster();
+  const isParent = (typeof tenant_state !== 'undefined' && tenant_state && tenant_state.demoMode === 'parent');
+  root.appendChild(h('h2',{class:'demo-grade-title'}, isParent ? 'Pick a child to preview' : 'Pick a grade to preview'));
   root.appendChild(h('p',{class:'demo-grade-sub'},
-    'You\'ll start a fresh demo session as a student at that grade. ' +
-    'Nothing you do here is saved — refresh any time to reset.'));
+    isParent
+      ? 'You\'ll start a fresh demo session as that child. Nothing you do here is saved — refresh any time to reset.'
+      : 'You\'ll start a fresh demo session as a student at that grade. Nothing you do here is saved — refresh any time to reset.'));
   const grid = h('div',{class:'profiles demo-grade-grid stagger'});
-  DEMO_GRADES.forEach(d=>{
+  roster.forEach(d=>{
+    // Parent mode → headline = kid's name, subtitle = grade.
+    // Teacher mode → headline = grade (no per-kid identity).
+    const headline  = isParent ? d.name  : d.grade;
+    const subtitle  = isParent ? d.grade : 'Preview →';
+    const ariaLabel = isParent
+      ? `Preview as ${d.name} (${d.grade})`
+      : `Preview as a ${d.grade} student`;
     const tile = h('button',{
       class:'profile-card demo-card',
       onclick:()=>enterDemoAs(d.id),
-      'aria-label':`Preview as a ${d.grade} student`
+      'aria-label': ariaLabel
     },[
       h('div',{class:'avatar-wrap'},[
         h('div',{
@@ -14219,8 +14281,8 @@ function renderDemoGradePicker(root){
           style:`background:linear-gradient(135deg,${d.colorLight},${d.colorDark})`
         }, d.initial),
       ]),
-      h('h3',{},d.grade),
-      h('span',{class:'grade demo-card-sub'},'Preview →'),
+      h('h3',{}, headline),
+      h('span',{class:'grade demo-card-sub'}, subtitle),
     ]);
     // Top stripe uses the grade's colors so the tile picks up identity
     tile.style.setProperty('--demo-stripe',
@@ -14235,9 +14297,13 @@ function renderDemoGradePicker(root){
   // (legacy path, still reachable via the demo-gate screen), "Back to
   // profiles" is the expected fallback.
   if(tenant_state && tenant_state.isDemo){
+    const backLabel = isParent ? '← Switch demo' : '← Switch classroom';
+    const confirmMsg = isParent
+      ? 'Leave the parent demo and enter a different PIN?'
+      : 'Leave the demo and enter a different classroom PIN?';
     root.appendChild(h('button',{class:'demo-gate-back',onclick:()=>{
-      if(confirm('Leave the demo and enter a different classroom PIN?')) clearTenantAndReload();
-    }},'← Switch classroom'));
+      if(confirm(confirmMsg)) clearTenantAndReload();
+    }}, backLabel));
   } else {
     root.appendChild(h('button',{class:'demo-gate-back',onclick:()=>go('profiles')},'← Back to profiles'));
   }
@@ -23916,12 +23982,39 @@ function shuffle(a){const b=[...a];for(let i=b.length-1;i>0;i--){const j=Math.fl
        reason about elsewhere in the codebase. */
 function showTenantGate(){
   if(document.getElementById('kq-tenant-gate')) return; // idempotent
+  // Pull demo intent from the URL: ?demo=parent or ?demo=teacher. Lets
+  // the marketing page deep-link visitors straight into the right demo
+  // dashboard. The mode is sticky for this page load only — refreshing
+  // without the param falls back to the user-picker chip below.
+  let demoMode = '';
+  try {
+    const params = new URLSearchParams(location.search || '');
+    const m = (params.get('demo') || '').toLowerCase();
+    if(m === 'parent' || m === 'teacher') demoMode = m;
+  } catch(e){}
   const wrap = document.createElement('div');
   wrap.id = 'kq-tenant-gate';
   wrap.setAttribute('role','dialog');
   wrap.setAttribute('aria-modal','true');
   wrap.setAttribute('aria-labelledby','kq-tg-title');
   wrap.style.cssText = 'position:fixed;inset:0;background:linear-gradient(135deg,#667eea,#764ba2);z-index:99999;display:flex;align-items:center;justify-content:center;font-family:"DM Sans",system-ui,sans-serif;padding:20px;box-sizing:border-box;';
+  // Banner shown only in demo mode — telegraphs which dashboard the
+  // visitor is about to land in BEFORE they type the PIN, plus a tiny
+  // toggle so they can switch without going back to marketing.
+  const isDemoFlow = !!demoMode;
+  const demoBadge = !isDemoFlow ? '' : (
+      '<div id="kq-tg-demo" style="display:flex;align-items:center;justify-content:center;gap:8px;margin:-8px 0 16px;padding:10px 14px;background:linear-gradient(135deg,#fef3c7,#fde68a);border-radius:12px;font-size:13px;font-weight:700;color:#92400e;">'
+    +   '<span>'+(demoMode==='parent'?'👨‍👩‍👧':'🎓')+'</span>'
+    +   '<span id="kq-tg-demo-label">'+(demoMode==='parent'?'Parent Demo':'Teacher Demo')+'</span>'
+    +   '<span style="opacity:.6;font-weight:600;">·</span>'
+    +   '<button type="button" id="kq-tg-demo-switch" style="background:none;border:none;color:#92400e;font:inherit;font-weight:700;text-decoration:underline;cursor:pointer;padding:0;">Switch</button>'
+    + '</div>'
+  );
+  const subline = !isDemoFlow
+    ? 'Enter your classroom PIN to begin.'
+    : (demoMode === 'parent'
+        ? 'Type PIN <strong>2228</strong> to preview the Parent Hub.'
+        : 'Type PIN <strong>2228</strong> to preview the Teacher Dashboard.');
   // 4-digit PIN input. `inputmode=numeric` pops a number pad on mobile;
   // `pattern=[0-9]*` gives iOS the numeric keyboard (the pattern is
   // checked client-side only — the worker enforces 4 digits). We render
@@ -23931,12 +24024,15 @@ function showTenantGate(){
     + '<div style="background:#fff;border-radius:24px;padding:40px 32px;max-width:440px;width:100%;text-align:center;box-shadow:0 24px 64px rgba(0,0,0,.3);box-sizing:border-box;">'
     +   '<div style="font-size:44px;margin-bottom:8px;">🌟</div>'
     +   '<h1 id="kq-tg-title" style="margin:0 0 8px;font-size:26px;color:#2d3436;font-weight:800;">Welcome to Solvix</h1>'
-    +   '<p style="margin:0 0 24px;color:#636e72;font-size:15px;line-height:1.5;">Enter your classroom PIN to begin.</p>'
+    +   '<p style="margin:0 0 24px;color:#636e72;font-size:15px;line-height:1.5;">' + subline + '</p>'
+    +   demoBadge
     +   '<input id="kq-tg-input" type="tel" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="••••" style="width:220px;max-width:100%;padding:18px 16px 18px calc(16px + .35em);border:2.5px solid #dfe6e9;border-radius:16px;font-size:36px;font-weight:800;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;text-align:center;outline:none;box-sizing:border-box;letter-spacing:.35em;color:#2d3436;" aria-label="4-digit classroom PIN" />'
     +   '<button id="kq-tg-submit" type="button" style="margin-top:18px;width:100%;padding:14px;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;border:none;border-radius:12px;font-size:16px;font-weight:700;cursor:pointer;letter-spacing:.02em;">Enter</button>'
     +   '<div id="kq-tg-msg" style="margin-top:14px;font-size:13px;color:#d63031;min-height:1em;line-height:1.4;" aria-live="polite"></div>'
     +   '<div style="margin-top:20px;padding-top:18px;border-top:1px solid #f1f3f5;font-size:12px;color:#b2bec3;line-height:1.5;">'
-    +     "Don't have a PIN? Ask the parent or teacher who set up your classroom."
+    +     (isDemoFlow
+            ? 'No card, no account. Demo data resets when you refresh.'
+            : "Don't have a PIN? Ask the parent or teacher who set up your classroom.")
     +   '</div>'
     + '</div>';
   document.body.appendChild(wrap);
@@ -23945,6 +24041,19 @@ function showTenantGate(){
   const msg    = document.getElementById('kq-tg-msg');
   const setMsg = (text, color)=>{ msg.textContent = text; msg.style.color = color || '#d63031'; };
   const submitting = { busy:false };
+  // Wire the in-banner Switch link so a visitor can flip Parent ↔ Teacher
+  // demo without going back to the marketing site.
+  const switchBtn = document.getElementById('kq-tg-demo-switch');
+  if(switchBtn){
+    switchBtn.addEventListener('click', ()=>{
+      const next = (demoMode === 'parent') ? 'teacher' : 'parent';
+      const url  = new URL(location.href);
+      url.searchParams.set('demo', next);
+      // Preserve hash + everything else; replace so back-button doesn't
+      // bounce the visitor into a stale demo state.
+      location.replace(url.toString());
+    });
+  }
   // Filter any non-digit the user pastes or types. Stays 4 chars max.
   input.addEventListener('input', ()=>{
     const cleaned = (input.value || '').replace(/\D+/g,'').slice(0,4);
@@ -23961,7 +24070,7 @@ function showTenantGate(){
     submit.disabled = true;
     submit.textContent = 'Checking…';
     setMsg('', '#636e72');
-    const result = await authenticateTenantCode(raw);
+    const result = await authenticateTenantCode(raw, demoMode);
     if(result.ok){
       // Different tenant than was previously cached? Wipe the per-tenant
       // localStorage cache so kids never see another family's data.
