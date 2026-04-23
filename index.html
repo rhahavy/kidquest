@@ -1101,9 +1101,11 @@ async function startTrial(planFamily){
 
 // Demo entry is now two static deeplinks (#demo section) — no email
 // gate, no /demo/request roundtrip. Visitors click Parent or Teacher
-// and the app opens straight to the right dashboard with shared PIN
-// 2228. The /demo/request worker endpoint still exists for now in case
-// we want to bring it back, but nothing on this page hits it anymore.
+// and the app opens straight to the right dashboard. The shared demo
+// PIN is handed out by the operator (solvixadmin@kidquest.fun) — not
+// in this file, not on the marketing page, not on the gate screen.
+// The /demo/request worker endpoint still exists for now in case we
+// want to bring it back, but nothing on this page hits it anymore.
 
 // Autoplay-queue mock (#see, mock 4): advance the active item every
 // ~2.5s, marking finished items "done" with a green check. After the

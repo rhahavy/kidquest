@@ -2187,13 +2187,23 @@ async function sendOwnerRefundNotification(env, audit, tenant) {
 // END ADMIN DASHBOARD ROUTES
 // =====================================================================
 
-// POST /auth — body: { code }. Returns sanitized tenant metadata on
-// hit, 401 on miss. Failed attempts increment BOTH a per-IP counter
-// (blocks a single host from churning through codes) AND a per-code
-// counter (locks that code if attackers distribute the brute force
-// across IPs). The per-code lockout is the key defense against
-// botnet-distributed PIN brute forcing — a 4-digit keyspace is too
-// small to rely on per-IP limits alone.
+// POST /auth — body: { code, mode? }. Returns sanitized tenant
+// metadata on hit, 401 on miss. Failed attempts increment BOTH a
+// per-IP counter (blocks a single host from churning through codes)
+// AND a per-code counter (locks that code if attackers distribute the
+// brute force across IPs). The per-code lockout is the key defense
+// against botnet-distributed PIN brute forcing — a 4-digit keyspace
+// is too small to rely on per-IP limits alone.
+//
+// Optional `mode` ('parent' | 'teacher'): the dual-demo reserved PIN
+// has two variants (`<pin>:parent` and `<pin>:teacher`) keyed in
+// RESERVED_TENANTS. The client sends `mode` instead of combining it
+// with the code client-side — that way the PIN literal never has to
+// appear in client source. If `<code>:<mode>` matches a reserved
+// tenant we return that; otherwise we fall through to plain `<code>`
+// lookup (for regular tenants or the back-compat alias). Rate limits
+// key on the ORIGINAL code so mode-switching doesn't bypass the
+// per-code lockout.
 async function handleAuthRoute(request, env, corsOrigin) {
   if (!env.KV) return json({ error: 'kv_not_bound' }, 500, corsOrigin);
   const ip = request.headers.get('cf-connecting-ip') || '';
@@ -2201,6 +2211,8 @@ async function handleAuthRoute(request, env, corsOrigin) {
   try { body = await request.json(); } catch { return json({ error: 'bad_json' }, 400, corsOrigin); }
   const code = (body.code || '').toString().trim().toLowerCase();
   if (!code) return json({ error: 'missing_code' }, 400, corsOrigin);
+  const rawMode = (body.mode || '').toString().trim().toLowerCase();
+  const mode = (rawMode === 'parent' || rawMode === 'teacher') ? rawMode : '';
 
   const ipKey   = `ratelimit:auth:ip:${ip}`;
   const codeKey = `ratelimit:auth:code:${code}`;
@@ -2210,7 +2222,11 @@ async function handleAuthRoute(request, env, corsOrigin) {
     return json({ error: 'rate_limited', resetAt: ipPre.resetAt || codePre.resetAt }, 429, corsOrigin);
   }
 
-  const tenant = await lookupTenantByCode(env, code);
+  // Try `code:mode` first (dual-demo), then plain code (regular
+  // tenants + back-compat alias).
+  let tenant = null;
+  if (mode) tenant = await lookupTenantByCode(env, code + ':' + mode);
+  if (!tenant) tenant = await lookupTenantByCode(env, code);
   if (!tenant) {
     await rateLimitHit(env, ipKey,   RL.AUTH_IP.max,   RL.AUTH_IP.window);
     await rateLimitHit(env, codeKey, RL.AUTH_CODE.max, RL.AUTH_CODE.window);

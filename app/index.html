@@ -2783,14 +2783,13 @@ const STUDENTS = [
 STUDENTS.forEach(s=>{ if(!s.color) s.color = s.colorDark; });
 
 /* ---- DEMO PROFILES ----
-   Prospect-facing: a parent or teacher can enter DEMO_PIN on the home
-   screen and explore the student experience without affecting real data.
-   Each demo grade reuses an existing student's curriculum
+   Prospect-facing: a parent or teacher types the demo PIN on the
+   welcome gate and explores the student experience without affecting
+   real data. Each demo grade reuses an existing student's curriculum
    (`curriculumSid`) so we don't duplicate lesson data. Demo users are
    created in-memory only — saveState() skips cloud + localStorage when
    the current user is a demo id, so a refresh wipes the demo state
-   clean. Change DEMO_PIN if you share the PIN with a parent and want
-   to rotate it later.
+   clean.
 
    DUAL-DEMO ROSTERS (new):
    • Parent demo (planType=family) → 5 kids, each in a different grade,
@@ -2799,9 +2798,13 @@ STUDENTS.forEach(s=>{ if(!s.color) s.color = s.colorDark; });
    • Teacher demo (planType=classroom) → one demo student per grade
      across the full SK→Grade 5 ladder, so a teacher can see what every
      grade level looks like in the Teacher Dashboard.
-   Same DEMO_PIN ('2228') unlocks both — disambiguated by the `:parent`
-   or `:teacher` mode suffix appended in authenticateTenantCode below. */
-const DEMO_PIN = '2228';
+   The demo PIN lives SERVER-SIDE in the Cloudflare Worker's
+   RESERVED_TENANTS map (`<pin>:parent` and `<pin>:teacher` keys) —
+   NOT in this file, NOT anywhere in the client bundle. The client
+   sends `{code: userInput, mode: 'parent'|'teacher'}` to /auth and
+   the worker does the match. That way view-source of the app shell
+   can't leak the PIN even with Ctrl+F. To rotate the PIN, edit the
+   worker's RESERVED_TENANTS and re-deploy. */
 // PARENT demo: 5 siblings spread across grades. We deliberately skip
 // some grade levels here so it feels like a real family roster (you
 // rarely have one kid in every single grade) and give the showcase a
@@ -2844,7 +2847,10 @@ const DEMO_GRADES = DEMO_GRADES_PARENT.concat(DEMO_GRADES_TEACHER);
 DEMO_GRADES.forEach(d=>{
   d.color = d.colorDark;
   d.isDemo = true;
-  d.pin = DEMO_PIN;            // unused (we bypass the emoji-pin flow)
+  // No d.pin: demo students bypass the emoji-pin flow entirely (they
+  // enter through the tenant gate, not a per-student pin). Keeping
+  // d.pin unset also means the PIN literal never has to appear in
+  // this file.
   d.decoEmoji = '🎓';
   d.hint = '(demo)';
 });
@@ -8674,26 +8680,26 @@ async function updateTenantSettings(patch, password){
 // {ok:true, tenant} on hit, {ok:false, error} on miss / rate-limit /
 // network failure.
 //
-// Optional `demoMode` ('parent' | 'teacher'): when the typed code is
-// the demo PIN, this picks which demo dashboard to land in. We append
-// `:parent` / `:teacher` to the code BEFORE sending — the worker keys
-// dual-demo tenants by the suffixed code. For non-demo PINs we leave
-// the code untouched so production tenants are unaffected.
+// Optional `demoMode` ('parent' | 'teacher'): picks which demo
+// dashboard to land in when the typed code is the reserved demo PIN.
+// We pass `mode` alongside the code — the WORKER does the suffix
+// combine (`<code>:<mode>` vs plain `<code>`). This keeps the PIN
+// literal out of the client bundle entirely: even view-source +
+// Ctrl+F can't find the demo PIN in this file. For non-demo PINs the
+// mode is harmlessly ignored — the worker falls through to plain
+// `<code>` lookup when `<code>:<mode>` doesn't match a reserved
+// tenant.
 async function authenticateTenantCode(code, demoMode){
   if(!DATA_BACKEND_URL) return { ok:false, error:'no_backend_url' };
-  let normalized = (code||'').toString().trim().toLowerCase();
+  const normalized = (code||'').toString().trim().toLowerCase();
   if(!normalized) return { ok:false, error:'missing_code' };
-  // Demo-mode disambiguation: only apply the suffix for the demo PIN.
-  // Other tenants pass through unchanged so we don't break real users.
-  if(normalized === DEMO_PIN && (demoMode === 'parent' || demoMode === 'teacher')){
-    normalized = normalized + ':' + demoMode;
-  }
+  const mode = (demoMode === 'parent' || demoMode === 'teacher') ? demoMode : '';
   let r;
   try {
     r = await fetch(DATA_BACKEND_URL.replace(/\/+$/,'') + '/auth', {
       method:'POST',
       headers:{ 'Content-Type':'application/json' },
-      body: JSON.stringify({ code: normalized }),
+      body: JSON.stringify(mode ? { code: normalized, mode } : { code: normalized }),
     });
   } catch(e){ return { ok:false, error:'network_error' }; }
   if(r.status === 429) return { ok:false, error:'rate_limited' };
@@ -14202,9 +14208,11 @@ function renderProfiles(root){
 }
 
 /* ========== DEMO PIN GATE ==========
-   4-digit PIN entry for parents/prospects. PIN is DEMO_PIN ('2228'),
-   intentionally separate from the emoji-PIN flow kids use — the PIN is
-   meant to be shared verbally or in a tutoring pamphlet. */
+   In-app 4-digit PIN gate. Currently DEAD CODE — no nav path routes
+   to screen='demo-gate' anymore (demo entry happens on the welcome
+   tenant gate, not here). Kept as a scaffold in case we bring back
+   an in-app demo unlock. The PIN is validated SERVER-SIDE via
+   authenticateTenantCode — the literal never appears in this file. */
 function renderDemoGate(root){
   const wrap = h('div',{class:'demo-gate'});
   wrap.appendChild(h('div',{class:'demo-gate-ico'},'🎓'));
@@ -14221,9 +14229,20 @@ function renderDemoGate(root){
     'aria-label':'Demo PIN'
   });
   const msg = h('div',{class:'demo-msg'},'');
-  const tryUnlock = ()=>{
+  let inFlight = false;
+  const tryUnlock = async ()=>{
+    if(inFlight) return;
     const val = (pinInput.value||'').trim();
-    if(val === DEMO_PIN){
+    if(val.length !== 4) return;
+    inFlight = true;
+    msg.textContent = 'Checking…';
+    msg.className = 'demo-msg';
+    // Default to teacher mode for this dead-code path (no UI to pick
+    // between parent / teacher here). If this screen ever comes back
+    // we should add a mode toggle — but today it's unreachable.
+    const res = await authenticateTenantCode(val, 'teacher');
+    inFlight = false;
+    if(res.ok){
       msg.textContent = '✓ Unlocked';
       msg.className = 'demo-msg ok';
       setTimeout(()=>go('demo-grade'), 450);
@@ -16111,7 +16130,7 @@ function findActivityById(activityId){
 /* Adult-gated modal: edit the YouTube video embedded on a specific lesson.
    Gating rule:
      - Already logged in as TEACHER   → skip prompt (they entered TEACHER_CREDS to get here).
-     - In the parent DEMO session     → skip prompt (they entered DEMO_PIN to get here).
+     - In the parent DEMO session     → skip prompt (they entered the demo PIN to get here).
      - Any kid profile (real student) → require TEACHER_CREDS every time — no cached
        unlock, because a kid could hand the iPad around mid-lesson.
    The demo skip is deliberate: owners demo the app at a kid's home, want to
@@ -16330,7 +16349,7 @@ function openLessonVideoSettings(activityId, builtinIds){
 
   // Skip the password prompt when the session is already adult-authenticated:
   //   • isTeacher      — teacher entered TEACHER_CREDS at login
-  //   • isDemoUser(..) — parent entered DEMO_PIN at home screen
+  //   • isDemoUser(..) — parent entered the demo PIN at the tenant gate
   // Kid profiles still get the password prompt every time (see header comment).
   if(isTeacher || isDemoUser(currentUser)){
     buildUnlocked();
