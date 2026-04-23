@@ -6,12 +6,13 @@
 <!-- Solvix admin dashboard
      ------------------------
      Operator-only console for managing tenants. Auth model:
-       1. Operator types ADMIN_TOKEN once → stored in localStorage
-       2. Every API call sends `Authorization: Bearer <token>`
-       3. Token is the same secret used by /provision, set via:
-            wrangler secret put ADMIN_TOKEN
-       4. Logout button wipes localStorage
-     The token is NEVER in markup, query strings, or referrers.
+       1. Operator types the admin password once → stored in localStorage
+       2. Every API call sends `Authorization: Bearer <password>`
+       3. The password is the same secret used by /provision, stored as
+          the ADMIN_TOKEN Cloudflare secret. Rotate via:
+            echo -n '<new-password>' | wrangler secret put ADMIN_TOKEN
+       4. Sign out button wipes localStorage
+     The password is NEVER in markup, query strings, or referrers.
      This page is intentionally noindex/nofollow and CSP-locked. -->
 <meta name="referrer" content="no-referrer">
 <meta name="robots" content="noindex,nofollow">
@@ -223,15 +224,15 @@ tbody tr:last-child td{border-bottom:none}
 <body>
 
 <!-- ============ AUTH GATE ============ -->
-<!-- Shown when no admin token in localStorage. -->
+<!-- Shown when no admin password in localStorage. -->
 <div id="gate" class="gate hidden">
   <div class="brand" style="justify-content:center;margin-bottom:18px">
     <div class="brand-mark">🌟</div>
     <div>Solvix <span class="brand-sub">Admin</span></div>
   </div>
   <h1>Sign in</h1>
-  <p>Paste your <code>ADMIN_TOKEN</code> to continue. The token never leaves your browser except as a Bearer header on API calls.</p>
-  <input id="gate-token" type="password" placeholder="ADMIN_TOKEN" autocomplete="off" autocapitalize="off" spellcheck="false">
+  <p>Enter your admin password to continue. It stays on this device — it's only sent to the Solvix worker as the <code>Authorization</code> header on API calls.</p>
+  <input id="gate-token" type="password" placeholder="Admin password" autocomplete="current-password" autocapitalize="off" spellcheck="false">
   <button class="btn btn-primary" id="gate-submit" style="width:100%;padding:14px;font-size:14px">Unlock dashboard</button>
   <div class="err hidden" id="gate-err"></div>
 </div>
@@ -245,7 +246,7 @@ tbody tr:last-child td{border-bottom:none}
     </div>
     <div class="topbar-actions">
       <button class="btn btn-ghost btn-sm" id="refresh-btn" title="Refresh data">🔄 Refresh</button>
-      <button class="btn btn-ghost btn-sm" id="logout-btn" title="Forget the admin token on this device">🚪 Sign out</button>
+      <button class="btn btn-ghost btn-sm" id="logout-btn" title="Forget the admin password on this device">🚪 Sign out</button>
     </div>
   </div>
 
@@ -421,10 +422,17 @@ tbody tr:last-child td{border-bottom:none}
   // marketing origin or locally during development.
   var BACKEND = 'https://kidquest-ai-proxy.rhahavy-b.workers.dev';
 
-  // Token storage. localStorage is fine — same machine the operator
+  // Password storage. localStorage is fine — same machine the operator
   // works from, never sent over the network except as Authorization
   // header on Worker calls (which are HTTPS-only).
-  var TOKEN_KEY = 'kidquest_admin_token';
+  var TOKEN_KEY = 'solvix_admin_password';
+  // Legacy key cleanup — previously stored under the kidquest_* name.
+  // Migrate once so an already-signed-in operator doesn't get bounced.
+  try {
+    var legacy = localStorage.getItem('kidquest_admin_token');
+    if(legacy && !localStorage.getItem(TOKEN_KEY)) localStorage.setItem(TOKEN_KEY, legacy);
+    if(legacy) localStorage.removeItem('kidquest_admin_token');
+  } catch(e){}
   function getToken(){ return localStorage.getItem(TOKEN_KEY) || ''; }
   function setToken(t){ localStorage.setItem(TOKEN_KEY, t); }
   function clearToken(){ localStorage.removeItem(TOKEN_KEY); }
@@ -445,7 +453,7 @@ tbody tr:last-child td{border-bottom:none}
     try { data = await r.json(); } catch(e){}
     if(r.status === 401){
       clearToken();
-      showGate('Your token was rejected. Sign in again.');
+      showGate('That password was rejected. Sign in again.');
       throw new Error('unauthorized');
     }
     if(!r.ok){
@@ -1077,7 +1085,7 @@ tbody tr:last-child td{border-bottom:none}
   // -------- Top-bar buttons --------
   document.getElementById('refresh-btn').addEventListener('click', loadTenants);
   document.getElementById('logout-btn').addEventListener('click', function(){
-    if(!confirm('Sign out of admin? You\'ll need your token to sign back in.')) return;
+    if(!confirm('Sign out of admin? You\'ll need your password to sign back in.')) return;
     clearToken();
     showGate();
   });
