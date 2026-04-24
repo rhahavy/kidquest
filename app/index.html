@@ -184,6 +184,17 @@ img{max-width:100%}
 .brand:active .logo{transform:rotate(-6deg) scale(1.02)}
 .brand:focus-visible{outline:3px solid var(--primary);outline-offset:4px;border-radius:14px}
 .brand-text{background:linear-gradient(135deg,var(--primary),#4834d4);-webkit-background-clip:text;background-clip:text;color:transparent}
+/* Left cluster wrapper — keeps brand button + "Main site" exit link
+   grouped as a single flex item so the topbar's 3-column space-between
+   layout (brand / nav / pills) stays intact. */
+.topbar-brand{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+/* "Main site" exit link — subtle so it never competes with the logo
+   or nav buttons, but always visible as a safety-valve exit back to
+   the marketing site. Deliberately low-contrast until hovered. */
+.site-link{display:inline-flex;align-items:center;gap:4px;padding:6px 12px;font-size:13px;font-weight:600;color:var(--ink2);background:rgba(108,92,231,.08);border-radius:999px;text-decoration:none;white-space:nowrap;transition:background .2s var(--spring),color .2s var(--spring),transform .2s var(--spring)}
+.site-link:hover{background:rgba(108,92,231,.18);color:var(--primary);transform:translateY(-1px)}
+.site-link:focus-visible{outline:3px solid var(--primary);outline-offset:2px}
+@media (max-width:480px){.site-link{font-size:12px;padding:5px 10px}}
 .topbar nav{display:flex;gap:6px;flex-wrap:wrap}
 .nav-btn{padding:9px 16px;border-radius:999px;font-size:14px;font-weight:700;color:var(--ink2);transition:all .25s var(--spring)}
 .nav-btn:hover{background:rgba(108,92,231,.1);color:var(--ink);transform:translateY(-1px)}
@@ -2281,6 +2292,9 @@ body.has-dev-banner{padding-top:26px}
 /* ---- FOOTER ---- */
 .footer{margin-top:40px;text-align:center;padding:18px;font-size:13px;color:var(--ink3)}
 .footer .brand-footer{display:inline-flex;align-items:center;gap:8px;padding:10px 18px;border-radius:999px;background:var(--card);font-weight:700;font-size:14px;color:var(--ink);box-shadow:var(--shadow);border:1px solid var(--line)}
+.footer-links{margin-top:10px}
+.footer-link{color:var(--primary);font-weight:600;text-decoration:none;transition:opacity .2s var(--spring)}
+.footer-link:hover{opacity:.75;text-decoration:underline}
 
 /* ---- NOVA MUTE BUTTON ----
    Corner toggle that silences Nova's voice. Independent from the
@@ -2532,13 +2546,30 @@ body.has-dev-banner{padding-top:26px}
          affordance, useful for parents/visitors viewing over a kid's
          shoulder who want the landing page, and for kids who want to switch
          back to the profile picker without hunting for "Switch." -->
-    <button class="brand" type="button" onclick="go('home')" aria-label="Solvix — go to welcome page"><span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2c2.5 2.5 4 5.5 4 9v6l-2 2h-4l-2-2v-6c0-3.5 1.5-6.5 4-9z"/><circle cx="12" cy="10" r="1.8"/><path d="M8 14l-3 4v2l3-1M16 14l3 4v2l-3-1"/></svg></span><span class="brand-text">Solvix</span></button>
+    <!-- Left cluster: brand + explicit exit link back to the marketing
+         site (/). Grouped in a wrapper so the topbar keeps its 3-item
+         flex layout (brand cluster / nav / pills) with `space-between`
+         behaviour intact. Rationale for the site link: a parent or
+         teacher who landed directly on /app/ (bookmark, direct link,
+         cleared history) had NO visible way back to kidquest.fun — the
+         brand button goes to the app's internal welcome screen, not
+         the public site. This link fills that gap regardless of
+         browser history. Kids won't usually click it; it's primarily
+         a safety valve for visitors. -->
+    <div class="topbar-brand">
+      <button class="brand" type="button" onclick="go('home')" aria-label="Solvix — go to welcome page"><span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2c2.5 2.5 4 5.5 4 9v6l-2 2h-4l-2-2v-6c0-3.5 1.5-6.5 4-9z"/><circle cx="12" cy="10" r="1.8"/><path d="M8 14l-3 4v2l3-1M16 14l3 4v2l-3-1"/></svg></span><span class="brand-text">Solvix</span></button>
+      <a href="/" class="site-link" title="Go to the main Solvix website" aria-label="Go to the main Solvix website">← Main site</a>
+    </div>
     <nav id="nav"></nav>
     <div class="pills" id="pills"></div>
   </header>
   <main id="screen"></main>
   <footer class="footer">
     <div class="brand-footer">Solvix v1.0 · Built by Rhahavy</div>
+    <!-- Secondary exit to the marketing site. The topbar already has the
+         primary "← Main site" link; this footer link is a low-cost backup
+         for anyone scrolled to the bottom of a long dashboard. -->
+    <div class="footer-links"><a href="/" class="footer-link">Main site (kidquest.fun) →</a></div>
   </footer>
 </div>
 <button id="fab" class="fab hidden" title="Home" aria-label="Go home"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5V20a1.5 1.5 0 0 1-1.5 1.5h-4v-6h-7v6h-4A1.5 1.5 0 0 1 3 20Z"/></svg></button>
