@@ -2601,7 +2601,16 @@ body.has-dev-banner{padding-top:26px}
          to the dashboard for logged-in students; this is the logo-as-home
          affordance, useful for parents/visitors viewing over a kid's
          shoulder who want the landing page, and for kids who want to switch
-         back to the profile picker without hunting for "Switch." -->
+         back to the profile picker without hunting for "Switch."
+
+         Special case — on the PIN screen, clicking the brand exits to the
+         marketing site (kidquest.fun) instead of the internal welcome
+         screen. Rationale: the pin page is where a user is mid-login, and
+         the internal welcome is exactly the screen they just came FROM to
+         get there. Bouncing them back to it is a no-op that feels like a
+         broken button. A parent/visitor who ended up at a kid's pin screen
+         and wants to leave the app entirely is better served by landing on
+         the public marketing page.  -->
     <!-- Left cluster: brand + explicit exit link back to the marketing
          site (/). Grouped in a wrapper so the topbar keeps its 3-item
          flex layout (brand cluster / nav / pills) with `space-between`
@@ -2613,7 +2622,7 @@ body.has-dev-banner{padding-top:26px}
          browser history. Kids won't usually click it; it's primarily
          a safety valve for visitors. -->
     <div class="topbar-brand">
-      <button class="brand" type="button" onclick="go('home')" aria-label="Solvix — go to welcome page"><span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2c2.5 2.5 4 5.5 4 9v6l-2 2h-4l-2-2v-6c0-3.5 1.5-6.5 4-9z"/><circle cx="12" cy="10" r="1.8"/><path d="M8 14l-3 4v2l3-1M16 14l3 4v2l-3-1"/></svg></span><span class="brand-text">Solvix</span></button>
+      <button class="brand" type="button" onclick="if(typeof currentScreen!=='undefined' && currentScreen==='pin'){ window.location.assign('/'); } else { go('home'); }" aria-label="Solvix — go to welcome page"><span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2c2.5 2.5 4 5.5 4 9v6l-2 2h-4l-2-2v-6c0-3.5 1.5-6.5 4-9z"/><circle cx="12" cy="10" r="1.8"/><path d="M8 14l-3 4v2l3-1M16 14l3 4v2l-3-1"/></svg></span><span class="brand-text">Solvix</span></button>
       <a href="/" class="site-link" title="Go to the main Solvix website" aria-label="Go to the main Solvix website">← Main site</a>
     </div>
     <nav id="nav"></nav>
