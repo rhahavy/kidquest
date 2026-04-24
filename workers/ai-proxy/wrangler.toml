@@ -98,6 +98,36 @@ EMAIL_REPLY_TO  = "admin@kidquest.fun"
 OWNER_EMAIL     = "admin@kidquest.fun"
 APP_URL         = "https://kidquest.fun/app/"
 
+# ----- STRIPE (BILLING) -----------------------------------------
+# Price IDs come from Stripe dashboard → Products. One product × two
+# prices (monthly + yearly) × two plans (family + classroom) = 4.
+# Pair these with two SECRETS (not in this file):
+#   wrangler secret put STRIPE_SECRET_KEY      # sk_test_... or sk_live_...
+#   wrangler secret put STRIPE_WEBHOOK_SECRET  # whsec_... from the webhook
+# Webhook endpoint URL (set in Stripe dashboard):
+#   https://kidquest-ai-proxy.rhahavy-b.workers.dev/stripe/webhook
+# Events the webhook must subscribe to:
+#   checkout.session.completed      ← provisions the tenant
+#   customer.subscription.updated   ← flips `suspended` on payment failure
+#   customer.subscription.deleted   ← flips `suspended` on cancellation
+# See DEPLOY_STRIPE.md for the full setup checklist.
+STRIPE_PRICE_FAMILY_MONTHLY    = "price_1TPnfX0iVJQSmAHXQf35febV"
+STRIPE_PRICE_FAMILY_YEARLY     = "price_1TPnfX0iVJQSmAHXEdUuru3h"
+STRIPE_PRICE_CLASSROOM_MONTHLY = "price_1TPng70iVJQSmAHXthXUbNE7"
+STRIPE_PRICE_CLASSROOM_YEARLY  = "price_1TPngb0iVJQSmAHXFKWzgKIu"
+
+# Where Stripe redirects after successful checkout. MUST include the
+# {CHECKOUT_SESSION_ID} placeholder — the thank-you page uses it to look
+# up the freshly-minted tenant code.
+STRIPE_SUCCESS_URL        = "https://kidquest.fun/thank-you/?session_id={CHECKOUT_SESSION_ID}"
+# Where Stripe redirects if the user clicks "Back" on Checkout.
+STRIPE_CANCEL_URL         = "https://kidquest.fun/#pricing"
+# Where the Stripe customer-portal "Return" button sends them.
+STRIPE_PORTAL_RETURN_URL  = "https://kidquest.fun/app/"
+# Free trial length in days. Matches the "7-day free trial" marketing
+# copy — change both if you change one.
+STRIPE_TRIAL_DAYS         = "7"
+
 # ----- OBSERVABILITY --------------------------------------------
 # Free Cloudflare dashboard metrics. No log body persistence.
 [observability]

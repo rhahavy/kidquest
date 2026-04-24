@@ -9125,6 +9125,20 @@ const defaultUser = () => ({
   // mean. Fires the first time the student sees a non-lesson question.
   // Same skip-counts-as-done rule as onboardingCompleted.
   activityTourSeen: false,
+  // Grown-up tours — one per adult-facing screen. Fire the first time
+  // the signed-in teacher/parent lands on the screen; set to true on
+  // complete OR skip (same "don't re-pester" rule). Users can replay
+  // any of these anytime via the 🤖 Nova Tour button on that screen's
+  // header — the manual replay bypasses the flag.
+  //   teacherDashTourSeen  — Classroom-plan dashboard walkthrough
+  //   parentHubTourSeen    — Family-plan Parent Hub walkthrough
+  //   courseEditorTourSeen — Course Editor (lesson-authoring) tour
+  // The flags are per-user (kids never trigger these because the tours
+  // are gated on isTeacher). Kept on defaultUser so returning tenants
+  // don't silently miss the first-run tour after a fresh tenant code.
+  teacherDashTourSeen: false,
+  parentHubTourSeen: false,
+  courseEditorTourSeen: false,
   // Brain-break mini-games — daily coin cap + personal bests.
   // Kept separate from academic progress so it can't replace real practice.
   miniGameStats: {
@@ -12559,6 +12573,259 @@ function maybeStartActivityTour(){
   } catch(e){
     console.warn('[Solvix] maybeStartActivityTour failed:', e);
   }
+}
+
+/* ==========================================================================
+   GROWN-UP TOURS — Nova also guides the adults who manage Solvix.
+   --------------------------------------------------------------------------
+   Three separate tours exist so each audience sees only what's relevant:
+
+     1. PARENT_HUB_TOUR_STEPS — Family plan. Shorter, friendlier, focused on
+        "what can I actually do as the parent in here?" Skips the classroom-
+        teacher sections (AI rewrites, maintenance, CSV export, parent-report
+        inbox) because they're plan-gated out of the UI entirely.
+     2. TEACHER_DASHBOARD_TOUR_STEPS — Classroom plan. Longer, covers every
+        pro section from curriculum authoring through billing.
+     3. COURSE_EDITOR_TOUR_STEPS — fires the first time a teacher lands on
+        the course-editor page; explains week slicing, override semantics,
+        curriculum tags, and the AI banner.
+
+   Persistence flags (seeded on defaultUser): parentHubTourSeen,
+   teacherDashTourSeen, courseEditorTourSeen. Each flag flips on BOTH
+   complete AND skip — same "we don't re-pester" rule as the kid tours.
+
+   Targets use the stable [data-section-id="<id>"] selectors emitted by the
+   accordion renderer around line 21680. Those are resilient to text/icon
+   changes (vs. pointing at a heading substring) and naturally scope-safe.
+   ========================================================================== */
+
+// Plan-aware getter: returns the right array for the current tenant. Split
+// into a function (not two constants) so the seenFlag lookup stays in one
+// place and the accordion-open prep step can inspect all targets at once.
+function getTeacherTourSteps(){
+  // familyMode → parent-oriented tour. otherwise → full classroom tour.
+  const familyMode = (typeof isFamilyPlan === 'function' && isFamilyPlan());
+
+  if(familyMode){
+    return [
+      { title: "Hi, I'm Nova! 👋",
+        text: "I'm your guide here in the Parent Hub. I'll show you around in under a minute — tap Next!",
+        tone: 'cheerful' },
+      { title: 'About your child',
+        text: "Tell me about your kid's interests, strengths, and challenges. I use this to tailor practice problems and explanations to them personally.",
+        target: '[data-section-id="about-child"]',
+        tone: 'cheerful' },
+      { title: 'Students & Reports',
+        text: "See every kid's coins, streak, accuracy, and subject-by-subject mastery. This is your at-a-glance progress dashboard.",
+        target: '[data-section-id="students"]',
+        tone: 'cheerful' },
+      { title: 'Education Plans',
+        text: "Toggle accommodations — dyslexia-friendly fonts, read-aloud everywhere, extra time on answers. Whatever your kid needs, flip it on here.",
+        target: '[data-section-id="plans"]',
+        tone: 'cheerful' },
+      { title: 'Messages',
+        text: "Send encouragement or read what your kid sent you. Great for a quick \"proud of you!\" after a hard lesson.",
+        target: '[data-section-id="messages"]',
+        tone: 'cheerful' },
+      { title: 'Rewards Shop',
+        text: "Set up real-world rewards kids can unlock with their coins — extra screen time, a favorite snack, a special outing. You approve each order.",
+        target: '[data-section-id="store"]',
+        tone: 'cheerful' },
+      { title: 'Backup & Data',
+        text: "Everything syncs to the cloud, but you can also take manual snapshots here. If something ever goes sideways, you can restore a previous snapshot in two clicks.",
+        target: '[data-section-id="backup"]',
+        tone: 'cheerful' },
+      { title: 'Passwords',
+        text: "Set or reset your kid's login PIN. The kid password is different from yours — theirs is kept simple so they can type it fast.",
+        target: '[data-section-id="passwords"]',
+        tone: 'cheerful' },
+      { title: 'Subscription & Billing',
+        text: "Manage your card, download invoices, or cancel anytime. This opens the official Stripe portal — your card info never touches Solvix servers.",
+        target: '[data-section-id="billing"]',
+        tone: 'cheerful' },
+      { title: "You're all set! 💜",
+        text: "Click anywhere to get started. You can replay this tour anytime with the 🤖 Nova Tour button at the top of the Hub.",
+        tone: 'cheerful' },
+    ];
+  }
+
+  // Classroom plan — fuller tour, hits every section a teacher touches.
+  return [
+    { title: "Hi, I'm Nova! 👋",
+      text: "I'm your guide to the Teacher Dashboard. I'll cover every section in under two minutes — tap Next when you're ready!",
+      tone: 'cheerful' },
+    { title: 'Students & Reports',
+      text: "Per-student progress: coins, streak, mastery %, wrong answers, time on task. The single most-used section — this is your class-at-a-glance view.",
+      target: '[data-section-id="students"]',
+      tone: 'cheerful' },
+    { title: 'Education Plans',
+      text: "Per-student accommodations (dyslexia-friendly fonts, read-aloud, extra time, enlarged text). Flip what each kid needs; it applies across every subject automatically.",
+      target: '[data-section-id="plans"]',
+      tone: 'cheerful' },
+    { title: 'Course Editor',
+      text: "Rewrite any lesson, question, or answer your students see. Each edit is stored as an override so you can roll back to the base any time. This is where you make the curriculum yours.",
+      target: '[data-section-id="curriculum"]',
+      tone: 'cheerful' },
+    { title: 'AI Content Rewrites',
+      text: "Pending AI-generated lesson variants are queued here for your review. Approve, reject, or tweak before they go live — you're always the final editor.",
+      target: '[data-section-id="ai-rewrites"]',
+      tone: 'cheerful' },
+    { title: 'Messages',
+      text: "Two-way messaging with every student. A badge pops up when anyone sends you something new so you never miss a question.",
+      target: '[data-section-id="messages"]',
+      tone: 'cheerful' },
+    { title: 'Parent Reports',
+      text: "Drafts of the weekly email that auto-sends to each parent. Review and edit anything before it goes out — or let the cron send them untouched every Sunday.",
+      target: '[data-section-id="parents"]',
+      tone: 'cheerful' },
+    { title: 'Rewards Shop',
+      text: "Create real-world rewards kids unlock with coins — class privileges, stickers, prize-box picks. You approve every order from here.",
+      target: '[data-section-id="store"]',
+      tone: 'cheerful' },
+    { title: 'Maintenance',
+      text: "Flip the whole app into maintenance mode with one toggle. Useful when you're rolling out a big change and don't want students typing mid-edit.",
+      target: '[data-section-id="maintenance"]',
+      tone: 'cheerful' },
+    { title: 'Backup & Data',
+      text: "Automatic cloud snapshots + manual \"take one now\" + a full JSON export. Restoring is non-destructive — it snapshots current state first so undo is always one click.",
+      target: '[data-section-id="backup"]',
+      tone: 'cheerful' },
+    { title: 'Data Export (CSV)',
+      text: "Seven CSV downloads for any analytics tool — per-student, per-subject, per-activity, wrong-answers, curriculum mastery, messages, full backup. Great for report-card week.",
+      target: '[data-section-id="data-export"]',
+      tone: 'cheerful' },
+    { title: 'Subscription & Billing',
+      text: "Manage your card, download invoices, switch plans, or cancel anytime through the official Stripe portal. No card info touches Solvix servers.",
+      target: '[data-section-id="billing"]',
+      tone: 'cheerful' },
+    { title: "That's the whole tour! 💜",
+      text: "You can replay this anytime with the 🤖 Nova Tour button at the top. For a question-level walkthrough, hop into any student's view and tap me there.",
+      tone: 'cheerful' },
+  ];
+}
+
+// Tour for the Course Editor screen. Static array — every classroom teacher
+// sees the same editor layout; no plan-gating.
+const COURSE_EDITOR_TOUR_STEPS = [
+  { title: "Welcome to the Course Editor! ✍️",
+    text: "This is where you edit every lesson your students see. Let me show you how it works — it's simpler than it looks!",
+    tone: 'cheerful' },
+  { title: 'Pick who + what to edit',
+    text: "Flip the Week, Student, and Subject dropdowns to jump to any lesson in your course. Each \"week\" is a batch of 5 levels students unlock together.",
+    target: '.curr-ctrls',
+    tone: 'cheerful' },
+  { title: 'Your lessons',
+    text: "One row per lesson. A blue \"Modified\" tag means you've overridden that lesson — tap ↺ Reset on any row to fall back to the base version instantly.",
+    target: '.curr-list',
+    tone: 'cheerful' },
+  { title: 'Edit or override a lesson',
+    text: "Tap \"+ Override\" (or \"✎ Edit\") to open the form-based editor. Change the title, lesson text, questions, answers — no code needed.",
+    target: '.curr-row:first-child .btn-primary',
+    tone: 'cheerful' },
+  { title: 'Ontario curriculum tags',
+    text: "The 📋 badge shows each lesson's Ontario expectation code. Tag \"Tag needed\"? Click Edit → Ontario Curriculum Alignment to map it to the provincial expectations.",
+    target: '.curr-row:first-child .curr-curric-badge',
+    tone: 'cheerful' },
+  { title: 'Back to Dashboard',
+    text: "When you're done editing, tap \"← Back to Dashboard\" to return to the main view. Your overrides sync to every student automatically.",
+    target: '.curr-head .back-btn',
+    tone: 'cheerful' },
+  { title: "You're ready! 💜",
+    text: "Edits save to the cloud so any kid on any device sees them. Replay this tour anytime with the 🤖 Nova Tour button at the top.",
+    tone: 'cheerful' },
+];
+
+/* maybeStartTeacherTour — auto-fire on first dashboard visit for a
+   signed-in teacher/parent. Gated on:
+     - logged in (isTeacher, currentUser, state ready)
+     - seen flag still false
+     - no tour already on screen
+   Flips state.teacherDashTourSeen (classroom) / state.parentHubTourSeen
+   (family) when the tour ends (complete OR skip — same rule as kid tours).
+   Also exposed as a manual trigger via the "🤖 Nova Tour" button on the
+   dashboard header so a user can re-run the tour on demand. The manual
+   trigger calls runTeacherTourNow() which bypasses the seen flag.
+*/
+function maybeStartTeacherTour(){
+  try {
+    if(!currentUser || !state) return;
+    if(!isTeacher) return;
+    const familyMode = (typeof isFamilyPlan === 'function' && isFamilyPlan());
+    const flagKey = familyMode ? 'parentHubTourSeen' : 'teacherDashTourSeen';
+    if(state[flagKey]) return;
+    // Don't stack on top of any other Nova tour that's already open.
+    if(document.querySelector('.nova-tour-backdrop')) return;
+    // Let the dashboard finish painting before Nova pops up.
+    setTimeout(() => {
+      try {
+        runNovaTour({
+          steps: getTeacherTourSteps(),
+          onFinish: () => {
+            try { state[flagKey] = true; saveState(); }
+            catch(e){ console.warn('[Solvix] Could not save '+flagKey+':', e); }
+          },
+        });
+      }
+      catch(e){ console.warn('[Solvix] teacher tour failed:', e); }
+    }, 500);
+  } catch(e){
+    console.warn('[Solvix] maybeStartTeacherTour failed:', e);
+  }
+}
+
+// Manual replay — bypass the seen flag so the "🤖 Nova Tour" button always
+// works even after the first-run tour completed.
+function runTeacherTourNow(){
+  try {
+    if(document.querySelector('.nova-tour-backdrop')) return;
+    const familyMode = (typeof isFamilyPlan === 'function' && isFamilyPlan());
+    const flagKey = familyMode ? 'parentHubTourSeen' : 'teacherDashTourSeen';
+    runNovaTour({
+      steps: getTeacherTourSteps(),
+      onFinish: () => {
+        try { if(state){ state[flagKey] = true; saveState(); } } catch(e){}
+      },
+    });
+  } catch(e){ console.warn('[Solvix] replay teacher tour failed:', e); }
+}
+
+function maybeStartCourseEditorTour(){
+  try {
+    if(!currentUser || !state) return;
+    if(!isTeacher) return;
+    if(state.courseEditorTourSeen) return;
+    if(document.querySelector('.nova-tour-backdrop')) return;
+    // Wait for the editor to finish rendering — buttons need to exist
+    // before we try to point a highlight at ".curr-row:first-child .btn-primary".
+    setTimeout(() => {
+      try {
+        // If the editor has no lessons (empty subject), skip the tour entirely —
+        // pointing at a nonexistent row would just be confusing.
+        if(!document.querySelector('.curr-row')){ return; }
+        runNovaTour({
+          steps: COURSE_EDITOR_TOUR_STEPS,
+          onFinish: () => {
+            try { state.courseEditorTourSeen = true; saveState(); }
+            catch(e){ console.warn('[Solvix] Could not save courseEditorTourSeen:', e); }
+          },
+        });
+      } catch(e){ console.warn('[Solvix] course-editor tour failed:', e); }
+    }, 550);
+  } catch(e){
+    console.warn('[Solvix] maybeStartCourseEditorTour failed:', e);
+  }
+}
+
+function runCourseEditorTourNow(){
+  try {
+    if(document.querySelector('.nova-tour-backdrop')) return;
+    runNovaTour({
+      steps: COURSE_EDITOR_TOUR_STEPS,
+      onFinish: () => {
+        try { if(state){ state.courseEditorTourSeen = true; saveState(); } } catch(e){}
+      },
+    });
+  } catch(e){ console.warn('[Solvix] replay course-editor tour failed:', e); }
 }
 
 /* buildTtsButtons(text, lang, opts?)  →  HTMLElement | null
@@ -20318,7 +20585,21 @@ function renderTeacher(root){
   // Family plan: this IS the parent's dashboard — frame it that way.
   // Classroom plan: keeps the "Teacher Dashboard" label it has always had.
   const dashTitle = isFamilyPlan() ? '🏠 Parent Hub' : '📊 Teacher Dashboard';
-  dash.appendChild(h('h2',{},dashTitle));
+  // Title + "🤖 Nova Tour" replay button in one row. The tour auto-fires
+  // the first time a teacher/parent lands here (maybeStartTeacherTour,
+  // called at the bottom of this function). The button is the escape
+  // hatch for people who skipped the first-run tour or want a refresher.
+  const titleRow = h('div',{
+    style:'display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:8px',
+  });
+  titleRow.appendChild(h('h2',{style:'margin:0'}, dashTitle));
+  titleRow.appendChild(h('button',{
+    type:'button',
+    class:'replay-tour-btn',
+    title:'Have Nova walk you through every section of this dashboard',
+    onclick: ()=>{ try{ runTeacherTourNow(); }catch(e){ console.warn('[Solvix] replay teacher tour failed:',e); } },
+  }, '🤖 Nova Tour'));
+  dash.appendChild(titleRow);
 
   // Tenant chip — shows which family/classroom is active and offers a
   // "Switch" link that wipes the local code and reloads to the gate.
@@ -21741,6 +22022,12 @@ function renderTeacher(root){
   // full behaviour.
   try { syncDocumentTitleBadge(); } catch(e){}
   try { maybeFireReviewNotification(unreviewedReportsTotal); } catch(e){}
+
+  // First-run guided tour. Fires once per signed-in teacher/parent the
+  // first time they see this dashboard. No-op if the seen flag is set
+  // (completing OR skipping flips it). Manual replay: 🤖 Nova Tour button
+  // in the title row at the top of this function.
+  try { maybeStartTeacherTour(); } catch(e){ console.warn('[Solvix] maybeStartTeacherTour failed:', e); }
 }
 
 /* ==========================================================================
@@ -21997,6 +22284,16 @@ function renderTeacherCourse(root){
   wrap.appendChild(h('div',{class:'curr-head'},[
     h('button',{class:'back-btn', onclick:()=>go('teacher')}, '← Back to Dashboard'),
     h('h2',{}, '📚 Course Editor'),
+    // Manual replay — bypasses the seen flag so teachers can re-run the
+    // walkthrough anytime they come back to the editor. Auto-first-run
+    // fires at the bottom of this function via maybeStartCourseEditorTour.
+    h('button',{
+      type:'button',
+      class:'replay-tour-btn',
+      style:'margin-left:auto',
+      title:'Have Nova walk you through the Course Editor',
+      onclick: ()=>{ try{ runCourseEditorTourNow(); }catch(e){ console.warn('[Solvix] replay course-editor tour failed:',e); } },
+    }, '🤖 Nova Tour'),
   ]));
 
   wrap.appendChild(h('p',{class:'curr-intro'},
@@ -22148,6 +22445,12 @@ function renderTeacherCourse(root){
   }
 
   root.appendChild(wrap);
+
+  // First-run tour of the Course Editor itself. Idempotent — the seen
+  // flag blocks second+ visits. The helper also quietly bails if there
+  // are no activities to highlight (empty subject), so teachers aren't
+  // shown a tour pointing at invisible rows.
+  try { maybeStartCourseEditorTour(); } catch(e){ console.warn('[Solvix] maybeStartCourseEditorTour failed:', e); }
 }
 
 /* Form-based course editor. Replaces the older JSON-textarea flow so
