@@ -24600,13 +24600,61 @@ function renderMaintenanceScreen(){
     + '</div>';
   const btn = document.getElementById('maintUnlockBtn');
   if(btn) btn.addEventListener('click', promptMaintenanceUnlock);
-  // Escape hatch: if a user has been sitting on the gate for >15s without
-  // being un-gated by pullCloud, something went wrong (cloud unreachable,
-  // auth failure, stale localStorage the pullCloud never overwrote because
-  // of an error). Surface a manual "refresh" action so they can recover
-  // without having to clear their browser storage manually. The button
-  // tries a fresh cloud check first; if that still says ON, it clears
-  // the local flag and hard-reloads (which re-reads the cloud from zero).
+
+  /* Un-stick the gate for kids whose device shouldn't be seeing it.
+     Two common cases cause the gate to render when cloud is actually OFF:
+       1. pullCloud failed on boot (network blip, Wi-Fi captive portal,
+          DNS flap). The 25s poll loop keeps trying but might ALSO fail,
+          leaving the kid staring at the screen.
+       2. localStorage was stale — maintenance was flipped OFF while the
+          tab was closed, then the tab opened. The boot IIFE reads local
+          SYNCHRONOUSLY (can't wait for cloud), renders the gate, and
+          pullCloud only un-gates AFTER its async response arrives.
+     Both paths need an independent cloud check that doesn't share code
+     with pullCloud (so if pullCloud is broken for any reason, this still
+     works). We race it at 3s (fast, keeps the gate-flash under 3s on
+     bad networks) and back it up with a visible manual button at 8s.
+     Before: only a 15s manual button, which kids wouldn't find. */
+  const __maintCheckCloudIsOff = async function(){
+    try {
+      if(!isWorkerBackendActive()) return false;
+      const r = await fetch(dataBackendUrl('data')+'?_='+Date.now(), { cache:'no-store', headers:dataBackendHeaders() });
+      if(!r.ok) return false;
+      const tx = await r.text();
+      if(!tx) return true; // empty body = default state = maintenance OFF
+      try { const d = JSON.parse(tx); return !(d && d.maintenance && d.maintenance.active); }
+      catch(e){ return false; }
+    } catch(e){ return false; /* unknown — stay on gate */ }
+  };
+  const __maintScrubLocalAndReload = function(){
+    // Clear the local flag so the next boot's IIFE doesn't render the
+    // gate a SECOND time. pullCloud on that boot will re-sync the real
+    // state (which is OFF — we just confirmed it above).
+    try{
+      allData.maintenance = { active:false, message:DEFAULT_MAINTENANCE_MESSAGE, updatedAt:0 };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(allData));
+    }catch(e){}
+    location.reload();
+  };
+
+  // 3s auto-rescue — runs once per gate render. Guarded against firing
+  // after pullCloud already un-gated (no point reloading if we're off
+  // the gate already). Silent no-op if cloud is unreachable; the manual
+  // button takes over at 8s.
+  let __maintAutoCheckRan = false;
+  try {
+    setTimeout(async function(){
+      if(__maintAutoCheckRan) return;
+      __maintAutoCheckRan = true;
+      if(!document.querySelector('.maintenance-screen')) return; // already un-gated
+      if(await __maintCheckCloudIsOff()) __maintScrubLocalAndReload();
+    }, 3000);
+  } catch(e){}
+
+  // 8s manual button — backstop when the auto-rescue's fetch also failed
+  // (offline, captive portal, etc). Same cloud check, same reload path
+  // on success; on "still ON" we show a clear status message so kids and
+  // parents know the check ran and the gate is genuinely up.
   try {
     setTimeout(function(){
       try{
@@ -24617,30 +24665,8 @@ function renderMaintenanceScreen(){
           rBtn.addEventListener('click', async function(){
             rBtn.disabled = true;
             rBtn.textContent = 'Checking…';
-            // Direct cloud check, bypassing any pullCloud state caching.
-            let cloudSaysOff = false;
-            try {
-              if(isWorkerBackendActive()){
-                const r = await fetch(dataBackendUrl('data')+'?_='+Date.now(), { cache:'no-store', headers:dataBackendHeaders() });
-                if(r.ok){
-                  const tx = await r.text();
-                  if(tx){
-                    const d = JSON.parse(tx);
-                    cloudSaysOff = !(d && d.maintenance && d.maintenance.active);
-                  } else {
-                    // Empty body = default state = maintenance OFF
-                    cloudSaysOff = true;
-                  }
-                }
-              }
-            } catch(e){}
-            if(cloudSaysOff){
-              // Scrub local flag, then reload into a clean boot.
-              try{
-                allData.maintenance = { active:false, message:DEFAULT_MAINTENANCE_MESSAGE, updatedAt:0 };
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(allData));
-              }catch(e){}
-              location.reload();
+            if(await __maintCheckCloudIsOff()){
+              __maintScrubLocalAndReload();
             } else {
               rBtn.disabled = false;
               rBtn.textContent = '🔄 Still under maintenance — try later';
@@ -24649,7 +24675,7 @@ function renderMaintenanceScreen(){
           });
         }
       }catch(e){}
-    }, 15000);
+    }, 8000);
   } catch(e){}
 }
 async function promptMaintenanceUnlock(){
