@@ -113,6 +113,14 @@ body{font-family:var(--font);color:var(--ink);background:var(--bg);min-height:10
 body.has-impersonation-banner{padding-top:48px}
 button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
 button:focus-visible{outline:3px solid var(--primary);outline-offset:3px}
+/* Kill the iOS / Android default tap-highlight — the translucent gray
+   rectangle that flashes behind every button, link, and [role=button]
+   on touch. Looks "weird" and boxy, especially on rounded pills and
+   custom-shape cards (the Nova "says" bubble, the brand logo, prize
+   tiles, etc.). Safe global override: buttons still have their own
+   :hover / :active transforms + the `outline` on keyboard focus, so
+   a11y is preserved — we're only removing the native tap flash. */
+button,a,[role="button"],[tabindex]{-webkit-tap-highlight-color:transparent}
 h1,h2,h3,h4,p{margin:0}
 h1,h2,h3{font-family:var(--font-display);letter-spacing:-.01em;font-weight:700}
 img{max-width:100%}
@@ -849,7 +857,7 @@ img{max-width:100%}
 .tts-btn .tts-lbl{font-weight:800}
 .tts-btn:active{transform:translateY(1px) scale(.98)}
 .tts-btn:hover{transform:translateY(-1px);filter:brightness(1.04)}
-.tts-btn:focus-visible{outline:3px solid #ffd54f;outline-offset:2px}
+.tts-btn:focus-visible{outline:3px solid var(--primary);outline-offset:2px}
 .tts-btn.tts-primary{
   background:linear-gradient(135deg,#6c5ce7 0%,#a29bfe 100%);
   color:#fff;
@@ -1196,12 +1204,17 @@ body.nova-tour-active{scroll-padding-top:40px}
 .nova-tour-btn.next,.nova-tour-btn.done{background:linear-gradient(135deg,#6C5CE7,#A29BFE);color:#fff;box-shadow:0 4px 12px rgba(108,92,231,.4)}
 .nova-tour-btn:hover{transform:translateY(-1px)}
 .nova-tour-btn:active{transform:translateY(0)}
-.nova-tour-btn:focus-visible{outline:3px solid #FDCB6E;outline-offset:2px}
-/* Target glow — gold pulse that stays visible through the dim backdrop. */
+.nova-tour-btn:focus-visible{outline:3px solid var(--primary);outline-offset:2px}
+/* Target glow — soft purple pulse that stays visible through the dim
+   backdrop. Brand-consistent with the rest of the app (no more "weird
+   yellow bar on the left of the Nova bubble" that looked like a
+   selection artifact). Ring is thinner (3px inner / 12px outer) so it
+   reads as "attention" not "selection box", and it uses the primary
+   purple so it blends with the app's palette. */
 .nova-tour-highlight{position:relative;border-radius:14px;animation:novaTourGlow 1.8s ease-in-out infinite}
 @keyframes novaTourGlow{
-  0%,100%{box-shadow:0 0 0 4px rgba(253,203,110,.9), 0 0 0 10px rgba(253,203,110,0)}
-  50%    {box-shadow:0 0 0 4px rgba(253,203,110,.95),0 0 0 16px rgba(253,203,110,.25)}
+  0%,100%{box-shadow:0 0 0 3px rgba(108,92,231,.55), 0 0 0 10px rgba(108,92,231,0)}
+  50%    {box-shadow:0 0 0 3px rgba(108,92,231,.75), 0 0 0 12px rgba(108,92,231,.22)}
 }
 @media(max-width:640px){.nova-tour-card{padding:16px 16px 14px}.nova-tour-title{font-size:18px}.nova-tour-text{font-size:14px}.nova-tour-btn{padding:9px 14px;font-size:13px}}
 
@@ -2156,7 +2169,10 @@ body.has-dev-banner{padding-top:26px}
 .ss-pad.lit{opacity:1;transform:scale(1.06);box-shadow:0 0 0 6px rgba(255,255,255,.55), 0 10px 24px rgba(26,16,53,.28)}
 .ss-pad:disabled{cursor:not-allowed}
 .ss-pad.active-input:not(:disabled):hover{opacity:.85;transform:scale(1.02)}
-.ss-pad.wrong{animation:shake .4s;outline:4px solid var(--coral)}
+/* Wrong-answer pad feedback: the shake animation already tells the kid
+   they missed. A soft colored ring reinforces it without the hard 4px
+   "selection box" look — softer for touch-heavy usage. */
+.ss-pad.wrong{animation:shake .4s;box-shadow:0 0 0 3px rgba(255,107,129,.85),0 0 14px rgba(255,107,129,.45)}
 .mg-tile .mg-info{flex:1;min-width:0}
 .mg-tile .mg-name{font-family:var(--font-display);font-size:18px;font-weight:700;letter-spacing:-.01em}
 .mg-tile .mg-desc{font-size:13px;color:var(--ink3);font-weight:600;margin-top:3px}
