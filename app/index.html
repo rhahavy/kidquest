@@ -1763,6 +1763,15 @@ body.has-dev-banner{padding-top:26px}
 .cf-choice-rm:hover{background:rgba(255,59,48,.08);color:#c92a2a}
 .cf-add-btn{background:transparent;border:1.5px dashed var(--line);color:var(--ink3);padding:7px 12px;font-size:12px;font-weight:700;border-radius:8px;cursor:pointer;align-self:flex-start}
 .cf-add-btn:hover{border-color:var(--primary);color:var(--primary);background:rgba(108,92,231,.04)}
+/* "Edit lesson videos" link-out button — lives in the course editor's
+   Lesson section and opens the existing openLessonVideoSettings modal.
+   Purposely styled like an action button (filled tint, not dashed) so
+   it reads as "click me to do a thing" rather than "add another row". */
+.cf-video-btn{display:inline-flex;align-items:center;gap:6px;background:linear-gradient(90deg,rgba(108,92,231,.12),rgba(87,94,232,.12));border:1px solid rgba(108,92,231,.35);color:#4f56d4;font-size:13px;font-weight:700;padding:9px 14px;border-radius:10px;cursor:pointer;align-self:flex-start;transition:background .15s,border-color .15s,color .15s}
+.cf-video-btn:hover{background:linear-gradient(90deg,rgba(108,92,231,.22),rgba(87,94,232,.22));border-color:var(--primary);color:var(--primary)}
+.cf-video-btn:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+.cf-video-btn-label{white-space:nowrap}
+.cf-field-help{margin:0 0 8px;font-size:11.5px;color:var(--ink3);line-height:1.5}
 .cf-pairs{display:flex;flex-direction:column;gap:6px}
 .cf-pair-row{display:flex;align-items:center;gap:8px}
 .cf-pair-row input{flex:1}
@@ -22108,6 +22117,65 @@ function openCourseEdit(baseActivity){
 
   lessonSection.appendChild(h('div',{class:'cf-field'},[ h('label',{class:'cf-field-label'},'Worked example'), lExample ]));
   lessonSection.appendChild(h('div',{class:'cf-field'},[ h('label',{class:'cf-field-label'},'Hint'), lHint ]));
+
+  // LESSON VIDEOS — link-out button that launches the existing
+  // openLessonVideoSettings modal scoped to THIS activity. Avoids duplicating
+  // the video-editing UI and keeps videoOverrides storage as the single
+  // source of truth (they live on allData.videoOverrides, NOT inside the
+  // curriculum override patch — see commentary near VIDEO_OVERRIDES_KEY).
+  // The button shows a live count so the teacher can tell at a glance
+  // whether the lesson currently has 0 / 1 / many videos.
+  const baseVideoIds = Array.isArray(baseActivity.videoIds) ? baseActivity.videoIds.filter(Boolean) : [];
+  const videoBtnLabel = h('span',{class:'cf-video-btn-label'}, '');
+  const updateVideoBtnLabel = () => {
+    try {
+      const ids = getActivityVideoIds(baseActivity.id, baseVideoIds);
+      const map = (allData && allData.videoOverrides) || {};
+      const overridden = Object.prototype.hasOwnProperty.call(map, baseActivity.id);
+      const n = ids.length;
+      if(overridden && n === 0){
+        videoBtnLabel.textContent = '🙈 Hidden (override) — click to edit';
+      } else if(n === 0){
+        videoBtnLabel.textContent = '🎬 No videos yet — click to add';
+      } else if(overridden){
+        videoBtnLabel.textContent = '🎬 Edit lesson videos (' + n + ', custom)';
+      } else {
+        videoBtnLabel.textContent = '🎬 Edit lesson videos (' + n + ')';
+      }
+    } catch(e){ videoBtnLabel.textContent = '🎬 Edit lesson videos'; }
+  };
+  updateVideoBtnLabel();
+  const videoBtn = h('button',{
+    type:'button',
+    class:'cf-video-btn',
+    title:'Open the YouTube video settings for this lesson',
+    onclick:()=>{
+      try { openLessonVideoSettings(baseActivity.id, baseVideoIds); }
+      catch(e){ console.warn('[Solvix] openLessonVideoSettings failed:', e); return; }
+      // The video settings modal is appended to document.body as the last
+      // .mg-win-overlay. Watch for it to leave the DOM so we can refresh
+      // the button label with the new count after the teacher saves / hides
+      // / resets / cancels. Using a MutationObserver (rather than polling)
+      // avoids a redundant setInterval burning battery on kids' devices.
+      setTimeout(()=>{
+        const overlays = document.querySelectorAll('.mg-win-overlay');
+        const ovl = overlays[overlays.length - 1];
+        if(!ovl) return;
+        const obs = new MutationObserver(()=>{
+          if(!document.body.contains(ovl)){
+            try { updateVideoBtnLabel(); } catch(e){}
+            obs.disconnect();
+          }
+        });
+        try { obs.observe(document.body, {childList:true}); } catch(e){}
+      }, 30);
+    },
+  }, [videoBtnLabel]);
+  lessonSection.appendChild(h('div',{class:'cf-field'},[
+    h('label',{class:'cf-field-label'},'Videos'),
+    h('p',{class:'cf-field-help'},'YouTube videos embedded in the Quick Lesson screen. Edits are teacher-gated, sync to every device, and survive cloud pulls (stored separately from the course override patch).'),
+    videoBtn,
+  ]));
 
   const getLessonValue = () => {
     const out = {};
