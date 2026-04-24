@@ -2601,16 +2601,7 @@ body.has-dev-banner{padding-top:26px}
          to the dashboard for logged-in students; this is the logo-as-home
          affordance, useful for parents/visitors viewing over a kid's
          shoulder who want the landing page, and for kids who want to switch
-         back to the profile picker without hunting for "Switch."
-
-         Special case — on the PIN screen, clicking the brand exits to the
-         marketing site (kidquest.fun) instead of the internal welcome
-         screen. Rationale: the pin page is where a user is mid-login, and
-         the internal welcome is exactly the screen they just came FROM to
-         get there. Bouncing them back to it is a no-op that feels like a
-         broken button. A parent/visitor who ended up at a kid's pin screen
-         and wants to leave the app entirely is better served by landing on
-         the public marketing page.  -->
+         back to the profile picker without hunting for "Switch." -->
     <!-- Left cluster: brand + explicit exit link back to the marketing
          site (/). Grouped in a wrapper so the topbar keeps its 3-item
          flex layout (brand cluster / nav / pills) with `space-between`
@@ -2622,7 +2613,7 @@ body.has-dev-banner{padding-top:26px}
          browser history. Kids won't usually click it; it's primarily
          a safety valve for visitors. -->
     <div class="topbar-brand">
-      <button class="brand" type="button" onclick="if(typeof currentScreen!=='undefined' && currentScreen==='pin'){ window.location.assign('/'); } else { go('home'); }" aria-label="Solvix — go to welcome page"><span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2c2.5 2.5 4 5.5 4 9v6l-2 2h-4l-2-2v-6c0-3.5 1.5-6.5 4-9z"/><circle cx="12" cy="10" r="1.8"/><path d="M8 14l-3 4v2l3-1M16 14l3 4v2l-3-1"/></svg></span><span class="brand-text">Solvix</span></button>
+      <button class="brand" type="button" onclick="go('home')" aria-label="Solvix — go to welcome page"><span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2c2.5 2.5 4 5.5 4 9v6l-2 2h-4l-2-2v-6c0-3.5 1.5-6.5 4-9z"/><circle cx="12" cy="10" r="1.8"/><path d="M8 14l-3 4v2l3-1M16 14l3 4v2l-3-1"/></svg></span><span class="brand-text">Solvix</span></button>
       <a href="/" class="site-link" title="Go to the main Solvix website" aria-label="Go to the main Solvix website">← Main site</a>
     </div>
     <nav id="nav"></nav>
@@ -24582,7 +24573,15 @@ function showTenantGate(){
   wrap.innerHTML = ''
     + '<div style="background:#fff;border-radius:24px;padding:40px 32px;max-width:440px;width:100%;text-align:center;box-shadow:0 24px 64px rgba(0,0,0,.3);box-sizing:border-box;">'
     +   '<div style="font-size:44px;margin-bottom:8px;">🌟</div>'
-    +   '<h1 id="kq-tg-title" style="margin:0 0 8px;font-size:26px;color:#2d3436;font-weight:800;">Welcome to Solvix</h1>'
+    // The word "Solvix" is a link back to the marketing site — a visitor
+    // who landed on the tenant gate by mistake (wrong PIN, old bookmark,
+    // curious click) needs an obvious exit. Without this, the gate is a
+    // dead-end overlay: the tenant gate sits ABOVE the normal topbar
+    // (z-index 99999), so the usual "← Main site" / Solvix-brand buttons
+    // are unreachable. The IIFE near end of body wraps "Solvix" text in
+    // a .solvix-rainbow span; that gradient paints this anchor's text
+    // automatically because the span renders INSIDE the anchor.
+    +   '<h1 id="kq-tg-title" style="margin:0 0 8px;font-size:26px;color:#2d3436;font-weight:800;">Welcome to <a href="/" style="color:inherit;text-decoration:none;cursor:pointer;" title="Back to the Solvix marketing site">Solvix</a></h1>'
     +   '<p style="margin:0 0 24px;color:#636e72;font-size:15px;line-height:1.5;">' + subline + '</p>'
     +   demoBadge
     +   '<input id="kq-tg-input" type="tel" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="••••" style="width:220px;max-width:100%;padding:18px 16px 18px calc(16px + .35em);border:2.5px solid #dfe6e9;border-radius:16px;font-size:36px;font-weight:800;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;text-align:center;outline:none;box-sizing:border-box;letter-spacing:.35em;color:#2d3436;" aria-label="4-digit classroom PIN" />'
