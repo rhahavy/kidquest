@@ -21631,7 +21631,7 @@ function renderTeacher(root){
       const lastAdded = window.__solvixLastAdded;
       // Only show within 10s of the add — so navigating back to the Roster
       // tab a day later doesn't pop a stale "just added" message.
-      if(lastAdded && (Date.now() - (lastAdded.at || 0) < 10_000)){
+      if(lastAdded && (Date.now() - (lastAdded.at || 0) < 10000)){
         const planLine = (lastAdded.planType && lastAdded.planType !== 'none')
           ? ' Their ' + (PLAN_META[lastAdded.planType] ? PLAN_META[lastAdded.planType].label : lastAdded.planType)
             + ' plan is saved — fine-tune accommodations anytime in 📋 Education Plans below.'
