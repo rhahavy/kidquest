@@ -3183,6 +3183,10 @@ const DATA_ROUTES = {
   'POST /data':     { kind: 'data',      read: false },
   'GET /snapshots': { kind: 'snapshots', read: true  },
   'POST /snapshots':{ kind: 'snapshots', read: false },
+  // /activity is read-only via this route (returns the rolling event log
+  // as-is). Writes go through handleActivityLogRoute below — that path
+  // computes IP/geo/UA server-side, so the client can't forge them.
+  'GET /activity':  { kind: 'activity',  read: true  },
 };
 
 async function handleDataRoute(request, env, corsOrigin, route) {
@@ -3211,6 +3215,131 @@ async function handleDataRoute(request, env, corsOrigin, route) {
   // code, and exposing internal IDs widens the surface for future bugs
   // that might trust a tenantId from untrusted input.
   return json({ ok: true, bytes: body.length }, 200, corsOrigin);
+}
+
+// ---------- Activity log ----------
+// Records "someone logged into this tenant" events. Visible to anyone
+// with the tenant code (i.e. anyone in the family/classroom), so a
+// stolen code is detectable: a parent looking at the picker sees an
+// unfamiliar device or city in the log.
+//
+// Server fills in IP-derived geo (request.cf), User-Agent, and timestamp
+// — the client only supplies `sid`. This means a tampered client can't
+// forge "Axel logged in from Antarctica"; it can only lie about which
+// kid it is, and the IP/device/time will still tell the truth.
+//
+// Throttle: if the most recent entry for the same {sid, ipHash, uaHash}
+// is < ACTIVITY_DEDUP_MS old, we just bump its timestamp instead of
+// adding a new row. Stops a reload-spamming kid from filling the log.
+const ACTIVITY_MAX_EVENTS = 100;
+const ACTIVITY_DEDUP_MS = 30 * 60 * 1000; // 30min
+
+// Tiny non-cryptographic hash (FNV-1a 32-bit). We only use it to dedup
+// log entries, not for security — IP/UA in plaintext would bloat the
+// blob and leak a bit more than necessary if the KV ever spilled.
+function fnv1a32(str) {
+  let h = 0x811c9dc5;
+  for (let i = 0; i < str.length; i++) {
+    h ^= str.charCodeAt(i);
+    h = Math.imul(h, 0x01000193);
+  }
+  // Unsigned 8-char hex.
+  return (h >>> 0).toString(16).padStart(8, '0');
+}
+
+// Parse a User-Agent into a friendly device label. Cheap heuristics —
+// good enough for "is that the iPad or my phone?" which is all the log
+// needs to communicate. Order matters (iPad UA also contains "Safari",
+// so device is checked before browser).
+function parseDeviceLabel(ua) {
+  const u = (ua || '').toLowerCase();
+  let device = 'Device';
+  if (u.includes('ipad'))                              device = 'iPad';
+  else if (u.includes('iphone'))                       device = 'iPhone';
+  else if (u.includes('android') && u.includes('mobile')) device = 'Android phone';
+  else if (u.includes('android'))                      device = 'Android tablet';
+  else if (u.includes('cros'))                         device = 'Chromebook';
+  else if (u.includes('mac os') || u.includes('macintosh')) device = 'Mac';
+  else if (u.includes('windows'))                      device = 'Windows';
+  else if (u.includes('linux'))                        device = 'Linux';
+  let browser = '';
+  // Edge / Opera contain "Chrome" too — check them first.
+  if (u.includes('edg/'))                              browser = 'Edge';
+  else if (u.includes('opr/') || u.includes('opera')) browser = 'Opera';
+  else if (u.includes('firefox'))                      browser = 'Firefox';
+  else if (u.includes('chrome'))                       browser = 'Chrome';
+  else if (u.includes('safari'))                       browser = 'Safari';
+  return browser ? `${device} (${browser})` : device;
+}
+
+async function handleActivityLogRoute(request, env, corsOrigin) {
+  if (!env.KV) return json({ error: 'kv_not_bound' }, 500, corsOrigin);
+  const code = (extractBearer(request) || '').toLowerCase();
+  const tenant = await lookupTenantByCode(env, code);
+  if (!tenant) return json({ error: 'invalid_code' }, 401, corsOrigin);
+
+  let payload;
+  try { payload = await request.json(); } catch (e) {
+    return json({ error: 'bad_body' }, 400, corsOrigin);
+  }
+  // sid = student id ("axel"), or "_teacher" for a teacher login, or a
+  // free-form short string for future "tutor switched profiles" events.
+  // Cap length defensively — KV keys / log rows shouldn't grow unbounded
+  // because a misbehaving client passed a 1MB string.
+  let sid = (payload && typeof payload.sid === 'string') ? payload.sid : '';
+  sid = sid.slice(0, 64).replace(/[^a-zA-Z0-9_\-]/g, '');
+  if (!sid) return json({ error: 'missing_sid' }, 400, corsOrigin);
+
+  const now = Date.now();
+  const ua = (request.headers.get('user-agent') || '').slice(0, 500);
+  const cf = request.cf || {};
+  // Cloudflare gives us city + region + country without a 3rd-party API.
+  // All three are best-effort — colo/dev requests may have nulls.
+  const city    = (cf.city || '').slice(0, 60);
+  const region  = (cf.region || cf.regionCode || '').slice(0, 40);
+  const country = (cf.country || '').slice(0, 4);
+  // IP — used only for hashing (dedup); never stored in plaintext.
+  const ip = request.headers.get('cf-connecting-ip') || request.headers.get('x-real-ip') || '';
+  const ipHash = fnv1a32(ip || 'no-ip');
+  const uaHash = fnv1a32(ua || 'no-ua');
+  const device = parseDeviceLabel(ua);
+
+  const key = `tenant:${tenant.id}:activity`;
+  const existing = await env.KV.get(key);
+  let blob = { events: [], updatedAt: 0 };
+  if (existing) {
+    try {
+      const parsed = JSON.parse(existing);
+      if (parsed && Array.isArray(parsed.events)) blob = parsed;
+    } catch { /* corrupt — start over rather than fail */ }
+  }
+
+  // Dedup: if the most recent matching entry is fresh enough, just
+  // bump its timestamp. This keeps a spam-reloading kid from filling
+  // the visible log with 47 identical rows.
+  const head = blob.events[0];
+  if (head && head.sid === sid && head.ipHash === ipHash && head.uaHash === uaHash &&
+      (now - (head.at || 0)) < ACTIVITY_DEDUP_MS) {
+    head.at = now;
+  } else {
+    blob.events.unshift({
+      at: now,
+      sid,
+      device,
+      city,
+      region,
+      country,
+      ipHash,
+      uaHash,
+    });
+  }
+  if (blob.events.length > ACTIVITY_MAX_EVENTS) {
+    blob.events.length = ACTIVITY_MAX_EVENTS;
+  }
+  blob.updatedAt = now;
+
+  await env.KV.put(key, JSON.stringify(blob));
+  return json({ ok: true }, 200, corsOrigin);
 }
 
 // Routing table. Each entry binds a method+path to (feature flag,
@@ -3331,6 +3460,10 @@ export default {
       if (request.method === 'GET' && url.pathname.startsWith('/stripe/session/')) {
         return await handleStripeSessionLookupRoute(request, env, corsOrigin);
       }
+      // Activity log writes go through their own handler (it computes
+      // IP/geo/UA server-side from request.cf). Reads use the generic
+      // DATA_ROUTES path so they share the same auth + KV plumbing.
+      if (routeKey === 'POST /activity') return await handleActivityLogRoute(request, env, corsOrigin);
       const dataRoute = DATA_ROUTES[routeKey];
       if (dataRoute) return await handleDataRoute(request, env, corsOrigin, dataRoute);
     } catch (err) {

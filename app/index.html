@@ -9063,6 +9063,76 @@ function dataBackendHeaders(){
     'Authorization': 'Bearer ' + ((tenant_state && tenant_state.code) || ''),
   };
 }
+
+// ---------- Activity log helpers ----------
+// Records "someone logged in" events to the Worker. Visible on the
+// profile picker so the family / classroom can spot a stranger using
+// their tenant code (unfamiliar device or city in the log = bad
+// actor caught early). Writes are best-effort and silent on failure
+// — a missing log entry must never block a kid from playing.
+async function logActivityEvent(sid){
+  if(!isWorkerBackendActive()) return;
+  if(!sid) return;
+  try{
+    await fetch(dataBackendUrl('activity'), {
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'Authorization':'Bearer ' + ((tenant_state && tenant_state.code) || ''),
+      },
+      body: JSON.stringify({ sid }),
+    });
+  }catch(e){ /* network blip — log is non-critical */ }
+}
+async function fetchActivityLog(){
+  if(!isWorkerBackendActive()) return [];
+  try{
+    const r = await fetch(dataBackendUrl('activity') + '?_=' + Date.now(), {
+      headers: dataBackendHeaders(),
+      cache: 'no-store',
+    });
+    if(!r.ok) return [];
+    const t = await r.text();
+    if(!t) return [];
+    const data = JSON.parse(t);
+    return Array.isArray(data && data.events) ? data.events : [];
+  }catch(e){ return []; }
+}
+// Render "5m ago" / "2h ago" / "3d ago" / a date for older events.
+function activityTimeAgo(at){
+  const now = Date.now();
+  const diff = Math.max(0, now - (at || 0));
+  const sec = Math.floor(diff / 1000);
+  if(sec < 60) return 'just now';
+  const min = Math.floor(sec / 60);
+  if(min < 60) return min + 'm ago';
+  const hr = Math.floor(min / 60);
+  if(hr < 24) return hr + 'h ago';
+  const day = Math.floor(hr / 24);
+  if(day < 7) return day + 'd ago';
+  // Older — show the date, not a misleading "53d ago".
+  try{
+    return new Date(at).toLocaleDateString(undefined, { month:'short', day:'numeric' });
+  }catch(e){ return day + 'd ago'; }
+}
+// Pretty location string from a log entry. Drop empty parts so we don't
+// render lonely commas like "  , CA".
+function activityLocation(ev){
+  const parts = [];
+  if(ev && ev.city)    parts.push(ev.city);
+  if(ev && ev.region)  parts.push(ev.region);
+  if(ev && ev.country && !parts.length) parts.push(ev.country);
+  return parts.length ? parts.join(', ') : 'Unknown location';
+}
+// Map a sid back to the friendly name + emoji shown in the log row.
+// Falls back gracefully when the sid isn't in the current roster (e.g.
+// "_teacher", or a kid who was archived after the event was logged).
+function activityProfileLabel(sid){
+  if(sid === '_teacher') return { emoji:'🔑', name:'Teacher login' };
+  const s = (typeof STUDENTS !== 'undefined' && STUDENTS) ? STUDENTS.find(x=>x.id===sid) : null;
+  if(s) return { emoji: (s.decoEmoji || '👤'), name: s.name };
+  return { emoji:'👤', name: sid || 'Unknown' };
+}
 // Flip a tenant-level setting via the Worker's /tenant-settings endpoint.
 // Requires the teacher/parent password — it's a password-gated write (same
 // rate-limit bucket as /teacher-auth on the server). On success we update
@@ -9878,6 +9948,9 @@ function loginAs(uid){
   state.lastActiveDate=today;
   try{localStorage.setItem(LOCAL_USER_KEY,uid)}catch(e){}
   saveState();
+  // Fire-and-forget: log this login to the activity feed so it shows up
+  // on the picker for everyone in the household / classroom.
+  try{ logActivityEvent(uid); }catch(e){}
   go('dashboard');
 }
 
@@ -9906,6 +9979,10 @@ function loginTeacher(){
   // Start (or reset) the destructive-action grace window.
   teacherAuthAt = Date.now();
   saveState();
+  // Log a teacher-login event to the activity feed. Uses sentinel sid
+  // '_teacher' so the picker can render "🔑 Teacher login" instead of
+  // pretending it was one of the kids.
+  try{ logActivityEvent('_teacher'); }catch(e){}
   go('teacher');
 }
 
@@ -15118,6 +15195,115 @@ function renderProfiles(root){
   // promoted to its own tenant — parents now type the demo classroom's
   // PIN on the welcome gate instead of a separate in-app unlock.)
   root.appendChild(h('div',{class:'teacher-link'},[h('a',{href:'#',onclick:e=>{e.preventDefault();go('teacher-login')}},'🔑 Teacher Login')]));
+
+  // Recent activity panel — a collapsible "who logged in, from where, when"
+  // log. Visible to anyone with the tenant code so an unfamiliar device
+  // or city tips off the family that someone else is using their PIN.
+  // Only shown when the worker backend is wired up; on a no-cloud build
+  // there's nothing to display.
+  if(isWorkerBackendActive()){
+    renderActivityPanel(root);
+  }
+}
+
+// Mounts a "🕘 Recent activity" disclosure under the picker. Defers the
+// network fetch until the user opens it — picker-screen render must stay
+// snappy, and most opens won't bother looking.
+function renderActivityPanel(root){
+  const wrap = h('div', { class: 'activity-panel' });
+  const summary = h('button', {
+    class: 'activity-toggle',
+    type: 'button',
+    'aria-expanded': 'false',
+  }, [
+    h('span',{class:'activity-toggle-title'},'🕘 Recent activity'),
+    h('span',{class:'activity-toggle-hint'},'Tap to see who logged in'),
+    h('span',{class:'activity-toggle-caret'},'▾'),
+  ]);
+  const body = h('div', { class: 'activity-body', style:'display:none' });
+  body.appendChild(h('div', { class:'activity-status' }, 'Loading…'));
+  wrap.appendChild(summary);
+  wrap.appendChild(body);
+  root.appendChild(wrap);
+
+  let loaded = false;
+  let open = false;
+  summary.onclick = async () => {
+    open = !open;
+    body.style.display = open ? 'block' : 'none';
+    summary.setAttribute('aria-expanded', open ? 'true' : 'false');
+    summary.querySelector('.activity-toggle-caret').textContent = open ? '▴' : '▾';
+    if(open && !loaded){
+      loaded = true;
+      const events = await fetchActivityLog();
+      paintActivityBody(body, events);
+    }
+  };
+  // Inject CSS once. Keeps the picker file self-contained — no separate
+  // stylesheet bump needed when this ships.
+  ensureActivityStyles();
+}
+
+function paintActivityBody(body, events){
+  body.textContent = '';
+  if(!events.length){
+    body.appendChild(h('div', {class:'activity-empty'},
+      'No logins logged yet. As people sign in, this list will fill up.'));
+    return;
+  }
+  // Show up to the 20 most recent — older history isn't actionable
+  // (an attacker from 3 weeks ago is already long gone).
+  const visible = events.slice(0, 20);
+  const list = h('ul', { class:'activity-list' });
+  visible.forEach(ev => {
+    const label = activityProfileLabel(ev.sid);
+    const li = h('li', { class:'activity-row' });
+    li.appendChild(h('div',{class:'activity-row-emoji'}, label.emoji));
+    const main = h('div',{class:'activity-row-main'});
+    main.appendChild(h('div',{class:'activity-row-name'}, label.name));
+    const meta = (ev.device || 'Device') + ' · ' + activityLocation(ev);
+    main.appendChild(h('div',{class:'activity-row-meta'}, meta));
+    li.appendChild(main);
+    li.appendChild(h('div',{class:'activity-row-time', title: new Date(ev.at).toLocaleString()},
+      activityTimeAgo(ev.at)));
+    list.appendChild(li);
+  });
+  body.appendChild(list);
+  body.appendChild(h('div',{class:'activity-foot'},
+    'See something unfamiliar? Change your tenant code in the Teacher Login → Settings.'));
+}
+
+function ensureActivityStyles(){
+  if(document.getElementById('activityPanelStyles')) return;
+  const style = document.createElement('style');
+  style.id = 'activityPanelStyles';
+  style.textContent =
+    '.activity-panel{max-width:560px;margin:24px auto 32px;padding:0 12px}' +
+    '.activity-toggle{width:100%;display:flex;align-items:center;gap:10px;padding:12px 16px;' +
+      'border:1px solid rgba(124,58,237,.25);background:rgba(255,255,255,.7);' +
+      'border-radius:12px;cursor:pointer;font:inherit;color:#3b1f8a;' +
+      'box-shadow:0 1px 3px rgba(76,29,149,.06);transition:background .15s}' +
+    '.activity-toggle:hover{background:#fff}' +
+    '.activity-toggle-title{font-weight:600;font-size:15px}' +
+    '.activity-toggle-hint{flex:1;font-size:13px;color:#6b7280;text-align:left}' +
+    '.activity-toggle-caret{font-size:14px;color:#7c3aed}' +
+    '.activity-body{margin-top:10px;padding:14px 16px;background:rgba(255,255,255,.85);' +
+      'border:1px solid rgba(124,58,237,.18);border-radius:12px}' +
+    '.activity-status,.activity-empty{font-size:14px;color:#6b7280;text-align:center;padding:8px 0}' +
+    '.activity-list{list-style:none;margin:0;padding:0}' +
+    '.activity-row{display:flex;align-items:center;gap:12px;padding:10px 4px;' +
+      'border-bottom:1px solid rgba(124,58,237,.08)}' +
+    '.activity-row:last-child{border-bottom:none}' +
+    '.activity-row-emoji{font-size:22px;width:32px;text-align:center;flex:0 0 auto}' +
+    '.activity-row-main{flex:1;min-width:0}' +
+    '.activity-row-name{font-weight:600;font-size:14px;color:#1f2937}' +
+    '.activity-row-meta{font-size:12px;color:#6b7280;margin-top:2px;' +
+      'overflow:hidden;text-overflow:ellipsis;white-space:nowrap}' +
+    '.activity-row-time{font-size:12px;color:#7c3aed;flex:0 0 auto;font-variant-numeric:tabular-nums}' +
+    '.activity-foot{margin-top:10px;padding-top:10px;border-top:1px dashed rgba(124,58,237,.2);' +
+      'font-size:11px;color:#6b7280;text-align:center}' +
+    '@media (max-width:480px){.activity-toggle-hint{display:none}}';
+  document.head.appendChild(style);
 }
 
 /* ========== DEMO PIN GATE ==========
