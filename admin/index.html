@@ -50,9 +50,26 @@ input,select,textarea{font-family:inherit}
 
 /* HEADER */
 .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;gap:12px;flex-wrap:wrap}
-.brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:22px;color:var(--ink)}
-.brand-mark{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--primary),var(--primary2));display:flex;align-items:center;justify-content:center;color:#fff;font-size:20px;box-shadow:var(--shadow)}
+/* Brand lockup — kept identical to the marketing site, app shell, and
+   thank-you page. The 🚀 emoji sits in a soft purple gradient tile and
+   the wordmark animates through a rainbow gradient. The whole lockup
+   is a link back to /admin/ so an operator who wandered into a sub-view
+   can always click home. */
+.brand{display:inline-flex;align-items:center;gap:10px;font-weight:800;font-size:22px;color:var(--ink);text-decoration:none}
+.brand:hover{text-decoration:none;color:var(--ink)}
+.brand-mark{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--primary),var(--primary2));display:flex;align-items:center;justify-content:center;color:#fff;font-size:22px;line-height:1;box-shadow:var(--shadow)}
 .brand-sub{color:var(--ink3);font-size:13px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;margin-left:6px}
+/* Rainbow wordmark — same gradient + animation tokens used by the
+   marketing site and the app shell so the brand renders identically
+   wherever it appears. */
+.solvix-rainbow{
+  background:linear-gradient(90deg,#ff5e5e,#ffaa00,#ffd400,#5fd35f,#3aa3ff,#7c5cff,#ff5cb8,#ff5e5e);
+  background-size:200% 100%;
+  -webkit-background-clip:text;background-clip:text;
+  -webkit-text-fill-color:transparent;color:transparent;
+  animation:solvix-rainbow-shift 8s linear infinite;
+}
+@keyframes solvix-rainbow-shift{from{background-position:0% 50%}to{background-position:200% 50%}}
 .topbar-actions{display:flex;gap:8px;align-items:center}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:8px 14px;font-weight:700;font-size:13px;border-radius:999px;cursor:pointer;transition:transform .12s ease,box-shadow .12s ease;border:none}
 .btn-primary{background:var(--primary);color:#fff;box-shadow:0 4px 14px rgba(108,92,231,.32)}
@@ -226,10 +243,14 @@ tbody tr:last-child td{border-bottom:none}
 <!-- ============ AUTH GATE ============ -->
 <!-- Shown when no admin password in localStorage. -->
 <div id="gate" class="gate hidden">
-  <div class="brand" style="justify-content:center;margin-bottom:18px">
-    <div class="brand-mark">🌟</div>
-    <div>Solvix <span class="brand-sub">Admin</span></div>
-  </div>
+  <!-- Brand lockup — link to /admin/. Operator could only land here from
+       the admin URL anyway, so the link is a no-op in normal flow; it's
+       there for consistency with the rest of the brand lockups across
+       the site (marketing, app, thank-you all link home from the brand). -->
+  <a class="brand" href="/admin/" style="justify-content:center;margin-bottom:18px" aria-label="Solvix Admin — go home">
+    <span class="brand-mark" aria-hidden="true">🚀</span>
+    <div><span class="solvix-rainbow">Solvix</span> <span class="brand-sub">Admin</span></div>
+  </a>
   <h1>Sign in</h1>
   <p>Enter your admin password to continue. It stays on this device — it's only sent to the Solvix worker as the <code>Authorization</code> header on API calls.</p>
   <input id="gate-token" type="password" placeholder="Admin password" autocomplete="current-password" autocapitalize="off" spellcheck="false">
@@ -240,10 +261,10 @@ tbody tr:last-child td{border-bottom:none}
 <!-- ============ MAIN APP ============ -->
 <div id="app" class="wrap hidden">
   <div class="topbar">
-    <div class="brand">
-      <div class="brand-mark">🌟</div>
-      <div>Solvix <span class="brand-sub">Admin</span></div>
-    </div>
+    <a class="brand" href="/admin/" aria-label="Solvix Admin — go home">
+      <span class="brand-mark" aria-hidden="true">🚀</span>
+      <div><span class="solvix-rainbow">Solvix</span> <span class="brand-sub">Admin</span></div>
+    </a>
     <div class="topbar-actions">
       <button class="btn btn-ghost btn-sm" id="refresh-btn" title="Refresh data">🔄 Refresh</button>
       <button class="btn btn-ghost btn-sm" id="logout-btn" title="Forget the admin password on this device">🚪 Sign out</button>
@@ -1242,6 +1263,51 @@ tbody tr:last-child td{border-bottom:none}
   } else {
     showGate();
   }
+})();
+
+/* Rainbow Solvix wordmark — wraps every text occurrence of "Solvix" in
+   a span with class .solvix-rainbow so the CSS gradient animation
+   applies. Same shape as the IIFE in app/index.html, thank-you and
+   index.html so the brand looks identical everywhere. The
+   MutationObserver matters here because tenant rows + dialogs render
+   "Solvix" text dynamically (e.g. confirm prompts mentioning "Solvix"). */
+(function setupSolvixRainbow(){
+  var WORD='Solvix', CLASS='solvix-rainbow';
+  var SKIP=/^(STYLE|SCRIPT|TEXTAREA|TITLE|CODE|PRE|NOSCRIPT|INPUT)$/;
+  function processTextNode(node){
+    if(!node || node.nodeType!==3 || !node.nodeValue || node.nodeValue.indexOf(WORD)<0) return;
+    var p=node.parentElement;
+    if(!p || p.classList.contains(CLASS) || SKIP.test(p.tagName)) return;
+    var parts=node.nodeValue.split(WORD);
+    var frag=document.createDocumentFragment();
+    for(var i=0;i<parts.length;i++){
+      if(parts[i]) frag.appendChild(document.createTextNode(parts[i]));
+      if(i<parts.length-1){
+        var s=document.createElement('span');
+        s.className=CLASS; s.textContent=WORD;
+        frag.appendChild(s);
+      }
+    }
+    node.parentNode.replaceChild(frag,node);
+  }
+  function walk(root){
+    if(!root) return;
+    if(root.nodeType===3){ processTextNode(root); return; }
+    if(root.nodeType!==1) return;
+    var w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,null);
+    var list=[],n; while((n=w.nextNode())) list.push(n);
+    for(var i=0;i<list.length;i++) processTextNode(list[i]);
+  }
+  try {
+    walk(document.body);
+    new MutationObserver(function(muts){
+      for(var i=0;i<muts.length;i++){
+        var m=muts[i];
+        for(var j=0;j<m.addedNodes.length;j++) walk(m.addedNodes[j]);
+        if(m.type==='characterData') processTextNode(m.target);
+      }
+    }).observe(document.documentElement,{childList:true,subtree:true,characterData:true});
+  } catch(e){ /* fail-silent: brand still readable without rainbow */ }
 })();
 </script>
 </body>

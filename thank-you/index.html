@@ -52,8 +52,27 @@ a{color:var(--primary);text-decoration:none;font-weight:700}
 a:hover{text-decoration:underline}
 button{font-family:inherit;cursor:pointer}
 .wrap{max-width:640px;margin:0 auto;padding:60px 24px}
-.brand{display:flex;align-items:center;gap:10px;margin-bottom:40px;font-weight:800;font-size:22px;color:var(--ink)}
-.brand-mark{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--primary),var(--primary2));display:flex;align-items:center;justify-content:center;color:#fff;font-size:20px;box-shadow:var(--shadow)}
+/* Brand lockup — kept identical across the marketing site, app shell,
+   thank-you page and admin so users always know they're in the same
+   product family. The 🚀 emoji sits inside a soft purple gradient tile
+   and the wordmark animates through a rainbow gradient. The whole
+   lockup is a link back to the marketing site (/) — visitors landing
+   here from a Stripe redirect should always have an obvious way home. */
+.brand{display:inline-flex;align-items:center;gap:10px;margin-bottom:40px;font-weight:800;font-size:22px;color:var(--ink);text-decoration:none}
+.brand:hover{text-decoration:none}
+.brand-mark{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--primary),var(--primary2));display:flex;align-items:center;justify-content:center;color:#fff;font-size:22px;line-height:1;box-shadow:var(--shadow)}
+/* Rainbow wordmark — same gradient + animation tokens used by the
+   marketing site and the app shell so the brand renders identically
+   wherever it appears. background-clip:text paints the gradient onto
+   the glyphs only; -webkit- prefix keeps Safari happy. */
+.solvix-rainbow{
+  background:linear-gradient(90deg,#ff5e5e,#ffaa00,#ffd400,#5fd35f,#3aa3ff,#7c5cff,#ff5cb8,#ff5e5e);
+  background-size:200% 100%;
+  -webkit-background-clip:text;background-clip:text;
+  -webkit-text-fill-color:transparent;color:transparent;
+  animation:solvix-rainbow-shift 8s linear infinite;
+}
+@keyframes solvix-rainbow-shift{from{background-position:0% 50%}to{background-position:200% 50%}}
 .card{background:var(--card);border-radius:32px;padding:40px;box-shadow:var(--shadow-lg);border:1px solid var(--line)}
 h1{font-size:clamp(28px,4vw,40px);line-height:1.1;letter-spacing:-.01em;font-weight:800;margin-bottom:10px}
 .lede{font-size:17px;line-height:1.5;color:var(--ink2);margin-bottom:24px}
@@ -84,10 +103,13 @@ h1{font-size:clamp(28px,4vw,40px);line-height:1.1;letter-spacing:-.01em;font-wei
 </head>
 <body>
 <div class="wrap">
-  <div class="brand">
-    <div class="brand-mark">🌟</div>
-    <div>Solvix</div>
-  </div>
+  <!-- Brand lockup — link back to the marketing site. After a Stripe
+       redirect, visitors arrive here cold; making the brand a clickable
+       link is the universally expected escape hatch. -->
+  <a class="brand" href="/" title="Go to the Solvix homepage" aria-label="Solvix — go home">
+    <span class="brand-mark" aria-hidden="true">🚀</span>
+    <span class="solvix-rainbow">Solvix</span>
+  </a>
 
   <div class="card">
     <!-- Loading state — shown while we resolve the session for the
@@ -281,6 +303,51 @@ h1{font-size:clamp(28px,4vw,40px);line-height:1.1;letter-spacing:-.01em;font-wei
 
   // Kick off the first attempt.
   resolveSession();
+})();
+
+/* Rainbow Solvix wordmark — wraps every text occurrence of "Solvix" in
+   a span with class .solvix-rainbow so the CSS gradient animation
+   applies. Same shape as the IIFE in app/index.html and index.html so
+   the brand looks identical everywhere. MutationObserver covers the
+   resolveSession() success path that swaps in the personalised welcome
+   line — that text otherwise wouldn't get rainbow-wrapped. */
+(function setupSolvixRainbow(){
+  var WORD='Solvix', CLASS='solvix-rainbow';
+  var SKIP=/^(STYLE|SCRIPT|TEXTAREA|TITLE|CODE|PRE|NOSCRIPT|INPUT)$/;
+  function processTextNode(node){
+    if(!node || node.nodeType!==3 || !node.nodeValue || node.nodeValue.indexOf(WORD)<0) return;
+    var p=node.parentElement;
+    if(!p || p.classList.contains(CLASS) || SKIP.test(p.tagName)) return;
+    var parts=node.nodeValue.split(WORD);
+    var frag=document.createDocumentFragment();
+    for(var i=0;i<parts.length;i++){
+      if(parts[i]) frag.appendChild(document.createTextNode(parts[i]));
+      if(i<parts.length-1){
+        var s=document.createElement('span');
+        s.className=CLASS; s.textContent=WORD;
+        frag.appendChild(s);
+      }
+    }
+    node.parentNode.replaceChild(frag,node);
+  }
+  function walk(root){
+    if(!root) return;
+    if(root.nodeType===3){ processTextNode(root); return; }
+    if(root.nodeType!==1) return;
+    var w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,null);
+    var list=[],n; while((n=w.nextNode())) list.push(n);
+    for(var i=0;i<list.length;i++) processTextNode(list[i]);
+  }
+  try {
+    walk(document.body);
+    new MutationObserver(function(muts){
+      for(var i=0;i<muts.length;i++){
+        var m=muts[i];
+        for(var j=0;j<m.addedNodes.length;j++) walk(m.addedNodes[j]);
+        if(m.type==='characterData') processTextNode(m.target);
+      }
+    }).observe(document.documentElement,{childList:true,subtree:true,characterData:true});
+  } catch(e){ /* fail-silent: brand still readable without rainbow */ }
 })();
 </script>
 </body>

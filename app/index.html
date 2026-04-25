@@ -182,15 +182,24 @@ img{max-width:100%}
 
 /* ---- TOPBAR ---- */
 .topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 18px;background:rgba(255,255,255,.78);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border:1.5px solid rgba(255,255,255,.9);border-radius:var(--r-lg);box-shadow:var(--shadow);position:sticky;top:10px;z-index:40;flex-wrap:wrap}
-/* `.brand` is a <button> now (clicks → go('home')), so reset the default
-   button padding and keep the original flex-row layout. The hover tilt on
-   .logo was already there — now it actually signals a clickable target. */
+/* `.brand` is a <button> now (clicks → goBrand() → smart routing: goes
+   to the active dashboard if a tenant + user is in session, else falls
+   back to the welcome page). Reset default button chrome; keep the
+   original flex-row layout. The hover tilt on .logo was already there —
+   now it actually signals a clickable target.
+
+   Logo mark: 🚀 emoji at 26px to match the marketing nav, thank-you
+   page, and admin dashboard. Old SVG rocket replaced for one
+   consistent brand lockup site-wide. */
 .brand{display:flex;align-items:center;gap:12px;font-weight:700;font-size:22px;letter-spacing:-.01em;font-family:var(--font-display);padding:0;background:none;border:none;color:inherit;cursor:pointer}
-.brand .logo{width:44px;height:44px;border-radius:14px;background:linear-gradient(135deg,var(--primary),var(--pink) 60%,var(--sun));display:grid;place-items:center;color:#fff;box-shadow:0 8px 18px rgba(108,92,231,.4),inset 0 -3px 0 rgba(0,0,0,.12);border:2px solid #fff;transition:transform .3s var(--spring)}
+.brand .logo{width:44px;height:44px;border-radius:14px;background:linear-gradient(135deg,var(--primary),var(--pink) 60%,var(--sun));display:grid;place-items:center;color:#fff;box-shadow:0 8px 18px rgba(108,92,231,.4),inset 0 -3px 0 rgba(0,0,0,.12);border:2px solid #fff;transition:transform .3s var(--spring);font-size:26px;line-height:1}
 .brand .logo svg{filter:drop-shadow(0 1px 1px rgba(0,0,0,.18))}
 .brand:hover .logo{transform:rotate(-6deg) scale(1.08)}
 .brand:active .logo{transform:rotate(-6deg) scale(1.02)}
 .brand:focus-visible{outline:3px solid var(--primary);outline-offset:4px;border-radius:14px}
+/* Legacy purple-blue gradient retained for back-compat in case any other
+   surface still references `.brand-text`; the topbar wordmark is now
+   .solvix-rainbow so it matches the marketing site exactly. */
 .brand-text{background:linear-gradient(135deg,var(--primary),#4834d4);-webkit-background-clip:text;background-clip:text;color:transparent}
 /* Left cluster wrapper — keeps brand button + "Main site" exit link
    grouped as a single flex item so the topbar's 3-column space-between
@@ -2613,7 +2622,7 @@ body.has-dev-banner{padding-top:26px}
          browser history. Kids won't usually click it; it's primarily
          a safety valve for visitors. -->
     <div class="topbar-brand">
-      <button class="brand" type="button" onclick="go('home')" aria-label="Solvix — go to welcome page"><span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2c2.5 2.5 4 5.5 4 9v6l-2 2h-4l-2-2v-6c0-3.5 1.5-6.5 4-9z"/><circle cx="12" cy="10" r="1.8"/><path d="M8 14l-3 4v2l3-1M16 14l3 4v2l-3-1"/></svg></span><span class="brand-text">Solvix</span></button>
+      <button class="brand" type="button" onclick="goBrand()" aria-label="Solvix — go to your dashboard"><span class="logo" aria-hidden="true">🚀</span><span class="solvix-rainbow brand-name">Solvix</span></button>
       <a href="/" class="site-link" title="Go to the main Solvix website" aria-label="Go to the main Solvix website">← Main site</a>
     </div>
     <nav id="nav"></nav>
@@ -2621,7 +2630,7 @@ body.has-dev-banner{padding-top:26px}
   </header>
   <main id="screen"></main>
   <footer class="footer">
-    <div class="brand-footer">Solvix v1.0 · Built by Rhahavy</div>
+    <div class="brand-footer"><span class="solvix-rainbow">Solvix</span> v1.0 · Built by Rhahavy</div>
     <!-- Secondary exit to the marketing site. The topbar already has the
          primary "← Main site" link; this footer link is a low-cost backup
          for anyone scrolled to the bottom of a long dashboard. -->
@@ -14865,6 +14874,24 @@ function updateTopbar(screen){
 }
 
 /* ========== ROUTING ========== */
+// Smart brand-click router. The 🚀 + rainbow "Solvix" lockup in the topbar
+// (and footer / tenant gate) is meant to feel like the universal "take me
+// home" target. What "home" means depends on context though:
+//   • Teacher logged in  → teacher dashboard (their command center)
+//   • Student logged in  → kid dashboard (their world map)
+//   • Nobody logged in   → welcome hero (the within-tenant landing page)
+// We never link out to the marketing site from inside the app — once the
+// kid is past the tenant gate, the brand should keep them in their tenant.
+function goBrand(){
+  try{
+    if(typeof isTeacher !== 'undefined' && isTeacher) return go('teacher');
+    if(typeof currentUser !== 'undefined' && currentUser) return go('dashboard');
+    return go('home');
+  }catch(e){
+    // Never let a brand-click crash the app — fall back to welcome.
+    try{ go('home'); }catch(_){ }
+  }
+}
 function go(screen,opts={}){
   // Demo-tenant shortcut: when the active classroom is flagged isDemo,
   // it has no real student profiles — its whole reason to exist is the
