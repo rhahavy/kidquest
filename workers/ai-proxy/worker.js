@@ -2485,6 +2485,19 @@ function stripeEncodeBody(obj, prefix) {
 // the caller redirects to. Rate-limited per-IP so a bot can't fill
 // our Stripe dashboard with abandoned sessions.
 async function handleStripeCheckoutRoute(request, env, corsOrigin) {
+  // Master signup kill-switch. When SIGNUPS_ENABLED is "false" the
+  // /stripe/checkout endpoint refuses to mint new sessions, regardless
+  // of how the marketing site is configured. This is the single
+  // operator knob to "stop new customers" — flip the env var and
+  // redeploy, no frontend change required (e.g. for a privacy /
+  // architecture freeze where existing tenants keep working but no
+  // new ones can be provisioned). Default true so this is opt-in.
+  if (String(env.SIGNUPS_ENABLED || 'true').toLowerCase() === 'false') {
+    return json({
+      error: 'signups_paused',
+      message: 'New signups are temporarily paused while we improve the onboarding experience. Join the waitlist at admin@kidquest.fun.',
+    }, 503, corsOrigin);
+  }
   const ip = request.headers.get('cf-connecting-ip') || '';
   const rlKey = `ratelimit:stripe-checkout:ip:${ip}`;
   const rl = await rateLimitHit(env, rlKey, RL.AUTH_IP.max, RL.AUTH_IP.window);

@@ -20,6 +20,17 @@ compatibility_date = "2025-01-01"
 # kill switch for "something's going wrong, shut it all off now".
 AI_ENABLED = "false"
 
+# ----- SIGNUP KILL-SWITCH ---------------------------------------
+# Independent of AI_ENABLED. When "false", POST /stripe/checkout
+# returns 503 "signups_paused" so no new tenants can be provisioned,
+# but every existing tenant keeps working (data backend, app, all
+# untouched). Use this when you need to freeze new-customer intake
+# while shipping a breaking onboarding change — e.g. while
+# genericizing the per-tenant student roster so paying customers
+# stop seeing the operator's hard-coded family. Default behaviour
+# (no override or "true") is signups OPEN.
+SIGNUPS_ENABLED = "false"
+
 # ----- PER-FEATURE FLAGS ----------------------------------------
 # Flip to "true" one at a time as you activate each phase.
 # Order matches the phasing plan in README.md.
