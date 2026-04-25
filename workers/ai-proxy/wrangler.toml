@@ -29,6 +29,25 @@ AI_ENABLED = "false"
 # genericizing the per-tenant student roster so paying customers
 # stop seeing the operator's hard-coded family. Default behaviour
 # (no override or "true") is signups OPEN.
+#
+# CHECKLIST TO RE-OPEN SIGNUPS (after Path B genericization ships):
+#   1. Replace the hard-coded STUDENTS array in app/index.html with
+#      a generic 5-kid placeholder roster (no real names, no IEP
+#      notes, no supports).
+#   2. Add a per-tenant roster override: load tenant.customRoster
+#      (stored in `tenant:{id}:data` under `roster`) on auth and
+#      mutate STUDENTS contents BEFORE the existing CSS/state
+#      initialization runs. Tenant 2020 (Rhahavy) needs a one-time
+#      KV write to install Rhahavy's existing roster as the override
+#      so their kids' progress doesn't orphan.
+#   3. Build a "set up your kids" wizard for new tenants that writes
+#      tenant.customRoster on first login (5 slots for family,
+#      35 for classroom).
+#   4. Flip SIGNUPS_ENABLED = "true" here, redeploy the worker.
+#   5. Remove the "Signups paused" banner block in index.html
+#      (search for "Signup-paused banner") and revert the plan
+#      buttons from mailto-waitlist back to startTrial(...) onclicks.
+#   6. Bump SW_VERSION in sw.js so cached marketing pages refresh.
 SIGNUPS_ENABLED = "false"
 
 # ----- PER-FEATURE FLAGS ----------------------------------------
