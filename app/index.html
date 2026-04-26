@@ -2839,7 +2839,9 @@ function icon(name,size){
 
    ADD NEW STORE REWARDS
    ─────────────────────
-   Edit STORE_ITEMS in the store section. Each item is one object.
+   The prize wall is operator-managed via /admin/. Edit catalog items
+   in the admin console (Prize Catalog panel) — STORE_ITEMS in this
+   file is only the seed/fallback for offline + first-run boots.
 
    ADD NEW SUBJECTS
    ────────────────
@@ -8558,19 +8560,19 @@ evan: {
 /* ==========================================================================
    KIDQUEST STORE — REWARD CATALOG + REQUEST SYSTEM
    --------------------------------------------------------------------------
-   ▸ EDIT ITEMS: update STORE_ITEMS below — name, price, coinCost, etc.
-   ▸ EDIT PRICES: tweak `approxPrice` (USD) and `coinCost` per item.
-   ▸ EDIT UNLOCK RULES: each item.requirements controls how hard it is to earn.
-       - minLevels: total activities student must have completed THIS WEEK
-       - minSubjects: how many DIFFERENT subjects they've touched this week
-       - challenge: 'easy' | 'medium' | 'hard' — mini-quiz difficulty
-   ▸ RARE "SPECIAL" ITEMS: set `special:true` for glowing treatment.
-   ▸ IMAGES: put real images in an /images folder and set `image:'images/foo.png'`,
-             or leave `image:null` and the emoji/icon will be used as the visual.
-   ▸ AMAZON LINKS: paste the real Amazon URL in `amazonLink` so I (the teacher)
-                   can quickly fulfill the order. This link is shown to the teacher
-                   ONLY — never shown to students.
-   ▸ BUDGET RULE: all items should stay under $15 unless manually changed.
+   PRIZES ARE OPERATOR-ADMINISTERED. The catalog lives in Cloudflare KV
+   (key: `global:store:catalog`) and is edited from the Solvix admin
+   console at /admin/. Teachers and parents do NOT input their own
+   prizes — they only:
+     • Toggle the store ON/OFF for their tenant (storeEnabled flag)
+     • Toggle per-item availability (catalogOverrides) so they can hide
+       items they don't want to fulfill this season.
+   This file's STORE_ITEMS array below is a SEED ONLY: the runtime
+   reads from `STORE_CATALOG`, which boot fills via loadStoreCatalog()
+   from the worker. If the worker is unreachable or the operator hasn't
+   seeded the KV blob yet, we fall back to the seed so kids still see
+   the Shop. The seed is also used by /admin/'s "Reset to defaults"
+   button when the operator wants to clear their edits.
    ▸ CATEGORIES: edit CATEGORIES array below to add/rename/reorder tabs.
    ========================================================================== */
 
@@ -8707,6 +8709,81 @@ const STORE_ITEMS = [
     approxPrice:12.99, coinCost:3500, image:null, amazonLink:'', isAvailable:true, special:true,
     requirements:{ minLevels:5, minSubjects:3, challenge:'hard' } },
 ];
+
+/* Live runtime catalog. Initially seeded from STORE_ITEMS (so the Shop
+   works on a fresh install, behind a flaky network, or before the SW
+   has primed the cache) and replaced on first successful fetch from
+   the operator-managed KV blob. Every reader (getCatalog, wishlist
+   resolve, store render) goes through STORE_CATALOG — never touch
+   STORE_ITEMS at runtime. */
+let STORE_CATALOG = STORE_ITEMS.slice();
+
+/* localStorage key for the cached catalog. Bumping the suffix forces
+   every device to re-fetch on next boot (use when the schema changes
+   in a way that old caches can't render). The cache is just a render
+   accelerator — KV is always source of truth. */
+const STORE_CATALOG_CACHE_KEY = 'kidquest:store:catalog:v1';
+
+/* Hydrate STORE_CATALOG from localStorage synchronously so the first
+   render of the Shop tab doesn't flicker between the seed and the
+   operator's real prize list. Falls back to the seed if the cache is
+   missing or unparseable. Called from the boot IIFE before any UI
+   render. Safe to call multiple times. */
+function hydrateStoreCatalogFromCache(){
+  try {
+    const raw = localStorage.getItem(STORE_CATALOG_CACHE_KEY);
+    if(!raw) return;
+    const parsed = JSON.parse(raw);
+    if(parsed && Array.isArray(parsed.items) && parsed.items.length){
+      STORE_CATALOG = parsed.items;
+    }
+  } catch(e){
+    // Bad cache row — drop it so the next read doesn't keep tripping.
+    try { localStorage.removeItem(STORE_CATALOG_CACHE_KEY); } catch(_){}
+  }
+}
+
+/* Async: fetch the live catalog from the worker. On success, replace
+   STORE_CATALOG and persist to localStorage so the next boot is
+   instant. On failure (offline, 404 = no catalog seeded yet, 5xx),
+   keep whatever STORE_CATALOG already holds — could be a previously
+   cached fetch or the hardcoded seed.
+
+   Re-renders the Shop tab if the kid is currently looking at it.
+   Otherwise the next navigation to Shop picks up the fresh items
+   automatically because renderStore reads through getCatalog(). */
+async function loadStoreCatalog(){
+  if(!DATA_BACKEND_URL) return;
+  try {
+    const r = await fetch(DATA_BACKEND_URL.replace(/\/+$/, '') + '/store/catalog', {
+      cache: 'no-store',
+    });
+    if(r.status === 404){
+      // Operator hasn't seeded KV yet — seed lives on locally as STORE_CATALOG.
+      return;
+    }
+    if(!r.ok) return;
+    const j = await r.json();
+    if(!j || !j.ok || !Array.isArray(j.catalog) || !j.catalog.length) return;
+    STORE_CATALOG = j.catalog;
+    try {
+      localStorage.setItem(STORE_CATALOG_CACHE_KEY, JSON.stringify({
+        items: j.catalog,
+        updatedAt: j.updatedAt || Date.now(),
+        cachedAt: Date.now(),
+      }));
+    } catch(e){ /* quota / private mode — fine, runtime still has it */ }
+    // If the kid is on the Shop tab right now, refresh in place.
+    try {
+      if(typeof currentScreen !== 'undefined' && currentScreen === 'store' &&
+         typeof renderStore === 'function'){
+        renderStore();
+      }
+    } catch(e){}
+  } catch(e){
+    // Network blip — silent. STORE_CATALOG already holds something usable.
+  }
+}
 
 /* ==========================================================================
    CHALLENGE BANK — mini-quiz questions gate every purchase.
@@ -10193,10 +10270,19 @@ function snapshotIfWipeImminent(reason, victims){
 }
 
 function initCloud(){
+  // Hydrate the prize catalog synchronously from localStorage so the
+  // first Shop render shows the operator's real items, not the seed.
+  // The async fetch below refreshes it without blocking. Safe to call
+  // multiple times — re-running it just rewrites STORE_CATALOG with
+  // whatever's already in cache.
+  try { hydrateStoreCatalogFromCache(); } catch(e){}
   // Global maint runs alongside pullCloud — no auth needed, fires even
   // for users with no tenant code yet. Catch every error so a /health
   // hiccup never blocks the per-tenant pull (and vice versa).
   checkGlobalMaintenance().catch(()=>{});
+  // Pull the live catalog from the worker. Cache-Control: public,
+  // max-age=120 on the response keeps repeat fetches cheap.
+  loadStoreCatalog().catch(()=>{});
   pullCloud(true).then(()=>{cloudReady=true}).catch(()=>{});
   setInterval(()=>{
     pullCloud(false);
@@ -10206,6 +10292,9 @@ function initCloud(){
     if(!document.hidden){
       pullCloud(false);
       checkGlobalMaintenance().catch(()=>{});
+      // Tab came back to focus — opportunity to pick up a recent
+      // operator catalog change without forcing the user to reload.
+      loadStoreCatalog().catch(()=>{});
     }
   });
 }
@@ -14462,7 +14551,7 @@ function activitiesUntilNextBatch(sid){
 /* ==========================================================================
    STORE HELPERS — requirements, orders, email
    --------------------------------------------------------------------------
-   ▸ getCatalog()          — returns STORE_ITEMS merged with teacher overrides
+   ▸ getCatalog()          — returns STORE_CATALOG merged with tenant overrides
    ▸ countWeekLevels(sid)  — total activities completed across all subjects
    ▸ countWeekSubjects(sid)— number of DIFFERENT subjects touched this week
    ▸ checkRequirements(item, sid) — returns {coins, levels, subjects, canAttempt}
@@ -14470,9 +14559,13 @@ function activitiesUntilNextBatch(sid){
    ▸ sendOrderEmail(order) — EmailJS primary, cloud-state fallback
    ========================================================================== */
 function getCatalog(){
-  // Merge live teacher edits with the source STORE_ITEMS catalog.
-  // Teacher can disable, rename, or adjust price/coinCost from the admin view.
-  return STORE_ITEMS.map(base=>{
+  // STORE_CATALOG is operator-managed (Solvix admin sets the prize wall
+  // via /admin/). We then layer the per-tenant catalogOverrides on top
+  // so a teacher/parent can hide an item they don't want kids buying
+  // this season — but they CAN'T add prizes or change names/prices.
+  // That's by design: prize fulfillment + pricing decisions stay in
+  // one place. Tenants ask the operator for custom items.
+  return STORE_CATALOG.map(base=>{
     const ov = (allData.catalogOverrides||{})[base.id] || {};
     return Object.assign({}, base, ov);
   });
@@ -26195,8 +26288,8 @@ function renderTeacherStore(){
   // --- Catalog editor ---
   wrap.appendChild(h('div',{class:'t-catalog'},[
     h('h2',{},'🎁 Reward Catalog'),
-    h('p',{class:'t-cat-sub'},'Toggle availability and spot items that exceed the budget cap. To edit names, prices, coin costs, or images, update STORE_ITEMS at the top of the file.'),
-    h('div',{class:'t-cat-note'},'💡 Budget guideline: all items should stay under $15 unless manually changed. Higher-priced items will be flagged below.'),
+    h('p',{class:'t-cat-sub'},'Toggle availability for the items you want kids to see. The Solvix catalog is operator-administered — names, prices, coin costs, and images are managed centrally so you don\'t have to. If you want a custom prize, email support and we\'ll add it for everyone.'),
+    h('div',{class:'t-cat-note'},'💡 The Solvix team curates this catalog and keeps items under $15. The on/off toggles below are yours to control.'),
   ]));
   const catGrid = h('div',{class:'t-cat-grid'});
   getCatalog().forEach(item=>{

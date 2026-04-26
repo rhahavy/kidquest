@@ -1412,6 +1412,156 @@ async function handleAdminGetGlobalMaintenanceRoute(request, env, corsOrigin) {
 }
 
 // =====================================================================
+// GLOBAL PRIZE CATALOG
+// =====================================================================
+// Single operator-managed catalog of physical rewards every tenant sees.
+// Lives in KV under `global:store:catalog`. Teachers/parents do NOT
+// edit prizes — they only flip `storeEnabled` (per-tenant) and toggle
+// per-item `catalogOverrides` (per-item availability) in their dashboard.
+//
+// Why a single catalog instead of per-tenant: kids across all tenants
+// effectively choose from the same Solvix-administered prize wall, so
+// inventory + pricing decisions stay in one place. If a tenant wants a
+// custom prize they ask the operator — that's by design.
+//
+// Public read (`GET /store/catalog`) is uncached at the Worker layer
+// but carries a 2-minute browser Cache-Control hint. The app also
+// localStorages the response so kids don't see a flash of "loading"
+// when they tap the Shop tab.
+
+const CATALOG_MAX_ITEMS = 200;
+const CATALOG_MAX_BYTES = 200 * 1024; // 200 KB ceiling on KV write
+
+// Whitelist of fields we persist. Anything else the operator pastes
+// in gets silently dropped — keeps clients from being surprised by
+// fields they don't render, and keeps the KV blob small.
+function sanitizeCatalogItem(raw) {
+  if (!raw || typeof raw !== 'object') return null;
+  const id = String(raw.id || '').trim().slice(0, 60).replace(/[^a-z0-9_\-]/gi, '');
+  if (!id) return null;
+  const name = String(raw.name || '').trim().slice(0, 120);
+  if (!name) return null;
+  const category = String(raw.category || '').trim().slice(0, 40) || 'misc';
+  const emoji = String(raw.emoji || '').trim().slice(0, 8) || '🎁';
+  const description = String(raw.description || '').trim().slice(0, 500);
+  const approxPrice = Number.isFinite(+raw.approxPrice) ? Math.max(0, +raw.approxPrice) : 0;
+  const coinCost = Number.isFinite(+raw.coinCost) ? Math.max(0, Math.floor(+raw.coinCost)) : 0;
+  const image = (raw.image == null || raw.image === '') ? null : String(raw.image).slice(0, 500);
+  const amazonLink = String(raw.amazonLink || '').slice(0, 500);
+  const isAvailable = raw.isAvailable !== false; // default true
+  const special = !!raw.special;
+  const r = (raw.requirements && typeof raw.requirements === 'object') ? raw.requirements : {};
+  const challenge = (r.challenge === 'easy' || r.challenge === 'medium' || r.challenge === 'hard')
+    ? r.challenge : 'easy';
+  const requirements = {
+    minLevels:   Number.isFinite(+r.minLevels)   ? Math.max(0, Math.floor(+r.minLevels))   : 1,
+    minSubjects: Number.isFinite(+r.minSubjects) ? Math.max(0, Math.floor(+r.minSubjects)) : 1,
+    challenge,
+  };
+  return { id, name, category, emoji, description, approxPrice, coinCost,
+           image, amazonLink, isAvailable, special, requirements };
+}
+
+async function getStoreCatalog(env) {
+  if (!env.KV) return null;
+  const raw = await env.KV.get('global:store:catalog');
+  if (!raw) return null;
+  try {
+    const v = JSON.parse(raw);
+    if (!v || !Array.isArray(v.items)) return null;
+    return {
+      items: v.items,
+      updatedAt: typeof v.updatedAt === 'number' ? v.updatedAt : 0,
+      updatedBy: typeof v.updatedBy === 'string' ? v.updatedBy : '',
+    };
+  } catch {
+    return null;
+  }
+}
+
+// GET /store/catalog — public (origin-gated). Returns the operator-set
+// catalog so the app can populate the rewards Shop. If KV is empty
+// (first-run, before the operator seeds it via /admin/), responds 404
+// with `no_catalog` — the app falls back to its hardcoded seed array.
+async function handleStoreCatalogRoute(request, env, corsOrigin) {
+  if (!env.KV) return json({ error: 'kv_not_bound' }, 500, corsOrigin);
+  // No tenant auth — every visitor can read the prize wall. Light
+  // per-IP rate limit so a misbehaving client can't pound KV.
+  const ip = request.headers.get('cf-connecting-ip') || '';
+  const rl = await rateLimitHit(env, `ratelimit:store-catalog:ip:${ip}`, 120, 60);
+  if (!rl.ok) return json({ error: 'rate_limited', resetAt: rl.resetAt }, 429, corsOrigin);
+  const cat = await getStoreCatalog(env);
+  if (!cat) return json({ ok: false, error: 'no_catalog' }, 404, corsOrigin);
+  // Browser cache for 2 minutes — keeps the Shop tab snappy without
+  // making catalog edits take forever to propagate to live tabs.
+  return new Response(JSON.stringify({ ok: true, catalog: cat.items, updatedAt: cat.updatedAt }), {
+    status: 200,
+    headers: {
+      ...corsHeaders(corsOrigin),
+      'content-type': 'application/json; charset=utf-8',
+      'cache-control': 'public, max-age=120',
+    },
+  });
+}
+
+// GET /admin/store/catalog — admin only. Returns the full catalog
+// (including private fields like updatedBy) for the admin editor UI.
+async function handleAdminGetStoreCatalogRoute(request, env, corsOrigin) {
+  if (!env.KV) return json({ error: 'kv_not_bound' }, 500, corsOrigin);
+  if (!checkAdminAuth(request, env)) return json({ error: 'admin_unauthorized' }, 401, corsOrigin);
+  const ip = request.headers.get('cf-connecting-ip') || '';
+  const rl = await rateLimitHit(env, `ratelimit:admin-catalog:ip:${ip}`, RL.ADMIN_IP.max, RL.ADMIN_IP.window);
+  if (!rl.ok) return json({ error: 'rate_limited', resetAt: rl.resetAt }, 429, corsOrigin);
+  const cat = await getStoreCatalog(env);
+  if (!cat) {
+    // Surface "no catalog yet" explicitly rather than 404'ing — the
+    // admin UI uses this to show a "Seed from defaults" button.
+    return json({ ok: true, catalog: [], updatedAt: 0, updatedBy: '', empty: true }, 200, corsOrigin);
+  }
+  return json({ ok: true, catalog: cat.items, updatedAt: cat.updatedAt, updatedBy: cat.updatedBy }, 200, corsOrigin);
+}
+
+// POST /admin/store/catalog — admin only. Body: { catalog: [...item] }.
+// Replaces the entire catalog. We accept full replacement (not patch)
+// because the operator UI always sends the full edited list — keeps
+// the wire protocol dead simple and avoids merge-conflict edge cases.
+async function handleAdminSetStoreCatalogRoute(request, env, corsOrigin) {
+  if (!env.KV) return json({ error: 'kv_not_bound' }, 500, corsOrigin);
+  if (!checkAdminAuth(request, env)) return json({ error: 'admin_unauthorized' }, 401, corsOrigin);
+  const ip = request.headers.get('cf-connecting-ip') || '';
+  const rl = await rateLimitHit(env, `ratelimit:admin-catalog:ip:${ip}`, RL.ADMIN_IP.max, RL.ADMIN_IP.window);
+  if (!rl.ok) return json({ error: 'rate_limited', resetAt: rl.resetAt }, 429, corsOrigin);
+
+  let body = {};
+  try { body = await request.json(); } catch { return json({ error: 'bad_json' }, 400, corsOrigin); }
+  const incoming = Array.isArray(body.catalog) ? body.catalog : null;
+  if (!incoming) return json({ error: 'missing_catalog' }, 400, corsOrigin);
+  if (incoming.length > CATALOG_MAX_ITEMS) {
+    return json({ error: 'too_many_items', max: CATALOG_MAX_ITEMS }, 400, corsOrigin);
+  }
+  // Sanitize + dedupe by id. Last write wins for duplicate ids since
+  // the operator probably meant to update the later one.
+  const byId = new Map();
+  const rejected = [];
+  for (let i = 0; i < incoming.length; i++) {
+    const clean = sanitizeCatalogItem(incoming[i]);
+    if (!clean) { rejected.push(i); continue; }
+    byId.set(clean.id, clean);
+  }
+  const items = [...byId.values()];
+  if (items.length === 0) return json({ error: 'empty_catalog', rejected }, 400, corsOrigin);
+
+  const now = Date.now();
+  const blob = { items, updatedAt: now, updatedBy: 'admin' };
+  const serialized = JSON.stringify(blob);
+  if (serialized.length > CATALOG_MAX_BYTES) {
+    return json({ error: 'catalog_too_large', maxBytes: CATALOG_MAX_BYTES, got: serialized.length }, 413, corsOrigin);
+  }
+  await env.KV.put('global:store:catalog', serialized);
+  return json({ ok: true, count: items.length, rejected, updatedAt: now }, 200, corsOrigin);
+}
+
+// =====================================================================
 // ADMIN DASHBOARD ROUTES
 // =====================================================================
 // All admin routes share three guarantees:
@@ -3415,6 +3565,13 @@ export default {
       // Global maintenance gate — operator-controlled site-wide hold screen.
       if (routeKey === 'GET /admin/global-maintenance')  return await handleAdminGetGlobalMaintenanceRoute(request, env, corsOrigin);
       if (routeKey === 'POST /admin/global-maintenance') return await handleAdminGlobalMaintenanceRoute(request, env, corsOrigin);
+      // Global prize catalog — single operator-administered list of
+      // physical rewards. Public read for kids; admin-token gate for
+      // edits. The app falls back to a hardcoded seed if the public
+      // read 404s, so a fresh install still has a working Shop.
+      if (routeKey === 'GET /store/catalog')             return await handleStoreCatalogRoute(request, env, corsOrigin);
+      if (routeKey === 'GET /admin/store/catalog')       return await handleAdminGetStoreCatalogRoute(request, env, corsOrigin);
+      if (routeKey === 'POST /admin/store/catalog')      return await handleAdminSetStoreCatalogRoute(request, env, corsOrigin);
       // Demo PIN admin routes (list active, manually generate). The
       // /admin/demo-pins prefix is matched before the generic
       // /admin/tenant/ block below so the order matters — keep these

@@ -298,6 +298,30 @@ tbody tr:last-child td{border-bottom:none}
     </div>
   </div>
 
+  <!-- Prize Catalog. Solvix is the single source of truth for the prize
+       wall every kid sees. Teachers/parents only toggle items on/off
+       per-tenant; they don't input their own prizes. Editing here is a
+       full-replace POST — operator pastes (or edits) the JSON array and
+       saves. Phase 1 is JSON-textarea editing; a richer form lives on
+       the roadmap. The list view above the editor is read-only and
+       just gives a glance at what's currently live. -->
+  <div class="panel" id="catalog-panel">
+    <div class="panel-head">
+      <h2>🎁 Prize Catalog <span class="count" id="catalog-count">—</span></h2>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-ghost btn-sm" id="catalog-refresh-btn" title="Re-read catalog from KV">🔄</button>
+        <button class="btn btn-ghost btn-sm" id="catalog-edit-btn" disabled>✏️ Edit JSON</button>
+      </div>
+    </div>
+    <div class="panel-body">
+      <p style="margin:0 0 10px;font-size:13px;color:#64748b">
+        The single, operator-managed prize wall every tenant sees. Teachers and parents can toggle items off for their classroom but can't add their own — that keeps fulfillment + pricing decisions in one place.
+      </p>
+      <div id="catalog-meta" style="font-size:12px;color:#94a3b8;margin-bottom:10px">Loading…</div>
+      <div id="catalog-list" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px"></div>
+    </div>
+  </div>
+
   <!-- Stats strip -->
   <div class="stats" id="stats">
     <!-- populated by JS -->
@@ -453,6 +477,37 @@ tbody tr:last-child td{border-bottom:none}
       </div>
     </div>
     <div id="refund-error" style="display:none"></div>
+  </div>
+</div>
+
+<!-- ============ CATALOG EDIT DIALOG ============
+     Phase 1 prize-catalog editor: a JSON textarea + Save. The shape of
+     each item is documented in the placeholder so the operator doesn't
+     have to dig into the worker source. The worker validates + sanitizes
+     server-side, so a typo here is rejected with a friendly error
+     before anything writes to KV. -->
+<div id="catalog-bg" class="modal-bg" role="dialog" aria-modal="true">
+  <div class="modal" style="position:relative;max-width:920px">
+    <button class="modal-close" id="catalog-close" aria-label="Close">×</button>
+    <h2>🎁 Edit Prize Catalog</h2>
+    <div class="sub" id="catalog-edit-sub">JSON array of prize items. Saving replaces the entire catalog.</div>
+    <div style="margin-top:12px">
+      <label style="display:block;font-size:13px;font-weight:600;color:#334155;margin-bottom:6px">Catalog JSON</label>
+      <textarea id="catalog-json" spellcheck="false" style="width:100%;min-height:340px;padding:12px;border:1.5px solid var(--line);border-radius:10px;font-family:var(--mono);font-size:12px;line-height:1.4;box-sizing:border-box;background:#fafafa"></textarea>
+      <div style="display:flex;gap:12px;margin-top:8px;flex-wrap:wrap;font-size:12px;color:#64748b">
+        <span><strong>Required fields per item:</strong> id, name</span>
+        <span><strong>Optional:</strong> category, emoji, description, approxPrice, coinCost, image, amazonLink, isAvailable, special, requirements</span>
+      </div>
+      <div style="margin-top:6px;font-size:12px;color:#64748b">
+        <strong>requirements:</strong> { minLevels: number, minSubjects: number, challenge: 'easy'|'medium'|'hard' }
+      </div>
+      <div id="catalog-edit-error" style="display:none;margin-top:10px;padding:10px;background:#fee2e2;border-radius:8px;color:#991b1b;font-size:13px;font-weight:600"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost btn-sm" id="catalog-cancel">Cancel</button>
+      <button class="btn btn-ghost btn-sm" id="catalog-format">Format JSON</button>
+      <button class="btn btn-primary btn-sm" id="catalog-save">💾 Save catalog</button>
+    </div>
   </div>
 </div>
 
@@ -1146,6 +1201,7 @@ tbody tr:last-child td{border-bottom:none}
       loadStats();
       loadDemoPins();
       loadGlobalMaintenance();
+      loadCatalog();
     } catch(e){
       if(e.message === 'unauthorized') return; // gate already shown
       $body.innerHTML = '<tr><td colspan="6"><div class="empty"><div class="emoji">⚠️</div><h3>Failed to load</h3><p>'+escapeHtml(e.message)+'</p></div></td></tr>';
@@ -1229,6 +1285,164 @@ tbody tr:last-child td{border-bottom:none}
     }
   }
 
+  // ===================================================================
+  // PRIZE CATALOG (operator-administered, single source of truth)
+  // ===================================================================
+  // Read flow: GET /admin/store/catalog → render the list grid + meta.
+  // Write flow: operator clicks ✏️ Edit JSON → modal with the catalog
+  // pre-filled as a pretty-printed textarea → on Save, POST the parsed
+  // array back. Server sanitizes, dedupes by id, and replaces in full.
+  // Phase 1 keeps the editor as raw JSON so we don't get blocked on a
+  // richer per-item form. The list view above the editor is read-only.
+
+  var catalogState = { items: [], updatedAt: 0, updatedBy: '', empty: false };
+
+  function renderCatalogList(){
+    var $list = document.getElementById('catalog-list');
+    var $count = document.getElementById('catalog-count');
+    var $meta = document.getElementById('catalog-meta');
+    var $editBtn = document.getElementById('catalog-edit-btn');
+    if(!$list) return;
+    var items = catalogState.items || [];
+    if($count) $count.textContent = items.length ? String(items.length) : '0';
+    if($meta){
+      if(catalogState.empty){
+        $meta.textContent = 'No catalog seeded yet — click ✏️ Edit JSON to paste one. (The app falls back to its built-in default until you do.)';
+      } else if(catalogState.updatedAt){
+        $meta.textContent = 'Last edited ' + new Date(catalogState.updatedAt).toLocaleString() +
+          (catalogState.updatedBy ? ' by ' + catalogState.updatedBy : '');
+      } else {
+        $meta.textContent = items.length + ' item' + (items.length===1?'':'s') + ' live.';
+      }
+    }
+    if($editBtn) $editBtn.disabled = false;
+    if(!items.length){
+      $list.innerHTML = '<div style="grid-column:1/-1;padding:18px;text-align:center;color:#94a3b8;background:#f8fafc;border-radius:10px">No items yet — click ✏️ Edit JSON to seed the catalog.</div>';
+      return;
+    }
+    // Compact grid card per item. Read-only; click ✏️ Edit JSON to change.
+    var html = '';
+    for(var i=0;i<items.length;i++){
+      var it = items[i] || {};
+      var emoji = escapeHtml(it.emoji || '🎁');
+      var name = escapeHtml(it.name || '(no name)');
+      var price = (typeof it.approxPrice === 'number' && isFinite(it.approxPrice)) ? '$'+it.approxPrice.toFixed(2) : '—';
+      var coins = (typeof it.coinCost === 'number' && isFinite(it.coinCost)) ? it.coinCost.toLocaleString()+' coins' : '—';
+      var cat = escapeHtml(it.category || 'misc');
+      var available = (it.isAvailable === false)
+        ? '<span style="color:#dc2626;font-weight:700">OFF</span>'
+        : '<span style="color:#16a34a;font-weight:700">ON</span>';
+      var spec = it.special ? '<span style="display:inline-block;background:#fef3c7;color:#92400e;padding:1px 6px;border-radius:6px;font-size:11px;font-weight:700;margin-left:4px">✨ SPECIAL</span>' : '';
+      html += '<div style="background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px 12px;display:flex;gap:10px;align-items:flex-start">' +
+        '<div style="font-size:24px;line-height:1">'+emoji+'</div>' +
+        '<div style="flex:1;min-width:0">' +
+          '<div style="font-weight:700;font-size:13px;color:var(--ink);overflow:hidden;text-overflow:ellipsis">'+name+spec+'</div>' +
+          '<div style="font-size:11px;color:#64748b;margin-top:2px">'+cat+' · '+price+' · '+coins+'</div>' +
+          '<div style="font-size:11px;color:#64748b;margin-top:2px">Default: '+available+'</div>' +
+        '</div>' +
+      '</div>';
+    }
+    $list.innerHTML = html;
+  }
+
+  async function loadCatalog(){
+    var $meta = document.getElementById('catalog-meta');
+    if($meta) $meta.textContent = 'Loading…';
+    try {
+      var r = await api('/admin/store/catalog');
+      catalogState = {
+        items: Array.isArray(r.catalog) ? r.catalog : [],
+        updatedAt: r.updatedAt || 0,
+        updatedBy: r.updatedBy || '',
+        empty: !!r.empty,
+      };
+      renderCatalogList();
+    } catch(e){
+      if(e.message === 'unauthorized') return;
+      var $count = document.getElementById('catalog-count');
+      if($count) $count.textContent = 'ERR';
+      if($meta) $meta.textContent = 'Failed to load: ' + e.message;
+    }
+  }
+
+  function openCatalogEdit(){
+    var $bg = document.getElementById('catalog-bg');
+    var $ta = document.getElementById('catalog-json');
+    var $err = document.getElementById('catalog-edit-error');
+    if(!$bg || !$ta) return;
+    $err.style.display = 'none';
+    // Pretty-print so operators can edit the JSON without a formatter.
+    // Empty catalog → seed a single example so they have something to
+    // paste over instead of staring at "[]".
+    var seed = catalogState.items && catalogState.items.length
+      ? catalogState.items
+      : [{
+          id: 'sticker-pack', name: 'Mega Sticker Pack', category: 'stickers',
+          emoji: '🌟',
+          description: 'A huge pack of shiny, sparkly stickers.',
+          approxPrice: 4.99, coinCost: 2000, image: null, amazonLink: '',
+          isAvailable: true, special: false,
+          requirements: { minLevels: 1, minSubjects: 1, challenge: 'easy' },
+        }];
+    $ta.value = JSON.stringify(seed, null, 2);
+    $bg.classList.add('show');
+  }
+  function closeCatalogEdit(){
+    var $bg = document.getElementById('catalog-bg');
+    if($bg) $bg.classList.remove('show');
+  }
+  function formatCatalogJson(){
+    var $ta = document.getElementById('catalog-json');
+    var $err = document.getElementById('catalog-edit-error');
+    if(!$ta) return;
+    try {
+      var parsed = JSON.parse($ta.value);
+      $ta.value = JSON.stringify(parsed, null, 2);
+      $err.style.display = 'none';
+    } catch(e){
+      $err.textContent = 'JSON is not valid: ' + e.message;
+      $err.style.display = 'block';
+    }
+  }
+  async function saveCatalog(){
+    var $ta = document.getElementById('catalog-json');
+    var $err = document.getElementById('catalog-edit-error');
+    var $save = document.getElementById('catalog-save');
+    if(!$ta || !$save) return;
+    var parsed;
+    try {
+      parsed = JSON.parse($ta.value);
+    } catch(e){
+      $err.textContent = 'JSON is not valid: ' + e.message;
+      $err.style.display = 'block';
+      return;
+    }
+    if(!Array.isArray(parsed)){
+      $err.textContent = 'Top-level must be a JSON array of items.';
+      $err.style.display = 'block';
+      return;
+    }
+    if(!confirm('Replace the prize catalog for every tenant? Kids will see the new list within ~2 minutes (or sooner if they refresh).')) return;
+    $save.disabled = true;
+    var prevText = $save.textContent;
+    $save.textContent = 'Saving…';
+    try {
+      var r = await api('/admin/store/catalog', { method:'POST', body: { catalog: parsed } });
+      var rejectedNote = (r && r.rejected && r.rejected.length)
+        ? ' (' + r.rejected.length + ' invalid item' + (r.rejected.length===1?'':'s') + ' skipped)'
+        : '';
+      toast('✓ Catalog saved — ' + (r.count||0) + ' items live' + rejectedNote, 'success');
+      closeCatalogEdit();
+      await loadCatalog();
+    } catch(e){
+      $err.textContent = 'Save failed: ' + e.message;
+      $err.style.display = 'block';
+    } finally {
+      $save.disabled = false;
+      $save.textContent = prevText;
+    }
+  }
+
   // -------- Top-bar buttons --------
   document.getElementById('refresh-btn').addEventListener('click', loadTenants);
   document.getElementById('logout-btn').addEventListener('click', function(){
@@ -1240,6 +1454,18 @@ tbody tr:last-child td{border-bottom:none}
   // -------- Global maintenance panel --------
   document.getElementById('gmaint-toggle-btn').addEventListener('click', toggleGlobalMaintenance);
   document.getElementById('gmaint-refresh-btn').addEventListener('click', loadGlobalMaintenance);
+
+  // -------- Prize catalog panel --------
+  document.getElementById('catalog-refresh-btn').addEventListener('click', loadCatalog);
+  document.getElementById('catalog-edit-btn').addEventListener('click', openCatalogEdit);
+  document.getElementById('catalog-close').addEventListener('click', closeCatalogEdit);
+  document.getElementById('catalog-cancel').addEventListener('click', closeCatalogEdit);
+  document.getElementById('catalog-format').addEventListener('click', formatCatalogJson);
+  document.getElementById('catalog-save').addEventListener('click', saveCatalog);
+  // Click-outside-to-close on the catalog modal background.
+  document.getElementById('catalog-bg').addEventListener('click', function(e){
+    if(e.target && e.target.id === 'catalog-bg') closeCatalogEdit();
+  });
 
   // -------- Gate wiring --------
   document.getElementById('gate-submit').addEventListener('click', tryUnlock);
