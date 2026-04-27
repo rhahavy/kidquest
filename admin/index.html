@@ -227,6 +227,32 @@ tbody tr:last-child td{border-bottom:none}
 .refund-dialog .totals{display:flex;justify-content:space-between;font-size:12px;color:var(--ink2);font-weight:600;padding:8px 2px}
 .refund-dialog .totals strong{color:var(--ink);font-family:var(--mono)}
 
+/* Curriculum Editor */
+.curr-select,.curr-search{padding:8px 12px;border:1.5px solid var(--line);border-radius:10px;font-size:13px;font-family:inherit;background:#fff;color:var(--ink)}
+.curr-select{min-width:120px}
+.curr-search{flex:1;min-width:200px}
+.curr-select:focus,.curr-search:focus{outline:none;border-color:var(--primary)}
+.curr-card{background:#fff;border:1.5px solid var(--line);border-radius:14px;padding:14px;cursor:pointer;transition:transform .12s ease,box-shadow .12s ease,border-color .12s ease;display:flex;flex-direction:column;gap:6px}
+.curr-card:hover{transform:translateY(-2px);box-shadow:var(--shadow);border-color:rgba(108,92,231,.35)}
+.curr-card .row{display:flex;align-items:center;gap:8px}
+.curr-card .emoji{font-size:22px;line-height:1}
+.curr-card .ttl{font-weight:700;font-size:14px;color:var(--ink);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.curr-card .id{font-family:var(--mono);font-size:11px;color:var(--ink3);margin-top:2px}
+.curr-card .meta{font-size:11px;color:var(--ink2);margin-top:4px;display:flex;flex-wrap:wrap;gap:6px}
+.curr-card .meta .chip{background:#f7f5ff;padding:2px 8px;border-radius:999px;font-weight:600;color:var(--ink2)}
+.curr-card .meta .chip.warn{background:#fff7e6;color:#92400e}
+.curr-card .meta .chip.err{background:#fee2e2;color:#991b1b}
+.curr-card .meta .chip.ok{background:#dcfce7;color:#166534}
+.curr-card .meta .chip.hidden{background:#1a1035;color:#fff}
+.curr-card.overridden{border-color:rgba(108,92,231,.55);background:linear-gradient(180deg,#fff,#fbf9ff)}
+.curr-card.hidden{opacity:.55}
+.curr-empty{grid-column:1/-1;text-align:center;color:var(--ink3);padding:40px 20px;font-size:14px}
+@media (max-width:768px){
+  .curr-search{min-width:0;width:100%}
+  #curriculum-filters{flex-direction:column}
+  .curr-select,.curr-search{width:100%}
+}
+
 @media (max-width:768px){
   .stat{padding:10px 12px}
   .stat-value{font-size:20px}
@@ -324,6 +350,42 @@ tbody tr:last-child td{border-bottom:none}
       </p>
       <div id="catalog-meta" style="font-size:12px;color:#94a3b8;margin-bottom:10px">Loading…</div>
       <div id="catalog-list" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px"></div>
+    </div>
+  </div>
+
+  <!-- Curriculum Editor. Operator-level fixes for the bundled WEEKS data
+       in app/index.html. Saved overrides live in KV (one blob), get fetched
+       by the app on every page load, and apply BEFORE per-tenant tutor
+       overrides so a teacher's local edits still win.
+       The activity catalog is loaded by spinning up a hidden iframe of
+       /app/?adminEditor=1 — the app's bail-out hook postMessages WEEKS
+       back here without running its own boot. Cached for the session so
+       repeat opens are instant. -->
+  <div class="panel" id="curriculum-panel">
+    <div class="panel-head">
+      <h2>📚 Curriculum Editor <span class="count" id="curriculum-count">—</span></h2>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-ghost btn-sm" id="curriculum-refresh-btn" title="Reload the activity list + overrides">🔄</button>
+      </div>
+    </div>
+    <div class="panel-body">
+      <p style="margin:0 0 10px;font-size:13px;color:#64748b">
+        Fix bugs in the bundled lessons (e.g. a missing reading passage) without redeploying. Saved overrides apply to <strong>every tenant</strong> on next page load. Per-tenant teacher edits still win on top, so a tutor's local customizations aren't undone.
+      </p>
+      <div id="curriculum-meta" style="font-size:12px;color:#94a3b8;margin-bottom:10px">Loading the activity catalog…</div>
+      <div id="curriculum-filters" style="display:none;gap:8px;flex-wrap:wrap;margin-bottom:12px;align-items:center">
+        <select id="curr-week" class="curr-select" aria-label="Week"></select>
+        <select id="curr-student" class="curr-select" aria-label="Student / template"></select>
+        <select id="curr-subject" class="curr-select" aria-label="Subject"></select>
+        <select id="curr-status" class="curr-select" aria-label="Override status">
+          <option value="all">All lessons</option>
+          <option value="overridden">Only overridden</option>
+          <option value="hidden">Only hidden</option>
+          <option value="missing-passage">Reading w/o passage</option>
+        </select>
+        <input type="search" id="curr-search" placeholder="Search title or ID…" class="curr-search">
+      </div>
+      <div id="curriculum-list" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:10px"></div>
     </div>
   </div>
 
@@ -515,6 +577,47 @@ tbody tr:last-child td{border-bottom:none}
     </div>
   </div>
 </div>
+
+<!-- ============ CURRICULUM EDIT DIALOG ============
+     Edit one activity's global override. The textarea holds the partial
+     activity object — only the fields you want to override. The app
+     shallow-merges this onto the bundled WEEKS activity, so leaving a
+     field out means "use the base value." Setting `_hidden: true`
+     removes the lesson from kids entirely. -->
+<div id="curr-edit-bg" class="modal-bg" role="dialog" aria-modal="true">
+  <div class="modal" style="position:relative;max-width:920px">
+    <button class="modal-close" id="curr-edit-close" aria-label="Close">×</button>
+    <h2 id="curr-edit-title-h">Edit lesson</h2>
+    <div class="sub" id="curr-edit-sub">—</div>
+    <div id="curr-edit-status" style="margin-top:6px;font-size:13px"></div>
+    <div style="margin-top:12px">
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+        <button class="btn btn-ghost btn-sm" id="curr-edit-load-base" title="Pre-fill the editor with the bundled lesson JSON">📋 Copy base into editor</button>
+        <button class="btn btn-ghost btn-sm" id="curr-edit-load-override" title="Pre-fill with the current saved override (or empty if none)">🔁 Load saved override</button>
+        <button class="btn btn-ghost btn-sm" id="curr-edit-format" title="Pretty-print the JSON">{ } Format</button>
+        <button class="btn btn-ghost btn-sm" id="curr-edit-add-passage" title="Insert an empty passage question into the questions array (helps you fix a missing-passage lesson fast)">＋ Insert passage question</button>
+      </div>
+      <label style="display:block;font-size:13px;font-weight:600;color:#334155;margin-bottom:6px">Override JSON</label>
+      <textarea id="curr-edit-json" spellcheck="false" placeholder='{"title":"…","emoji":"📚","lesson":{"intro":"…"},"questions":[…]}' style="width:100%;min-height:380px;padding:12px;border:1.5px solid var(--line);border-radius:10px;font-family:var(--mono);font-size:12px;line-height:1.5;box-sizing:border-box;background:#fafafa"></textarea>
+      <div style="margin-top:6px;font-size:12px;color:#64748b;line-height:1.5">
+        <strong>Allowed top-level keys:</strong> <code>title</code>, <code>emoji</code>, <code>videoIds</code>, <code>curriculum</code>, <code>lesson</code>, <code>questions</code>, <code>stretchQuestions</code>, <code>demoOnly</code>, <code>_hidden</code>.<br>
+        Set <code>_hidden:true</code> to remove this lesson from kids. The activity <code>id</code> is preserved automatically.
+      </div>
+      <div id="curr-edit-error" style="display:none;margin-top:10px;padding:10px;background:#fee2e2;border-radius:8px;color:#991b1b;font-size:13px;font-weight:600"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost btn-sm" id="curr-edit-cancel">Cancel</button>
+      <button class="btn btn-danger btn-sm" id="curr-edit-clear">🗑️ Remove override</button>
+      <button class="btn btn-primary btn-sm" id="curr-edit-save">💾 Save override</button>
+    </div>
+  </div>
+</div>
+
+<!-- Hidden iframe used by the Curriculum Editor to extract the canonical
+     WEEKS data from the live app without duplicating it here. Loaded
+     lazily on first panel render. The app detects ?adminEditor=1 and
+     postMessages WEEKS back, then halts boot — no rendering, no network. -->
+<iframe id="curr-iframe" title="Curriculum data extractor" style="display:none;width:0;height:0;border:0" sandbox="allow-scripts allow-same-origin"></iframe>
 
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
@@ -1607,10 +1710,495 @@ tbody tr:last-child td{border-bottom:none}
     await loadTenants();
   }
 
+  // ========== Curriculum Editor ==========
+  // Lets the operator (you) override or hide individual lessons across
+  // every tenant. The activity catalog itself isn't duplicated here —
+  // a hidden iframe loads /app/?adminEditor=1 and the app's bail-out
+  // hook postMessages the WEEKS object back, then halts boot. Saved
+  // overrides hit /admin/curriculum/global-override on the worker;
+  // kids pick them up on next /app/ load via the global override layer
+  // wired into getWeekActivities.
+  //
+  // Merge order at runtime (in app/index.html):
+  //   base (bundled WEEKS)  →  global override (this editor)
+  //                         →  per-tenant override (tutor edits)
+  //                         →  per-student AI simplify / stretch
+  // So tutor customizations still win over operator fixes — that's
+  // intentional: never undo a teacher's tweak when patching a bug.
+  var curriculumState = {
+    weeks: null,                  // populated by iframe postMessage
+    overrides: {},                // map of activityId → override blob
+    overridesUpdatedAt: 0,
+    iframeReady: false,
+    iframeLoading: false,
+    iframeTimer: null,
+    filters: { week:'', student:'', subject:'', status:'all', search:'' },
+    currentEdit: null             // {id, base, row}
+  };
+
+  var $currMeta      = document.getElementById('curriculum-meta');
+  var $currCount     = document.getElementById('curriculum-count');
+  var $currFilters   = document.getElementById('curriculum-filters');
+  var $currList      = document.getElementById('curriculum-list');
+  var $currWeek      = document.getElementById('curr-week');
+  var $currStudent   = document.getElementById('curr-student');
+  var $currSubject   = document.getElementById('curr-subject');
+  var $currStatusSel = document.getElementById('curr-status');
+  var $currSearch    = document.getElementById('curr-search');
+  var $currIframe    = document.getElementById('curr-iframe');
+  var $currEditBg    = document.getElementById('curr-edit-bg');
+  var $currEditTitle = document.getElementById('curr-edit-title-h');
+  var $currEditSub   = document.getElementById('curr-edit-sub');
+  var $currEditState = document.getElementById('curr-edit-status');
+  var $currEditJson  = document.getElementById('curr-edit-json');
+  var $currEditError = document.getElementById('curr-edit-error');
+  var $currRefresh   = document.getElementById('curriculum-refresh-btn');
+
+  // Same-origin postMessage from the bail-out hook in /app/. Validate
+  // origin so a hostile tab/iframe can't spoof us with fake WEEKS.
+  window.addEventListener('message', function(ev){
+    try {
+      if(!ev || ev.origin !== window.location.origin) return;
+      var d = ev.data;
+      if(!d || d.type !== 'kq-admin-editor-weeks') return;
+      curriculumState.weeks = d.weeks || null;
+      curriculumState.iframeReady = true;
+      curriculumState.iframeLoading = false;
+      if(curriculumState.iframeTimer){
+        clearTimeout(curriculumState.iframeTimer);
+        curriculumState.iframeTimer = null;
+      }
+      onCurriculumWeeksReady();
+    } catch(_){}
+  });
+
+  function ensureCurriculumLoaded(){
+    if(curriculumState.iframeReady) return;
+    if(curriculumState.iframeLoading) return;
+    curriculumState.iframeLoading = true;
+    $currMeta.textContent = 'Loading the activity catalog from /app/…';
+    $currMeta.style.color = '';
+    // Cache-buster so a fresh edit shows up even if SW cached an older
+    // /app/ entry. The bail-out hook in app halts boot before any cloud
+    // I/O happens, so this is a cheap call.
+    var src = '/app/?adminEditor=1&_=' + Date.now();
+    $currIframe.src = src;
+    // Safety timeout — most likely failure is an old SW version cached
+    // without the bail-out hook. Surface it instead of hanging.
+    curriculumState.iframeTimer = setTimeout(function(){
+      if(curriculumState.iframeReady) return;
+      curriculumState.iframeLoading = false;
+      $currMeta.innerHTML = 'Could not load the activity catalog. The app is probably on an old service-worker version. Open <a href="/app/" target="_blank">/app/</a> in another tab and hard-reload (Cmd+Shift+R), then click 🔄 here.';
+      $currMeta.style.color = '#991b1b';
+    }, 10000);
+  }
+
+  async function loadCurriculumOverrides(){
+    try {
+      var r = await api('/admin/curriculum/global-overrides');
+      curriculumState.overrides = (r && r.overrides) || {};
+      curriculumState.overridesUpdatedAt = (r && r.updatedAt) || 0;
+    } catch(e){
+      // Don't toast — endpoint may not be deployed yet, fail-open so
+      // the catalog still renders (just shows nothing as overridden).
+      curriculumState.overrides = {};
+      console.warn('[curriculum] overrides load failed', e && e.message);
+    }
+  }
+
+  function onCurriculumWeeksReady(){
+    populateCurriculumFilters();
+    renderCurriculum();
+  }
+
+  function populateCurriculumFilters(){
+    if(!curriculumState.weeks) return;
+    var weeks = curriculumState.weeks;
+    var weekKeys = Object.keys(weeks).sort(function(a,b){ return Number(a)-Number(b); });
+    var students = {};
+    var subjects = {};
+    weekKeys.forEach(function(wk){
+      var byStu = weeks[wk] || {};
+      Object.keys(byStu).forEach(function(sid){
+        students[sid] = true;
+        var bySub = byStu[sid] || {};
+        Object.keys(bySub).forEach(function(sub){ subjects[sub] = true; });
+      });
+    });
+
+    $currWeek.innerHTML = '<option value="">All weeks</option>' +
+      weekKeys.map(function(w){ return '<option value="'+escapeHtml(w)+'">Week '+escapeHtml(w)+'</option>'; }).join('');
+    var stuKeys = Object.keys(students).sort();
+    $currStudent.innerHTML = '<option value="">All students</option>' +
+      stuKeys.map(function(s){ return '<option value="'+escapeHtml(s)+'">'+escapeHtml(s)+'</option>'; }).join('');
+    var subKeys = Object.keys(subjects).sort();
+    $currSubject.innerHTML = '<option value="">All subjects</option>' +
+      subKeys.map(function(s){ return '<option value="'+escapeHtml(s)+'">'+escapeHtml(s)+'</option>'; }).join('');
+
+    $currWeek.value     = curriculumState.filters.week;
+    $currStudent.value  = curriculumState.filters.student;
+    $currSubject.value  = curriculumState.filters.subject;
+    $currStatusSel.value = curriculumState.filters.status;
+    $currSearch.value   = curriculumState.filters.search;
+
+    $currFilters.style.display = 'flex';
+    $currMeta.textContent = '';
+  }
+
+  // Flatten the WEEKS tree → [{week, sid, subject, activity}, …].
+  function flattenActivities(){
+    var rows = [];
+    var weeks = curriculumState.weeks || {};
+    Object.keys(weeks).forEach(function(wk){
+      var byStu = weeks[wk] || {};
+      Object.keys(byStu).forEach(function(sid){
+        var bySub = byStu[sid] || {};
+        Object.keys(bySub).forEach(function(sub){
+          var arr = bySub[sub];
+          if(!Array.isArray(arr)) return;
+          arr.forEach(function(a){
+            if(!a || !a.id) return;
+            rows.push({ week:String(wk), sid:sid, subject:sub, activity:a });
+          });
+        });
+      });
+    });
+    return rows;
+  }
+
+  // A reading-with-passage activity is one whose questions array
+  // contains at least one type:'passage' item, or has a top-level
+  // .passage / lesson.passage string (some legacy lessons).
+  function activityHasPassage(activity){
+    if(!activity) return false;
+    if(activity.passage) return true;
+    if(activity.lesson && activity.lesson.passage) return true;
+    var qs = activity.questions || [];
+    for(var i=0;i<qs.length;i++){
+      if(qs[i] && qs[i].type === 'passage') return true;
+    }
+    return false;
+  }
+
+  function applyCurriculumFilters(rows){
+    var f = curriculumState.filters;
+    var q = (f.search || '').trim().toLowerCase();
+    return rows.filter(function(r){
+      if(f.week && r.week !== f.week) return false;
+      if(f.student && r.sid !== f.student) return false;
+      if(f.subject && r.subject !== f.subject) return false;
+      var ov = curriculumState.overrides[r.activity.id];
+      if(f.status === 'overridden' && !ov) return false;
+      if(f.status === 'hidden' && !(ov && ov._hidden)) return false;
+      if(f.status === 'missing-passage'){
+        // The whole reason this editor exists: find reading lessons
+        // that look broken because they have no passage block.
+        var isReading = /reading|^r$/i.test(r.subject);
+        if(!isReading) return false;
+        // If override already adds questions w/ a passage, treat as fixed.
+        if(ov && ov.questions && Array.isArray(ov.questions)){
+          for(var i=0;i<ov.questions.length;i++){
+            if(ov.questions[i] && ov.questions[i].type === 'passage') return false;
+          }
+        }
+        if(activityHasPassage(r.activity)) return false;
+      }
+      if(q){
+        var hay = ((r.activity.title||'') + ' ' + r.activity.id).toLowerCase();
+        if(hay.indexOf(q) < 0) return false;
+      }
+      return true;
+    });
+  }
+
+  function renderCurriculum(){
+    if(!curriculumState.weeks){ return; }
+    var rows = applyCurriculumFilters(flattenActivities());
+    $currCount.textContent = String(rows.length);
+    if(!rows.length){
+      $currList.innerHTML = '<div class="curr-empty">No lessons match these filters.</div>';
+      return;
+    }
+    rows.sort(function(a,b){
+      var w = Number(a.week)-Number(b.week);
+      if(w) return w;
+      if(a.sid !== b.sid) return a.sid.localeCompare(b.sid);
+      if(a.subject !== b.subject) return a.subject.localeCompare(b.subject);
+      return (a.activity.id || '').localeCompare(b.activity.id || '');
+    });
+    var html = rows.map(function(r){
+      var a = r.activity;
+      var ov = curriculumState.overrides[a.id];
+      var classes = ['curr-card'];
+      if(ov) classes.push('overridden');
+      if(ov && ov._hidden) classes.push('hidden');
+      var emoji = (ov && ov.emoji) || a.emoji || '📘';
+      var title = (ov && ov.title) || a.title || '(untitled)';
+      var chips = [];
+      chips.push('<span class="chip">W'+escapeHtml(r.week)+'</span>');
+      chips.push('<span class="chip">'+escapeHtml(r.sid)+'</span>');
+      chips.push('<span class="chip">'+escapeHtml(r.subject)+'</span>');
+      var isReading = /reading|^r$/i.test(r.subject);
+      var ovHasPassageQ = false;
+      if(ov && Array.isArray(ov.questions)){
+        for(var qi=0;qi<ov.questions.length;qi++){
+          if(ov.questions[qi] && ov.questions[qi].type === 'passage'){ ovHasPassageQ = true; break; }
+        }
+      }
+      if(isReading && !activityHasPassage(a) && !ovHasPassageQ){
+        chips.push('<span class="chip err" title="Reading lesson without a passage block — kids see questions but no story">⚠ no passage</span>');
+      }
+      if(ov && ov._hidden) chips.push('<span class="chip hidden">hidden</span>');
+      else if(ov) chips.push('<span class="chip ok">overridden</span>');
+      return (
+        '<div class="'+classes.join(' ')+'" data-aid="'+escapeHtml(a.id)+'">' +
+          '<div class="row"><div class="emoji">'+escapeHtml(emoji)+'</div>'+
+            '<div class="ttl" title="'+escapeHtml(title)+'">'+escapeHtml(title)+'</div></div>' +
+          '<div class="id">'+escapeHtml(a.id)+'</div>' +
+          '<div class="meta">'+chips.join('')+'</div>' +
+        '</div>'
+      );
+    }).join('');
+    $currList.innerHTML = html;
+    var cards = $currList.querySelectorAll('.curr-card');
+    for(var i=0;i<cards.length;i++){
+      cards[i].addEventListener('click', function(){
+        openCurriculumEditor(this.getAttribute('data-aid'));
+      });
+    }
+  }
+
+  // The activity id is preserved server-side, so don't show it in the
+  // editor — it just creates noise (and risk of accidental rename).
+  function stripIdFromBase(activity){
+    if(!activity || typeof activity !== 'object') return activity;
+    var copy = {};
+    Object.keys(activity).forEach(function(k){
+      if(k === 'id') return;
+      copy[k] = activity[k];
+    });
+    return copy;
+  }
+
+  function findActivityById(aid){
+    var rows = flattenActivities();
+    for(var i=0;i<rows.length;i++){
+      if(rows[i].activity.id === aid) return rows[i];
+    }
+    return null;
+  }
+
+  function openCurriculumEditor(aid){
+    var row = findActivityById(aid);
+    if(!row){ toast('Lesson not found in catalog', 'err'); return; }
+    curriculumState.currentEdit = { id: aid, base: row.activity, row: row };
+    var ov = curriculumState.overrides[aid];
+    $currEditTitle.textContent = (ov && ov.title) || row.activity.title || '(untitled)';
+    $currEditSub.textContent = 'Week ' + row.week + ' · ' + row.sid + ' · ' + row.subject + ' · id=' + aid;
+    var statusHtml;
+    if(ov && ov._hidden){
+      statusHtml = '<span style="color:#991b1b;font-weight:700">Currently hidden from kids</span>';
+    } else if(ov){
+      statusHtml = '<span style="color:#166534;font-weight:700">Override active</span>';
+    } else {
+      statusHtml = '<span style="color:#64748b">No override — kids see the bundled lesson</span>';
+    }
+    $currEditState.innerHTML = statusHtml;
+    // Default contents: the saved override if any, else an empty {}.
+    // The operator clicks "Copy base" to start from the bundled lesson.
+    var initialJson = ov ? ov : {};
+    $currEditJson.value = JSON.stringify(initialJson, null, 2);
+    $currEditError.style.display = 'none';
+    $currEditError.textContent = '';
+    $currEditBg.classList.add('show');
+  }
+
+  function closeCurriculumEditor(){
+    $currEditBg.classList.remove('show');
+    curriculumState.currentEdit = null;
+  }
+
+  function readEditorJson(){
+    var raw = ($currEditJson.value || '').trim();
+    if(!raw){
+      throw new Error('Editor is empty. Paste an override JSON or click "Copy base".');
+    }
+    var obj;
+    try { obj = JSON.parse(raw); }
+    catch(e){ throw new Error('JSON syntax error: ' + (e && e.message)); }
+    if(!obj || typeof obj !== 'object' || Array.isArray(obj)){
+      throw new Error('Override must be a JSON object.');
+    }
+    return obj;
+  }
+
+  function showEditorError(msg){
+    $currEditError.textContent = msg;
+    $currEditError.style.display = 'block';
+  }
+  function hideEditorError(){
+    $currEditError.style.display = 'none';
+    $currEditError.textContent = '';
+  }
+
+  // Modal close + cancel + click-outside
+  document.getElementById('curr-edit-close').addEventListener('click', closeCurriculumEditor);
+  document.getElementById('curr-edit-cancel').addEventListener('click', closeCurriculumEditor);
+  $currEditBg.addEventListener('click', function(ev){
+    if(ev.target === $currEditBg) closeCurriculumEditor();
+  });
+
+  // Copy base into editor
+  document.getElementById('curr-edit-load-base').addEventListener('click', function(){
+    if(!curriculumState.currentEdit) return;
+    $currEditJson.value = JSON.stringify(stripIdFromBase(curriculumState.currentEdit.base), null, 2);
+    hideEditorError();
+  });
+
+  // Reload saved override
+  document.getElementById('curr-edit-load-override').addEventListener('click', function(){
+    if(!curriculumState.currentEdit) return;
+    var ov = curriculumState.overrides[curriculumState.currentEdit.id];
+    $currEditJson.value = JSON.stringify(ov || {}, null, 2);
+    hideEditorError();
+  });
+
+  // Pretty-print
+  document.getElementById('curr-edit-format').addEventListener('click', function(){
+    try {
+      var obj = readEditorJson();
+      $currEditJson.value = JSON.stringify(obj, null, 2);
+      hideEditorError();
+    } catch(e){ showEditorError(e.message); }
+  });
+
+  // Insert a passage question — solves the "Reading w/o passage" case
+  // directly. If the editor is empty, starts from the bundled base so
+  // the operator only needs to fill in the story text and answers.
+  document.getElementById('curr-edit-add-passage').addEventListener('click', function(){
+    if(!curriculumState.currentEdit) return;
+    var current;
+    var raw = ($currEditJson.value || '').trim();
+    if(!raw){
+      current = stripIdFromBase(curriculumState.currentEdit.base);
+    } else {
+      try { current = JSON.parse(raw); }
+      catch(e){ showEditorError('Format the JSON first: ' + e.message); return; }
+    }
+    if(!current || typeof current !== 'object' || Array.isArray(current)){
+      showEditorError('Override must be a JSON object before inserting.');
+      return;
+    }
+    var qs = Array.isArray(current.questions) ? current.questions.slice() : [];
+    var passageBlock = {
+      type: 'passage',
+      visual: '📖',
+      passage: 'Replace this with the actual reading passage. Aim for 4–8 short sentences appropriate for the grade level.',
+      q: 'What is the main idea of the passage?',
+      choices: ['Choice A','Choice B','Choice C','Choice D'],
+      answer: 0
+    };
+    qs.unshift(passageBlock);
+    current.questions = qs;
+    $currEditJson.value = JSON.stringify(current, null, 2);
+    hideEditorError();
+    toast('Passage block inserted at the top — fill in the story.', 'ok');
+  });
+
+  // Save override
+  document.getElementById('curr-edit-save').addEventListener('click', async function(){
+    if(!curriculumState.currentEdit) return;
+    var aid = curriculumState.currentEdit.id;
+    var blob;
+    try { blob = readEditorJson(); }
+    catch(e){ showEditorError(e.message); return; }
+    if(Object.keys(blob).length === 0){
+      showEditorError('Empty object would have no effect. Click "Remove override" to clear instead.');
+      return;
+    }
+    hideEditorError();
+    try {
+      var resp = await api('/admin/curriculum/global-override', {
+        method: 'PUT',
+        body: { id: aid, override: blob }
+      });
+      curriculumState.overrides[aid] = (resp && resp.override) || blob;
+      curriculumState.overridesUpdatedAt = (resp && resp.updatedAt) || Date.now();
+      toast('Override saved. Kids will see it on next /app/ load.', 'ok');
+      closeCurriculumEditor();
+      renderCurriculum();
+    } catch(e){
+      showEditorError('Save failed: ' + (e && e.message));
+    }
+  });
+
+  // Remove override
+  document.getElementById('curr-edit-clear').addEventListener('click', async function(){
+    if(!curriculumState.currentEdit) return;
+    var aid = curriculumState.currentEdit.id;
+    if(!curriculumState.overrides[aid]){
+      toast('No override to remove on this lesson.', 'err');
+      return;
+    }
+    if(!confirm('Remove the saved override for "'+aid+'"?\n\nKids will see the bundled lesson again on next /app/ load.')) return;
+    try {
+      await api('/admin/curriculum/global-override?id='+encodeURIComponent(aid), { method: 'DELETE' });
+      delete curriculumState.overrides[aid];
+      toast('Override removed.', 'ok');
+      closeCurriculumEditor();
+      renderCurriculum();
+    } catch(e){
+      showEditorError('Remove failed: ' + (e && e.message));
+    }
+  });
+
+  // Filter wiring
+  $currWeek.addEventListener('change', function(){
+    curriculumState.filters.week = this.value; renderCurriculum();
+  });
+  $currStudent.addEventListener('change', function(){
+    curriculumState.filters.student = this.value; renderCurriculum();
+  });
+  $currSubject.addEventListener('change', function(){
+    curriculumState.filters.subject = this.value; renderCurriculum();
+  });
+  $currStatusSel.addEventListener('change', function(){
+    curriculumState.filters.status = this.value; renderCurriculum();
+  });
+  var currSearchTimer = null;
+  $currSearch.addEventListener('input', function(){
+    var v = this.value;
+    if(currSearchTimer) clearTimeout(currSearchTimer);
+    currSearchTimer = setTimeout(function(){
+      curriculumState.filters.search = v; renderCurriculum();
+    }, 200);
+  });
+
+  // Refresh: re-pull both the WEEKS catalog (fresh iframe) and the
+  // overrides KV blob, in case another operator edited in parallel.
+  $currRefresh.addEventListener('click', function(){
+    curriculumState.iframeReady = false;
+    curriculumState.iframeLoading = false;
+    curriculumState.weeks = null;
+    if(curriculumState.iframeTimer){
+      clearTimeout(curriculumState.iframeTimer);
+      curriculumState.iframeTimer = null;
+    }
+    $currList.innerHTML = '';
+    $currMeta.style.color = '';
+    loadCurriculum();
+  });
+
+  async function loadCurriculum(){
+    await loadCurriculumOverrides();
+    ensureCurriculumLoaded();
+  }
+
   // -------- Boot --------
   if(getToken()){
     showApp();
     loadTenants();
+    loadCurriculum();
   } else {
     showGate();
   }

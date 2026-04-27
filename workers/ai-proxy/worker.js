@@ -1562,6 +1562,201 @@ async function handleAdminSetStoreCatalogRoute(request, env, corsOrigin) {
 }
 
 // =====================================================================
+// GLOBAL CURRICULUM OVERRIDES
+// =====================================================================
+// One operator-managed layer that sits BETWEEN the bundled WEEKS
+// (hardcoded in app/index.html) and per-tenant tutor overrides
+// (allData.curriculum.overrides). Lets the operator fix bugs in the
+// shipped curriculum (e.g. a Grade 3 reading lesson missing its
+// passage) without redeploying the SPA — the change propagates to
+// every tenant on next page load.
+//
+// Storage: single KV blob `global:curriculum:overrides`. Shape:
+//   {
+//     overrides: { [activityId]: { ...partial activity fields } },
+//     updatedAt: <ms>,
+//     updatedBy: 'admin',
+//   }
+// Each override is shallow-merged into the matching base activity
+// (same semantics as applyCurriculumOverride in the app). Setting
+// `_hidden: true` removes the activity from the merged output.
+//
+// Wire protocol uses single-activity PUT/DELETE (not full-blob
+// replacement) so two operators editing different lessons can't
+// clobber each other. Conflicts on the SAME activity still last-
+// write-wins, but that's an extreme edge case.
+
+const CURRICULUM_OVERRIDES_KEY = 'global:curriculum:overrides';
+// Soft cap on a single override's serialized size — a generous
+// activity payload (lesson + 10 questions with passages) is
+// comfortably under 8 KB; 32 KB leaves room for stretchQuestions
+// and unusual content without inviting abuse.
+const CURRICULUM_OVERRIDE_MAX_BYTES = 32 * 1024;
+// Cap on total overrides count — at ~150 lessons in the shipped
+// curriculum, 500 is plenty of headroom for future weeks.
+const CURRICULUM_OVERRIDES_MAX_COUNT = 500;
+// Activity ids look like `w1-akshayan-r5` — letters, digits, hyphens.
+const ACTIVITY_ID_RE = /^[a-z0-9][a-z0-9_-]{1,80}$/i;
+
+async function loadCurriculumOverrides(env) {
+  if (!env.KV) return null;
+  const raw = await env.KV.get(CURRICULUM_OVERRIDES_KEY);
+  if (!raw) return { overrides: {}, updatedAt: 0, updatedBy: '' };
+  try {
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== 'object') return { overrides: {}, updatedAt: 0, updatedBy: '' };
+    return {
+      overrides: (parsed.overrides && typeof parsed.overrides === 'object') ? parsed.overrides : {},
+      updatedAt: parsed.updatedAt || 0,
+      updatedBy: parsed.updatedBy || '',
+    };
+  } catch {
+    return { overrides: {}, updatedAt: 0, updatedBy: '' };
+  }
+}
+
+async function saveCurriculumOverrides(env, blob) {
+  blob.updatedAt = Date.now();
+  blob.updatedBy = blob.updatedBy || 'admin';
+  await env.KV.put(CURRICULUM_OVERRIDES_KEY, JSON.stringify(blob));
+}
+
+// GET /curriculum/global-overrides — PUBLIC (origin-gated, rate-limited).
+// Every app load fetches this so the merge layer is fresh. Response is
+// small (typically a few KB) and cached at the browser for 60s — long
+// enough to avoid hammering KV from N tabs, short enough that an
+// override edit propagates to live users within a minute.
+async function handleCurriculumGlobalOverridesPublicRoute(request, env, corsOrigin) {
+  if (!env.KV) return json({ error: 'kv_not_bound' }, 500, corsOrigin);
+  const ip = request.headers.get('cf-connecting-ip') || '';
+  const rl = await rateLimitHit(env, `ratelimit:curriculum-public:ip:${ip}`, 240, 60);
+  if (!rl.ok) return json({ error: 'rate_limited', resetAt: rl.resetAt }, 429, corsOrigin);
+  const blob = await loadCurriculumOverrides(env) || { overrides: {}, updatedAt: 0 };
+  return new Response(JSON.stringify({
+    ok: true,
+    overrides: blob.overrides,
+    updatedAt: blob.updatedAt,
+  }), {
+    status: 200,
+    headers: {
+      ...corsHeaders(corsOrigin),
+      'content-type': 'application/json; charset=utf-8',
+      // 60s browser cache — short enough that fixes propagate fast,
+      // long enough to absorb the N-tabs-on-one-device case.
+      'cache-control': 'public, max-age=60',
+    },
+  });
+}
+
+// GET /admin/curriculum/global-overrides — admin only. Same blob, no
+// edge cache so the editor always sees the live KV state.
+async function handleAdminCurriculumGetOverridesRoute(request, env, corsOrigin) {
+  if (!env.KV) return json({ error: 'kv_not_bound' }, 500, corsOrigin);
+  if (!checkAdminAuth(request, env)) return json({ error: 'admin_unauthorized' }, 401, corsOrigin);
+  const ip = request.headers.get('cf-connecting-ip') || '';
+  const rl = await rateLimitHit(env, `ratelimit:admin-curriculum:ip:${ip}`, RL.ADMIN_IP.max, RL.ADMIN_IP.window);
+  if (!rl.ok) return json({ error: 'rate_limited', resetAt: rl.resetAt }, 429, corsOrigin);
+  const blob = await loadCurriculumOverrides(env);
+  return json({
+    ok: true,
+    overrides: blob.overrides,
+    updatedAt: blob.updatedAt,
+    updatedBy: blob.updatedBy,
+    count: Object.keys(blob.overrides).length,
+  }, 200, corsOrigin);
+}
+
+// PUT /admin/curriculum/global-override — admin only. Body:
+//   { activityId: 'w1-akshayan-r5', override: { ...partial fields } }
+// Sets the override for a single activity. Pass override:{_hidden:true}
+// to hide a lesson from kids. Subsequent writes to the same activityId
+// REPLACE the previous override (not deep-merge) — this matches the
+// app's apply semantics and keeps the wire protocol simple.
+async function handleAdminCurriculumPutOverrideRoute(request, env, corsOrigin) {
+  if (!env.KV) return json({ error: 'kv_not_bound' }, 500, corsOrigin);
+  if (!checkAdminAuth(request, env)) return json({ error: 'admin_unauthorized' }, 401, corsOrigin);
+  const ip = request.headers.get('cf-connecting-ip') || '';
+  const rl = await rateLimitHit(env, `ratelimit:admin-curriculum:ip:${ip}`, RL.ADMIN_IP.max, RL.ADMIN_IP.window);
+  if (!rl.ok) return json({ error: 'rate_limited', resetAt: rl.resetAt }, 429, corsOrigin);
+
+  let body = {};
+  try { body = await request.json(); } catch { return json({ error: 'bad_json' }, 400, corsOrigin); }
+  const activityId = String(body.activityId || '');
+  if (!ACTIVITY_ID_RE.test(activityId)) return json({ error: 'bad_activity_id' }, 400, corsOrigin);
+  const override = body.override;
+  if (!override || typeof override !== 'object' || Array.isArray(override)) {
+    return json({ error: 'bad_override' }, 400, corsOrigin);
+  }
+  // Reject suspicious top-level keys. Allowlist the fields we know
+  // the app's shallow-merge actually uses; ignore anything else so a
+  // typo doesn't silently bloat the blob with dead data.
+  const ALLOWED = new Set([
+    'title', 'emoji', 'videoIds', 'curriculum', 'lesson',
+    'questions', 'stretchQuestions', 'demoOnly', '_hidden',
+  ]);
+  const cleaned = {};
+  for (const k of Object.keys(override)) {
+    if (ALLOWED.has(k)) cleaned[k] = override[k];
+  }
+  if (Object.keys(cleaned).length === 0) {
+    return json({ error: 'empty_override', allowed: [...ALLOWED] }, 400, corsOrigin);
+  }
+  // Size guard on the single override.
+  const serializedOne = JSON.stringify(cleaned);
+  if (serializedOne.length > CURRICULUM_OVERRIDE_MAX_BYTES) {
+    return json({ error: 'override_too_large', maxBytes: CURRICULUM_OVERRIDE_MAX_BYTES, got: serializedOne.length }, 413, corsOrigin);
+  }
+
+  const blob = await loadCurriculumOverrides(env);
+  // Count guard — only reject if this is a NEW activity id; existing
+  // ids can be re-saved even at the cap (no growth).
+  const isNew = !Object.prototype.hasOwnProperty.call(blob.overrides, activityId);
+  if (isNew && Object.keys(blob.overrides).length >= CURRICULUM_OVERRIDES_MAX_COUNT) {
+    return json({ error: 'too_many_overrides', max: CURRICULUM_OVERRIDES_MAX_COUNT }, 400, corsOrigin);
+  }
+  blob.overrides[activityId] = cleaned;
+  await saveCurriculumOverrides(env, blob);
+  return json({
+    ok: true,
+    activityId,
+    override: cleaned,
+    updatedAt: blob.updatedAt,
+    count: Object.keys(blob.overrides).length,
+  }, 200, corsOrigin);
+}
+
+// DELETE /admin/curriculum/global-override — admin only. Body:
+//   { activityId: 'w1-akshayan-r5' }
+// Clears the override (lesson reverts to its bundled WEEKS content
+// + per-tenant overrides). No-op if the override didn't exist.
+async function handleAdminCurriculumDeleteOverrideRoute(request, env, corsOrigin) {
+  if (!env.KV) return json({ error: 'kv_not_bound' }, 500, corsOrigin);
+  if (!checkAdminAuth(request, env)) return json({ error: 'admin_unauthorized' }, 401, corsOrigin);
+  const ip = request.headers.get('cf-connecting-ip') || '';
+  const rl = await rateLimitHit(env, `ratelimit:admin-curriculum:ip:${ip}`, RL.ADMIN_IP.max, RL.ADMIN_IP.window);
+  if (!rl.ok) return json({ error: 'rate_limited', resetAt: rl.resetAt }, 429, corsOrigin);
+
+  let body = {};
+  try { body = await request.json(); } catch { return json({ error: 'bad_json' }, 400, corsOrigin); }
+  const activityId = String(body.activityId || '');
+  if (!ACTIVITY_ID_RE.test(activityId)) return json({ error: 'bad_activity_id' }, 400, corsOrigin);
+
+  const blob = await loadCurriculumOverrides(env);
+  const had = Object.prototype.hasOwnProperty.call(blob.overrides, activityId);
+  if (had) {
+    delete blob.overrides[activityId];
+    await saveCurriculumOverrides(env, blob);
+  }
+  return json({
+    ok: true,
+    activityId,
+    removed: had,
+    updatedAt: blob.updatedAt,
+    count: Object.keys(blob.overrides).length,
+  }, 200, corsOrigin);
+}
+
+// =====================================================================
 // ADMIN DASHBOARD ROUTES
 // =====================================================================
 // All admin routes share three guarantees:
@@ -3895,6 +4090,13 @@ export default {
       if (routeKey === 'GET /store/catalog')             return await handleStoreCatalogRoute(request, env, corsOrigin);
       if (routeKey === 'GET /admin/store/catalog')       return await handleAdminGetStoreCatalogRoute(request, env, corsOrigin);
       if (routeKey === 'POST /admin/store/catalog')      return await handleAdminSetStoreCatalogRoute(request, env, corsOrigin);
+      // Global curriculum overrides — operator-edited fixes for the
+      // bundled WEEKS data. Public read fuels the app's merge layer;
+      // single-activity PUT/DELETE keep edits conflict-resistant.
+      if (routeKey === 'GET /curriculum/global-overrides')          return await handleCurriculumGlobalOverridesPublicRoute(request, env, corsOrigin);
+      if (routeKey === 'GET /admin/curriculum/global-overrides')    return await handleAdminCurriculumGetOverridesRoute(request, env, corsOrigin);
+      if (routeKey === 'PUT /admin/curriculum/global-override')     return await handleAdminCurriculumPutOverrideRoute(request, env, corsOrigin);
+      if (routeKey === 'DELETE /admin/curriculum/global-override')  return await handleAdminCurriculumDeleteOverrideRoute(request, env, corsOrigin);
       // Demo PIN admin routes (list active, manually generate). The
       // /admin/demo-pins prefix is matched before the generic
       // /admin/tenant/ block below so the order matters — keep these

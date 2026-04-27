@@ -6,7 +6,7 @@
 <!-- Baseline CSP: blocks <object>/<embed>, <base href> hijacking, cross-origin
      <form action>, and iframing. 'unsafe-inline' is kept for inline handlers
      in this file; primary XSS defense is the sanitizer in the h() helper. -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'self' https: data:; script-src 'self' 'unsafe-inline' https:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: https: blob:; media-src 'self' https: blob: data:; connect-src 'self' https:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none';">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' https: data:; script-src 'self' 'unsafe-inline' https:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: https: blob:; media-src 'self' https: blob: data:; connect-src 'self' https:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self';">
 <meta name="theme-color" content="#6C5CE7">
 <title>Solvix — Where Learning Becomes an Adventure</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -8786,6 +8786,77 @@ async function loadStoreCatalog(){
 }
 
 /* ==========================================================================
+   GLOBAL CURRICULUM OVERRIDES — operator-managed lesson fixes.
+   --------------------------------------------------------------------------
+   Sits BETWEEN the bundled WEEKS data and the per-tenant tutor overrides.
+   Lets the operator fix bugs in the shipped curriculum (e.g. a Grade 3
+   reading lesson missing its passage) without redeploying the SPA — every
+   tenant picks up the fix on next page load (60s edge cache + 5min SW
+   shell cache).
+
+   Cache shape (localStorage):
+     { overrides: {<aid>: <override>}, updatedAt: <ms>, cachedAt: <ms> }
+   The runtime variable is window.GLOBAL_CURRICULUM_OVERRIDES, kept in
+   sync. applyGlobalCurriculumOverride (defined down by the curriculum
+   merge layer) reads from that runtime variable.
+   ========================================================================== */
+const GLOBAL_CURRICULUM_CACHE_KEY = 'kidquest:curriculum:globalOverrides:v1';
+window.GLOBAL_CURRICULUM_OVERRIDES = {};
+window.GLOBAL_CURRICULUM_UPDATED_AT = 0;
+
+/* Hydrate from localStorage synchronously so the first render uses any
+   previously-fetched overrides. Bad cache rows are dropped silently. */
+function hydrateGlobalCurriculumFromCache(){
+  try {
+    const raw = localStorage.getItem(GLOBAL_CURRICULUM_CACHE_KEY);
+    if(!raw) return;
+    const parsed = JSON.parse(raw);
+    if(parsed && parsed.overrides && typeof parsed.overrides === 'object'){
+      window.GLOBAL_CURRICULUM_OVERRIDES = parsed.overrides;
+      window.GLOBAL_CURRICULUM_UPDATED_AT = parsed.updatedAt || 0;
+    }
+  } catch(e){
+    try { localStorage.removeItem(GLOBAL_CURRICULUM_CACHE_KEY); } catch(_){}
+  }
+}
+
+/* Async: fetch global overrides from the worker. On success, replace the
+   runtime map + persist to localStorage. On failure (offline, etc.) keep
+   the current map. The endpoint sets max-age=60 so multiple tabs share
+   one fetch within the cache window. */
+async function loadGlobalCurriculumOverrides(){
+  if(!DATA_BACKEND_URL) return;
+  try {
+    const r = await fetch(DATA_BACKEND_URL.replace(/\/+$/, '') + '/curriculum/global-overrides', {
+      // Let the browser honour the worker's max-age; we don't want to
+      // bypass it from every tab.
+    });
+    if(!r.ok) return;
+    const j = await r.json();
+    if(!j || !j.ok || !j.overrides || typeof j.overrides !== 'object') return;
+    window.GLOBAL_CURRICULUM_OVERRIDES = j.overrides;
+    window.GLOBAL_CURRICULUM_UPDATED_AT = j.updatedAt || Date.now();
+    try {
+      localStorage.setItem(GLOBAL_CURRICULUM_CACHE_KEY, JSON.stringify({
+        overrides: j.overrides,
+        updatedAt: j.updatedAt || Date.now(),
+        cachedAt: Date.now(),
+      }));
+    } catch(e){ /* quota — fine, runtime still has it */ }
+    // If the kid is mid-lesson, force a re-render so a freshly-pushed
+    // fix surfaces immediately rather than waiting for the next nav.
+    try {
+      if(typeof currentScreen !== 'undefined' && currentScreen === 'subject' &&
+         typeof renderActivities === 'function'){
+        renderActivities();
+      }
+    } catch(e){}
+  } catch(e){
+    // Network blip — silent.
+  }
+}
+
+/* ==========================================================================
    CHALLENGE BANK — mini-quiz questions gate every purchase.
    --------------------------------------------------------------------------
    ▸ EDIT DIFFICULTY: add/remove questions from each array.
@@ -10276,6 +10347,11 @@ function initCloud(){
   // multiple times — re-running it just rewrites STORE_CATALOG with
   // whatever's already in cache.
   try { hydrateStoreCatalogFromCache(); } catch(e){}
+  // Hydrate global curriculum overrides synchronously so the first
+  // activity render already reflects any operator fixes — avoids a
+  // flicker between the bundled lesson and the override on first
+  // navigation to a subject screen.
+  try { hydrateGlobalCurriculumFromCache(); } catch(e){}
   // Global maint runs alongside pullCloud — no auth needed, fires even
   // for users with no tenant code yet. Catch every error so a /health
   // hiccup never blocks the per-tenant pull (and vice versa).
@@ -10283,6 +10359,9 @@ function initCloud(){
   // Pull the live catalog from the worker. Cache-Control: public,
   // max-age=120 on the response keeps repeat fetches cheap.
   loadStoreCatalog().catch(()=>{});
+  // Pull global curriculum overrides. Worker caches this 60s so even
+  // 100 tabs across one device share a single round trip.
+  loadGlobalCurriculumOverrides().catch(()=>{});
   pullCloud(true).then(()=>{cloudReady=true}).catch(()=>{});
   setInterval(()=>{
     pullCloud(false);
@@ -10295,6 +10374,7 @@ function initCloud(){
       // Tab came back to focus — opportunity to pick up a recent
       // operator catalog change without forcing the user to reload.
       loadStoreCatalog().catch(()=>{});
+      loadGlobalCurriculumOverrides().catch(()=>{});
     }
   });
 }
@@ -13829,6 +13909,27 @@ function applyCurriculumOverride(activity){
   return Object.assign({}, activity, ov, { id: activity.id });
 }
 
+/* ---- Global (operator) curriculum override merge ----
+   Sits BEFORE the per-tenant `applyCurriculumOverride` so operator-
+   level fixes ship to every tenant, but a tenant's own tutor edits
+   still win on top (a teacher who's customized a lesson keeps their
+   edits even if the operator later patches the bundled version).
+
+   Reads from window.GLOBAL_CURRICULUM_OVERRIDES, populated by
+   loadGlobalCurriculumOverrides() at boot from /curriculum/global-overrides.
+
+   Same semantics as applyCurriculumOverride: shallow merge with id
+   preserved, `_hidden:true` removes the activity. Pure function. */
+function applyGlobalCurriculumOverride(activity){
+  if(!activity || !activity.id) return activity;
+  const map = window.GLOBAL_CURRICULUM_OVERRIDES;
+  if(!map || typeof map !== 'object') return activity;
+  const ov = map[activity.id];
+  if(!ov) return activity;
+  if(ov._hidden) return null;
+  return Object.assign({}, activity, ov, { id: activity.id });
+}
+
 /* ---- Per-student AI override merge ----
    Second layer on top of tutor overrides. Driven by the student's plan
    toggles (simpleLanguage today). The cache shape is:
@@ -14524,16 +14625,20 @@ function getWeekActivities(sid,subj){
   }
   const acts = (WEEKS[currentWeek] && WEEKS[currentWeek][resolved] && WEEKS[currentWeek][resolved][subj]) || [];
   // Layered merge at read time:
-  //   base WEEKS → tutor override (Course Editor) → student simpleLanguage
-  //              → student autoStretch questions
-  // Tutor overrides apply to every student. Student AI overrides (from
-  // simpleLanguage / autoStretch) are keyed by sid — demos use the resolved
-  // id so the preview reflects what the target student actually sees, but
-  // tenant-added kids who borrowed a template curriculum should still see
-  // THEIR OWN plan + stretch overrides (not the template kid's), so we pass
-  // their original sid here.
+  //   base WEEKS → operator (global) override → tenant tutor override
+  //              → student simpleLanguage → student autoStretch
+  // Operator overrides ship from KV (admin Curriculum Editor) and apply
+  // to EVERY tenant; tutor overrides win on top so a teacher's local
+  // customizations aren't undone by an operator patch. Student AI
+  // overrides (simpleLanguage / autoStretch) are keyed by sid — demos
+  // use the resolved id so the preview reflects what the target student
+  // actually sees, but tenant-added kids who borrowed a template
+  // curriculum should still see THEIR OWN plan + stretch overrides
+  // (not the template kid's), so we pass their original sid here.
   const planSid = demo ? resolved : sid;
   const merged = acts
+    .map(applyGlobalCurriculumOverride)
+    .filter(Boolean)
     .map(applyCurriculumOverride)
     .filter(Boolean)
     .map(a => applyStudentPlanOverride(a, planSid))
@@ -26582,6 +26687,41 @@ function clearTenantAndReload(){
   location.reload();
 }
 try { window.clearTenantAndReload = clearTenantAndReload; } catch(e){}
+
+// =====================================================================
+// ADMIN CURRICULUM EDITOR — iframe data extraction hook
+// =====================================================================
+// The /admin/ Curriculum Editor loads /app/?adminEditor=1 in a hidden
+// iframe so it can read the canonical WEEKS structure (3,000+ lines of
+// hardcoded curriculum data) without duplicating it. By this point in
+// the script all WEEKS-shaping IIFEs (Axel/Mia/spelling clones) have
+// finished, so window.WEEKS is the full, final dataset.
+//
+// We postMessage WEEKS to the parent and then THROW to abort the rest
+// of the boot — that skips tenantGateBoot, initCloud, the dev banner,
+// service worker registration, etc. so the iframe doesn't waste
+// resources or trigger network calls. The throw is intentional and
+// only affects the iframe context; user-facing app loads (no
+// adminEditor query param) are unaffected.
+//
+// Origin check: postMessage uses '*' targetOrigin because the admin
+// page may live on either kidquest.fun or a localhost preview. The
+// admin-side handler validates the message shape AND e.origin before
+// trusting the payload.
+if(typeof location !== 'undefined' && /[?&]adminEditor=1\b/.test(location.search || '')){
+  try {
+    if(window.parent && window.parent !== window){
+      window.parent.postMessage({
+        type: 'kq-admin-editor-weeks',
+        weeks: (typeof WEEKS !== 'undefined' ? WEEKS : null),
+        sourceVersion: 'v1',
+      }, '*');
+    }
+  } catch(_){}
+  // Halt the rest of boot. The browser won't render anything since
+  // initCloud / tenantGateBoot never run; the iframe is invisible.
+  throw new Error('admin editor mode — boot halted intentionally');
+}
 
 // Show the gate immediately if we need to. The rest of the boot still
 // runs underneath (cloud calls will 401 silently and fail gracefully)
