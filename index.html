@@ -149,6 +149,52 @@ section.tight{padding:56px 0}
 .feature h3{font-size:20px;font-weight:800;margin-bottom:8px}
 .feature p{color:var(--ink2);line-height:1.55;font-size:15px}
 
+/* Subjects grid — concrete topic detail per subject so parents can see
+   exactly what their kid will be doing. Sits between #features (the
+   "what we offer" overview) and #see (the animated walkthroughs). Uses
+   auto-fill with minmax so it reflows from 3 cols → 2 → 1 cleanly.
+   Each card mirrors the .feature visual language but with a coloured
+   header strip + grade chip + an actual topic list pulled from the
+   shipping curriculum. The optional "+French" callout below the grid
+   makes it explicit that French ships at varying depth (beginner base
+   for every kid, custom advanced tracks for tutored students). */
+.subj-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:18px}
+.subj{background:var(--card);border-radius:var(--r);box-shadow:var(--shadow);border:1px solid var(--line);overflow:hidden;display:flex;flex-direction:column;transition:transform .2s ease,box-shadow .2s ease}
+.subj:hover{transform:translateY(-4px);box-shadow:var(--shadow-lg)}
+.subj-head{padding:18px 20px 14px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--line);position:relative}
+.subj-emoji{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;background:#fff;box-shadow:0 2px 6px rgba(26,16,53,.06)}
+.subj-name{font-size:18px;font-weight:800;line-height:1.2;flex:1;min-width:0}
+.subj-grade{font-size:11px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--ink2);background:#F0EEFF;padding:4px 10px;border-radius:999px;flex-shrink:0;white-space:nowrap}
+.subj-body{padding:14px 20px 18px;flex:1;display:flex;flex-direction:column;gap:10px}
+.subj-body p.tag{font-size:14px;color:var(--ink);font-weight:700;line-height:1.4;margin:0}
+.subj-topics{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:6px}
+.subj-topics li{font-size:12px;font-weight:600;color:var(--ink2);background:#FAF8FF;border:1px solid var(--line);padding:4px 10px;border-radius:999px;line-height:1.3}
+.subj-format{font-size:12px;color:var(--ink3);font-weight:600;line-height:1.45;margin-top:2px}
+/* Subject head accent stripes — colour-codes the strand at a glance.
+   Each colour matches the subject's emoji background tile elsewhere on
+   the page so the visual language is consistent between the hero
+   activity rows, the features tile, and these subject cards. */
+.subj-reading .subj-head{background:linear-gradient(180deg,#fff,#e3f2ff)}
+.subj-writing .subj-head{background:linear-gradient(180deg,#fff,#fde7f3)}
+.subj-math    .subj-head{background:linear-gradient(180deg,#fff,#fff8e1)}
+.subj-logic   .subj-head{background:linear-gradient(180deg,#fff,#e0f7f5)}
+.subj-science .subj-head{background:linear-gradient(180deg,#fff,#e6f7e9)}
+.subj-social  .subj-head{background:linear-gradient(180deg,#fff,#ffe9d9)}
+.subj-coding  .subj-head{background:linear-gradient(180deg,#fff,#ede7f6)}
+.subj-french  .subj-head{background:linear-gradient(180deg,#fff,#e6eeff)}
+
+/* "+ French" callout — full-width band under the grid acknowledging
+   French ships at variable depth, so we don't oversell it on the cards
+   but we don't bury it either. Same border + shadow language as a
+   feature card, but layout is row-style. */
+.subj-aside{margin-top:18px;background:var(--card);border-radius:var(--r);padding:18px 22px;box-shadow:var(--shadow);border:1px solid var(--line);display:flex;align-items:center;gap:16px}
+.subj-aside .subj-emoji{background:#e6eeff}
+.subj-aside p{font-size:14px;color:var(--ink2);line-height:1.55;margin:0;flex:1}
+.subj-aside strong{color:var(--ink)}
+@media(max-width:640px){
+  .subj-aside{flex-direction:column;align-items:flex-start;text-align:left}
+}
+
 /* How it works */
 .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
 @media(max-width:720px){.steps{grid-template-columns:1fr}}
@@ -571,6 +617,7 @@ footer{padding:48px 0;border-top:1px solid var(--line);margin-top:72px}
     <a href="/" class="logo"><span class="logo-mark">🚀</span><span>Solvix</span></a>
     <div class="nav-links">
       <a href="#features" class="hide-sm">Features</a>
+      <a href="#subjects" class="hide-sm">Subjects</a>
       <a href="#see" class="hide-sm">See it</a>
       <a href="#pricing" class="hide-sm">Pricing</a>
       <a href="#demo" class="hide-sm">Try free</a>
@@ -654,9 +701,205 @@ footer{padding:48px 0;border-top:1px solid var(--line);margin-top:72px}
       <div class="feature">
         <div class="feature-icon" style="background:#e0f7f5">📚</div>
         <h3>8 core subjects</h3>
-        <p>Reading, Writing, Spelling, Math, Logic, French, Science, and Social Studies — all bundled. One login covers every skill your elementary learner is building.</p>
+        <p>Reading, Writing, Math, Logic, Science, Social Studies, Coding, and French — all bundled. One login covers every skill your elementary learner is building.</p>
       </div>
     </div>
+  </div>
+</section>
+
+<!-- ============ SUBJECTS DETAIL ============
+     Concrete topic-level breakdown of what kids actually do per subject.
+     Lives between #features (the high-level overview) and #see (the
+     animated walkthroughs) so the parent reading top-to-bottom goes:
+       what's inside → what each subject teaches → what it looks like
+                       → how it works → what it costs → FAQ
+     Topics listed are real titles pulled from the live WEEKS catalog
+     in app/index.html (via an inventory pass). Keep them honest — if
+     a subject's content changes, update these chips. Grade ranges
+     reflect the curriculum metadata each lesson is tagged with. -->
+<section id="subjects" class="tight">
+  <div class="container">
+    <div class="section-head">
+      <span class="section-eyebrow">What kids learn</span>
+      <h2>8 subjects, every grade from K to 8</h2>
+      <p>Every lesson is anchored to a specific Ontario curriculum expectation, so you know exactly what skill your child is practicing — and where they are on the official progression.</p>
+    </div>
+    <div class="subj-grid">
+
+      <div class="subj subj-reading">
+        <div class="subj-head">
+          <div class="subj-emoji">📖</div>
+          <div class="subj-name">Reading</div>
+          <div class="subj-grade">K – Gr 7</div>
+        </div>
+        <div class="subj-body">
+          <p class="tag">Stories, vocabulary, and "why" questions</p>
+          <ul class="subj-topics">
+            <li>Reading passages</li>
+            <li>Main idea</li>
+            <li>Character inferences</li>
+            <li>Vocabulary from context</li>
+            <li>Figurative language</li>
+            <li>Poetry &amp; tone</li>
+          </ul>
+          <div class="subj-format">Format: short passages → multiple-choice + matching tasks.</div>
+        </div>
+      </div>
+
+      <div class="subj subj-writing">
+        <div class="subj-head">
+          <div class="subj-emoji">✍️</div>
+          <div class="subj-name">Writing</div>
+          <div class="subj-grade">K – Gr 7</div>
+        </div>
+        <div class="subj-body">
+          <p class="tag">Sentences, spelling, and conventions</p>
+          <ul class="subj-topics">
+            <li>First letters &amp; sounds</li>
+            <li>Capitalization rules</li>
+            <li>Punctuation</li>
+            <li>Tricky spelling</li>
+            <li>Homophones</li>
+            <li>Paragraph writing</li>
+          </ul>
+          <div class="subj-format">Format: multiple-choice + open-write tasks the AI tutor can grade.</div>
+        </div>
+      </div>
+
+      <div class="subj subj-math">
+        <div class="subj-head">
+          <div class="subj-emoji">🔢</div>
+          <div class="subj-name">Math</div>
+          <div class="subj-grade">K – Gr 8</div>
+        </div>
+        <div class="subj-body">
+          <p class="tag">Numbers, patterns, and real-world problems</p>
+          <ul class="subj-topics">
+            <li>Counting &amp; comparing</li>
+            <li>Shapes &amp; geometry</li>
+            <li>Two-digit addition</li>
+            <li>Fractions on a number line</li>
+            <li>Word problems</li>
+            <li>Number patterns</li>
+          </ul>
+          <div class="subj-format">Format: skill-focused multiple-choice with side-by-side compares.</div>
+        </div>
+      </div>
+
+      <div class="subj subj-logic">
+        <div class="subj-head">
+          <div class="subj-emoji">🧩</div>
+          <div class="subj-name">Logic</div>
+          <div class="subj-grade">K – Gr 7</div>
+        </div>
+        <div class="subj-body">
+          <p class="tag">Patterns, classification, and reasoning</p>
+          <ul class="subj-topics">
+            <li>What goes together?</li>
+            <li>Odd one out</li>
+            <li>What comes next?</li>
+            <li>Sequencing</li>
+            <li>Number patterns</li>
+            <li>Simple analogies</li>
+          </ul>
+          <div class="subj-format">Format: multiple-choice + ordering + matching puzzles.</div>
+        </div>
+      </div>
+
+      <div class="subj subj-science">
+        <div class="subj-head">
+          <div class="subj-emoji">🔬</div>
+          <div class="subj-name">Science</div>
+          <div class="subj-grade">K – Gr 8</div>
+        </div>
+        <div class="subj-body">
+          <p class="tag">How the natural world works</p>
+          <ul class="subj-topics">
+            <li>Living vs. non-living</li>
+            <li>The five senses</li>
+            <li>Weather &amp; seasons</li>
+            <li>The water cycle</li>
+            <li>Parts of a plant</li>
+            <li>Materials &amp; mixtures</li>
+          </ul>
+          <div class="subj-format">Format: multiple-choice + step-ordering for processes.</div>
+        </div>
+      </div>
+
+      <div class="subj subj-social">
+        <div class="subj-head">
+          <div class="subj-emoji">🌎</div>
+          <div class="subj-name">Social Studies</div>
+          <div class="subj-grade">K – Gr 7</div>
+        </div>
+        <div class="subj-body">
+          <p class="tag">Community, civics, and Canadian context</p>
+          <ul class="subj-topics">
+            <li>I live in Canada</li>
+            <li>My family &amp; community</li>
+            <li>Community helpers</li>
+            <li>Canadian symbols</li>
+            <li>Indigenous peoples</li>
+            <li>Holidays &amp; traditions</li>
+          </ul>
+          <div class="subj-format">Format: multiple-choice. Canadian-flavoured by default; configurable per family.</div>
+        </div>
+      </div>
+
+      <div class="subj subj-coding">
+        <div class="subj-head">
+          <div class="subj-emoji">💻</div>
+          <div class="subj-name">Coding</div>
+          <div class="subj-grade">K – Gr 7</div>
+        </div>
+        <div class="subj-body">
+          <p class="tag">Algorithmic thinking — no live editor required</p>
+          <ul class="subj-topics">
+            <li>What is code?</li>
+            <li>Step-by-step instructions</li>
+            <li>Tell the robot</li>
+            <li>Find the bug</li>
+            <li>Loops &amp; repetition</li>
+            <li>Keyboard friends</li>
+          </ul>
+          <div class="subj-format">Format: concept-first multiple-choice. Builds the mental model before any syntax.</div>
+        </div>
+      </div>
+
+      <div class="subj subj-french">
+        <div class="subj-head">
+          <div class="subj-emoji">🇫🇷</div>
+          <div class="subj-name">French</div>
+          <div class="subj-grade">Beginner+</div>
+        </div>
+        <div class="subj-body">
+          <p class="tag">Vocabulary, phrases, and core grammar</p>
+          <ul class="subj-topics">
+            <li>Greetings</li>
+            <li>Numbers &amp; colours</li>
+            <li>Family words</li>
+            <li>Question words</li>
+            <li>Adjective agreement</li>
+            <li>Passé composé (advanced)</li>
+          </ul>
+          <div class="subj-format">Format: multiple-choice. Beginner pack ships to every kid; advanced tracks unlock for older students.</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- French depth disclosure: most subjects ship the same 7-week
+         arc per student, but French is intentionally tiered — beginner
+         core for every kid plus a deeper Gr 6+ track. Surfacing it here
+         keeps the marketing claim ("8 subjects") honest. -->
+    <div class="subj-aside" role="note" aria-label="French depth note">
+      <div class="subj-emoji">🇫🇷</div>
+      <p><strong>About French:</strong> a beginner core (greetings, numbers, common phrases) ships to every student from day one. Older students with custom tutor plans also unlock advanced tracks like passé composé, adjective agreement, and question words. Want a different second language? Tell us and we'll prioritize it.</p>
+    </div>
+
+    <p style="margin-top:24px;text-align:center;font-size:14px;color:var(--ink3);max-width:680px;margin-left:auto;margin-right:auto;line-height:1.55">
+      Don't see something your child needs? Every lesson is editable per family — your tutor or parent dashboard can rewrite, add, or hide any topic in seconds.
+    </p>
   </div>
 </section>
 
