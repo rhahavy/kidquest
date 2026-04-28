@@ -2215,7 +2215,10 @@ tbody tr:last-child td{border-bottom:none}
       issues.push({severity:'error', code:'empty-questions', msg:'Questions array is empty.'});
       return issues;
     }
-    if(activity.questions.length !== 5){
+    // Demo-only preview lessons (Levels 6-10) are intentionally lightweight
+    // — 1 short lesson + 3 MCQs by design — so the wrong-question-count
+    // warning is a false-positive on them. Skip it for those.
+    if(activity.questions.length !== 5 && !activity.demoOnly){
       issues.push({severity:'warn', code:'wrong-question-count',
         msg:'Has ' + activity.questions.length + ' questions (Week-1 norm is 5).'});
     }
@@ -2263,14 +2266,21 @@ tbody tr:last-child td{border-bottom:none}
                 msg:qNum+': choice '+(ci+1)+' is empty.'});
             }
           }
-          // Duplicate-choice detection. Many choices use a leading emoji
-          // ("🐱 Cat" / "🐶 Cat") — we strip that prefix before comparing
-          // so an honest "🐱 Cat" appearing twice is still flagged.
+          // Duplicate-choice detection — case-SENSITIVE so capitalization-
+          // teaching lessons don't false-positive (the whole point of those
+          // is "spot the right capital", and choices look intentionally
+          // alike when lowercased). We DO strip a leading "emoji + space"
+          // prefix so "🐱 Cat" / "🐶 Cat" still flag as duplicates, but
+          // we leave meaningful symbols (-1 / +1 / $5) alone — those
+          // signs are part of the value, not decoration.
           var seen = {};
           var dup = null;
           for(var di=0;di<q.choices.length;di++){
-            var norm = String(q.choices[di] || '').trim().toLowerCase()
-              .replace(/^[\s\W_]+/, '').trim();
+            var norm = String(q.choices[di] || '').trim()
+              // Strip a leading run of non-word/non-space chars THAT IS
+              // followed by whitespace. That's the emoji-prefix shape.
+              // "-1" has no space after the -, so it stays "-1".
+              .replace(/^[^\w\s]+\s+/, '').trim();
             if(!norm) continue;
             if(seen[norm] !== undefined){ dup = q.choices[di]; break; }
             seen[norm] = di;
@@ -2331,9 +2341,11 @@ tbody tr:last-child td{border-bottom:none}
     return issues;
   }
 
-  // Build the EFFECTIVE merged activity (base + override) the same way the
-  // app's applyCurriculumOverride does: shallow merge, id preserved. Used
-  // by analyzeLesson so we lint what kids actually see.
+  // Build the EFFECTIVE merged activity (base + override). Mirrors the
+  // runtime mergeOverride() in app/index.html: top-level fields are
+  // shallow-replaced, but the two nested objects most likely to be
+  // partially overridden — curriculum and lesson — are deep-merged so
+  // a partial/empty override doesn't wipe out base's grade/codes/etc.
   function effectiveActivity(base, override){
     if(!base) return null;
     if(!override) return base;
@@ -2345,6 +2357,14 @@ tbody tr:last-child td{border-bottom:none}
       merged[k] = override[k];
     });
     merged.id = base.id;
+    if(base.curriculum && typeof base.curriculum === 'object' &&
+       override.curriculum && typeof override.curriculum === 'object'){
+      merged.curriculum = Object.assign({}, base.curriculum, override.curriculum);
+    }
+    if(base.lesson && typeof base.lesson === 'object' &&
+       override.lesson && typeof override.lesson === 'object'){
+      merged.lesson = Object.assign({}, base.lesson, override.lesson);
+    }
     return merged;
   }
 

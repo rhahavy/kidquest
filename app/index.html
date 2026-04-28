@@ -4202,7 +4202,7 @@ akaran: {
         {type:'mcq',q:'Which is punctuated correctly?',choices:['I like red blue and green.','I like red, blue, and green.','I like red blue, and green.','I, like red blue and green.'],answer:1},
         {type:'mcq',q:'What goes at the end? "Can you help me with this"',choices:['.','?','!',','],answer:1},
         {type:'mcq',q:'What goes at the end? "Look out for that car"',choices:['.','?','!',','],answer:2},
-        {type:'mcq',q:'Which sentence is correct?',choices:['Do you like pizza.','Do you like pizza?','Do you like pizza!','do you like pizza?'],answer:1},
+        {type:'mcq',q:'Which sentence is correct?',choices:['Do you like pizza.','Do you like pizza?','Do you like pizza!','Do you like pizza'],answer:1},
         {type:'mcq',q:'Which uses a comma correctly?',choices:['Yes I will come.','Yes, I will come.','Yes I, will come.','Yes I will, come.'],answer:1},
       ]},
     { id:'w1-akaran-w3', title:'Tricky Spelling', emoji:'📝', videoIds:['9S7DY2lgJlU'],
@@ -9904,14 +9904,14 @@ WEEKS[2] = {
     P('w1-akaran-sp7','Long Vowels','🎵','Magic E makes vowels say their name: cake, bike, bone.',[
       ['Add E to "cak" — you get...',['cake','cak','cakee','caik'],0],
       ['Which word has a long I?',['bit','bite','bat','but'],1],
-      ['Which word has a long O?',['hop','hope','hot','hot'],1]]),
+      ['Which word has a long O?',['hop','hope','hot','hat'],1]]),
     P('w1-akaran-sp8','Plurals with S','📚','Add S to make more than one: cat → cats.',[
       ['One dog. Many ___?',['doges','dog','dogs','doggs'],2],
       ['Plural of "book"?',['bookes','booke','books','bookies'],2],
       ['Plural of "hat"?',['hat','hats','hatz','hates'],1]]),
     P('w1-akaran-sp9','Double Letters','🪜','Some words have double letters: ball, bell, mitt.',[
       ['Ball has two...',['a\'s','l\'s','b\'s','vowels'],1],
-      ['Which is spelled correctly?',['litle','litle','little','liddle'],2],
+      ['Which is spelled correctly?',['litle','littel','little','liddle'],2],
       ['Which is spelled correctly?',['happy','hapy','haaappy','hapi'],0]]),
     P('w1-akaran-sp10','Silent Letters','🤫','Some letters hide: knee, lamb, wrap (silent k, b, w).',[
       ['"Knee" — which letter is silent?',['n','e','k','double'],2],
@@ -15691,7 +15691,26 @@ function applyCurriculumOverride(activity){
   const ov = allData && allData.curriculum && allData.curriculum.overrides && allData.curriculum.overrides[activity.id];
   if(!ov) return activity;
   if(ov._hidden) return null;
-  return Object.assign({}, activity, ov, { id: activity.id });
+  return mergeOverride(activity, ov);
+}
+/** Shared merge logic for both override layers. Top-level fields are
+ *  shallow-replaced (override wins). The two nested objects most likely
+ *  to be partially overridden — `curriculum` and `lesson` — are
+ *  deep-merged so an override that only changes one sub-field
+ *  (e.g. `{lesson:{intro:'new copy'}}`) doesn't blow away the rest.
+ *  Same goes for empty `curriculum:{}` artifacts left behind by older
+ *  form saves — they no longer wipe out grade / strand / codes. */
+function mergeOverride(base, override){
+  const merged = Object.assign({}, base, override, { id: base.id });
+  if(base.curriculum && typeof base.curriculum === 'object' &&
+     override.curriculum && typeof override.curriculum === 'object'){
+    merged.curriculum = Object.assign({}, base.curriculum, override.curriculum);
+  }
+  if(base.lesson && typeof base.lesson === 'object' &&
+     override.lesson && typeof override.lesson === 'object'){
+    merged.lesson = Object.assign({}, base.lesson, override.lesson);
+  }
+  return merged;
 }
 
 /* ---- Global (operator) curriculum override merge ----
@@ -15731,7 +15750,7 @@ function applyGlobalCurriculumOverride(activity){
   }
   if(!ov) return activity;
   if(ov._hidden) return null;
-  return Object.assign({}, activity, ov, { id: activity.id });
+  return mergeOverride(activity, ov);
 }
 
 /* ---- Per-student AI override merge ----
