@@ -15607,7 +15607,9 @@ function updateOrderStatus(orderId, status, refund){
 //   cd workers/ai-proxy && wrangler deploy
 // Leave blank to disable every AI feature on the frontend — the site
 // falls back gracefully everywhere (same pattern as TTS_PROXY_URL).
-const AI_PROXY_URL = '';
+// Same Worker hostname that powers the data backend — AI endpoints live
+// at /explain, /feedback, /simplify, /generate-questions, etc.
+const AI_PROXY_URL = 'https://kidquest-ai-proxy.rhahavy-b.workers.dev';
 
 // Health-check cache. Populated by fetchAiHealth() at page load and
 // re-polled every AI_HEALTH_TTL_MS so a tutor flipping a flag
