@@ -253,6 +253,45 @@ tbody tr:last-child td{border-bottom:none}
 .curr-card.has-warn{border-left:4px solid #fbbf24}
 .curr-card.has-error{border-left:4px solid #ef4444;background:linear-gradient(180deg,#fff,#fef2f2)}
 
+/* Inline issue detail list — visible by default on flagged cards so
+   the operator can read every problem without hovering for a tooltip.
+   Errors render with a red bullet, warnings with amber. The list is
+   pointer-events:none so it doesn't intercept the card's click-to-edit. */
+.curr-card .curr-issues{
+  list-style:none;
+  margin:6px 0 0;
+  padding:8px 10px;
+  background:rgba(239,68,68,.06);
+  border:1px solid rgba(239,68,68,.18);
+  border-radius:8px;
+  font-size:11.5px;
+  line-height:1.45;
+  color:var(--ink2);
+  pointer-events:none; /* let card-level click-to-edit win */
+}
+.curr-card.has-warn:not(.has-error) .curr-issues{
+  background:rgba(251,191,36,.08);
+  border-color:rgba(251,191,36,.28);
+}
+.curr-card .curr-issue{
+  padding:2px 0 2px 16px;
+  position:relative;
+  word-break:break-word;
+}
+.curr-card .curr-issue::before{
+  content:'';
+  position:absolute;
+  left:4px;
+  top:9px;
+  width:6px;
+  height:6px;
+  border-radius:50%;
+}
+.curr-card .curr-issue.err::before {background:#ef4444}
+.curr-card .curr-issue.warn::before{background:#f59e0b}
+.curr-card .curr-issue.err {color:#7f1d1d}
+.curr-card .curr-issue.warn{color:#78350f}
+
 /* ===== No-code lesson form (Form tab inside the edit modal) ===== */
 .cf-tabs{display:flex;gap:6px;margin-bottom:14px;border-bottom:1px solid var(--line)}
 .cf-tab{background:transparent;border:none;padding:8px 14px;font-size:13px;font-weight:700;color:#64748b;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:color .15s ease,border-color .15s ease}
@@ -2598,27 +2637,42 @@ tbody tr:last-child td{border-bottom:none}
       // not the raw SID, so the operator sees "Grade 3" not "akshayan").
       chips.push('<span class="chip">'+escapeHtml(r.grade || r.sid)+'</span>');
       chips.push('<span class="chip">'+escapeHtml(r.subject)+'</span>');
-      // Issue chips — grouped by severity, with the full message list in
-      // the title attribute so hovering surfaces the detail. Click on the
-      // card still opens the editor (event handler attached below).
-      if(hasError){
-        var errs = r.issues.filter(function(x){return x.severity==='error';});
-        var errTitle = errs.map(function(x){return '• '+x.msg;}).join('\n');
-        chips.push('<span class="chip err" title="'+escapeHtml(errTitle)+'">⛔ '+errs.length+' error'+(errs.length>1?'s':'')+'</span>');
+      // Issue count chips — quick summary at the top of the card. The
+      // detailed message list is rendered inline below the meta row, so
+      // the operator can read what's actually wrong without having to
+      // hover (title-attribute tooltips are easy to miss). The chips
+      // stay because they're useful at-a-glance scanning the grid.
+      var errs  = hasError ? r.issues.filter(function(x){return x.severity==='error';}) : [];
+      var warns = hasWarn  ? r.issues.filter(function(x){return x.severity==='warn';})  : [];
+      if(errs.length){
+        chips.push('<span class="chip err">⛔ '+errs.length+' error'+(errs.length>1?'s':'')+'</span>');
       }
-      if(hasWarn){
-        var warns = r.issues.filter(function(x){return x.severity==='warn';});
-        var warnTitle = warns.map(function(x){return '• '+x.msg;}).join('\n');
-        chips.push('<span class="chip warn" title="'+escapeHtml(warnTitle)+'">⚠ '+warns.length+' warning'+(warns.length>1?'s':'')+'</span>');
+      if(warns.length){
+        chips.push('<span class="chip warn">⚠ '+warns.length+' warning'+(warns.length>1?'s':'')+'</span>');
       }
       if(ov && ov._hidden) chips.push('<span class="chip hidden">hidden</span>');
       else if(ov) chips.push('<span class="chip ok">overridden</span>');
+      // Inline issue detail list — visible by default on every flagged
+      // card. Each issue is a single-line bullet so a card with five
+      // problems takes ~5 lines of space, not a tooltip you have to
+      // chase. Clicking the card still opens the editor (the list does
+      // not intercept the click).
+      var issueDetailHtml = '';
+      if(errs.length || warns.length){
+        var items = errs.map(function(x){
+          return '<li class="curr-issue err">'+escapeHtml(x.msg)+'</li>';
+        }).concat(warns.map(function(x){
+          return '<li class="curr-issue warn">'+escapeHtml(x.msg)+'</li>';
+        })).join('');
+        issueDetailHtml = '<ul class="curr-issues">'+items+'</ul>';
+      }
       return (
         '<div class="'+classes.join(' ')+'" data-aid="'+escapeHtml(a.id)+'">' +
           '<div class="row"><div class="emoji">'+escapeHtml(emoji)+'</div>'+
             '<div class="ttl" title="'+escapeHtml(title)+'">'+escapeHtml(title)+'</div></div>' +
           '<div class="id">'+escapeHtml(a.id)+'</div>' +
           '<div class="meta">'+chips.join('')+'</div>' +
+          issueDetailHtml +
         '</div>'
       );
     }).join('');
