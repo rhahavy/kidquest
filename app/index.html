@@ -8356,7 +8356,33 @@ WEEKS[2] = {
     }
     return out;
   };
-  const put = (sid, activities) => { if(WEEKS[1][sid]) WEEKS[1][sid].spelling = activities; };
+  // Default curriculum tag per student-grade. Spelling sits under
+  // Ontario's Language strand B (Foundations of Language) — specifically
+  // word-solving skills (B3.x). Each grade gets the codes that match
+  // its actual content here (CVC words for SK, prefixes/suffixes for
+  // G3+, Greek/Latin roots for upper grades). One representative tag
+  // per student covers all 5 spelling lessons; finer-grained per-lesson
+  // tags can be added later by overriding curriculum on individual SP()
+  // outputs at the call site.
+  const SPELLING_CURR = {
+    nishan:   oc('Senior Kindergarten', 'Language — B. Foundations of Language (Word-Solving)', ['B3.1'],         'Apply early phonics to decode beginning sounds and 3-letter CVC words.'),
+    akaran:   oc('Grade 1',             'Language — B. Foundations of Language (Word-Solving)', ['B3.1','B3.2'],  'Decode and spell short-vowel CVC words and high-frequency sight words.'),
+    rushan:   oc('Grade 2',             'Language — B. Foundations of Language (Word-Solving)', ['B3.1','B3.2'],  'Spell words with consonant blends, long-vowel patterns, and common word families.'),
+    akshayan: oc('Grade 3',             'Language — B. Foundations of Language (Word-Solving)', ['B3.1','B3.2'],  'Spell using prefixes, suffixes, silent-letter patterns, and tricky high-frequency words.'),
+    axel:     oc('Grade 3',             'Language — B. Foundations of Language (Word-Solving)', ['B3.1','B3.2'],  'Spell using prefixes, suffixes, silent-letter patterns, and tricky high-frequency words.'),
+    isaiah:   oc('Grade 5',             'Language — B. Foundations of Language (Word-Solving)', ['B3.2','B3.5'],  'Spell using Greek/Latin roots; distinguish commonly-confused homophones; use root meanings to decode unfamiliar words.'),
+    evan:     oc('Grade 7',             'Language — B. Foundations of Language (Word-Solving)', ['B3.2','B3.5'],  'Apply word-solving (roots, affixes, etymology) to academic vocabulary — high-priority ESL skill.'),
+  };
+  const put = (sid, activities) => {
+    if(!WEEKS[1][sid]) return;
+    const curr = SPELLING_CURR[sid];
+    // Attach the curriculum tag IF the SP() output didn't already set one
+    // (preserve any per-lesson overrides at the call site).
+    WEEKS[1][sid].spelling = activities.map(a => {
+      if(curr && !a.curriculum) a.curriculum = curr;
+      return a;
+    });
+  };
 
   /* --- Nishan (SK) --- */
   put('nishan', [
@@ -8878,9 +8904,39 @@ WEEKS[2] = {
    To add more previews later: just push onto the right subject array here.
    ========================================================================== */
 (function addDemoPreviewLevels(){
+  // Default curriculum tag for the demo preview lessons. These are
+  // demoOnly:true and serve as marketing previews, NOT the curriculum
+  // real students study — but they still benefit from a tag so the
+  // admin lint scanner doesn't flag every one of them, and so the
+  // tag is a starting point if a preview ever graduates to real
+  // shipped content. Per-grade strand reflects what kids of that
+  // grade are typically working on across subjects.
+  const PREVIEW_CURR_BY_SID = {
+    nishan:   { grade:'Senior Kindergarten', strand:'Preview — Kindergarten Program 2016',           codes:['OE.13'],   notes:'Demo-only preview level. Replace with subject-specific tag when promoting to real content.' },
+    akaran:   { grade:'Grade 1',             strand:'Preview — multi-subject Grade 1 expectations',  codes:['B3.1'],    notes:'Demo-only preview level.' },
+    rushan:   { grade:'Grade 2',             strand:'Preview — multi-subject Grade 2 expectations',  codes:['B3.2'],    notes:'Demo-only preview level.' },
+    akshayan: { grade:'Grade 3',             strand:'Preview — multi-subject Grade 3 expectations',  codes:['B3.2'],    notes:'Demo-only preview level.' },
+    axel:     { grade:'Grade 3',             strand:'Preview — multi-subject Grade 3 expectations',  codes:['B3.2'],    notes:'Demo-only preview level.' },
+    mia:      { grade:'Grade 3',             strand:'Preview — multi-subject Grade 3 expectations',  codes:['B3.2'],    notes:'Demo-only preview level.' },
+    isaiah:   { grade:'Grade 5',             strand:'Preview — multi-subject Grade 5 expectations',  codes:['B3.5'],    notes:'Demo-only preview level.' },
+    evan:     { grade:'Grade 7',             strand:'Preview — multi-subject Grade 7 expectations',  codes:['B3.5'],    notes:'Demo-only preview level.' },
+    theo:     { grade:'Junior Kindergarten', strand:'Preview — Kindergarten Program 2016',           codes:['OE.13'],   notes:'Demo-only preview level.' },
+    lily:     { grade:'Grade 4',             strand:'Preview — multi-subject Grade 4 expectations',  codes:['C1.4'],    notes:'Demo-only preview level.' },
+    jasper:   { grade:'Grade 6',             strand:'Preview — multi-subject Grade 6 expectations',  codes:['C2.3'],    notes:'Demo-only preview level.' },
+    nora:     { grade:'Grade 8',             strand:'Preview — multi-subject Grade 8 expectations',  codes:['C2.4'],    notes:'Demo-only preview level.' },
+  };
+  // Pull SID out of the activity id (w1-<sid>-<letter><num>) and look
+  // up its preview curriculum. Falls back to a minimal tag if the SID
+  // isn't in the map — analyzer's no-grade error stays meaningful.
+  const previewCurrFor = (id) => {
+    const m = /^w\d+-([a-z]+)-/.exec(id || '');
+    if(!m) return null;
+    return PREVIEW_CURR_BY_SID[m[1]] || null;
+  };
   // Compact activity builder: 5 lines per level instead of 15.
   const P = (id, title, emoji, intro, qs) => ({
     id, title, emoji, demoOnly:true,
+    curriculum: previewCurrFor(id),
     lesson:{ title:title, intro:intro,
       example:'Preview lesson — real students unlock this after finishing Levels 1–5 in every subject!',
       hint:'Parents: this is a sample of upcoming content.' },
