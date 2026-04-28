@@ -2522,7 +2522,8 @@ tbody tr:last-child td{border-bottom:none}
         this.textContent = 'Saving…';
         try {
           var resp = await api('/admin/curriculum/global-override', {
-            method:'PUT', body:{ id: aid, override: override }
+            // Worker expects `activityId` (not `id`) on the PUT body.
+            method:'PUT', body:{ activityId: aid, override: override }
           });
           curriculumState.overrides[aid] = (resp && resp.override) || override;
           curriculumState.overridesUpdatedAt = (resp && resp.updatedAt) || Date.now();
@@ -3179,7 +3180,8 @@ tbody tr:last-child td{border-bottom:none}
     try {
       var resp = await api('/admin/curriculum/global-override', {
         method: 'PUT',
-        body: { id: aid, override: blob }
+        // Worker expects `activityId` (not `id`) on the PUT body.
+        body: { activityId: aid, override: blob }
       });
       curriculumState.overrides[aid] = (resp && resp.override) || blob;
       curriculumState.overridesUpdatedAt = (resp && resp.updatedAt) || Date.now();
