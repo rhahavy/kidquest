@@ -371,6 +371,48 @@ tbody tr:last-child td{border-bottom:none}
 .cv-vt-meta{font-size:11.5px;color:#64748b;line-height:1.4}
 .cv-vt-meta strong{color:var(--ink);font-size:13px;display:block}
 .cv-videos-empty{padding:40px 20px;text-align:center;color:#64748b;font-size:14px;background:#fff;border:1px solid var(--line);border-radius:10px}
+
+/* ===== Preview tab ===== Lightweight mirror of the kid-facing lesson
+   layout. Read-only render of formDraft so the operator can sanity-
+   check what shipped before clicking Save. */
+.cp-empty{padding:30px 20px;text-align:center;color:#94a3b8;font-size:13px;border:1px dashed var(--line);border-radius:10px;background:#fafafa}
+.cp-meta{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:14px;font-size:11.5px;color:#64748b}
+.cp-meta .chip{background:#f3f4f6;padding:3px 8px;border-radius:999px;font-weight:600;color:#475569;font-size:11px}
+.cp-meta .chip.demo{background:#fef3c7;color:#78350f}
+.cp-meta .chip.hidden{background:#1a1035;color:#fff}
+.cp-card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin-bottom:12px;box-shadow:0 2px 6px rgba(0,0,0,.04)}
+.cp-lesson-card{background:linear-gradient(180deg,#faf9ff,#fff);border-color:rgba(108,92,231,.18)}
+.cp-lesson-head{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+.cp-lesson-emoji{width:48px;height:48px;border-radius:50%;background:#f3f0ff;display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0}
+.cp-lesson-titles{flex:1;min-width:0}
+.cp-lesson-titles .cp-act-title{font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em}
+.cp-lesson-titles .cp-lesson-title{font-size:18px;font-weight:800;color:var(--ink);line-height:1.2}
+.cp-block{margin:8px 0 0;font-size:13.5px;line-height:1.55;color:var(--ink2)}
+.cp-block strong{color:var(--ink);display:inline}
+.cp-block-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#64748b;display:block;margin-top:8px;margin-bottom:2px}
+.cp-q-label{font-size:11px;font-weight:800;color:var(--primary);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;display:flex;gap:8px;align-items:center}
+.cp-q-label .cp-q-num{background:var(--primary);color:#fff;padding:2px 8px;border-radius:999px;font-size:11px}
+.cp-q-label .cp-q-type{color:#64748b;font-size:10.5px;background:#f3f4f6;padding:2px 7px;border-radius:6px;text-transform:lowercase;letter-spacing:.02em}
+.cp-passage{margin:8px 0 12px;padding:12px 14px;background:#f8fafc;border-left:3px solid var(--primary);border-radius:6px;font-size:14px;line-height:1.55;color:var(--ink2)}
+.cp-q-text{font-size:15px;font-weight:700;color:var(--ink);line-height:1.4;margin:6px 0 10px}
+.cp-choices{display:flex;flex-direction:column;gap:6px}
+.cp-choice{padding:8px 12px;border:1.5px solid var(--line);border-radius:8px;font-size:13.5px;color:var(--ink2);background:#fff;display:flex;align-items:center;gap:10px}
+.cp-choice .cp-choice-letter{display:inline-flex;width:22px;height:22px;border-radius:50%;background:#f3f4f6;color:#64748b;font-size:11px;font-weight:800;align-items:center;justify-content:center;flex-shrink:0}
+.cp-choice.correct{border-color:#16a34a;background:#dcfce7;color:#14532d;font-weight:700}
+.cp-choice.correct .cp-choice-letter{background:#16a34a;color:#fff}
+.cp-choice.correct::after{content:'✓ correct';margin-left:auto;font-size:11px;color:#16a34a;font-weight:800}
+.cp-q-write{padding:14px;background:#f8fafc;border:1px dashed var(--line);border-radius:10px;color:#64748b;font-size:13px}
+.cp-pairs,.cp-items{display:flex;flex-direction:column;gap:6px;font-size:13px}
+.cp-pair{display:flex;gap:8px;padding:6px 10px;background:#f8fafc;border-radius:6px}
+.cp-pair-l{font-weight:700;color:var(--ink)}
+.cp-pair-r{color:var(--ink2)}
+.cp-item{padding:6px 10px;background:#f8fafc;border-radius:6px;color:var(--ink);font-size:13px}
+.cp-item-num{display:inline-block;width:22px;height:22px;border-radius:50%;background:var(--primary);color:#fff;font-size:11px;font-weight:800;text-align:center;line-height:22px;margin-right:8px}
+.cp-compare{display:flex;gap:8px;margin-top:6px}
+.cp-compare .cp-cmp{flex:1;padding:10px;border:1.5px solid var(--line);border-radius:8px;text-align:center;font-size:13.5px;background:#fff}
+.cp-compare .cp-cmp.correct{border-color:#16a34a;background:#dcfce7;color:#14532d;font-weight:700}
+.cp-help-bar{padding:10px 14px;background:#f3f7ff;border:1px solid rgba(108,92,231,.18);border-radius:8px;font-size:12px;color:#475569;margin-bottom:14px}
+.cp-help-bar strong{color:var(--ink)}
 .curr-empty{grid-column:1/-1;text-align:center;color:var(--ink3);padding:40px 20px;font-size:14px}
 @media (max-width:768px){
   .curr-search{min-width:0;width:100%}
@@ -744,6 +786,7 @@ tbody tr:last-child td{border-bottom:none}
            comes from. -->
       <div class="cf-tabs" role="tablist" style="display:flex;gap:6px;margin-bottom:14px;border-bottom:1px solid var(--line)">
         <button class="cf-tab active" id="cf-tab-form" data-tab="form" role="tab" type="button">📝 Form</button>
+        <button class="cf-tab" id="cf-tab-preview" data-tab="preview" role="tab" type="button">👁️ Preview</button>
         <button class="cf-tab" id="cf-tab-json" data-tab="json" role="tab" type="button">{ } Raw JSON</button>
       </div>
 
@@ -820,6 +863,15 @@ tbody tr:last-child td{border-bottom:none}
           <strong>Allowed top-level keys:</strong> <code>title</code>, <code>emoji</code>, <code>videoIds</code>, <code>curriculum</code>, <code>lesson</code>, <code>questions</code>, <code>stretchQuestions</code>, <code>demoOnly</code>, <code>_hidden</code>.<br>
           Set <code>_hidden:true</code> to remove this lesson from kids. The activity <code>id</code> is preserved automatically.
         </div>
+      </div>
+
+      <!-- ============== PREVIEW VIEW (kid's-eye render) ============== -->
+      <!-- Renders the in-progress draft (current Form contents) the way a
+           kid actually sees it — lesson intro card, then each question
+           card with the correct answer highlighted. No save side-effects;
+           this view is read-only. -->
+      <div id="cf-view-preview" class="cf-view" style="display:none">
+        <div id="cf-preview-body"></div>
       </div>
 
       <div id="curr-edit-error" style="display:none;margin-top:10px;padding:10px;background:#fee2e2;border-radius:8px;color:#991b1b;font-size:13px;font-weight:600"></div>
@@ -3049,16 +3101,138 @@ tbody tr:last-child td{border-bottom:none}
     return override;
   }
 
-  // Tab switching — Form ↔ Raw JSON. When switching to Raw JSON, fill the
-  // textarea with the current form state so power users can keep editing
-  // without losing their in-progress changes.
+  // ===== Lesson preview renderer =====
+  // Rebuilds a simplified, kid-styled view of the current formDraft so
+  // the operator can sanity-check titles, passages, choices, and the
+  // correct-answer assignment before clicking Save. Read-only — no
+  // events or side-effects.
+  function renderLessonPreview(){
+    var box = document.getElementById('cf-preview-body');
+    if(!box) return;
+    if(!formDraft || !formDraft.activity){
+      box.innerHTML = '<div class="cp-empty">No lesson loaded.</div>';
+      return;
+    }
+    // Pull the latest form values into the draft so the preview reflects
+    // the operator's in-flight typing (we run readFormToOverride for the
+    // side-effect of mutating formDraft.activity from the inputs).
+    try { readFormToOverride(); } catch(_){ /* validation may fail; preview the draft anyway */ }
+    var a = formDraft.activity;
+    var hidden = !!formDraft.hidden;
+    var meta = [];
+    var info = curriculumState.currentEdit && curriculumState.currentEdit.row;
+    if(info){
+      meta.push('<span class="chip">Week '+escapeHtml(info.week)+'</span>');
+      meta.push('<span class="chip">'+escapeHtml(info.grade || info.sid)+'</span>');
+      meta.push('<span class="chip">'+escapeHtml(info.subject)+'</span>');
+    }
+    if(a.demoOnly) meta.push('<span class="chip demo">demo preview</span>');
+    if(hidden)     meta.push('<span class="chip hidden">hidden from kids</span>');
+    var helpBar = '<div class="cp-help-bar">'+
+      '<strong>👁️ Kid\'s-eye preview.</strong> This is what your draft renders to right now. '+
+      'Edit fields on the Form tab and switch back here to see the result. Nothing on this tab saves.'+
+    '</div>';
+    var html = helpBar +
+      (meta.length ? '<div class="cp-meta">'+meta.join('')+'</div>' : '');
+
+    // Lesson intro card
+    var lesson = a.lesson || {};
+    var lessonHtml = (
+      '<div class="cp-card cp-lesson-card">'+
+        '<div class="cp-lesson-head">'+
+          '<div class="cp-lesson-emoji">'+escapeHtml(a.emoji || '📚')+'</div>'+
+          '<div class="cp-lesson-titles">'+
+            '<div class="cp-act-title">Activity · '+escapeHtml(a.title || '(untitled)')+'</div>'+
+            (lesson.title ? '<div class="cp-lesson-title">'+escapeHtml(lesson.title)+'</div>' : '')+
+          '</div>'+
+        '</div>'+
+        (lesson.intro   ? '<div class="cp-block">'+escapeHtml(lesson.intro)+'</div>' : '')+
+        (lesson.example ? '<span class="cp-block-label">Example</span><div class="cp-block">'+escapeHtml(lesson.example)+'</div>' : '')+
+        (lesson.hint    ? '<span class="cp-block-label">Hint</span><div class="cp-block">'+escapeHtml(lesson.hint)+'</div>' : '')+
+      '</div>'
+    );
+    html += lessonHtml;
+
+    // Question cards. Walk the questions array and render each.
+    // For passage carryover (Q2-N inheriting an earlier passage on a
+    // reading lesson), we track the most-recent passage and surface it
+    // again on follow-up MCQs — same behavior as the kid app.
+    var qs = Array.isArray(a.questions) ? a.questions : [];
+    if(!qs.length){
+      html += '<div class="cp-empty">No questions yet. Add one on the Form tab.</div>';
+    }
+    var carriedPassage = null;
+    qs.forEach(function(q, qi){
+      var label = '<div class="cp-q-label">'+
+        '<span class="cp-q-num">Q'+(qi+1)+'</span>'+
+        '<span class="cp-q-type">'+escapeHtml(q.type || 'mcq')+'</span>'+
+      '</div>';
+      var passageHtml = '';
+      if(q.type === 'passage' && q.passage){
+        carriedPassage = q.passage;
+        passageHtml = '<div class="cp-passage">'+escapeHtml(q.passage)+'</div>';
+      } else if((q.type === 'mcq' || q.type === 'fill') && carriedPassage){
+        passageHtml = '<div class="cp-passage">'+escapeHtml(carriedPassage)+'</div>';
+      }
+      var qText = q.q ? '<div class="cp-q-text">'+escapeHtml(q.q)+'</div>' : '';
+      var bodyHtml = '';
+      if(q.type === 'mcq' || q.type === 'passage' || q.type === 'fill'){
+        var choices = Array.isArray(q.choices) ? q.choices : [];
+        var ans = (typeof q.answer === 'number') ? q.answer : -1;
+        bodyHtml = '<div class="cp-choices">' +
+          choices.map(function(c, ci){
+            var letter = String.fromCharCode(65 + ci); // A, B, C, D…
+            var cls = (ci === ans) ? 'cp-choice correct' : 'cp-choice';
+            return '<div class="'+cls+'"><span class="cp-choice-letter">'+letter+'</span>'+escapeHtml(c || '')+'</div>';
+          }).join('') +
+        '</div>';
+      } else if(q.type === 'match'){
+        var pairs = Array.isArray(q.pairs) ? q.pairs : [];
+        bodyHtml = '<div class="cp-pairs">' +
+          pairs.map(function(p){
+            return '<div class="cp-pair"><span class="cp-pair-l">'+escapeHtml((p && p[0]) || '')+'</span><span>↔</span><span class="cp-pair-r">'+escapeHtml((p && p[1]) || '')+'</span></div>';
+          }).join('') +
+        '</div>';
+      } else if(q.type === 'order'){
+        var items = Array.isArray(q.items) ? q.items : [];
+        var order = Array.isArray(q.correctOrder) ? q.correctOrder : items.map(function(_, i){return i;});
+        bodyHtml = '<div class="cp-items">' +
+          order.map(function(idx, pos){
+            return '<div class="cp-item"><span class="cp-item-num">'+(pos+1)+'</span>'+escapeHtml(items[idx] || '(missing)')+'</div>';
+          }).join('') +
+        '</div>';
+      } else if(q.type === 'compare'){
+        var ansAB = (q.answer === 'a' || q.answer === 'b') ? q.answer : null;
+        bodyHtml = '<div class="cp-compare">'+
+          '<div class="cp-cmp '+(ansAB==='a'?'correct':'')+'">A: '+escapeHtml(q.a || '')+'</div>'+
+          '<div class="cp-cmp '+(ansAB==='b'?'correct':'')+'">B: '+escapeHtml(q.b || '')+'</div>'+
+        '</div>';
+      } else if(q.type === 'write'){
+        bodyHtml = '<div class="cp-q-write">'+
+          '<strong>✍️ Write task.</strong> Prompt: '+escapeHtml(q.prompt || q.q || '(no prompt)')+
+        '</div>';
+      } else {
+        bodyHtml = '<div class="cp-q-write">Type <code>'+escapeHtml(q.type || '?')+'</code> — preview not yet specialised. The kid app still renders this normally.</div>';
+      }
+      html += '<div class="cp-card">'+ label + passageHtml + qText + bodyHtml +'</div>';
+    });
+    box.innerHTML = html;
+  }
+
+  // Tab switching — Form ↔ Preview ↔ Raw JSON. Switching to Raw JSON
+  // fills the textarea with the current form state. Switching FROM Raw
+  // JSON back to Form rebuilds the draft from the textarea (best-effort
+  // — invalid JSON keeps the existing form state). Switching to Preview
+  // re-renders against the latest form values.
   function switchEditorTab(tab){
-    var formActive = (tab !== 'json');
-    document.getElementById('cf-tab-form').classList.toggle('active', formActive);
-    document.getElementById('cf-tab-json').classList.toggle('active', !formActive);
-    document.getElementById('cf-view-form').style.display = formActive ? '' : 'none';
-    document.getElementById('cf-view-json').style.display = formActive ? 'none' : '';
-    if(!formActive){
+    var validTab = (tab === 'form' || tab === 'json' || tab === 'preview') ? tab : 'form';
+    document.getElementById('cf-tab-form').classList.toggle('active',    validTab === 'form');
+    document.getElementById('cf-tab-preview').classList.toggle('active', validTab === 'preview');
+    document.getElementById('cf-tab-json').classList.toggle('active',    validTab === 'json');
+    document.getElementById('cf-view-form').style.display    = validTab === 'form'    ? '' : 'none';
+    document.getElementById('cf-view-preview').style.display = validTab === 'preview' ? '' : 'none';
+    document.getElementById('cf-view-json').style.display    = validTab === 'json'    ? '' : 'none';
+    if(validTab === 'json'){
       // Sync: form → JSON
       try {
         var ov = readFormToOverride();
@@ -3066,7 +3240,7 @@ tbody tr:last-child td{border-bottom:none}
       } catch(_){
         // If form validation fails, leave whatever was there.
       }
-    } else {
+    } else if(validTab === 'form'){
       // Sync: JSON → form (best-effort — invalid JSON keeps form state)
       try {
         var raw = ($currEditJson.value || '').trim();
@@ -3080,6 +3254,8 @@ tbody tr:last-child td{border-bottom:none}
           }
         }
       } catch(_){}
+    } else if(validTab === 'preview'){
+      renderLessonPreview();
     }
   }
 
@@ -3205,8 +3381,9 @@ tbody tr:last-child td{border-bottom:none}
   });
 
   // Tab toggle wiring (Form ↔ Raw JSON)
-  document.getElementById('cf-tab-form').addEventListener('click', function(){ switchEditorTab('form'); });
-  document.getElementById('cf-tab-json').addEventListener('click', function(){ switchEditorTab('json'); });
+  document.getElementById('cf-tab-form').addEventListener('click',    function(){ switchEditorTab('form'); });
+  document.getElementById('cf-tab-preview').addEventListener('click', function(){ switchEditorTab('preview'); });
+  document.getElementById('cf-tab-json').addEventListener('click',    function(){ switchEditorTab('json'); });
 
   // + Add video — append a new empty videoIds slot the operator can fill.
   document.getElementById('cf-add-video').addEventListener('click', function(){
@@ -3241,9 +3418,11 @@ tbody tr:last-child td{border-bottom:none}
     if(!curriculumState.currentEdit) return;
     var aid = curriculumState.currentEdit.id;
     var blob;
-    var formActive = document.getElementById('cf-tab-form').classList.contains('active');
+    // Save from Form OR Preview reads the form draft; save from Raw JSON
+    // reads the textarea. (Preview is form-driven, just rendered.)
+    var jsonActive = document.getElementById('cf-tab-json').classList.contains('active');
     try {
-      blob = formActive ? readFormToOverride() : readEditorJson();
+      blob = jsonActive ? readEditorJson() : readFormToOverride();
     }
     catch(e){ showEditorError(e.message); return; }
     if(Object.keys(blob).length === 0){
