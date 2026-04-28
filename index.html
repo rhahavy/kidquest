@@ -212,12 +212,12 @@ section.tight{padding:56px 0}
 @media(max-width:640px){.plans{grid-template-columns:1fr}}
 .plan{background:var(--card);border-radius:var(--r-lg);padding:32px;box-shadow:var(--shadow);border:1.5px solid var(--line);position:relative;display:flex;flex-direction:column}
 /* Featured plan = "recommended for teachers", NOT selected. We keep the
-   same neutral border as the unfeatured plan so the card doesn't read as
-   a clicked/active state — instead, the elevated drop-shadow, slight
-   upward lift, and "For teachers" badge convey emphasis. The previous
-   solid-primary border was tripping users into thinking they'd clicked
-   the card. */
-.plan.featured{box-shadow:0 20px 50px rgba(108,92,231,.22);transform:translateY(-6px)}
+   same neutral border as the unfeatured plan so the card doesn't read
+   as a clicked/active state, and we keep both cards on the SAME baseline
+   (no translateY lift) so the row reads as level/intentional rather than
+   misaligned. Emphasis comes from the "For teachers" badge plus a
+   stronger purple-tinted drop-shadow. */
+.plan.featured{box-shadow:0 20px 50px rgba(108,92,231,.22)}
 .plan-badge{position:absolute;top:-14px;left:50%;transform:translateX(-50%);background:linear-gradient(120deg,var(--primary),var(--pink));color:#fff;padding:6px 14px;border-radius:999px;font-size:12px;font-weight:800;letter-spacing:.04em;text-transform:uppercase}
 .plan-name{font-size:14px;font-weight:800;color:var(--primary);letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px}
 .plan-users{font-size:13px;color:var(--ink3);margin-bottom:20px}
