@@ -2136,6 +2136,147 @@ async function handleAdminTenantSuspendRoute(request, env, corsOrigin, mode) {
   return json({ ok: true, tenantId, suspended: t.suspended, stripe: stripeResult }, 200, corsOrigin);
 }
 
+// ====================================================================
+// REWARD ORDERS — operator-administered prize fulfillment
+// --------------------------------------------------------------------
+// Each tenant tracks their own reward orders in `tenant:<id>:data` under
+// `orders` (see placeOrder() in app/index.html). The OPERATOR (admin) is
+// the one who actually ships/delivers the prize, so we need a global
+// view across all tenants + a way to mark fulfillment.
+//
+// Endpoints:
+//   GET /admin/orders[?status=pending&limit=200]
+//     Aggregates orders from every tenant data blob. Adds tenant
+//     context (label, code, isDemo) to each order so the operator can
+//     contact the family if needed. Default returns pending only.
+//
+//   POST /admin/orders/<tenantId>/<orderId>/status
+//     Body: { status: 'pending'|'fulfilled'|'cancelled', note?: string }
+//     Updates the order in-place inside the tenant's data blob and
+//     stamps statusUpdatedAt + statusUpdatedBy:'admin'. We do NOT
+//     refund coins on cancel — that's intentional: a cancelled order
+//     usually means the kid still got something equivalent (substitute
+//     prize, store credit, etc.) so silently restoring the coin
+//     balance would inflate the economy. If a real refund is needed,
+//     the operator does it via the (now-removed) per-tenant Coin
+//     Adjuster — or, post-removal, a direct KV edit.
+// ====================================================================
+
+async function handleAdminListOrdersRoute(request, env, corsOrigin) {
+  if (!env.KV) return json({ error: 'kv_not_bound' }, 500, corsOrigin);
+  if (!checkAdminAuth(request, env)) return json({ error: 'admin_unauthorized' }, 401, corsOrigin);
+  const ip = request.headers.get('cf-connecting-ip') || '';
+  const rl = await rateLimitHit(env, `ratelimit:admin-orders:ip:${ip}`, RL.ADMIN_IP.max, RL.ADMIN_IP.window);
+  if (!rl.ok) return json({ error: 'rate_limited', resetAt: rl.resetAt }, 429, corsOrigin);
+
+  const url = new URL(request.url);
+  const filterStatus = (url.searchParams.get('status') || '').toLowerCase();
+  const includeDemo  = url.searchParams.get('includeDemo') === '1';
+  const hardLimit    = Math.min(500, Math.max(10, parseInt(url.searchParams.get('limit') || '200', 10)));
+
+  // List every tenant. KV.list returns a flat name list; we want the
+  // `:data` keys specifically because that's where orders live. We
+  // also need the parent `tenant:<id>` blob for the label/code/isDemo
+  // context, so we batch those reads after we've collected the data
+  // keys to avoid N round-trips when the orders array is empty.
+  const list = await env.KV.list({ prefix: 'tenant:', limit: 1000 });
+  const dataKeys = list.keys.filter(k => k.name.endsWith(':data'));
+
+  const orders = [];
+  // Walk tenants in order. We bail early once orders.length hits hardLimit.
+  for (const k of dataKeys) {
+    if (orders.length >= hardLimit) break;
+    const tenantId = k.name.slice('tenant:'.length, -':data'.length);
+    let dataRaw;
+    try { dataRaw = await env.KV.get(k.name); } catch { continue; }
+    if (!dataRaw) continue;
+    let data;
+    try { data = JSON.parse(dataRaw); } catch { continue; }
+    if (!Array.isArray(data.orders) || data.orders.length === 0) continue;
+
+    // Lazy fetch of the tenant header blob — only for tenants that
+    // actually have orders, so empty tenants don't trigger a round-trip.
+    let tenant = {};
+    try {
+      const tRaw = await env.KV.get(`tenant:${tenantId}`);
+      if (tRaw) tenant = JSON.parse(tRaw) || {};
+    } catch {}
+
+    if (!includeDemo && tenant.isDemo) continue;
+
+    for (const o of data.orders) {
+      if (!o || typeof o !== 'object') continue;
+      const status = String(o.status || 'pending').toLowerCase();
+      if (filterStatus && status !== filterStatus) continue;
+      orders.push({
+        ...o,
+        status,
+        tenantId,
+        tenantLabel: tenant.label || '',
+        tenantCode: (tenant.code || '').toUpperCase(),
+        tenantIsDemo: !!tenant.isDemo,
+        customerEmail: tenant.customerEmail || '',
+      });
+      if (orders.length >= hardLimit) break;
+    }
+  }
+
+  // Newest first — operators want the most recent pending orders at
+  // the top of the list. Pending status sorts first within same-day
+  // ties because operators care about action items.
+  orders.sort((a, b) => {
+    const ap = a.status === 'pending' ? 0 : 1;
+    const bp = b.status === 'pending' ? 0 : 1;
+    if (ap !== bp) return ap - bp;
+    return (b.requestedAt || 0) - (a.requestedAt || 0);
+  });
+
+  return json({ ok: true, orders, total: orders.length }, 200, corsOrigin);
+}
+
+async function handleAdminUpdateOrderStatusRoute(request, env, corsOrigin) {
+  if (!env.KV) return json({ error: 'kv_not_bound' }, 500, corsOrigin);
+  if (!checkAdminAuth(request, env)) return json({ error: 'admin_unauthorized' }, 401, corsOrigin);
+  const ip = request.headers.get('cf-connecting-ip') || '';
+  const rl = await rateLimitHit(env, `ratelimit:admin-orders-update:ip:${ip}`, RL.ADMIN_IP.max, RL.ADMIN_IP.window);
+  if (!rl.ok) return json({ error: 'rate_limited', resetAt: rl.resetAt }, 429, corsOrigin);
+
+  const url = new URL(request.url);
+  // /admin/orders/<tenantId>/<orderId>/status
+  // split = ['', 'admin', 'orders', '<tenantId>', '<orderId>', 'status']
+  const parts = url.pathname.split('/');
+  const tenantId = parts[3] || '';
+  const orderId  = parts[4] || '';
+  if (!tenantId || !orderId) return json({ error: 'missing_params' }, 400, corsOrigin);
+
+  let body = {};
+  try { body = await request.json(); } catch { return json({ error: 'bad_json' }, 400, corsOrigin); }
+  const next = String(body.status || '').toLowerCase();
+  const VALID = ['pending', 'fulfilled', 'cancelled'];
+  if (!VALID.includes(next)) return json({ error: 'invalid_status', valid: VALID }, 400, corsOrigin);
+
+  const dataKey = `tenant:${tenantId}:data`;
+  const raw = await env.KV.get(dataKey);
+  if (!raw) return json({ error: 'tenant_not_found' }, 404, corsOrigin);
+  let data;
+  try { data = JSON.parse(raw); } catch { return json({ error: 'malformed' }, 500, corsOrigin); }
+  if (!Array.isArray(data.orders)) return json({ error: 'no_orders_array' }, 404, corsOrigin);
+
+  const idx = data.orders.findIndex(o => o && o.id === orderId);
+  if (idx < 0) return json({ error: 'order_not_found' }, 404, corsOrigin);
+
+  const order = data.orders[idx];
+  order.status = next;
+  order.statusUpdatedAt = Date.now();
+  order.statusUpdatedBy = 'admin';
+  if (typeof body.note === 'string' && body.note.trim()) {
+    order.adminNote = body.note.trim().slice(0, 500);
+  }
+
+  await env.KV.put(dataKey, JSON.stringify(data));
+  return json({ ok: true, order }, 200, corsOrigin);
+}
+
 // POST /admin/tenant/:id/resend-code — re-sends the welcome email
 // to the customer's address on file. Useful when a customer says
 // they never got the email and contacts you directly. Same email
@@ -4231,6 +4372,14 @@ export default {
       // above any startsWith('/admin/') catchalls.
       if (routeKey === 'GET /admin/demo-pins')           return await handleAdminListDemoPinsRoute(request, env, corsOrigin);
       if (routeKey === 'POST /admin/demo-pins/generate') return await handleAdminGenerateDemoPinRoute(request, env, corsOrigin);
+      // Reward orders — operator-administered prize fulfillment.
+      // Aggregates orders across every tenant + lets the operator
+      // mark fulfilled / cancelled on each one. See handler block above
+      // for the data model + why we don't auto-refund coins.
+      if (routeKey === 'GET /admin/orders')              return await handleAdminListOrdersRoute(request, env, corsOrigin);
+      if (request.method === 'POST' && url.pathname.startsWith('/admin/orders/') && url.pathname.endsWith('/status')) {
+        return await handleAdminUpdateOrderStatusRoute(request, env, corsOrigin);
+      }
       // Public demo-PIN request (visitor on the marketing page).
       if (routeKey === 'POST /demo/request') return await handleDemoRequestRoute(request, env, corsOrigin);
       // GET /admin/tenant/<id>/charges — list refundable charges. Match

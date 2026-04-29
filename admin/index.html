@@ -171,6 +171,36 @@ tbody tr:last-child td{border-bottom:none}
 .panel-head{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--line);background:#faf9ff;gap:12px;flex-wrap:wrap}
 .panel-head h2{font-size:15px;font-weight:800;color:var(--ink);display:flex;align-items:center;gap:8px}
 .panel-head h2 .count{background:var(--primary);color:#fff;padding:2px 9px;border-radius:999px;font-size:11px;font-weight:800;letter-spacing:.4px}
+.panel-head h2 .count.urgent{background:#ef4444;animation:countPulse 1.6s ease-in-out infinite}
+@keyframes countPulse{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.55)}50%{box-shadow:0 0 0 7px rgba(239,68,68,0)}}
+
+/* Reward orders panel — operator view of every prize order across all
+   tenants. Each row shows what to ship, who to ship to (tenant + kid),
+   and a Mark Fulfilled button. Filter chips along the top scope to
+   pending / fulfilled / cancelled / all. Uses same .panel + .filter
+   styles as the rest of the admin so it feels native. */
+#orders-panel .panel-body{padding:0}
+#orders-panel table{width:100%;border-collapse:collapse;font-size:13.5px}
+#orders-panel thead th{text-align:left;padding:11px 12px;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.9px;color:var(--ink3);background:#faf9ff;border-bottom:1.5px solid var(--line);white-space:nowrap}
+#orders-panel tbody td{padding:12px;border-bottom:1px solid var(--line);vertical-align:top}
+#orders-panel tbody tr:hover{background:#faf9ff}
+#orders-panel tbody tr:last-child td{border-bottom:none}
+#orders-panel .ord-when{font-size:12px;color:var(--ink2);white-space:nowrap}
+#orders-panel .ord-tenant{font-weight:700;color:var(--ink)}
+#orders-panel .ord-tenant-meta{font-size:11px;color:var(--ink3);font-family:var(--mono);margin-top:2px}
+#orders-panel .ord-student{font-weight:700;color:var(--ink)}
+#orders-panel .ord-student-meta{font-size:11px;color:var(--ink3);margin-top:2px}
+#orders-panel .ord-item{font-weight:700}
+#orders-panel .ord-item-meta{font-size:11px;color:var(--ink3);margin-top:2px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+#orders-panel .ord-item-meta a{color:var(--primary);text-decoration:none}
+#orders-panel .ord-item-meta a:hover{text-decoration:underline}
+#orders-panel .ord-cost{font-family:var(--mono);font-weight:700;color:var(--ink);white-space:nowrap}
+#orders-panel .ord-status{padding:3px 10px;border-radius:999px;font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;display:inline-block}
+#orders-panel .ord-status-pending{background:#fef3c7;color:#92400e}
+#orders-panel .ord-status-fulfilled{background:#dcfce7;color:#166534}
+#orders-panel .ord-status-cancelled{background:#fee2e2;color:#991b1b}
+#orders-panel .ord-actions{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+#orders-panel .demo-tag{background:#e0f2fe;color:#075985;padding:1px 7px;border-radius:6px;font-size:10px;font-weight:700;margin-left:6px;text-transform:uppercase;letter-spacing:.4px}
 .panel-body{padding:14px 18px}
 .demo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
 .demo-pin-card{background:#fafafa;border:1.5px solid var(--line);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:8px}
@@ -598,6 +628,27 @@ tbody tr:last-child td{border-bottom:none}
     </div>
     <div class="panel-body" id="demo-body">
       <div class="demo-empty"><span class="spinner"></span> Loading demo PINs…</div>
+    </div>
+  </div>
+
+  <!-- Reward Orders panel. Operator (admin) view of every prize order
+       across all tenants — admin physically ships/delivers prizes, so
+       this is the action queue. Pending count is highlighted red so it
+       grabs attention; click filter chips to scope to fulfilled /
+       cancelled / all. Per-row "Mark Fulfilled" button writes through
+       to the worker, which updates the tenant's orders array in KV. -->
+  <div class="panel" id="orders-panel">
+    <div class="panel-head">
+      <h2>🎁 Reward Orders <span class="count urgent" id="orders-pending-count">0</span></h2>
+      <div class="filter" id="orders-filter-bar">
+        <button data-of="pending" class="active">Pending</button>
+        <button data-of="fulfilled">Fulfilled</button>
+        <button data-of="cancelled">Cancelled</button>
+        <button data-of="all">All</button>
+      </div>
+    </div>
+    <div class="panel-body" id="orders-body">
+      <div class="loading-row" style="padding:40px;text-align:center;color:var(--ink2)"><span class="spinner"></span> Loading orders…</div>
     </div>
   </div>
 
@@ -1634,6 +1685,147 @@ tbody tr:last-child td{border-bottom:none}
     }
   });
 
+  // ===== Reward Orders panel =====
+  // Operator (admin) view of every prize order across all tenants.
+  // Loads via /admin/orders, lets the operator mark fulfilled /
+  // cancelled / re-pending. The pending-count badge above the table
+  // is what tells the operator there's work to do.
+  var ordersFilter = 'pending';
+  var $ordersBody = document.getElementById('orders-body');
+  var $ordersFilterBar = document.getElementById('orders-filter-bar');
+  var $ordersPendingCount = document.getElementById('orders-pending-count');
+
+  function fmtOrderWhen(ms){
+    if(!ms) return '—';
+    var d = new Date(ms);
+    var diffMin = Math.floor((Date.now() - ms) / 60000);
+    if(diffMin < 1) return 'just now';
+    if(diffMin < 60) return diffMin+'m ago';
+    if(diffMin < 60*24) return Math.floor(diffMin/60)+'h ago';
+    if(diffMin < 60*24*7) return Math.floor(diffMin/(60*24))+'d ago';
+    return d.toLocaleDateString(undefined, {month:'short', day:'numeric'});
+  }
+
+  function renderOrders(orders, totalPending){
+    if(typeof totalPending === 'number'){
+      $ordersPendingCount.textContent = totalPending;
+      $ordersPendingCount.classList.toggle('urgent', totalPending > 0);
+    }
+    if(!orders || !orders.length){
+      var emptyMsg = ordersFilter === 'pending'
+        ? '<div class="emoji">🎉</div>No pending orders. Every prize is shipped or cancelled.'
+        : '<div class="emoji">📭</div>No '+escapeHtml(ordersFilter)+' orders.';
+      $ordersBody.innerHTML = '<div class="empty">'+emptyMsg+'</div>';
+      return;
+    }
+    var rows = orders.map(function(o){
+      var statusClass = 'ord-status-' + (o.status || 'pending');
+      var demo = o.tenantIsDemo ? '<span class="demo-tag">Demo</span>' : '';
+      var amazon = o.amazonLink
+        ? '<a href="'+escapeHtml(o.amazonLink)+'" target="_blank" rel="noopener">Amazon ↗</a>'
+        : '';
+      var price = (o.approxPrice != null && o.approxPrice !== '')
+        ? '<span style="color:var(--ink3)">≈$'+escapeHtml(String(o.approxPrice))+'</span>'
+        : '';
+      var category = o.itemCategory
+        ? '<span style="color:var(--ink3)">'+escapeHtml(o.itemCategory)+'</span>'
+        : '';
+      var actions = [];
+      if(o.status !== 'fulfilled'){
+        actions.push('<button class="btn btn-primary btn-sm" data-act="fulfill" data-tenant="'+escapeHtml(o.tenantId)+'" data-order="'+escapeHtml(o.id)+'">✓ Fulfilled</button>');
+      }
+      if(o.status !== 'cancelled'){
+        actions.push('<button class="btn btn-ghost btn-sm" data-act="cancel" data-tenant="'+escapeHtml(o.tenantId)+'" data-order="'+escapeHtml(o.id)+'">Cancel</button>');
+      }
+      if(o.status !== 'pending'){
+        actions.push('<button class="btn btn-ghost btn-sm" data-act="repend" data-tenant="'+escapeHtml(o.tenantId)+'" data-order="'+escapeHtml(o.id)+'">Reopen</button>');
+      }
+      return '<tr>'+
+        '<td><div class="ord-when">'+escapeHtml(fmtOrderWhen(o.requestedAt))+'</div></td>'+
+        '<td><div class="ord-tenant">'+escapeHtml(o.tenantLabel || '(no label)')+demo+'</div>'+
+            '<div class="ord-tenant-meta">'+escapeHtml((o.tenantCode || '').toUpperCase())+
+            (o.customerEmail ? ' · '+escapeHtml(o.customerEmail) : '')+'</div></td>'+
+        '<td><div class="ord-student">'+escapeHtml(o.studentName || '?')+'</div>'+
+            '<div class="ord-student-meta">'+escapeHtml(o.studentGrade || '')+'</div></td>'+
+        '<td><div class="ord-item">'+escapeHtml(o.itemName || '?')+'</div>'+
+            '<div class="ord-item-meta">'+[category, price, amazon].filter(Boolean).join(' · ')+'</div></td>'+
+        '<td><div class="ord-cost">💰 '+escapeHtml(String(o.coinCost || 0))+'</div></td>'+
+        '<td><span class="ord-status '+statusClass+'">'+escapeHtml(o.status || 'pending')+'</span></td>'+
+        '<td><div class="ord-actions">'+actions.join('')+'</div></td>'+
+      '</tr>';
+    }).join('');
+    $ordersBody.innerHTML =
+      '<table>'+
+        '<thead><tr>'+
+          '<th>When</th><th>Tenant</th><th>Student</th><th>Item</th><th>Coins</th><th>Status</th><th style="text-align:right">Actions</th>'+
+        '</tr></thead>'+
+        '<tbody>'+rows+'</tbody>'+
+      '</table>';
+  }
+
+  async function loadOrders(){
+    try {
+      $ordersBody.innerHTML = '<div class="loading-row" style="padding:40px;text-align:center;color:var(--ink2)"><span class="spinner"></span> Loading orders…</div>';
+      var qs = ordersFilter === 'all' ? '' : '?status='+encodeURIComponent(ordersFilter);
+      var data = await api('/admin/orders'+qs);
+      // We always want the pending-count badge to reflect TRUE pending
+      // (across the whole site), not just the filtered slice. Cheapest
+      // way: when we're not already filtering to pending, fire a
+      // count-only request. Tiny duplicate fetch but it keeps the badge
+      // honest without re-engineering the endpoint to return both.
+      var pendingTotal = data.total;
+      if(ordersFilter !== 'pending'){
+        try {
+          var p = await api('/admin/orders?status=pending&limit=10');
+          pendingTotal = (p.orders || []).length;
+        } catch(_){}
+      }
+      renderOrders(data.orders || [], pendingTotal);
+    } catch(e){
+      if(e.message === 'unauthorized') return;
+      $ordersBody.innerHTML = '<div class="empty"><div class="emoji">⚠️</div>Failed to load: '+escapeHtml(e.message)+'</div>';
+    }
+  }
+
+  // Filter chip click — switch active class + reload.
+  $ordersFilterBar.addEventListener('click', function(e){
+    var b = e.target.closest('button[data-of]');
+    if(!b) return;
+    $ordersFilterBar.querySelectorAll('button').forEach(function(x){ x.classList.remove('active'); });
+    b.classList.add('active');
+    ordersFilter = b.getAttribute('data-of');
+    loadOrders();
+  });
+
+  // Per-row action click. Confirms destructive ones (cancel) but
+  // fulfilled is one-click — that's the happy path.
+  $ordersBody.addEventListener('click', async function(e){
+    var btn = e.target.closest('button[data-act]');
+    if(!btn) return;
+    var act      = btn.getAttribute('data-act');
+    var tenantId = btn.getAttribute('data-tenant');
+    var orderId  = btn.getAttribute('data-order');
+    var nextStatus = act === 'fulfill' ? 'fulfilled'
+                   : act === 'cancel'  ? 'cancelled'
+                   : act === 'repend'  ? 'pending'
+                   : null;
+    if(!nextStatus) return;
+    if(act === 'cancel' && !confirm('Mark this order as CANCELLED? Coins are NOT refunded — if you also want to refund, do it via direct KV edit.')) return;
+    var orig = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = '…';
+    try {
+      await api('/admin/orders/'+encodeURIComponent(tenantId)+'/'+encodeURIComponent(orderId)+'/status',
+                { method:'POST', body:{ status: nextStatus } });
+      toast('✓ Marked '+nextStatus, 'success');
+      await loadOrders();
+    } catch(e){
+      toast('Error: '+e.message, 'error');
+      btn.disabled = false;
+      btn.textContent = orig;
+    }
+  });
+
   // -------- Loaders --------
   async function loadStats(){
     try {
@@ -1660,6 +1852,7 @@ tbody tr:last-child td{border-bottom:none}
       loadDemoPins();
       loadGlobalMaintenance();
       loadCatalog();
+      loadOrders();
     } catch(e){
       if(e.message === 'unauthorized') return; // gate already shown
       $body.innerHTML = '<tr><td colspan="6"><div class="empty"><div class="emoji">⚠️</div><h3>Failed to load</h3><p>'+escapeHtml(e.message)+'</p></div></td></tr>';
