@@ -16,7 +16,7 @@
    current version. skipWaiting + clients.claim means the new SW takes
    over on the very next page load after deploy. */
 
-const SW_VERSION = 'kidquest-v120-jk-vs-sk-clear-leap';
+const SW_VERSION = 'kidquest-v121-admin-scanner-cache-bypass';
 const SHELL_CACHE = SW_VERSION + '-shell';
 const RUNTIME_CACHE = SW_VERSION + '-runtime';
 
@@ -73,6 +73,19 @@ self.addEventListener('fetch', (event) => {
   // Same-origin HTML / JS / CSS / icons → cache-first with background
   // refresh. This is what makes the app open instantly offline.
   if(url.origin === self.location.origin){
+    // Cache-bust escape hatch — when the URL carries adminEditor=1 (set
+    // by the admin's hidden iframe that extracts the curriculum WEEKS
+    // data), skip the cache entirely and go straight to network. The
+    // admin scanner relies on getting the FRESHEST app HTML to read
+    // post-deploy curriculum changes; the iframe was already adding a
+    // ?_=<timestamp> buster, but cacheFirstWithRefresh.match() uses
+    // ignoreSearch so the buster did nothing — which is why the admin
+    // kept flagging lessons that already had passages added in the
+    // last deploy. The scanner is now back in sync with reality.
+    if(url.searchParams.get('adminEditor') === '1'){
+      event.respondWith(fetch(req).catch(() => new Response('Offline', { status: 503 })));
+      return;
+    }
     event.respondWith(cacheFirstWithRefresh(req));
     return;
   }
