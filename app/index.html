@@ -19748,7 +19748,13 @@ function renderActivity(root,actId,subId){
   // Keeping the default off is important because the first renderQ() may
   // look at the flag before the kid answers — off means "no timer shown",
   // which is the safe default if anything ever races the modal.
-  quiz={activityId:actId, subject:subId, activity, questions:qs, idx:0, correct:0, locked:false, stretchMode: useStretch, timerEnabled:false};
+  quiz={activityId:actId, subject:subId, activity, questions:qs, idx:0, correct:0, locked:false, stretchMode: useStretch, timerEnabled:false,
+    // Nova-helper tracking (Apr 2026). novaUsedOn is the set of question
+    // indices where the kid tapped "Show me how"; novaAssistedCorrect
+    // counts how many of those they then got correct. finishActivity
+    // docks 1 coin per assisted-correct so help isn't free — see
+    // reward calc near baseCoins.
+    novaUsedOn:new Set(), novaAssistedCorrect:0};
   const wrap=h('div',{class:'quiz'});
   root.appendChild(wrap);
   // Ask the kid up-front whether they want a timer for this quiz. The
@@ -20903,6 +20909,24 @@ function logWrongAnswer(q, choseIdx, correctIdx, opts){
   } catch(e){ console.warn('[Solvix] adaptive-down hook failed:', e); }
 }
 
+/* trackCorrect() — central place that bumps the correct counter AND
+   records "this Q was Nova-assisted-correct" if the kid had tapped
+   Show me how on the current question before answering. Used by every
+   answer-handler so the dock logic is consistent.
+   Optionally pass a partialCount (for write-type which adds 0 or 1
+   based on a rubric level) — defaults to +1. */
+function trackCorrect(partialCount){
+  if(!quiz) return;
+  const inc = (typeof partialCount === 'number') ? partialCount : 1;
+  if(inc <= 0) return;
+  quiz.correct += inc;
+  try {
+    if(quiz.novaUsedOn && quiz.novaUsedOn.has(quiz.idx)){
+      quiz.novaAssistedCorrect = (quiz.novaAssistedCorrect||0) + inc;
+    }
+  } catch(_){}
+}
+
 /* ---- MCQ ---- */
 function renderMCQ(card,q){
   // Auto-prefix each choice with a topical emoji when it doesn't already
@@ -20920,7 +20944,7 @@ function handleMCQ(ev,pick,ans){
   if(quiz.locked)return; quiz.locked=true; clearTimer();
   const btn=ev.currentTarget;
   btn.parentElement.querySelectorAll('.choice').forEach(c=>c.classList.add('locked'));
-  if(pick===ans){btn.classList.add('correct');quiz.correct++;setFB(true)}
+  if(pick===ans){btn.classList.add('correct');trackCorrect();setFB(true)}
   else{
     btn.classList.add('wrong');btn.parentElement.children[ans].classList.add('correct');setFB(false);
     logWrongAnswer(quiz.questions[quiz.idx], pick, ans);
@@ -20934,7 +20958,7 @@ function renderCompare(card,q){
   const mk=(key,txt)=>h('button',{class:'choice',style:'font-size:20px;padding:22px',onclick:e=>{
     if(quiz.locked)return;quiz.locked=true;clearTimer();
     e.currentTarget.parentElement.querySelectorAll('.choice').forEach(c=>c.classList.add('locked'));
-    if(key===q.answer){e.currentTarget.classList.add('correct');quiz.correct++;setFB(true)}
+    if(key===q.answer){e.currentTarget.classList.add('correct');trackCorrect();setFB(true)}
     else{e.currentTarget.classList.add('wrong');setFB(false);logWrongAnswer(q, null, null)}
     showNext();
   }},txt);
@@ -20952,7 +20976,7 @@ function renderMatch(card,q){
   const board=h('div',{class:'match-board'});
   const colL=h('div',{class:'match-col'}),colR=h('div',{class:'match-col'});
   lefts.forEach(l=>{const el=h('button',{class:'match-item',onclick:()=>{if(el.classList.contains('done'))return;colL.querySelectorAll('.match-item').forEach(x=>x.classList.remove('selected'));el.classList.add('selected');selL={el,val:l}}},l);colL.appendChild(el)});
-  rights.forEach(r=>{const el=h('button',{class:'match-item',onclick:()=>{if(el.classList.contains('done')||!selL)return;if(map[selL.val]===r){el.classList.add('done');selL.el.classList.add('done');selL.el.classList.remove('selected');done++;if(done===q.pairs.length){quiz.correct++;setFB(true);quiz.locked=true;clearTimer();showNext()}}else{el.style.borderColor='var(--coral)';setTimeout(()=>el.style.borderColor='',400)}if(selL)selL.el.classList.remove('selected');selL=null}},r);colR.appendChild(el)});
+  rights.forEach(r=>{const el=h('button',{class:'match-item',onclick:()=>{if(el.classList.contains('done')||!selL)return;if(map[selL.val]===r){el.classList.add('done');selL.el.classList.add('done');selL.el.classList.remove('selected');done++;if(done===q.pairs.length){trackCorrect();setFB(true);quiz.locked=true;clearTimer();showNext()}}else{el.style.borderColor='var(--coral)';setTimeout(()=>el.style.borderColor='',400)}if(selL)selL.el.classList.remove('selected');selL=null}},r);colR.appendChild(el)});
   board.appendChild(colL);board.appendChild(colR);card.appendChild(board);
 }
 
@@ -20973,7 +20997,7 @@ function renderOrder(card,q){
   function check(){
     quiz.locked=true;clearTimer();
     const ok=placed.every((v,i)=>v===expected[i]);
-    if(ok){quiz.correct++;setFB(true)}else{setFB(false);logWrongAnswer(q, null, null)}
+    if(ok){trackCorrect();setFB(true)}else{setFB(false);logWrongAnswer(q, null, null)}
     showNext();
   }
   card.appendChild(slots);card.appendChild(pool);refresh();
@@ -21005,7 +21029,7 @@ function renderWrite(card,q){
     if(quiz) quiz.locked = true;
     btn.disabled=true; ta.disabled=true; clearTimer();
     const result=gradeWriting(text,q);
-    quiz.correct+=(result.level>=3?1:0); // Level 3-4 counts as correct
+    trackCorrect(result.level>=3 ? 1 : 0); // Level 3-4 counts as correct
     if(result.level<3) logWrongAnswer(q, null, null);
     // Show rubric
     const rubric=h('div',{class:'rubric'});
@@ -21109,7 +21133,7 @@ function renderDictate(card, q){
     const ok = accepted.includes(typed.toLowerCase());
     if(ok){
       input.classList.add('correct');
-      quiz.correct++;
+      trackCorrect();
       setFB(true);
     } else {
       input.classList.add('wrong');
@@ -21297,6 +21321,16 @@ function buildQuizNovaHelper(q){
 
     showBtn.addEventListener('click', async ()=>{
       showBtn.disabled = true;
+      // Mark this question as Nova-assisted. If the kid gets it correct,
+      // finishActivity will dock 1 coin — help isn't free, but they still
+      // earn for getting the question right (just at half the rate of an
+      // independent solve).
+      try {
+        if(quiz){
+          if(!quiz.novaUsedOn) quiz.novaUsedOn = new Set();
+          quiz.novaUsedOn.add(quiz.idx);
+        }
+      } catch(_){}
       // Replace the button with a spinner inline.
       showBtn.innerHTML = '';
       showBtn.appendChild(h('span',{class:'ai-btn-spin'}));
@@ -21735,13 +21769,25 @@ function finishActivity(){
   const wasAlreadyDone = prevProgForCoins.done === true;
   const shouldReward = isStretch || (passed && !wasAlreadyDone);
   const baseCoins = shouldReward ? correct * 2 : 0;
+  // Nova-help dock (Apr 2026). Each question where the kid tapped
+  // "Show me how" AND got it correct costs 1 coin off the base.
+  // Rationale: getting it right after Nova's walkthrough still shows
+  // they understood the method, so they earn — but at half the rate
+  // of an independent solve (correct = +2, Nova-assisted-correct = +1).
+  // Wrong answers aren't double-docked; they already earn 0 base coins
+  // for that question.
+  // Skipped on re-runs (shouldReward=false → baseCoins is already 0).
+  const novaAssistedCorrect = Math.max(0, Number(quiz.novaAssistedCorrect||0));
+  const novaDock = shouldReward ? Math.min(novaAssistedCorrect, baseCoins) : 0;
+  const baseAfterDock = Math.max(0, baseCoins - novaDock);
   // Beat-the-clock bonus: kid opted into the timer AND got at least one
-  // correct answer. +50% on top of base coins, rounded. Gated on
-  // shouldReward so we don't invent coins on a re-run of an already-done
-  // level (would break the anti-farm rule above). The reward overlay
-  // surfaces this so the kid feels the payoff for taking the challenge.
+  // correct answer. +50% on top of base coins (after Nova dock), rounded.
+  // Gated on shouldReward so we don't invent coins on a re-run of an
+  // already-done level (would break the anti-farm rule above). The
+  // reward overlay surfaces this so the kid feels the payoff for taking
+  // the challenge.
   const timerBonusEarned = !!(quiz.timerEnabled && shouldReward && correct > 0);
-  const coins = timerBonusEarned ? Math.round(baseCoins * 1.5) : baseCoins;
+  const coins = timerBonusEarned ? Math.round(baseAfterDock * 1.5) : baseAfterDock;
   // ------------------------------------------------------------
   // STRETCH MODE vs NORMAL MODE
   // ------------------------------------------------------------
@@ -21827,7 +21873,14 @@ function finishActivity(){
   // Celebrate the beat-the-clock bonus when it actually paid out, so the
   // kid sees the choice → reward connection. Plain text suffix keeps the
   // existing #rwMsg styling intact.
-  const msg = timerBonusEarned ? baseMsg + ' ⚡ +50% beat-the-clock bonus!' : baseMsg;
+  // Also disclose the Nova-help dock so the kid sees why their coins
+  // total is lower than 2× correct — keeps the system transparent
+  // ("Nova helped 2× → -2 coins") rather than feeling like the app
+  // shortchanged them.
+  let msg = timerBonusEarned ? baseMsg + ' ⚡ +50% beat-the-clock bonus!' : baseMsg;
+  if(novaDock > 0){
+    msg += ' 🤖 Nova helped on ' + novaAssistedCorrect + ' question' + (novaAssistedCorrect === 1 ? '' : 's') + ' (-' + novaDock + ' coins).';
+  }
   $('#rwEmoji').textContent=emoji;$('#rwTitle').textContent=title;$('#rwMsg').textContent=msg;
   $('#rwCoins').textContent='+'+coins;$('#rwScore').textContent=correct+'/'+scorable;
   // Nova cameo — tone + pep line depend on the result tier. We also track
