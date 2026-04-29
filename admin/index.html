@@ -847,6 +847,18 @@ tbody tr:last-child td{border-bottom:none}
           <button type="button" class="btn btn-ghost btn-sm" id="cf-add-question">+ Add question</button>
           <div class="cf-help">For advanced question types (match, order, compare, write) and curriculum-tag tweaks, switch to the <strong>Raw JSON</strong> tab.</div>
         </fieldset>
+
+        <!-- Stretch pool — harder variants kids see when they replay this
+             lesson after acing it. Rendered dynamically; the inline
+             "✨ Auto-generate" button calls the AI proxy's
+             /generate-questions endpoint with this lesson's curriculum
+             tag, title, and existing questions, then injects the result
+             as stretchQuestions[]. Operator reviews on the Raw JSON tab
+             before clicking Save. -->
+        <fieldset class="cf-fs">
+          <legend>🌟 Stretch pool (harder variants on replay)</legend>
+          <div id="cf-stretch-body"></div>
+        </fieldset>
       </div>
 
       <!-- ============== RAW JSON VIEW (power-user fallback) ============== -->
@@ -3098,6 +3110,146 @@ tbody tr:last-child td{border-bottom:none}
     document.getElementById('cf-lesson-hint').value    = ll.hint    || '';
     renderFormVideos();
     renderFormQuestions();
+    renderStretchPool();
+  }
+
+  // Stretch pool panel — renders state in three flavours:
+  //   • No pool defined → "Auto-generate" CTA
+  //   • Pool exists → count + Re-generate / Clear / View JSON buttons
+  //   • Generating → spinner + disabled buttons
+  function renderStretchPool(){
+    var box = document.getElementById('cf-stretch-body');
+    if(!box || !formDraft) return;
+    var pool = formDraft.activity.stretchQuestions;
+    var count = (Array.isArray(pool) ? pool.length : 0);
+    if(count === 0){
+      box.innerHTML = (
+        '<div class="cf-help" style="margin:0 0 10px">'+
+          'No stretch pool defined. When kids ace this lesson and replay it, the engine '+
+          'looks for harder variants here — without one, replay just shows the same questions. '+
+          'Click below and the AI proxy will draft 3 harder questions on the same skill, anchored '+
+          'to this lesson\'s curriculum tag. You can review on the Raw JSON tab before saving.'+
+        '</div>'+
+        '<button type="button" class="btn btn-primary btn-sm" id="cf-stretch-generate">'+
+          '✨ Auto-generate stretch questions'+
+        '</button>'
+      );
+    } else {
+      // Preview the first question text so the operator gets a sense of the
+      // pool without leaving the Form tab.
+      var preview = '';
+      try {
+        var q0 = pool[0];
+        if(q0 && q0.q){
+          preview = '<div class="cf-help" style="margin:6px 0 10px;font-style:italic">'+
+            'First question: "'+escapeHtml(String(q0.q).slice(0, 120))+
+            (String(q0.q).length > 120 ? '…' : '')+'"</div>';
+        }
+      } catch(_){}
+      box.innerHTML = (
+        '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px">'+
+          '<span class="chip ok">🌟 '+count+' stretch question'+(count===1?'':'s')+' ready</span>'+
+        '</div>'+
+        preview +
+        '<div style="display:flex;gap:6px;flex-wrap:wrap">'+
+          '<button type="button" class="btn btn-ghost btn-sm" id="cf-stretch-regen">✨ Re-generate</button>'+
+          '<button type="button" class="btn btn-ghost btn-sm" id="cf-stretch-view">👀 View on Raw JSON tab</button>'+
+          '<button type="button" class="btn btn-ghost btn-sm" id="cf-stretch-clear" style="color:#991b1b">🗑️ Clear pool</button>'+
+        '</div>'
+      );
+    }
+    // Wire whichever buttons are now in the DOM.
+    var btnGen = document.getElementById('cf-stretch-generate');
+    if(btnGen) btnGen.addEventListener('click', function(){ generateStretchPool(false); });
+    var btnRegen = document.getElementById('cf-stretch-regen');
+    if(btnRegen) btnRegen.addEventListener('click', function(){
+      if(confirm('Replace the existing '+count+' stretch question'+(count===1?'':'s')+' with a fresh AI-generated set? Your current pool will be discarded.')){
+        generateStretchPool(true);
+      }
+    });
+    var btnView = document.getElementById('cf-stretch-view');
+    if(btnView) btnView.addEventListener('click', function(){ switchEditorTab('json'); });
+    var btnClear = document.getElementById('cf-stretch-clear');
+    if(btnClear) btnClear.addEventListener('click', function(){
+      if(confirm('Clear the stretch pool? Kids who replay this lesson will see the same questions again instead of harder variants.')) {
+        formDraft.activity.stretchQuestions = [];
+        renderStretchPool();
+        toast('Stretch pool cleared. Click Save to apply.', 'ok');
+      }
+    });
+  }
+
+  // Hit the AI proxy to draft a stretch pool for the current lesson.
+  // Sends the lesson's title + intro + curriculum tag + first 3-5
+  // existing MCQ questions as shape/style/difficulty context. The
+  // worker prompts Claude to produce ONE step harder variants on the
+  // same Ontario expectation. Result lives in formDraft.activity
+  // .stretchQuestions until the operator clicks Save.
+  async function generateStretchPool(isRegen){
+    if(!formDraft) return;
+    var a = formDraft.activity;
+    var curr = a.curriculum;
+    if(!curr || !curr.grade){
+      toast('This lesson has no curriculum tag with a grade — fill that in first so the AI can stay on-grade.', 'err');
+      return;
+    }
+    // Pull mcq-shaped existing questions for the prompt — those are the
+    // shape the worker expects. Filter out passage/match/order/etc.
+    var mcqLike = (Array.isArray(a.questions) ? a.questions : [])
+      .filter(function(q){ return q && (q.type === 'mcq' || q.type === 'passage' || q.type === 'fill') && Array.isArray(q.choices) && q.choices.length >= 2; })
+      .slice(0, 5)
+      .map(function(q){
+        return {
+          q: String(q.q || '').slice(0, 400),
+          choices: q.choices.slice(0, 6).map(function(c){ return String(c || '').slice(0, 120); }),
+          answer: typeof q.answer === 'number' ? q.answer : 0,
+        };
+      });
+    if(!mcqLike.length){
+      toast('No MCQ-shape questions on this lesson to base stretch variants on. Add some first.', 'err');
+      return;
+    }
+    var box = document.getElementById('cf-stretch-body');
+    var prevHtml = box ? box.innerHTML : '';
+    if(box){
+      box.innerHTML = '<div style="padding:14px;font-size:13px;color:#64748b"><span class="spinner"></span> Asking the AI to draft 3 harder variants…</div>';
+    }
+    try {
+      var resp = await fetch(BACKEND + '/generate-questions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Student-Id': 'admin-curriculum',
+        },
+        body: JSON.stringify({
+          curriculum: curr,
+          existingQuestions: mcqLike,
+          count: 3,
+          lessonTitle: a.title || (a.lesson && a.lesson.title) || '',
+          lessonIntro: (a.lesson && a.lesson.intro) || '',
+          difficulty: 'stretch',
+        }),
+      });
+      var data = await resp.json();
+      if(!resp.ok){
+        var err = (data && data.error) || ('http_' + resp.status);
+        if(err === 'feature_disabled') throw new Error('FEATURE_GENERATE_QUESTIONS is off in the worker config. Flip the flag in wrangler.toml and redeploy.');
+        if(err === 'ai_globally_disabled') throw new Error('AI is globally disabled (AI_ENABLED=false). Flip the master switch in the worker config.');
+        if(err === 'rate_limited') throw new Error('Daily generation cap reached for the admin user. Try again tomorrow or raise DAILY_CAP_PER_STUDENT.');
+        throw new Error(err + (data && data.detail ? ' — ' + data.detail : ''));
+      }
+      var newQs = (data && data.data && Array.isArray(data.data.questions)) ? data.data.questions : null;
+      if(!newQs || !newQs.length){
+        throw new Error('AI returned no usable questions. Try again, or click "Re-generate" for a different draft.');
+      }
+      formDraft.activity.stretchQuestions = newQs;
+      renderStretchPool();
+      var cached = !!(data && data.cached);
+      toast('Generated ' + newQs.length + ' stretch question' + (newQs.length===1?'':'s') + (cached ? ' (from cache)' : '') + '. Click Save to deploy.', 'ok');
+    } catch(e){
+      if(box && prevHtml) box.innerHTML = prevHtml;
+      toast('Generate failed: ' + (e && e.message), 'err');
+    }
   }
 
   // Read the form back into a partial override blob. Strategy: snapshot
