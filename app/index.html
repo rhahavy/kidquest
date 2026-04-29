@@ -188,9 +188,10 @@ img{max-width:100%}
    original flex-row layout. The hover tilt on .logo was already there —
    now it actually signals a clickable target.
 
-   Logo mark: 🚀 emoji at 26px to match the marketing nav, thank-you
-   page, and admin dashboard. Old SVG rocket replaced for one
-   consistent brand lockup site-wide. */
+   Logo mark: minimalist line-rocket SVG at 1em (the parent's font-size
+   sets render size — 26px here, 22-34px on marketing/admin nav). One
+   consistent brand lockup site-wide; SVG paths use currentColor so the
+   icon inherits the white text colour inside the gradient tile. */
 .brand{display:flex;align-items:center;gap:12px;font-weight:700;font-size:22px;letter-spacing:-.01em;font-family:var(--font-display);padding:0;background:none;border:none;color:inherit;cursor:pointer}
 .brand .logo{width:44px;height:44px;border-radius:14px;background:linear-gradient(135deg,var(--primary),var(--pink) 60%,var(--sun));display:grid;place-items:center;color:#fff;box-shadow:0 8px 18px rgba(108,92,231,.4),inset 0 -3px 0 rgba(0,0,0,.12);border:2px solid #fff;transition:transform .3s var(--spring);font-size:26px;line-height:1}
 .brand .logo svg{filter:drop-shadow(0 1px 1px rgba(0,0,0,.18))}
@@ -2655,7 +2656,7 @@ body.has-dev-banner{padding-top:26px}
          browser history. Kids won't usually click it; it's primarily
          a safety valve for visitors. -->
     <div class="topbar-brand">
-      <button class="brand" type="button" onclick="goBrand()" aria-label="Solvix — go to your dashboard"><span class="logo" aria-hidden="true">🚀</span><span class="solvix-rainbow brand-name">Solvix</span></button>
+      <button class="brand" type="button" onclick="goBrand()" aria-label="Solvix — go to your dashboard"><span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.5 7.5 11v6h9v-6L12 2.5Z"/><path d="M7.5 14.5 4 18v3l3.5-1.5"/><path d="M16.5 14.5 20 18v3l-3.5-1.5"/><circle cx="12" cy="10" r="1.6"/></svg></span><span class="solvix-rainbow brand-name">Solvix</span></button>
       <a href="/" class="site-link" title="Go to the main Solvix website" aria-label="Go to the main Solvix website">← Main site</a>
     </div>
     <nav id="nav"></nav>

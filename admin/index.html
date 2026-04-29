@@ -51,9 +51,10 @@ input,select,textarea{font-family:inherit}
 /* HEADER */
 .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;gap:12px;flex-wrap:wrap}
 /* Brand lockup — kept identical to the marketing site, app shell, and
-   thank-you page. The 🚀 emoji sits in a soft purple gradient tile and
-   the wordmark animates through a rainbow gradient. The whole lockup
-   is a link back to /admin/ so an operator who wandered into a sub-view
+   thank-you page. A minimalist line-rocket SVG sits in a soft purple
+   gradient tile (currentColor inherits the white text colour) and the
+   wordmark animates through a rainbow gradient. The whole lockup is a
+   link back to /admin/ so an operator who wandered into a sub-view
    can always click home. */
 .brand{display:inline-flex;align-items:center;gap:10px;font-weight:800;font-size:22px;color:var(--ink);text-decoration:none}
 .brand:hover{text-decoration:none;color:var(--ink)}
@@ -441,7 +442,7 @@ tbody tr:last-child td{border-bottom:none}
        there for consistency with the rest of the brand lockups across
        the site (marketing, app, thank-you all link home from the brand). -->
   <a class="brand" href="/admin/" style="justify-content:center;margin-bottom:18px" aria-label="Solvix Admin — go home">
-    <span class="brand-mark" aria-hidden="true">🚀</span>
+    <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.5 7.5 11v6h9v-6L12 2.5Z"/><path d="M7.5 14.5 4 18v3l3.5-1.5"/><path d="M16.5 14.5 20 18v3l-3.5-1.5"/><circle cx="12" cy="10" r="1.6"/></svg></span>
     <div><span class="solvix-rainbow">Solvix</span> <span class="brand-sub">Admin</span></div>
   </a>
   <h1>Sign in</h1>
@@ -455,7 +456,7 @@ tbody tr:last-child td{border-bottom:none}
 <div id="app" class="wrap hidden">
   <div class="topbar">
     <a class="brand" href="/admin/" aria-label="Solvix Admin — go home">
-      <span class="brand-mark" aria-hidden="true">🚀</span>
+      <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.5 7.5 11v6h9v-6L12 2.5Z"/><path d="M7.5 14.5 4 18v3l3.5-1.5"/><path d="M16.5 14.5 20 18v3l-3.5-1.5"/><circle cx="12" cy="10" r="1.6"/></svg></span>
       <div><span class="solvix-rainbow">Solvix</span> <span class="brand-sub">Admin</span></div>
     </a>
     <div class="topbar-actions">
