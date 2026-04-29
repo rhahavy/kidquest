@@ -917,54 +917,53 @@ img{max-width:100%}
    turtle / syllable-pace helper — critical for Evan's -OUGH drills and
    Akaran's vowel-sound practice.
 */
-.tts-buttons{display:inline-flex;flex-wrap:wrap;align-items:center;gap:8px;margin:10px 0 14px 0}
+/* Read-aloud buttons (per-question 🔊 Hear it / 🐢 Slow). Earlier
+   version was two big saturated gradient pills side by side — heavy
+   and visually competed with the question card. Now: a single
+   compact connected pill with a thin divider — primary "Hear it"
+   on the left (purple text on white) and "Slow" on the right
+   (green text on white). Same tap-target height, much less ink. */
+.tts-buttons{
+  display:inline-flex;align-items:center;
+  margin:8px 0 14px 0;
+  border-radius:999px;
+  background:#fff;
+  border:1.5px solid rgba(108,92,231,.18);
+  box-shadow:0 2px 8px rgba(108,92,231,.08);
+  overflow:hidden;
+}
 .tts-btn{
-  display:inline-flex;align-items:center;gap:8px;
-  min-height:44px;padding:10px 18px;
-  border-radius:999px;border:none;cursor:pointer;
-  font-family:'DM Sans',system-ui,sans-serif;font-size:15px;font-weight:800;
+  display:inline-flex;align-items:center;gap:7px;
+  min-height:40px;padding:8px 16px;
+  border:none;cursor:pointer;background:transparent;
+  font-family:'DM Sans',system-ui,sans-serif;font-size:13px;font-weight:800;
   letter-spacing:.01em;line-height:1;
-  transition:transform .15s ease, box-shadow .15s ease, filter .15s ease;
+  color:var(--ink);
+  transition:background .15s ease, color .15s ease;
   -webkit-tap-highlight-color:transparent;
   user-select:none;
   white-space:nowrap;
 }
-.tts-btn .tts-ico{font-size:20px;line-height:1}
+.tts-btn .tts-ico{font-size:16px;line-height:1}
 .tts-btn .tts-lbl{font-weight:800}
-.tts-btn:active{transform:translateY(1px) scale(.98)}
-.tts-btn:hover{transform:translateY(-1px);filter:brightness(1.04)}
-.tts-btn:focus-visible{outline:3px solid var(--primary);outline-offset:2px}
-.tts-btn.tts-primary{
-  background:linear-gradient(135deg,#6c5ce7 0%,#a29bfe 100%);
-  color:#fff;
-  box-shadow:0 6px 16px rgba(108,92,231,.35), inset 0 1px 0 rgba(255,255,255,.22);
+.tts-btn:hover{background:rgba(108,92,231,.06)}
+.tts-btn:active{background:rgba(108,92,231,.10)}
+.tts-btn:focus-visible{outline:2px solid var(--primary);outline-offset:-2px}
+.tts-btn.tts-primary{color:#5046e5;border-right:1px solid rgba(108,92,231,.15)}
+.tts-btn.tts-slow{color:#0a8e6f}
+.tts-btn.tts-slow:hover{background:rgba(0,184,148,.08)}
+.tts-btn.tts-slow:active{background:rgba(0,184,148,.12)}
+.tts-btn.speaking{background:rgba(108,92,231,.12)}
+.tts-btn.tts-slow.speaking{background:rgba(0,184,148,.12)}
+.tts-btn.speaking::after{
+  content:"";display:inline-block;width:6px;height:6px;border-radius:50%;
+  background:currentColor;margin-left:2px;
+  animation:tts-dot 0.8s ease-in-out infinite;
 }
-.tts-btn.tts-slow{
-  background:linear-gradient(135deg,#00b894 0%,#55efc4 100%);
-  color:#063d2f;
-  box-shadow:0 6px 16px rgba(0,184,148,.3), inset 0 1px 0 rgba(255,255,255,.35);
-}
-.tts-btn.tts-primary.speaking,
-.tts-btn.tts-slow.speaking{
-  animation:tts-pulse 1s ease-in-out infinite;
-  filter:brightness(1.08);
-}
-@keyframes tts-pulse{
-  0%,100% { box-shadow:0 6px 16px rgba(108,92,231,.35), 0 0 0 0 rgba(108,92,231,.5); }
-  50%     { box-shadow:0 6px 20px rgba(108,92,231,.55), 0 0 0 8px rgba(108,92,231,0); }
-}
-.tts-btn.tts-slow.speaking{
-  animation:tts-pulse-slow 1.2s ease-in-out infinite;
-}
-@keyframes tts-pulse-slow{
-  0%,100% { box-shadow:0 6px 16px rgba(0,184,148,.3), 0 0 0 0 rgba(0,184,148,.5); }
-  50%     { box-shadow:0 6px 20px rgba(0,184,148,.55), 0 0 0 8px rgba(0,184,148,0); }
-}
-/* On wider screens the buttons stand on their own line; on phone the
-   wrap keeps them from pushing layout around. */
+@keyframes tts-dot{0%,100%{opacity:.3;transform:scale(.8)}50%{opacity:1;transform:scale(1.2)}}
 @media (max-width:480px){
-  .tts-btn{padding:10px 14px;font-size:14px}
-  .tts-btn .tts-ico{font-size:18px}
+  .tts-btn{padding:8px 12px;font-size:12px}
+  .tts-btn .tts-ico{font-size:15px}
 }
 
 /* ---- STACKED MATH COLUMN DISPLAY ----
@@ -14359,6 +14358,19 @@ function _normalizeForTts(text){
   // --- Decorative arrows + bullets (strip, don't pronounce) ---
   s = s.replace(/[\u2190-\u21FF\u2794-\u27BF\u00BB\u00AB]/g, ' ')
        .replace(/[\u2022\u00B7\u25CF\u25EF\u25CE\u25CB]/g, ' ');
+  // --- Phonetic fix: "read" in unambiguously imperative contexts ---
+  // Most cloned + stock voices (including ElevenLabs Rachel and the
+  // current Solvix narrator G5l3TqaLfwZ63P7RpUuL) default to the
+  // PAST-tense pronunciation "red" when context is ambiguous. In a
+  // kid-tutoring app most "read"s are imperatives ("Read aloud",
+  // "Read the passage", "Read carefully") and they sound flat-out
+  // wrong as "red". Phonetic respelling forces present-tense.
+  // Scope is narrow: only "read" followed by an imperative-sounding
+  // word, so "I read books" stays correct in narration. Affects the
+  // audio path only — visible text is unchanged.
+  s = s.replace(/\bread\s+aloud\b/gi, 'reed aloud')
+       .replace(/(\b)([Rr])ead\s+(the|this|that|each|every|along|out|silently|carefully|slowly|again)\b/g,
+                (m, lb, R, w) => lb + (R === 'R' ? 'R' : 'r') + 'eed ' + w);
   // --- Tidy: collapse whitespace ---
   s = s.replace(/\s+/g, ' ').trim();
   return s;
