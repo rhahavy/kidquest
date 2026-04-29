@@ -174,6 +174,32 @@ section.tight{padding:56px 0}
 .adapt-list li:first-child{border-top:0}
 .adapt-list li::before{content:"";position:absolute;left:4px;top:17px;width:8px;height:8px;border-radius:50%;background:var(--adapt-pip)}
 
+/* Nova introduction — gives the AI tutor a face + voice so parents see
+   exactly who their kid is interacting with. The actual mascot SVG is
+   simplified from app/index.html's novaSVG() so the marketing render
+   matches what the kid will meet in-app. Float animation reinforces
+   "she's friendly and alive, not a static graphic."
+   Layout: mascot + sample chat exchange on the left, "what Nova does"
+   pillar list on the right. Stacks on mobile. */
+#nova{background:linear-gradient(180deg,transparent 0%,#FAF7FF 60%,transparent 100%)}
+.nova-grid{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center;max-width:1020px;margin:0 auto}
+@media(max-width:820px){.nova-grid{grid-template-columns:1fr;gap:36px}}
+.nova-stage{display:flex;flex-direction:column;align-items:center;gap:20px;padding:8px}
+.nova-mascot{width:180px;height:auto;filter:drop-shadow(0 10px 28px rgba(108,92,231,.25));animation:novaFloat 4s ease-in-out infinite}
+@keyframes novaFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+.nova-chat{display:flex;flex-direction:column;gap:12px;width:100%;max-width:380px}
+.nova-bubble{position:relative;padding:14px 18px;border-radius:18px;font-size:15px;line-height:1.5;box-shadow:var(--shadow)}
+.nova-bubble.kid{align-self:flex-end;background:#EEEAFF;color:var(--ink);border-bottom-right-radius:6px}
+.nova-bubble.nova{align-self:flex-start;background:#fff;color:var(--ink);border:1px solid var(--line);border-bottom-left-radius:6px}
+.nova-bubble.nova::before{content:"";position:absolute;left:-1px;bottom:-9px;width:18px;height:18px;background:#fff;border-bottom:1px solid var(--line);border-left:1px solid var(--line);border-radius:0 0 0 6px;clip-path:polygon(0 0,100% 100%,0 100%)}
+.nova-bubble em{font-style:normal;font-weight:700;color:var(--primary)}
+.nova-bubble-tag{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--ink2);margin-bottom:2px}
+.nova-pillars{display:flex;flex-direction:column;gap:18px}
+.nova-pillar{display:flex;gap:16px;align-items:flex-start}
+.nova-pillar-icon{flex-shrink:0;width:48px;height:48px;border-radius:14px;background:#E8E5FF;display:flex;align-items:center;justify-content:center;font-size:24px}
+.nova-pillar h3{font-size:18px;font-weight:800;margin:4px 0 6px;letter-spacing:-.01em}
+.nova-pillar p{color:var(--ink2);font-size:14.5px;line-height:1.55;margin:0}
+
 /* Subjects grid — concrete topic detail per subject so parents can see
    exactly what their kid will be doing. Sits between #features (the
    "what we offer" overview) and #see (the animated walkthroughs). Uses
@@ -833,8 +859,8 @@ footer{padding:48px 0;border-top:1px solid var(--line);margin-top:72px}
      that run automatically with no parent setup:
        • Early Bridge — catches struggling kids before they spiral
          (rolling 3-of-last-5 wrong → swap easier OR pull Nova in)
-       • Stretch Mode — keeps fast kids out of repeat-the-easy-stuff
-         hell (lifetime perfect → harder questions in same skill,
+       • Stretch Mode — pushes fast kids past easy mastery
+         (lifetime perfect → harder questions in same skill,
          backs off if recent accuracy drops)
      Sits between #features (generic story) and #see (visual proof)
      so the parent reads the conceptual story before watching the
@@ -870,7 +896,7 @@ footer{padding:48px 0;border-top:1px solid var(--line);margin-top:72px}
           <div class="adapt-icon">🚀</div>
           <div>
             <div class="adapt-name">Stretch Mode</div>
-            <div class="adapt-tag">No repeat-the-easy-stuff hell</div>
+            <div class="adapt-tag">Pushes fast kids past easy mastery</div>
           </div>
         </div>
         <p>Once a kid aces an activity, the next visit serves harder questions in the same skill — not a copy-paste of what they already mastered. If they slip on the harder version, it backs off automatically.</p>
@@ -879,6 +905,96 @@ footer{padding:48px 0;border-top:1px solid var(--line);margin-top:72px}
           <li>Backs off if recent accuracy drops below 60%</li>
           <li>Stays on grade-level curriculum, not random extension</li>
         </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ MEET NOVA ============
+     Gives the AI tutor a face + voice so parents see exactly who their
+     kid is interacting with. Mascot SVG simplified from app/index.html's
+     novaSVG() — same character, fewer animation hooks. The chat bubbles
+     show Nova's actual voice handling a kid's wrong answer (not generic
+     "I'm an AI tutor" copy) — concrete > abstract for marketing.
+     Three pillars communicate: she's kid-friendly, curriculum-anchored,
+     and reads aloud — which together = a kid can succeed without a
+     teacher hovering. -->
+<section id="nova">
+  <div class="container">
+    <div class="section-head">
+      <span class="section-eyebrow">Meet your tutor</span>
+      <h2>Say hi to Nova</h2>
+      <p>An AI tutor with personality — warm, patient, curriculum-anchored, and never tells a kid “ask your teacher.”</p>
+    </div>
+
+    <div class="nova-grid">
+      <div class="nova-stage">
+        <svg viewBox="0 0 120 140" class="nova-mascot" xmlns="http://www.w3.org/2000/svg" aria-label="Nova the alien tutor">
+          <defs>
+            <linearGradient id="novaMG" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#A29BFE"/>
+              <stop offset="100%" stop-color="#6C5CE7"/>
+            </linearGradient>
+            <radialGradient id="novaMS" cx="35%" cy="30%" r="45%">
+              <stop offset="0%" stop-color="#fff" stop-opacity=".35"/>
+              <stop offset="100%" stop-color="#fff" stop-opacity="0"/>
+            </radialGradient>
+          </defs>
+          <line x1="60" y1="30" x2="60" y2="18" stroke="#6C5CE7" stroke-width="3" stroke-linecap="round"/>
+          <circle cx="60" cy="12" r="6" fill="#FD79A8"/>
+          <circle cx="14" cy="74" r="9" fill="url(#novaMG)"/>
+          <circle cx="106" cy="86" r="7" fill="url(#novaMG)"/>
+          <path d="M60 32 C92 32 106 58 106 84 C106 112 86 128 60 128 C34 128 14 112 14 84 C14 58 28 32 60 32 Z" fill="url(#novaMG)"/>
+          <path d="M60 32 C92 32 106 58 106 84 C106 112 86 128 60 128 C34 128 14 112 14 84 C14 58 28 32 60 32 Z" fill="url(#novaMS)"/>
+          <circle cx="45" cy="72" r="13" fill="#fff"/>
+          <circle cx="75" cy="72" r="13" fill="#fff"/>
+          <circle cx="47" cy="75" r="7" fill="#1A1035"/>
+          <circle cx="77" cy="75" r="7" fill="#1A1035"/>
+          <circle cx="50" cy="72" r="2.5" fill="#fff"/>
+          <circle cx="80" cy="72" r="2.5" fill="#fff"/>
+          <ellipse cx="32" cy="92" rx="7" ry="5" fill="#FD79A8"/>
+          <ellipse cx="88" cy="92" rx="7" ry="5" fill="#FD79A8"/>
+          <path d="M48 100 Q60 112 72 100" stroke="#1A1035" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+        </svg>
+
+        <div class="nova-chat" aria-label="Sample tutoring exchange">
+          <div class="nova-bubble kid">I think ½ goes right after 1.</div>
+          <div class="nova-bubble nova">
+            <div class="nova-bubble-tag">Nova says</div>
+            Almost! ½ goes <em>between</em> 0 and 1 — closer to the middle. Want me to break it down step-by-step?
+          </div>
+        </div>
+      </div>
+
+      <div class="nova-pillars">
+        <div class="nova-pillar">
+          <div class="nova-pillar-icon">🧠</div>
+          <div>
+            <h3>Explains in kid words</h3>
+            <p>When your child gets stuck, Nova rephrases the question in language a kid actually uses — never lecturing, never overwhelming.</p>
+          </div>
+        </div>
+        <div class="nova-pillar">
+          <div class="nova-pillar-icon">📋</div>
+          <div>
+            <h3>Curriculum-anchored, every time</h3>
+            <p>Every Nova explanation is locked to the same Ontario strand and code as the question. No drift into concepts your kid hasn’t met yet.</p>
+          </div>
+        </div>
+        <div class="nova-pillar">
+          <div class="nova-pillar-icon">🎙️</div>
+          <div>
+            <h3>Reads aloud in a kid voice</h3>
+            <p>Built-in text-to-speech with a warm, age-appropriate voice — perfect for early readers, ESL families, and kids who learn better by listening.</p>
+          </div>
+        </div>
+        <div class="nova-pillar">
+          <div class="nova-pillar-icon">🛡️</div>
+          <div>
+            <h3>Never an open chat box</h3>
+            <p>Nova only responds to lesson questions — no free-form prompting, no off-topic detours. Kid-safe by design.</p>
+          </div>
+        </div>
       </div>
     </div>
   </div>
