@@ -4296,7 +4296,7 @@ const ROUTES = {
   'POST /parent-report':      { flag: 'FEATURE_PARENT_REPORT',      fn: handleParentReport },
   'POST /voice-clone':        { flag: 'FEATURE_VOICE_CLONE',        fn: notYetImplemented('voice-clone') },
   // Phase D — scaffolded.
-  'POST /sidekick':           { flag: 'FEATURE_SIDEKICK',           fn: notYetImplemented('sidekick') },
+  'POST /sidekick':           { flag: 'FEATURE_SIDEKICK',           fn: handleSidekick },
   'POST /photo-extract':      { flag: 'FEATURE_PHOTO_EXTRACT',      fn: notYetImplemented('photo-extract') },
 };
 
@@ -4844,6 +4844,146 @@ async function handleParentReport(request, env, ctx, corsOrigin) {
       return out;
     },
     auditSummary: (inputs) => `parent-report → ${inputs.firstName}, ${inputs.activitiesCompleted} activities`,
+  });
+}
+
+// ---- /sidekick ---------------------------------------------------------
+// Locked-down chatbox where kids can ask Nova about the CURRENT question.
+// This is the highest-stakes AI surface in the app (free-form input from
+// a child) so the guardrails are layered:
+//
+//   1. The system prompt declares the model is glued to the current
+//      question. Off-topic → polite redirect, NEVER engage.
+//   2. The correct answer is passed in and explicitly banned (same trick
+//      as /worked-example) — Nova can't be coaxed into "is it B?".
+//   3. KID_SAFE_RULES + the existing post-output CONTENT_BLOCKLIST
+//      (applied by runStandardHandler) catch anything the prompt missed.
+//   4. Per-question turn limit on the client (4 turns) caps abuse +
+//      keeps cost bounded. Each turn still counts toward the daily cap.
+//   5. No cache — every conversation is unique.
+//   6. Output is STRICT JSON with `onTopic` flag so the client can show
+//      kids a soft "let's get back to your question" cue when Nova
+//      redirected.
+async function handleSidekick(request, env, ctx, corsOrigin) {
+  return runStandardHandler({
+    request, env, ctx, corsOrigin,
+    endpoint: '/sidekick',
+    readInputs: async (body) => ({
+      // Current question context. Identical shape to /worked-example
+      // so the schema is familiar.
+      questionType: String(body.questionType || 'unknown').slice(0, 40),
+      prompt: String(body.prompt || '').trim().slice(0, 600),
+      choices: Array.isArray(body.choices) ? body.choices.slice(0, 6).map(c => String(c).slice(0, 120)) : null,
+      correctAnswer: (typeof body.correctAnswer === 'number' || typeof body.correctAnswer === 'string') ? body.correctAnswer : null,
+      gradeContext: String(body.gradeContext || '').slice(0, 40),
+      curriculum: (body.curriculum && typeof body.curriculum === 'object') ? body.curriculum : null,
+      // Conversation history — array of { role: 'kid'|'nova', text: string }.
+      // Capped at 8 entries (4 round trips) to keep the prompt small + match
+      // the client-side turn limit.
+      history: Array.isArray(body.history)
+        ? body.history.slice(-8).map(t => ({
+            role: (t && t.role === 'nova') ? 'nova' : 'kid',
+            text: String((t && t.text) || '').slice(0, 280),
+          })).filter(t => t.text)
+        : [],
+      // Kid's new message. Hard char cap so a paste-bomb can't run up
+      // the bill (the model still sees only what's here).
+      message: String(body.message || '').trim().slice(0, 280),
+    }),
+    validate: ({ message, prompt }) => {
+      if (!message) return { error: 'missing_message' };
+      if (!prompt)  return { error: 'missing_question_context' };
+      return null;
+    },
+    // No caching — chat is conversational; every message is unique.
+    cacheKey: null,
+    maxTokens: 240,
+    buildSystemPrompt: () => (
+      'You are Nova, an AI tutor for a child (ages 4-12). The child is currently working on a quiz question. They have opened a chat with you to ask for help. ' +
+      'Reply with STRICT JSON ONLY (no prose, no markdown fences):\n' +
+      '{\n' +
+      '  "reply":   string,    // your reply to the kid. Max 2 short sentences.\n' +
+      '  "onTopic": boolean    // true if the kid asked about the question/lesson; false if you redirected.\n' +
+      '}\n\n' +
+      'CRITICAL RULES — these are non-negotiable:\n\n' +
+      'STAY ON TOPIC. You ONLY discuss the current question and how to think about it. If the kid asks about ANYTHING else (your day, games, sports, family, food, weekend, music, you, other lessons, the weather, what time it is, jokes, random stuff) — kindly redirect with one short sentence and set onTopic:false. Examples of redirect lines: "Let\'s focus on this question — what part feels tricky?", "I can only help with this lesson right now. What\'s puzzling you about it?", "We can chat about that another time! Right now, let\'s figure out this question together."\n\n' +
+      'NEVER REVEAL THE ANSWER. Even if the kid asks "is it B?" or "is the answer 12?" — don\'t confirm or deny a specific choice. Redirect them to the method: "I can\'t tell you which one — but try reading it out loud and listen for what sounds right." Same for math: don\'t state the final number; walk them through the steps but stop one short.\n\n' +
+      'KID-FRIENDLY LANGUAGE. Match the grade level: K-2 very simple words, 3-5 friendly, 6+ solid. Be warm. Never scold. Never say "no" harshly — always redirect kindly.\n\n' +
+      'BREVITY. Max 2 short sentences per reply. No lectures.\n\n' +
+      'BANNED TOPICS — auto-redirect, never engage even briefly:\n' +
+      '- Anything about violence, weapons, injury, scary things, horror.\n' +
+      '- Anything about drugs, alcohol, smoking.\n' +
+      '- Anything about romance, dating, the body, bathroom topics.\n' +
+      '- Personal info: names of family, where they live, what school they go to.\n' +
+      '- Politics, religion, current events.\n' +
+      '- Anything that makes you uncomfortable as a tutor — redirect with: "That\'s not something we chat about here. Let\'s get back to your question!"\n\n' +
+      'IF THE KID JUST VENTS or says they\'re frustrated/sad/tired: one short empathetic sentence, then bring them back to the question. Don\'t become a therapist. Example: "That\'s okay — every kid feels stuck sometimes. Let\'s break this question into a tiny piece. What\'s the first word that jumps out?"\n\n' +
+      'NEVER claim to be a person or have a body / family / age. You are Nova, a friendly tutor character.\n' +
+      'NEVER mention the student\'s name (you don\'t know it).'
+      + KID_SAFE_RULES
+      + CURRICULUM_ALIGNMENT_RULES
+    ),
+    buildUserPrompt: ({ questionType, prompt, choices, correctAnswer, gradeContext, curriculum, history, message }) => {
+      let p = buildCurriculumBlock(curriculum || { grade: gradeContext }) + '\n\n';
+      p += '— THE CURRENT QUESTION (this is the ONLY topic you may discuss) —\n';
+      p += 'Question type: ' + questionType + '\n';
+      p += 'Question: ' + prompt + '\n';
+      if (choices && choices.length) {
+        p += 'Choices:\n';
+        choices.forEach((c, i) => { p += '  ' + i + '. ' + c + '\n'; });
+      }
+      const correctText = (typeof correctAnswer === 'number' && choices && choices[correctAnswer] !== undefined)
+        ? String(choices[correctAnswer])
+        : (correctAnswer != null ? String(correctAnswer) : '');
+      if (correctText) {
+        p += '\nCorrect answer (NEVER reveal): ' + correctText + '\n';
+      }
+      if (history.length) {
+        p += '\n— Conversation so far —\n';
+        for (const t of history) {
+          p += (t.role === 'kid' ? 'Kid' : 'Nova') + ': ' + t.text + '\n';
+        }
+      }
+      p += '\n— New message from the kid —\n';
+      p += 'Kid: ' + message + '\n\n';
+      p += 'Now write your reply as JSON. Stay on this question. Never reveal the answer. Max 2 sentences.';
+      return p;
+    },
+    postProcess: (text, inputs) => {
+      const parsed = parseJsonFromText(text);
+      if (!parsed || typeof parsed !== 'object' || typeof parsed.reply !== 'string') {
+        return { error: 'parse_failed', raw: (text || '').slice(0, 200) };
+      }
+      const reply = parsed.reply.trim();
+      if (!reply) return { error: 'empty_reply' };
+      const out = {
+        reply: reply.slice(0, 320),
+        onTopic: parsed.onTopic !== false,
+      };
+      // Belt-and-suspenders leak check (same pattern as /worked-example).
+      // If the correct answer text appears in the reply, drop it.
+      try {
+        const inp = inputs || {};
+        const choices = Array.isArray(inp.choices) ? inp.choices : null;
+        const correctText = (typeof inp.correctAnswer === 'number' && choices && choices[inp.correctAnswer] !== undefined)
+          ? String(choices[inp.correctAnswer])
+          : (inp.correctAnswer != null ? String(inp.correctAnswer) : '');
+        if (correctText && correctText.trim().length > 0) {
+          const haystack = out.reply.toLowerCase();
+          const needle = correctText.trim().toLowerCase();
+          let leaked = false;
+          if (needle.length <= 3) {
+            const re = new RegExp('(?:^|[^\\w])' + needle.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '(?:[^\\w]|$)');
+            leaked = re.test(haystack);
+          } else {
+            leaked = haystack.indexOf(needle) !== -1;
+          }
+          if (leaked) return { error: 'answer_leaked' };
+        }
+      } catch (_) {}
+      return out;
+    },
+    auditSummary: (inputs) => `sidekick → "${(inputs.message||'').slice(0, 40)}" Q="${(inputs.prompt||'').slice(0, 30)}"`,
   });
 }
 

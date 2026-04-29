@@ -70,7 +70,7 @@ FEATURE_PARENT_REPORT      = "true"   # on-demand weekly parent report card
 FEATURE_VOICE_CLONE        = "false"  # ElevenLabs parent-voice clone
 
 # Phase D (high-effort, high-risk — do last)
-FEATURE_SIDEKICK           = "false"  # chat buddy (heavily capped)
+FEATURE_SIDEKICK           = "true"   # locked-down chatbox: question-scoped, never reveals answer, redirects off-topic
 FEATURE_PHOTO_EXTRACT      = "false"  # homework photo → quiz
 
 # ----- CORS / SECURITY ------------------------------------------

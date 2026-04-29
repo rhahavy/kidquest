@@ -791,6 +791,95 @@ img{max-width:100%}
   font-size:14px;font-weight:600;color:var(--ink2);
   text-align:center;
 }
+
+/* "Ask Nova" button — sits next to "Show me how" in the helper. Same
+   visual weight, slightly different palette (teal-leaning) so kids
+   can tell them apart at a glance. */
+.quiz-nova-helper .qnh-ask-btn{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:10px 18px;border:none;border-radius:999px;
+  background:linear-gradient(135deg,#16a085 0%,#48c9b0 100%);
+  color:#fff;font-family:inherit;font-size:14px;font-weight:800;
+  letter-spacing:.01em;cursor:pointer;
+  box-shadow:0 6px 16px rgba(22,160,133,.32);
+  transition:transform .15s ease,filter .15s ease;
+  -webkit-tap-highlight-color:transparent;
+}
+.quiz-nova-helper .qnh-ask-btn:hover{transform:translateY(-1px);filter:brightness(1.05)}
+.quiz-nova-helper .qnh-ask-btn:disabled{opacity:.7;cursor:wait}
+
+/* Chat panel — opens below the buttons when "Ask Nova" is tapped.
+   Conversation log + input + turn counter. Max 4 kid turns per
+   question; resets when renderQ rebuilds the helper for the next Q. */
+.quiz-nova-helper .qnh-chat{
+  width:100%;max-width:420px;margin-top:6px;
+  background:#fff;border:2px solid rgba(22,160,133,.28);
+  border-radius:18px;padding:0;
+  box-shadow:0 8px 24px rgba(22,160,133,.16);
+  overflow:hidden;
+  animation:qnhBubbleIn .35s var(--spring);
+  text-align:left;
+}
+.quiz-nova-helper .qnh-chat-head{
+  display:flex;align-items:center;gap:8px;
+  padding:10px 14px;border-bottom:1px solid rgba(22,160,133,.18);
+  background:rgba(22,160,133,.05);
+}
+.quiz-nova-helper .qnh-chat-title{font-size:12px;font-weight:800;letter-spacing:.4px;color:var(--ink2);text-transform:uppercase}
+.quiz-nova-helper .qnh-chat-log{
+  display:flex;flex-direction:column;gap:8px;
+  padding:14px;max-height:280px;overflow-y:auto;
+  background:#fafdfb;
+}
+.quiz-nova-helper .qnh-msg{
+  max-width:80%;padding:9px 13px;border-radius:14px;
+  font-size:14px;line-height:1.45;font-weight:500;
+  word-wrap:break-word;
+}
+.quiz-nova-helper .qnh-msg-nova{
+  align-self:flex-start;background:#fff;border:1px solid rgba(22,160,133,.22);color:var(--ink);
+  border-bottom-left-radius:4px;
+}
+.quiz-nova-helper .qnh-msg-kid{
+  align-self:flex-end;background:linear-gradient(135deg,#6c5ce7,#a29bfe);color:#fff;
+  border-bottom-right-radius:4px;
+}
+.quiz-nova-helper .qnh-msg-redirect{
+  border-color:rgba(253,203,110,.45);background:rgba(253,203,110,.08);
+}
+.quiz-nova-helper .qnh-msg-thinking{
+  display:inline-flex;align-items:center;color:var(--ink2);font-weight:600;font-style:italic;
+}
+.quiz-nova-helper .qnh-chat-input-wrap{
+  display:flex;align-items:center;gap:8px;
+  padding:10px 12px;border-top:1px solid rgba(22,160,133,.15);
+  background:#fff;
+}
+.quiz-nova-helper .qnh-chat-input{
+  flex:1;min-width:0;padding:9px 12px;
+  border:1.5px solid var(--line);border-radius:999px;
+  font-family:inherit;font-size:14px;color:var(--ink);background:#fff;
+}
+.quiz-nova-helper .qnh-chat-input:focus{outline:none;border-color:#16a085;box-shadow:0 0 0 3px rgba(22,160,133,.15)}
+.quiz-nova-helper .qnh-chat-input:disabled{background:#f4f3fa;color:var(--ink3)}
+.quiz-nova-helper .qnh-chat-send{
+  flex-shrink:0;width:36px;height:36px;border-radius:50%;border:none;
+  background:linear-gradient(135deg,#16a085,#48c9b0);color:#fff;
+  font-family:inherit;font-size:18px;font-weight:800;cursor:pointer;
+  box-shadow:0 4px 10px rgba(22,160,133,.3);
+  transition:transform .15s ease,filter .15s ease;
+}
+.quiz-nova-helper .qnh-chat-send:hover{transform:translateY(-1px);filter:brightness(1.05)}
+.quiz-nova-helper .qnh-chat-send:disabled{background:#cbd2d8;cursor:default;box-shadow:none;transform:none}
+.quiz-nova-helper .qnh-chat-footer{
+  padding:8px 14px;font-size:11.5px;color:var(--ink3);font-weight:700;
+  border-top:1px solid rgba(22,160,133,.1);background:#f8fbfa;
+  text-align:center;
+}
+.quiz-nova-helper .qnh-chat-footer-done{color:#0a8e6f}
+@media (max-width:520px){
+  .quiz-nova-helper .qnh-chat{max-width:none}
+}
 @media (max-width:520px){
   .quiz-nova-helper{align-items:stretch}
   .quiz-nova-helper .qnh-mascot{align-self:flex-end}
@@ -21722,6 +21811,180 @@ function buildQuizNovaHelper(q){
       }
     });
   }
+
+  // "💬 Ask Nova" — locked-down chatbox. The kid can ask up to 4
+  // questions about the CURRENT lesson question; Nova replies via
+  // /sidekick. Strictly question-scoped server-side: off-topic gets
+  // redirected, answer-leak attempts get refused, banned topics
+  // bounce. Per-question conversation — resets when renderQ rebuilds
+  // the helper for the next question.
+  if(aiFeatureOn('FEATURE_SIDEKICK')){
+    const askBtn = h('button',{
+      type:'button', class:'qnh-ask-btn',
+      title:'Chat with Nova about this question. She stays on topic and never reveals the answer.',
+    },[
+      h('span',{class:'qnh-show-ico'},'💬'),
+      h('span',{},'Ask Nova'),
+    ]);
+    root.appendChild(askBtn);
+
+    askBtn.addEventListener('click', ()=>{
+      askBtn.disabled = true;
+      askBtn.style.display = 'none'; // collapse the button once chat is open
+      const chat = buildSidekickChat(q);
+      if(chat) root.appendChild(chat);
+    });
+  }
+
+  return root;
+}
+
+/* Build the locked-down sidekick chat panel for the current question.
+   Lives inside the quiz Nova helper. Maintains its own conversation
+   state (messages array + remaining turns). Each kid → Nova round
+   trip POSTs to /sidekick with the FULL conversation history so the
+   model has context.
+
+   Hard limits enforced client-side:
+     • 4 kid turns max per question (server has its own history cap of 8)
+     • 280 chars per message (server clamps too)
+     • Turn count visible so the kid knows when they're running out
+
+   When out of turns, the input collapses with "I've helped all I can
+   for this one — try answering!" so the kid is gently nudged back to
+   the choice buttons. */
+function buildSidekickChat(q){
+  if(!q) return null;
+  const MAX_TURNS = 4;
+  const root = h('div',{class:'qnh-chat'});
+  root.appendChild(h('div',{class:'qnh-chat-head'},[
+    h('span',{class:'qnh-badge'},'NOVA'),
+    h('span',{class:'qnh-chat-title'},'Ask about this question'),
+  ]));
+  const log = h('div',{class:'qnh-chat-log','aria-live':'polite'});
+  // Open with a Nova-side greeting so the panel doesn't look empty +
+  // sets the tone (just this question).
+  log.appendChild(h('div',{class:'qnh-msg qnh-msg-nova'}, "Hi! I can help with THIS question. What's tricky about it?"));
+  root.appendChild(log);
+
+  const inputWrap = h('div',{class:'qnh-chat-input-wrap'});
+  const input = h('input',{
+    type:'text', class:'qnh-chat-input',
+    placeholder:'Type a question about this lesson…',
+    'aria-label':'Ask Nova about this question',
+    maxlength:'280',
+  });
+  const sendBtn = h('button',{
+    type:'button', class:'qnh-chat-send',
+    'aria-label':'Send message',
+  }, '→');
+  inputWrap.appendChild(input);
+  inputWrap.appendChild(sendBtn);
+  root.appendChild(inputWrap);
+
+  const footer = h('div',{class:'qnh-chat-footer'},
+    MAX_TURNS + ' messages left. Nova only helps with this question.');
+  root.appendChild(footer);
+
+  // Conversation state. `history` is the array we send to /sidekick
+  // (kid + nova alternating). `turnsUsed` tracks the kid's turns,
+  // capped at MAX_TURNS.
+  const history = [];
+  let turnsUsed = 0;
+  let inFlight = false;
+
+  function setFooter(){
+    const left = MAX_TURNS - turnsUsed;
+    if(left <= 0){
+      footer.textContent = "I've helped all I can with this one — go ahead and try answering!";
+      footer.classList.add('qnh-chat-footer-done');
+    } else {
+      footer.textContent = left + ' message' + (left === 1 ? '' : 's') + ' left. Nova only helps with this question.';
+    }
+  }
+
+  function disableInput(reason){
+    input.disabled = true;
+    sendBtn.disabled = true;
+    if(reason === 'done'){
+      input.placeholder = 'Out of messages — try answering now!';
+    }
+  }
+
+  async function send(){
+    if(inFlight) return;
+    if(turnsUsed >= MAX_TURNS) return;
+    const text = (input.value || '').trim();
+    if(!text) return;
+    if(text.length < 2) return;
+
+    inFlight = true;
+    turnsUsed += 1;
+    // Render kid bubble
+    log.appendChild(h('div',{class:'qnh-msg qnh-msg-kid'}, text));
+    history.push({ role:'kid', text });
+    input.value = '';
+    setFooter();
+
+    // Spinner placeholder while the model thinks
+    const thinking = h('div',{class:'qnh-msg qnh-msg-nova qnh-msg-thinking'},[
+      h('span',{class:'ai-btn-spin'}),
+      h('span',{style:'margin-left:8px'},'Nova is thinking…'),
+    ]);
+    log.appendChild(thinking);
+    log.scrollTop = log.scrollHeight;
+
+    const payload = {
+      questionType: q.type || 'unknown',
+      prompt: q.q || q.prompt || '',
+      choices: Array.isArray(q.choices) ? q.choices.slice(0, 6) : null,
+      correctAnswer: (typeof q.answer !== 'undefined') ? q.answer : null,
+      gradeContext: (function(){
+        try {
+          const me = STUDENTS.find(x => x.id === currentUser);
+          return me ? me.grade : '';
+        } catch(_){ return ''; }
+      })(),
+      history: history.slice(0, -1),  // exclude the just-added kid message; server reconstructs from history + message
+      message: text,
+    };
+    const res = await callAI('/sidekick', payload, { studentId: currentUser, timeoutMs: 14000 });
+    inFlight = false;
+    thinking.remove();
+
+    let replyText, isOnTopic = true;
+    if(res.ok && res.data && res.data.reply){
+      replyText = String(res.data.reply);
+      isOnTopic = res.data.onTopic !== false;
+    } else if(res.capped){
+      replyText = "I've helped all I can today — try sounding it out yourself! Come back tomorrow.";
+      disableInput('done');
+    } else {
+      // Network / disabled / error → soft, on-brand redirect.
+      replyText = "I can't chat right now. Try reading the question one more time — I bet you can spot it.";
+    }
+    const novaBubble = h('div',{
+      class:'qnh-msg qnh-msg-nova' + (isOnTopic ? '' : ' qnh-msg-redirect'),
+    }, replyText);
+    log.appendChild(novaBubble);
+    log.scrollTop = log.scrollHeight;
+    history.push({ role:'nova', text: replyText });
+    try { speakAsNova(replyText); } catch(_){}
+
+    if(turnsUsed >= MAX_TURNS) disableInput('done');
+  }
+
+  sendBtn.addEventListener('click', send);
+  input.addEventListener('keydown', (e)=>{
+    if(e.key === 'Enter' && !e.shiftKey){
+      e.preventDefault();
+      send();
+    }
+  });
+
+  // Auto-focus the input when the panel opens — the kid wanted to chat,
+  // they shouldn't have to tap again.
+  setTimeout(()=>{ try { input.focus(); } catch(_){} }, 80);
 
   return root;
 }
