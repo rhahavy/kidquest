@@ -481,8 +481,20 @@ img{max-width:100%}
 /* Nova (inline SVG mascot) replaces the old '👋' emoji on the dashboard hero.
    We keep @keyframes wave in case other screens still reference it. */
 @keyframes wave{0%,100%{transform:translateY(-50%) rotate(0)}25%{transform:translateY(-50%) rotate(15deg)}75%{transform:translateY(-50%) rotate(-15deg)}}
-.dash-hero .mascot-wrap{margin-left:auto;align-self:center}
-@media(max-width:640px){.dash-hero .mascot-wrap{margin-left:0;width:100%;justify-content:flex-start}.dash-hero .mascot-wrap .speech-bubble{max-width:none}}
+/* Reserve a FIXED column for Nova on desktop so her speech bubble's
+   variable-length quips ("You poke good." vs "All three of my hearts
+   just did a flip!") don't reshuffle the row. The bubble itself gets
+   a fixed inner width + min-height so short and long quips occupy
+   the same visual footprint — text wraps to additional lines instead
+   of expanding/collapsing the bubble. Combined: hero is rock-solid,
+   no layout shift on every Nova render. Mobile (<640px) drops the
+   fixed sizing and lets Nova flow full-width below the info block. */
+.dash-hero .mascot-wrap{flex:0 0 320px;align-self:center;justify-content:flex-end;margin-left:auto}
+.dash-hero .mascot-wrap .speech-bubble{width:180px;min-height:60px;max-width:none;display:flex;align-items:center}
+@media(max-width:640px){
+  .dash-hero .mascot-wrap{flex:0 0 100%;margin-left:0;justify-content:flex-start}
+  .dash-hero .mascot-wrap .speech-bubble{width:auto;max-width:none;min-height:0;display:block}
+}
 
 /* ==========================================================================
    AVATAR PICKER — grid of emoji choices kids can pick for their tile
