@@ -2374,24 +2374,32 @@ tbody tr:last-child td{border-bottom:none}
     // Reading lesson should have at least one passage block — but skip
     // the warning when the lesson is intentionally a skill drill, not a
     // comprehension lesson. Heuristics:
-    //   1) demoOnly previews — already exempt above.
-    //   2) Pre-readers (JK / SK) — kids can't decode passages yet;
+    //   1) Pre-readers (JK / SK) — kids can't decode passages yet;
     //      reading lessons at this grade are phonics, letter recognition,
     //      and rhyming, not story comprehension.
-    //   3) Lessons that contain order/match/compare questions — those
-    //      are sequencing, vocabulary-match, or comparison drills with
-    //      mini-contexts embedded in the question, not passage-driven.
+    //   2) Lessons where the MAJORITY of questions are skill-drill types
+    //      (order / match / compare) — those are sequencing, vocab-match,
+    //      or comparison drills end-to-end. NOTE: previously a single
+    //      skill-drill question exempted the whole lesson; that hid real
+    //      bugs (e.g. w1-rushan-r4 had 4 of 5 Qs that needed a passage
+    //      but the scanner stayed quiet because of one match question).
+    //      Now the threshold is >50%.
+    //   3) demoOnly previews — DROPPED. A reading preview without a
+    //      passage is just as broken as a real lesson without one,
+    //      maybe worse: it's the first thing parents see in a demo.
     var isReading = /reading|^r$/i.test(subject || '');
-    if(isReading && !isDemo){
+    if(isReading){
       var grade = (activity.curriculum && activity.curriculum.grade) || '';
       var isPreReader = /^(Junior|Senior)\s+Kindergarten$/i.test(grade);
-      var hasSkillDrillTypes = activity.questions.some(function(q){
+      var skillDrillCount = activity.questions.filter(function(q){
         return q && (q.type === 'order' || q.type === 'match' || q.type === 'compare');
-      });
+      }).length;
+      var totalQs = activity.questions.length;
+      var isMostlyDrills = totalQs > 0 && (skillDrillCount / totalQs) > 0.5;
       var hasPassage = activity.questions.some(function(q){
         return q && q.type === 'passage' && q.passage && String(q.passage).trim().length > 0;
       });
-      if(!hasPassage && !isPreReader && !hasSkillDrillTypes){
+      if(!hasPassage && !isPreReader && !isMostlyDrills){
         issues.push({severity:'warn', code:'reading-no-passage',
           msg:'Reading lesson has no passage block — kids see questions with no story.'});
       }

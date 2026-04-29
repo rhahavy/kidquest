@@ -4193,7 +4193,10 @@ akaran: {
       curriculum: oc('Grade 1', 'Language — C. Comprehension', ['C1.2','C1.3'], 'Retell a short story identifying beginning, middle, and end.'),
       lesson:{title:'Story Order',intro:'Every story has a BEGINNING, MIDDLE, and END. Good readers can retell what happened in order.',example:'Beginning: The problem starts. Middle: Things happen. End: The problem is solved.',hint:'Think: what happened first, next, and last?'},
       questions:[
-        {type:'order',q:'Put this story in the right order.',items:['Ben found a stray kitten in the rain.','He brought it inside and dried it with a towel.','He gave it warm milk and a cozy blanket.','The next day, he found the kitten\'s owner.'],correctOrder:[0,1,2,3]},
+        {type:'passage',
+          passage:'Ben was walking home in the cold rain. Suddenly, he heard a tiny meow from under a bush. It was a stray kitten, all wet and shivering. Ben gently picked it up and brought it inside. He dried the kitten with a soft towel and gave it warm milk in a little bowl. The kitten purred and curled up in a cozy blanket. The next day, Ben\'s neighbor came by — the kitten was hers, and she had been looking everywhere!',
+          q:'What did Ben do FIRST after hearing the meow?',
+          choices:['Gave the kitten warm milk','Gently picked up the kitten','Found the owner','Dried it with a towel'],answer:1},
         {type:'order',q:'Order the events!',items:['Maya planted a seed in a pot.','She watered it every day.','A tiny green sprout appeared.','The sprout grew into a beautiful sunflower.'],correctOrder:[0,1,2,3]},
         {type:'mcq',q:'In a story, the problem usually appears in the...',choices:['Title','Beginning','End','Author\'s name'],answer:1},
         {type:'mcq',q:'The solution to a problem usually comes at the...',choices:['Beginning','Middle','End','Title'],answer:2},
@@ -4665,6 +4668,10 @@ rushan: {
       curriculum: oc('Grade 2', 'Language — B. Foundations of Language', ['B2.1','B2.3'], 'Match vocabulary to definitions and identify synonyms and antonyms.'),
       lesson:{title:'Word Meanings',intro:'Knowing what words mean helps you understand stories better.',example:'Huge = very big. Tiny = very small. Swift = very fast.',hint:'Think about the word in a sentence.'},
       questions:[
+        {type:'passage',
+          passage:'The huge brown bear lumbered through the chilly forest. Snow crunched under its giant paws. Suddenly, a tiny squirrel darted past — faster than a blink. The bear blinked, surprised. The little squirrel was so swift that it disappeared between the trees in seconds.',
+          q:'In the story, which word means "very big"?',
+          choices:['Tiny','Huge','Chilly','Swift'],answer:1},
         {type:'match',q:'Match each word to its meaning!',pairs:[['Huge','Very big'],['Tiny','Very small'],['Swift','Very fast'],['Chilly','A little cold']]},
         {type:'mcq',q:'What does "gigantic" mean?',choices:['Very tiny','Very big','Very soft','Very loud'],answer:1},
         {type:'mcq',q:'What does "whisper" mean?',choices:['Shout loudly','Talk very softly','Sing','Laugh'],answer:1},
@@ -4674,6 +4681,10 @@ rushan: {
       curriculum: oc('Grade 2', 'Language — B. Foundations of Language', ['B3.3'], 'Unscramble words into complete sentences with subject-verb-object order.'),
       lesson:{title:'Sentence Order',intro:'Words in a sentence go in a specific order. Unscramble by asking "what makes sense?"',example:'"The curious cat quietly climbed the tree."',hint:'Usually: Who → did what → where/when.'},
       questions:[
+        {type:'passage',
+          passage:'Yesterday, Tom had a perfect Saturday morning. The happy dog played in the park. Tom threw a ball, and his dog ran swiftly across the grass. Afterwards, Tom sat under a tree and ate a big red apple. Birds sang above, and a rabbit hopped past. It was the best morning all week.',
+          q:'According to the passage, what did Tom do AFTER playing with the dog?',
+          choices:['Went home','Sat under a tree and ate an apple','Climbed the tree','Talked to the rabbit'],answer:1},
         {type:'order',q:'Unscramble this sentence.',items:['The','happy','dog','played','in','the','park'],correctOrder:[0,1,2,3,4,5,6]},
         {type:'order',q:'Unscramble this sentence.',items:['She','ate','a','big','red','apple'],correctOrder:[0,1,2,3,4,5]},
         {type:'order',q:'Put the story in order.',items:['The sun rose over the hills.','Birds began to sing.','A rabbit hopped out.','It nibbled on fresh grass.'],correctOrder:[0,1,2,3]},
@@ -8969,6 +8980,23 @@ WEEKS[2] = {
       hint:'Parents: this is a sample of upcoming content.' },
     questions: qs.map(r => ({type:'mcq', q:r[0], choices:r[1], answer:r[2]})),
   });
+  // PR — same as P but the FIRST question is a `type:'passage'` block
+  // carrying a short story; the rest are comprehension MCQs that pull
+  // their answers from that passage. Use this for reading-preview
+  // lessons at G1+ so kids see an actual story instead of abstract
+  // "what is a fact?" questions floating in space. JK/SK preview
+  // reading stays on P() because pre-readers can't decode passages —
+  // those levels do phonics, rhyme, and letter-recognition instead.
+  const PR = (id, title, emoji, passage, qs) => ({
+    id, title, emoji, demoOnly:true,
+    curriculum: previewCurrFor(id),
+    lesson:{ title:title, intro:'Read the story, then answer the questions.',
+      example:'Preview lesson — real students unlock this after finishing Levels 1–5 in every subject!',
+      hint:'Parents: this is a sample of upcoming content.' },
+    questions: qs.map((r, idx) => idx === 0
+      ? {type:'passage', passage: passage, q:r[0], choices:r[1], answer:r[2]}
+      : {type:'mcq', q:r[0], choices:r[1], answer:r[2]}),
+  });
 
   const W = WEEKS[1];
   const push = (sid, subj, levels) => { if(W[sid] && W[sid][subj]) W[sid][subj].push(...levels); };
@@ -9153,26 +9181,31 @@ WEEKS[2] = {
 
   /* ===== AKARAN (Grade 1 / 2) ===== */
   push('akaran','reading',[
-    P('w1-akaran-r6','Find the Fact','🔎','Stories have FACTS — details that are true in the story.',[
-      ['To find a fact, you should...',['guess','read carefully','skip it','close the book'],1],
-      ['Facts tell us what is...',['pretend','true','colorful','loud'],1],
-      ['If a story says "the dog is brown," the dog is...',['black','brown','white','pink'],1]]),
-    P('w1-akaran-r7','Tricky Words','💡','Sight words are words we see a lot: "the, and, of, was, said."',[
-      ['Which is a sight word?',['elephant','the','watermelon','sidewalk'],1],
-      ['Sight words we should...',['skip','know by heart','write only','hide'],1],
-      ['"Said" is a...',['color','sight word','number','shape'],1]]),
-    P('w1-akaran-r8','Story Order','📖','Stories have an order: first, next, then, last.',[
-      ['After "first" comes...',['last','next','never','alone'],1],
-      ['The LAST thing in a story is the...',['start','ending','title','cover'],1],
-      ['"Then" comes...',['before next','before first','between events','never'],2]]),
-    P('w1-akaran-r9','What\'s the Word?','🗣️','Using clues in the sentence helps us guess word meanings.',[
-      ['"The cat was FURIOUS — she hissed and scratched." FURIOUS means...',['happy','very angry','sleepy','hungry'],1],
-      ['"The puppy was TINY, smaller than a shoe." TINY means...',['very big','very small','loud','fluffy'],1],
-      ['"She GIGGLED with joy." GIGGLED means...',['cried','laughed','frowned','slept'],1]]),
-    P('w1-akaran-r10','Make a Picture','🎨','Good readers make pictures in their head when they read.',[
-      ['"The red balloon floated up into blue sky." Imagine...',['a rock sinking','a balloon rising','a fish swimming','a cake'],1],
-      ['When we make pictures, we help ourselves...',['forget','understand','skip','close the book'],1],
-      ['The word that helps picture color is...',['the','red','was','and'],1]]),
+    PR('w1-akaran-r6','Find the Fact','🔎',
+      'Maya read a book about giraffes. The book said giraffes have very long necks to reach leaves on tall trees. Maya wrote down this fact in her notebook.',[
+      ['What did Maya learn about giraffes?',['They have short necks','They have very long necks','They eat fish','They are blue'],1],
+      ['According to the book, giraffes\' necks help them reach...',['the ground','leaves on tall trees','the moon','other giraffes'],1],
+      ['Where did Maya write the fact?',['on the wall','in her notebook','in the sand','on a giraffe'],1]]),
+    PR('w1-akaran-r7','Tricky Words','💡',
+      'The cat sat on the mat. The cat said meow. Then the cat ran out the door.',[
+      ['Which sight word do you see in the passage?',['elephant','the','watermelon','sidewalk'],1],
+      ['What did the cat do FIRST?',['ran outside','sat on the mat','said meow','jumped'],1],
+      ['What did the cat say?',['woof','meow','hello','nothing'],1]]),
+    PR('w1-akaran-r8','Story Order','📖',
+      'First, Sam woke up. Next, he ate his breakfast. Then, he packed his school bag. Last, he walked to school.',[
+      ['What did Sam do FIRST?',['ate breakfast','woke up','packed his bag','walked to school'],1],
+      ['What did Sam do LAST?',['ate breakfast','woke up','packed his bag','walked to school'],3],
+      ['What did Sam do RIGHT AFTER waking up?',['walked to school','ate breakfast','packed his bag','went back to sleep'],1]]),
+    PR('w1-akaran-r9','What\'s the Word?','🗣️',
+      'The puppy was tiny — smaller than a teacup! It fit right in Maya\'s pocket. The little puppy giggled and licked her hand.',[
+      ['In this story, what does TINY mean?',['very big','very small','loud','sleepy'],1],
+      ['How small was the puppy?',['bigger than a house','smaller than a teacup','the size of a horse','the size of a cat'],1],
+      ['What did the puppy do to Maya\'s hand?',['bit it','licked it','hid from it','painted it'],1]]),
+    PR('w1-akaran-r10','Make a Picture','🎨',
+      'The red balloon floated high into the bright blue sky. A bird flew past, surprised. The balloon kept rising until it was just a tiny dot.',[
+      ['What color was the balloon?',['green','red','yellow','blue'],1],
+      ['Where did the balloon go?',['under the water','high into the sky','into a hole','into a pocket'],1],
+      ['At the end of the story, the balloon looked like a...',['huge cloud','tiny dot','red sun','flying bird'],1]]),
   ]);
   push('akaran','writing',[
     P('w1-akaran-w6','Full Sentence','📝','A complete sentence has a SUBJECT (who) and an ACTION (what they do).',[
