@@ -58,7 +58,12 @@ input,select,textarea{font-family:inherit}
    can always click home. */
 .brand{display:inline-flex;align-items:center;gap:10px;font-weight:800;font-size:22px;color:var(--ink);text-decoration:none}
 .brand:hover{text-decoration:none;color:var(--ink)}
-.brand-mark{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--primary),var(--primary2));display:flex;align-items:center;justify-content:center;color:#fff;font-size:22px;line-height:1;box-shadow:var(--shadow)}
+.brand-mark{width:36px;height:42px;display:flex;align-items:center;justify-content:center;line-height:0}
+.brand-mark .logo-nova-svg{display:block;width:100%;height:100%;filter:drop-shadow(0 2px 6px rgba(0,206,201,.4));animation:logoNovaBob 3.2s ease-in-out infinite}
+.brand-mark .logo-nova-tip{transform-origin:60px 12px;animation:logoNovaTip 1.8s ease-in-out infinite}
+@keyframes logoNovaBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+@keyframes logoNovaTip{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.3);opacity:.7}}
+@media (prefers-reduced-motion:reduce){.brand-mark .logo-nova-svg,.brand-mark .logo-nova-tip{animation:none}}
 .brand-sub{color:var(--ink3);font-size:13px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;margin-left:6px}
 /* Rainbow wordmark — same gradient + animation tokens used by the
    marketing site and the app shell so the brand renders identically
@@ -442,7 +447,7 @@ tbody tr:last-child td{border-bottom:none}
        there for consistency with the rest of the brand lockups across
        the site (marketing, app, thank-you all link home from the brand). -->
   <a class="brand" href="/admin/" style="justify-content:center;margin-bottom:18px" aria-label="Solvix Admin — go home">
-    <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><ellipse cx="12" cy="12" rx="9.5" ry="4" transform="rotate(-30 12 12)"/><ellipse cx="12" cy="12" rx="9.5" ry="4" transform="rotate(30 12 12)"/><circle cx="12" cy="12" r="2" fill="currentColor" stroke="none"/><circle cx="4.4" cy="17" r="1.1" fill="currentColor" stroke="none"/><circle cx="19.6" cy="7" r="0.9" fill="currentColor" stroke="none"/></svg></span>
+    <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 120 140" class="logo-nova-svg" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="lng" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#74B9FF"/><stop offset="100%" stop-color="#00CEC9"/></linearGradient><radialGradient id="lns" cx="35%" cy="30%" r="45%"><stop offset="0%" stop-color="#fff" stop-opacity=".35"/><stop offset="100%" stop-color="#fff" stop-opacity="0"/></radialGradient></defs><line x1="60" y1="30" x2="60" y2="18" stroke="#00CEC9" stroke-width="3" stroke-linecap="round"/><circle class="logo-nova-tip" cx="60" cy="12" r="6" fill="#FD79A8"/><circle cx="14" cy="74" r="9" fill="url(#lng)"/><circle cx="106" cy="86" r="7" fill="url(#lng)"/><path d="M60 32 C92 32 106 58 106 84 C106 112 86 128 60 128 C34 128 14 112 14 84 C14 58 28 32 60 32 Z" fill="url(#lng)"/><path d="M60 32 C92 32 106 58 106 84 C106 112 86 128 60 128 C34 128 14 112 14 84 C14 58 28 32 60 32 Z" fill="url(#lns)"/><circle cx="45" cy="72" r="13" fill="#fff"/><circle cx="75" cy="72" r="13" fill="#fff"/><circle cx="47" cy="75" r="7" fill="#1A1035"/><circle cx="77" cy="75" r="7" fill="#1A1035"/><circle cx="50" cy="72" r="2.5" fill="#fff"/><circle cx="80" cy="72" r="2.5" fill="#fff"/><ellipse cx="32" cy="92" rx="7" ry="5" fill="#FD79A8"/><ellipse cx="88" cy="92" rx="7" ry="5" fill="#FD79A8"/><path d="M48 100 Q60 112 72 100" stroke="#1A1035" stroke-width="3.5" fill="none" stroke-linecap="round"/></svg></span>
     <div><span class="solvix-rainbow">Solvix</span> <span class="brand-sub">Admin</span></div>
   </a>
   <h1>Sign in</h1>
@@ -456,7 +461,7 @@ tbody tr:last-child td{border-bottom:none}
 <div id="app" class="wrap hidden">
   <div class="topbar">
     <a class="brand" href="/admin/" aria-label="Solvix Admin — go home">
-      <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><ellipse cx="12" cy="12" rx="9.5" ry="4" transform="rotate(-30 12 12)"/><ellipse cx="12" cy="12" rx="9.5" ry="4" transform="rotate(30 12 12)"/><circle cx="12" cy="12" r="2" fill="currentColor" stroke="none"/><circle cx="4.4" cy="17" r="1.1" fill="currentColor" stroke="none"/><circle cx="19.6" cy="7" r="0.9" fill="currentColor" stroke="none"/></svg></span>
+      <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 120 140" class="logo-nova-svg" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="lng" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#74B9FF"/><stop offset="100%" stop-color="#00CEC9"/></linearGradient><radialGradient id="lns" cx="35%" cy="30%" r="45%"><stop offset="0%" stop-color="#fff" stop-opacity=".35"/><stop offset="100%" stop-color="#fff" stop-opacity="0"/></radialGradient></defs><line x1="60" y1="30" x2="60" y2="18" stroke="#00CEC9" stroke-width="3" stroke-linecap="round"/><circle class="logo-nova-tip" cx="60" cy="12" r="6" fill="#FD79A8"/><circle cx="14" cy="74" r="9" fill="url(#lng)"/><circle cx="106" cy="86" r="7" fill="url(#lng)"/><path d="M60 32 C92 32 106 58 106 84 C106 112 86 128 60 128 C34 128 14 112 14 84 C14 58 28 32 60 32 Z" fill="url(#lng)"/><path d="M60 32 C92 32 106 58 106 84 C106 112 86 128 60 128 C34 128 14 112 14 84 C14 58 28 32 60 32 Z" fill="url(#lns)"/><circle cx="45" cy="72" r="13" fill="#fff"/><circle cx="75" cy="72" r="13" fill="#fff"/><circle cx="47" cy="75" r="7" fill="#1A1035"/><circle cx="77" cy="75" r="7" fill="#1A1035"/><circle cx="50" cy="72" r="2.5" fill="#fff"/><circle cx="80" cy="72" r="2.5" fill="#fff"/><ellipse cx="32" cy="92" rx="7" ry="5" fill="#FD79A8"/><ellipse cx="88" cy="92" rx="7" ry="5" fill="#FD79A8"/><path d="M48 100 Q60 112 72 100" stroke="#1A1035" stroke-width="3.5" fill="none" stroke-linecap="round"/></svg></span>
       <div><span class="solvix-rainbow">Solvix</span> <span class="brand-sub">Admin</span></div>
     </a>
     <div class="topbar-actions">
