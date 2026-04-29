@@ -33,6 +33,13 @@ DEFAULT_VOICE_ID = "21m00Tcm4TlvDq8ikWAM"  # Rachel — stock English voice
 # model on Starter — 30k ÷ 2 = 15k effective chars/mo.
 DEFAULT_MODEL_ID = "eleven_flash_v2_5"     # default: speed + quota-friendly
 
+# Output bitrate. Free / Creator tier ONLY allows 128 kbps; Starter
+# and above unlock 192. If you set this to a format your tier doesn't
+# allow, ElevenLabs returns 403 "output_format_not_allowed" and Nova
+# goes silent (kid falls through to browser TTS). Bump to mp3_44100_192
+# the day you upgrade your ElevenLabs plan — no code change needed.
+OUTPUT_FORMAT = "mp3_44100_128"
+
 # Origin allow-list for CORS. Only these sites can call /tts.
 # Comma-separated, no spaces required. Update when you add a custom
 # domain (e.g. https://kidquest.fun).

@@ -125,20 +125,27 @@ async function handleTts(request, env, corsOrigin) {
   const modelId = sanitizeId(body.modelId) || env.DEFAULT_MODEL_ID || FALLBACK_MODEL_ID;
 
   // Output format notes:
-  //   mp3_44100_128 — default on ElevenLabs Free (128 kbps). OK but
-  //                    slightly muddy on short consonants; kids doing
-  //                    phonics reads sometimes mishear "th" vs "f".
-  //   mp3_44100_192 — 192 kbps, unlocked on the Starter tier and up.
-  //                    Costs the same in character credits — higher
-  //                    bitrate is a free audio-quality win once the
-  //                    account is Starter+. Audible improvement on
+  //   mp3_44100_128 — works on EVERY ElevenLabs tier including Free.
+  //                    OK quality; slightly muddy on short consonants
+  //                    (phonics reads can mishear "th" vs "f").
+  //   mp3_44100_192 — 192 kbps, requires Starter tier or higher.
+  //                    Same character cost; audible improvement on
   //                    cloned voices (Nova) and French cadence.
-  // We request 192 unconditionally. If the account ever drops back to
-  // Free, ElevenLabs returns a clear error and the client trips its
-  // cooldown → browser TTS fallback. Safe to keep asking for the best.
+  //   mp3_44100_64  — 64 kbps, "best effort" on Free if 128 is also
+  //                    blocked. Almost never needed.
+  //
+  // Past bug: previously hardcoded to 192. On Free / Creator (and any
+  // account that didn't unlock 192 kbps) ElevenLabs returns a hard 403
+  // with code "output_format_not_allowed" — Nova went silent and we
+  // fell through to browser TTS for every kid. Default is now 128
+  // (universal) and configurable via OUTPUT_FORMAT in wrangler.toml
+  // so the operator can bump back to 192 the moment they upgrade,
+  // no code change needed.
+  const FALLBACK_OUTPUT_FORMAT = 'mp3_44100_128';
+  const outputFormat = sanitizeId(env.OUTPUT_FORMAT) || FALLBACK_OUTPUT_FORMAT;
   const upstreamUrl =
     `https://api.elevenlabs.io/v1/text-to-speech/${encodeURIComponent(voiceId)}` +
-    `?output_format=mp3_44100_192`;
+    `?output_format=${encodeURIComponent(outputFormat)}`;
 
   // Stability/similarity defaults chosen for a calm, consistent
   // read-aloud voice. Adjusting these means re-uploading a custom
