@@ -185,7 +185,7 @@ section.tight{padding:56px 0}
 .nova-grid{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center;max-width:1020px;margin:0 auto}
 @media(max-width:820px){.nova-grid{grid-template-columns:1fr;gap:36px}}
 .nova-stage{display:flex;flex-direction:column;align-items:center;gap:20px;padding:8px}
-.nova-mascot{width:180px;height:auto;filter:drop-shadow(0 10px 28px rgba(108,92,231,.25));animation:novaFloat 4s ease-in-out infinite}
+.nova-mascot{width:180px;height:auto;filter:drop-shadow(0 10px 28px rgba(0,206,201,.28));animation:novaFloat 4s ease-in-out infinite}
 @keyframes novaFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
 .nova-chat{display:flex;flex-direction:column;gap:12px;width:100%;max-width:380px}
 .nova-bubble{position:relative;padding:14px 18px;border-radius:18px;font-size:15px;line-height:1.5;box-shadow:var(--shadow)}
@@ -931,16 +931,21 @@ footer{padding:48px 0;border-top:1px solid var(--line);margin-top:72px}
       <div class="nova-stage">
         <svg viewBox="0 0 120 140" class="nova-mascot" xmlns="http://www.w3.org/2000/svg" aria-label="Nova the alien tutor">
           <defs>
+            <!-- Nova's default "cheerful" palette from app/index.html
+                 NOVA_TONES — sky blue → teal. Do NOT swap to brand
+                 purple here even though it'd match the page chrome:
+                 Nova is her own character with her own colors, and
+                 mismatched mascot ≠ what kids meet in-app. -->
             <linearGradient id="novaMG" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stop-color="#A29BFE"/>
-              <stop offset="100%" stop-color="#6C5CE7"/>
+              <stop offset="0%" stop-color="#74B9FF"/>
+              <stop offset="100%" stop-color="#00CEC9"/>
             </linearGradient>
             <radialGradient id="novaMS" cx="35%" cy="30%" r="45%">
               <stop offset="0%" stop-color="#fff" stop-opacity=".35"/>
               <stop offset="100%" stop-color="#fff" stop-opacity="0"/>
             </radialGradient>
           </defs>
-          <line x1="60" y1="30" x2="60" y2="18" stroke="#6C5CE7" stroke-width="3" stroke-linecap="round"/>
+          <line x1="60" y1="30" x2="60" y2="18" stroke="#00CEC9" stroke-width="3" stroke-linecap="round"/>
           <circle cx="60" cy="12" r="6" fill="#FD79A8"/>
           <circle cx="14" cy="74" r="9" fill="url(#novaMG)"/>
           <circle cx="106" cy="86" r="7" fill="url(#novaMG)"/>
