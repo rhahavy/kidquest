@@ -2280,15 +2280,21 @@ tbody tr:last-child td{border-bottom:none}
       return issues;
     }
     // Demo-only preview lessons (Levels 6-10) are intentionally lightweight
-    // — 1 short lesson + 3 MCQs by design — so the wrong-question-count
-    // warning is a false-positive on them. Skip it for those.
-    if(activity.questions.length !== 5 && !activity.demoOnly){
+    // — 1 short lesson + 3 MCQs by design — so we suppress the
+    // wrong-question-count AND reading-no-passage warnings on them.
+    // Both are accurate-for-real-lessons but pure noise on previews.
+    var isDemo = !!activity.demoOnly;
+    // Question-count warning: tolerate 4-6 (the norm is 5 but adding
+    // a passage Q legitimately bumps a reading lesson to 6, and skill
+    // drills sometimes ship at 4 with embedded mini-stories).
+    if(!isDemo && (activity.questions.length < 4 || activity.questions.length > 6)){
       issues.push({severity:'warn', code:'wrong-question-count',
-        msg:'Has ' + activity.questions.length + ' questions (Week-1 norm is 5).'});
+        msg:'Has ' + activity.questions.length + ' questions (Week-1 norm is 5; 4-6 is acceptable).'});
     }
-    // Reading lesson should have at least one passage block.
+    // Reading lesson should have at least one passage block — but
+    // demo previews are exempt (3-question marketing samples).
     var isReading = /reading|^r$/i.test(subject || '');
-    if(isReading){
+    if(isReading && !isDemo){
       var hasPassage = activity.questions.some(function(q){
         return q && q.type === 'passage' && q.passage && String(q.passage).trim().length > 0;
       });
