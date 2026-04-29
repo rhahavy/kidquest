@@ -17172,11 +17172,15 @@ function go(screen,opts={}){
     }
     else if(screen==='teacher') renderTeacher(root);
     else if(screen==='teacher-course'){
-      // Curriculum editor is classroom-plan only. Family plan users rely on
-      // the built-in course content and influence it via "About My Child"
-      // + per-student Education Plans instead of raw editing.
-      if(isFamilyPlan()) return go('teacher');
-      renderTeacherCourse(root);
+      // Per-tenant lesson editing has been retired — lesson content
+      // (titles, questions, AI rewrites, curriculum tags) is managed
+      // centrally by the Solvix admin at /admin/, NOT by individual
+      // tenant teachers or parents. Anyone who lands here from an
+      // older bookmark or an in-app jump bounces back to the
+      // teacher dashboard. Plan adjustments (Early Bridge,
+      // Auto-Stretch, IEP scaffolds) are still tenant-controllable
+      // via the Plans panel.
+      return go('teacher');
     }
     else if(screen==='parent') renderParentView(root);
     else renderHome(root); // unknown screen → safe fallback
@@ -25591,8 +25595,16 @@ function renderTeacher(root){
     { id:'students',     icon:'👥', title:'Students & Reports',    build: buildStudentInsightsPanel },
     { id:'plans',        icon:'📋', title:'Student Education Plans', build: buildStudentPlansPanel },
     { id:'about-child',  icon:'🧒', title:'About My Child',        build: renderAboutMyChild, familyOnly:true },
-    { id:'curriculum',   icon:'📚', title:'Course Editor',         build: buildCourseLink, classroomOnly:true },
-    { id:'ai-rewrites',  icon:'🤖', title:'AI Content Rewrites',   badge: countPendingAiRewrites(), badgeLabel:'AI rewrites awaiting review', build: buildAiRewritesPanel, classroomOnly:true },
+    // Lesson content (titles, questions, AI rewrites, curriculum tags)
+    // is managed centrally by the Solvix admin/operator at /admin/. The
+    // per-tenant Course Editor and AI Rewrites panels were removed so
+    // a tenant teacher can't fork the curriculum out of step with the
+    // grade master. Their per-student plan adjustments (Early Bridge,
+    // Auto-Stretch, IEP scaffolds, etc.) still live on the Plans panel
+    // above — those don't change WHAT kids learn, just HOW it's paced.
+    // The buildCourseLink / buildAiRewritesPanel functions are kept in
+    // place at lines 24738 / 24765 in case we re-introduce them behind
+    // an admin gate later.
     { id:'messages',     icon:'💬', title:'Messages',              badge: unreadTotal,       badgeLabel:'unread messages', build: renderTeacherMessages },
     { id:'parents',      icon:'📧', title:'Parent Reports',        badge: unreviewedReportsTotal, badgeLabel:'reports awaiting review', build: renderParentReports, classroomOnly:true },
     { id:'store',        icon:'🛍️', title:'Rewards Shop',          badge: pendingOrdersTotal, badgeLabel:'pending orders',  build: renderTeacherStore },
