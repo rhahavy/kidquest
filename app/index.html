@@ -13154,8 +13154,8 @@ const NOVA_TAP_QUIPS = [
   "Beep boop — oh wait, I'm not a robot!",
   "I blinked just for you.",
   "Did you see that? I winked.",
-  "Tap me again, I dare you.",
-  "Careful, I might do a flip.",
+  "Tap me again — I'll do something fun!",
+  "Careful, I might do a flip!",
 ];
 function attachNovaTapReaction(wrap, svg){
   let cooldown = false;
@@ -13405,7 +13405,7 @@ const NOVA_PEP = {
     "You kept going. That's the whole secret.",
     "A win is a win — mark it.",
     "Tiny rocket, real miles.",
-    "I logged this one on Learnia. We're watching. In a nice way.",
+    "I'm cheering for you all the way from Learnia.",
   ],
   fail: [
     "So close! Try again? 💪",
@@ -13426,7 +13426,7 @@ const NOVA_PEP_PERFECT_STREAK = [
   "TWO perfects in a row?! My antenna is melting.",
   "Back-to-back perfect. You're on another level today.",
   "Perfect, again. All three hearts are shaking.",
-  "Two perfects! Are you sure you're from Earth?",
+  "Two perfects! You've got serious brain power.",
 ];
 const NOVA_PEP_STRETCH = [
   "Stretch mode — you went EXTRA. I love that.",
@@ -14303,12 +14303,53 @@ function _getNovaVoice(lang){
 //   œ → oe, æ → ae, curly apostrophe → straight, non-breaking space → space.
 // Pure visual characters like the accents in "é" / "à" / "ç" are left alone;
 // the French voices handle those natively.
+/* Convert kid-facing text into something TTS engines can read cleanly.
+   Two jobs:
+
+   1) Normalize accented + composed characters that some voices stumble
+      on (œ, æ, smart-quote apostrophes, non-breaking spaces).
+
+   2) Convert math / code symbols into spoken English. Without this,
+      "Brain = charged" reads as "Brain equals charged" (weird in a
+      Nova quip) or "8 > 5" reads as "8 greater 5" / a literal
+      "greater than sign" depending on engine. Decorative arrows like
+      → ← get pronounced as "right pointing arrow" — strip those.
+
+      Order matters: multi-char ops (>=, <=, ==, !=) run BEFORE single
+      chars so ">=" doesn't become "is greater than equals". */
 function _normalizeForTts(text){
-  return String(text || '')
-    .replace(/\u0153/g,'oe').replace(/\u0152/g,'Oe')  // œ Œ
-    .replace(/\u00E6/g,'ae').replace(/\u00C6/g,'Ae')  // æ Æ
-    .replace(/\u2019/g,"'")                            // ’ → '
-    .replace(/\u00A0/g,' ');                           // nbsp → space
+  let s = String(text || '');
+  // --- Character normalization (was the original behavior) ---
+  s = s.replace(/\u0153/g,'oe').replace(/\u0152/g,'Oe')   // œ Œ
+       .replace(/\u00E6/g,'ae').replace(/\u00C6/g,'Ae')   // æ Æ
+       .replace(/\u2019/g,"'")                              // ’ → '
+       .replace(/\u00A0/g,' ');                             // nbsp → space
+  // --- Multi-character math/code operators (run FIRST) ---
+  s = s.replace(/>=/g, ' is at least ')
+       .replace(/<=/g, ' is at most ')
+       .replace(/==/g, ' equals ')
+       .replace(/!=/g, ' is not equal to ')
+       .replace(/&&/g, ' and ')
+       .replace(/\|\|/g, ' or ');
+  // --- Single-character math symbols ---
+  s = s.replace(/\s>\s/g, ' is greater than ')
+       .replace(/\s<\s/g, ' is less than ')
+       .replace(/[<>]/g, ' ')
+       .replace(/(\d)\s*=\s*(\d)/g, '$1 is $2')
+       .replace(/\s=\s/g, ' is ')
+       .replace(/=/g, ' ')
+       .replace(/\s\+\s/g, ' plus ')
+       .replace(/\s\u2212\s|\s-\s/g, ' minus ')
+       .replace(/\s\u00D7\s|\s\*\s/g, ' times ')
+       .replace(/\s\u00F7\s|\s\/\s/g, ' divided by ')
+       .replace(/(\d)%/g, '$1 percent')
+       .replace(/&/g, ' and ');
+  // --- Decorative arrows + bullets (strip, don't pronounce) ---
+  s = s.replace(/[\u2190-\u21FF\u2794-\u27BF\u00BB\u00AB]/g, ' ')
+       .replace(/[\u2022\u00B7\u25CF\u25EF\u25CE\u25CB]/g, ' ');
+  // --- Tidy: collapse whitespace ---
+  s = s.replace(/\s+/g, ' ').trim();
+  return s;
 }
 /* ==========================================================================
    ELEVENLABS VOICE LAYER (via Cloudflare Worker proxy)
