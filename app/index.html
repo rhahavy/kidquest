@@ -525,9 +525,58 @@ img{max-width:100%}
 /* Read-aloud toggle pill — a twin to .change-avatar-btn but with a
    tangible on/off state. The ON variant uses the same purple gradient as
    the primary TTS button so kids associate the two UIs. */
-.dash-hero .tts-dash-toggle{margin-top:6px;margin-left:6px;background:#f1f3f6;color:#555;border:1.5px solid #d8dbe0;border-radius:999px;padding:4px 12px;font-size:12px;font-weight:800;cursor:pointer;transition:all .2s ease;font-family:inherit}
-.dash-hero .tts-dash-toggle:hover{filter:brightness(.97);transform:translateY(-1px)}
-.dash-hero .tts-dash-toggle.on{background:linear-gradient(135deg,#6c5ce7 0%,#a29bfe 100%);color:#fff;border-color:rgba(255,255,255,.35);box-shadow:0 3px 10px rgba(108,92,231,.3)}
+/* Read-aloud toggle — designed to make ON vs OFF unambiguous at a
+   glance. Earlier version was a pill with subtle background change
+   plus 🔊/🔇 emojis; on Chromebooks the emoji rendered nearly
+   identical and the off-state bg blended into the hero card.
+   Now it's an iOS-style toggle: a track + a sliding dot that
+   physically moves left↔right plus a hard color change. Even at
+   thumbnail size you can read the state. */
+.dash-hero .tts-dash-toggle{
+  margin-top:6px;margin-left:6px;
+  display:inline-flex;align-items:center;gap:10px;
+  background:#fff;color:#5B5580;
+  border:2px solid #d8dbe0;
+  border-radius:999px;
+  padding:5px 14px 5px 6px;
+  font-size:12px;font-weight:800;
+  cursor:pointer;
+  transition:all .2s ease;
+  font-family:inherit;
+}
+.dash-hero .tts-dash-toggle:hover{filter:brightness(.98);transform:translateY(-1px)}
+/* Built-in track + sliding knob via ::before. Always visible; no JS
+   needed to animate state changes. Off = knob left + gray; on =
+   knob right + white-on-purple. */
+.dash-hero .tts-dash-toggle::before{
+  content:"";
+  flex-shrink:0;
+  width:32px;height:18px;
+  border-radius:999px;
+  background:#cbd2d8;
+  position:relative;
+  transition:background .2s ease;
+}
+.dash-hero .tts-dash-toggle::after{
+  content:"";
+  flex-shrink:0;
+  width:14px;height:14px;
+  border-radius:50%;
+  background:#fff;
+  position:relative;
+  margin-left:-30px;
+  margin-right:16px;
+  box-shadow:0 1px 3px rgba(0,0,0,.18);
+  transition:transform .2s ease;
+}
+.dash-hero .tts-dash-toggle.on{
+  background:linear-gradient(135deg,#6c5ce7 0%,#a29bfe 100%);
+  color:#fff;
+  border-color:#6c5ce7;
+  box-shadow:0 4px 14px rgba(108,92,231,.4);
+}
+.dash-hero .tts-dash-toggle.on::before{background:rgba(255,255,255,.32)}
+.dash-hero .tts-dash-toggle.on::after{transform:translateX(14px);box-shadow:0 1px 4px rgba(0,0,0,.25)}
 .dash-hero .av{width:100px;height:100px;border-radius:28px;display:grid;place-items:center;font-size:52px;color:#fff;font-weight:700;font-family:var(--font-display);border:3px solid #fff;box-shadow:0 12px 26px rgba(26,16,53,.2),inset 0 -4px 0 rgba(0,0,0,.18);flex-shrink:0;transition:transform .4s var(--spring)}
 .dash-hero:hover .av{transform:rotate(-4deg) scale(1.04)}
 .dash-hero .info{flex:1;min-width:200px}
@@ -18642,7 +18691,12 @@ function renderDashboard(root){
       }
       renderDashboard(root);
     }
-  }, ttsOn ? '🔊 Read-aloud: ON' : '🔇 Read-aloud: OFF');
+  // The CSS draws the actual switch via ::before (track) + ::after
+  // (sliding knob). The label here is just the action name — state is
+  // unambiguous from the switch position + the purple-on-white color
+  // change. Plain text "Read aloud" is more reliable than 🔊/🔇
+  // emojis, which render almost identically on some Chromebooks.
+  }, 'Read aloud');
   // NOTE: Plan type (IEP/gifted/ESL/custom) and support tags (articulation,
   // etc.) are intentionally NOT shown on the kid-facing dashboard. That info
   // lives on the teacher dashboard only — it's for the tutor's planning, not
