@@ -20381,6 +20381,17 @@ function renderWrite(card,q){
     const text=ta.value.trim();
     const wc=text.split(/\s+/).filter(w=>w).length;
     if(wc<(q.minWords||2)){$('#fb').className='feedback no';$('#fb').textContent='Write a bit more! You need at least '+(q.minWords||2)+' words.';return}
+    // Re-entry guard — lock IMMEDIATELY before any heavy sync work. The
+    // writing submit chain runs gradeWriting → logWrongAnswer →
+    // maybeInjectEasier → getWeekActivities (which hashes every activity's
+    // lesson + question text). On a Chromebook that takes multiple frames,
+    // and a double-tap during that window used to spawn TWO concurrent
+    // handlers — they'd fight over the DOM and the page would appear to
+    // freeze. MCQ has always locked first thing (line ~20309); writing
+    // used to lock at the very end (after showNext), which was the race
+    // window. Mirror MCQ's pattern here.
+    if(quiz && quiz.locked) return;
+    if(quiz) quiz.locked = true;
     btn.disabled=true; ta.disabled=true; clearTimer();
     const result=gradeWriting(text,q);
     quiz.correct+=(result.level>=3?1:0); // Level 3-4 counts as correct
@@ -20406,8 +20417,22 @@ function renderWrite(card,q){
     if(aiFeatureOn('FEATURE_FEEDBACK')){
       attachAiWritingFeedback(area, text, q, result);
     }
-    quiz.locked=true;
+    // quiz.locked already set at the top of this handler — no need to
+    // re-set here. Just reveal the Next button so the kid can advance
+    // even while the AI feedback spinner is still chugging.
     showNext();
+    // Scroll the Next button into view. On a phone the rubric + AI box
+    // can push it below the fold, which contributes to the "I tapped
+    // Submit and nothing happened" perception even when the page is
+    // perfectly responsive.
+    setTimeout(()=>{
+      try {
+        const b = document.getElementById('nextBtn');
+        if(b && typeof b.scrollIntoView === 'function'){
+          b.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      } catch(_){}
+    }, 80);
   }},'Submit Writing ✏️');
   area.appendChild(btn);
   card.appendChild(area);
