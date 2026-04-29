@@ -2566,6 +2566,38 @@ tbody tr:last-child td{border-bottom:none}
       issues.push({severity:'error', code:'empty-questions', msg:'Questions array is empty.'});
       return issues;
     }
+    // Every activity should TEACH the kid something before asking them
+    // to answer. The renderQ flow prepends `{type:'lesson', lesson:
+    // activity.lesson}` to the question list when activity.lesson exists,
+    // which gives the kid an intro/example card before the first quiz Q.
+    // If activity.lesson is missing — OR present but empty (only a title,
+    // no actual teaching content) — kids land on Q1 cold with no
+    // instruction. That's the "answering blindly" anti-pattern.
+    //
+    // Bar for "real teaching content": at least one of these fields has
+    // meaningful text/data:
+    //   • intro    — the explainer paragraph ("Period (.) for statements...")
+    //   • example  — concrete worked example
+    //   • steps    — math step-by-step array
+    //   • pictures — picture-vocab array (JK letter cards, French animals)
+    //   • stack    — math stacked-column display spec
+    //
+    // A bare {title:'X'} doesn't count — the kid would see a near-empty
+    // card and immediately move to the questions, which is the same UX
+    // as having no lesson at all.
+    var lesson = activity.lesson;
+    var hasMeaningfulTeaching = false;
+    if(lesson && typeof lesson === 'object'){
+      if(lesson.intro    && String(lesson.intro).trim().length > 0)   hasMeaningfulTeaching = true;
+      if(lesson.example  && String(lesson.example).trim().length > 0) hasMeaningfulTeaching = true;
+      if(Array.isArray(lesson.steps)    && lesson.steps.length    > 0) hasMeaningfulTeaching = true;
+      if(Array.isArray(lesson.pictures) && lesson.pictures.length > 0) hasMeaningfulTeaching = true;
+      if(lesson.stack && typeof lesson.stack === 'object')             hasMeaningfulTeaching = true;
+    }
+    if(!hasMeaningfulTeaching){
+      issues.push({severity:'warn', code:'no-lesson-card',
+        msg:'No teaching lesson before the questions — kids see Q1 cold with no instruction. Add lesson.intro (or example / steps / pictures) so the concept is taught first.'});
+    }
     // Demo-only preview lessons (Levels 6-10) are intentionally lightweight
     // — 1 short lesson + 3 MCQs by design — so we suppress the
     // wrong-question-count AND reading-no-passage warnings on them.
