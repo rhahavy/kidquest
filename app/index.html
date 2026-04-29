@@ -21306,6 +21306,12 @@ function buildQuizNovaHelper(q){
         questionType: q.type || 'unknown',
         prompt: q.q || q.prompt || '',
         choices: Array.isArray(q.choices) ? q.choices.slice(0, 6) : null,
+        // Send the correct answer so the worker can explicitly tell the
+        // model "do not write THIS in your steps" + post-validate that
+        // the response doesn't leak it. Without this the model often
+        // computed the answer itself (esp. for math) and snuck it into
+        // a counting sequence.
+        correctAnswer: (typeof q.answer !== 'undefined') ? q.answer : null,
         gradeContext: (function(){
           try{
             const me = STUDENTS.find(x=>x.id===currentUser);

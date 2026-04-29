@@ -4689,37 +4689,67 @@ async function handleWorkedExample(request, env, ctx, corsOrigin) {
       questionType: String(body.questionType || 'unknown').slice(0, 40),
       prompt: String(body.prompt || '').trim().slice(0, 600),
       choices: Array.isArray(body.choices) ? body.choices.slice(0, 6).map(c => String(c).slice(0, 120)) : null,
+      // correctAnswer (Apr 2026): we now PASS the correct answer to the
+      // model so it knows EXACTLY what string/number to avoid revealing
+      // in its steps. Hiding it didn't work — for math the model just
+      // computed the answer itself and put it in the counting sequence
+      // ("count: 8, 9, 10, 11, 12"). Telling the model "do not say 12"
+      // is far more reliable than hoping it doesn't infer 12.
+      correctAnswer: (typeof body.correctAnswer === 'number' || typeof body.correctAnswer === 'string') ? body.correctAnswer : null,
       gradeContext: String(body.gradeContext || '').slice(0, 40),
       curriculum: (body.curriculum && typeof body.curriculum === 'object') ? body.curriculum : null,
     }),
     validate: ({ prompt }) => prompt ? null : { error: 'missing_prompt' },
     cacheKey: ({ prompt, choices, gradeContext, curriculum }) =>
       hashKey(
-        'worked-example',
+        // v3 (Apr 2026): stricter prompt that passes correctAnswer to the
+        // model + post-validates the response for leaks. Bumped from v2
+        // so previously-cached leaky responses get rebuilt.
+        'worked-example-v3',
         prompt,
         JSON.stringify(choices || []),
         gradeContext,
         curriculum ? JSON.stringify({g:curriculum.grade, s:curriculum.strand, c:curriculum.codes}) : ''
       ),
     cacheTtlSeconds: 30 * 24 * 3600,
-    maxTokens: 320,
+    maxTokens: 360,
     buildSystemPrompt: () => (
-      'You are Nova, a warm AI tutor for a child who is stuck on a quiz question. Show them HOW to approach the question step by step — without giving away the answer. Reply with STRICT JSON ONLY (no prose, no markdown fences). Shape:\n' +
+      'You are Nova, a warm AI tutor for a child stuck on a quiz question. Walk them through HOW to find the answer in 2-4 easy steps. The kid should be able to FIGURE OUT the answer from your steps without you ever stating it.\n\n' +
+      'REPLY WITH STRICT JSON ONLY (no prose, no markdown fences):\n' +
       '{\n' +
       '  "steps": [string, ...]   // 2 to 4 short steps. Each step is one sentence.\n' +
-      '  "finalNudge": string     // one short sentence pointing them back to the choices\n' +
+      '  "finalNudge": string     // one short sentence — encouragement to pick now\n' +
       '}\n\n' +
-      'Rules:\n' +
-      '- DO NOT reveal which choice is correct. Never say "the answer is" or hint at a specific letter/number.\n' +
-      '- Show the STRATEGY: how to read the question, what to look for, what to compare.\n' +
+      'CRITICAL — never reveal the answer:\n' +
+      '- DO NOT say "the answer is X" or "X is correct" or "pick X" or "choose X."\n' +
+      '- DO NOT name a specific choice by number, letter, or its full text. No "option 2", no "B", no "the third one."\n' +
+      '- DO NOT compute the final numeric answer. Stop ONE step short — let the kid do the last hop.\n' +
+      '- DO NOT quote back the exact correct choice as a "good example."\n\n' +
+      'BUT — make the answer obvious through the method:\n' +
+      '- For multiple choice: rule OUT clearly wrong choices ("\'in park we the played\' has the words mixed up like a puzzle"). It is fine to point at the structural pattern of one or two wrong choices — the kid eliminates them and the right one is left.\n' +
+      '- For math: walk the operation one tiny step at a time, STOPPING JUST BEFORE the final number. Example: "First add 8 + 4 = 12. Now take away 5. What\'s left?"\n' +
+      '- For reading comprehension: point to the EXACT sentence or phrase in the passage that holds the answer, without saying what the answer is. Example: "Look at the part that says \'because she was scared\'. What word comes right before that?"\n' +
+      '- For vocabulary: give the meaning in different words, without using the word itself. The kid maps it to the right choice.\n\n' +
+      'EXAMPLES OF GOOD vs BAD output:\n\n' +
+      'Q: "What is 7 + 5?" Correct answer: 12\n' +
+      '  BAD:  ["Now count up 5 more: 8, 9, 10, 11, 12.", "What number did you land on?"]   ← leaks 12 inside the count\n' +
+      '  BAD:  ["7 + 5 equals 12.", "The answer is 12."]   ← states it directly\n' +
+      '  GOOD: ["Start at 7 in your head.", "Count up four numbers: 8, 9, 10, 11.", "Now say one more — that\'s your answer."]\n\n' +
+      'Q: "Which sentence has the BEST word order? a) Park the in played we. b) We played in the park. c) Played we park the in. d) In park we the played." Correct answer: "We played in the park."\n' +
+      '  BAD:  ["Pick the one that says \'We played in the park.\'"]   ← quotes the correct choice text\n' +
+      '  GOOD: ["Read each one out loud in your head.", "Some have the words shuffled like a puzzle — those don\'t sound like real English.", "Find the one that sounds like a sentence you would actually say."]\n\n' +
+      'Q: "Why did Maya go to the park?" Passage mentions "to meet Jamie." Correct answer: "To meet Jamie"\n' +
+      '  BAD:  ["She went to meet Jamie."]   ← states the answer\n' +
+      '  GOOD: ["Find the part of the passage that mentions the park.", "Look at the words that come right after — they tell you why.", "Match those words to one of the choices."]\n\n' +
+      'OTHER RULES:\n' +
       '- Match the grade level: K-2 very simple words, 3-5 friendly, 6+ solid.\n' +
-      '- Be warm and concise — kids stuck on a question already feel slow; no lectures.\n' +
+      '- Be warm and concise. No lectures. No "you got this!" filler in the steps — save warmth for finalNudge.\n' +
       '- Never mention the student\'s name or any identifying detail.\n' +
-      '- finalNudge example: "Now you can pick the one that fits!" or "Try it — you\'ve got this."'
+      '- finalNudge: ~1 short encouraging sentence. Examples: "Now pick the one that fits!", "Which one matches?", "You can do it — give it a try."'
       + KID_SAFE_RULES
       + CURRICULUM_ALIGNMENT_RULES
     ),
-    buildUserPrompt: ({ questionType, prompt, choices, gradeContext, curriculum }) => {
+    buildUserPrompt: ({ questionType, prompt, choices, correctAnswer, gradeContext, curriculum }) => {
       let p = buildCurriculumBlock(curriculum || { grade: gradeContext }) + '\n\n';
       p += 'Question type: ' + questionType + '\n';
       p += 'Question the child sees: ' + prompt + '\n';
@@ -4727,10 +4757,21 @@ async function handleWorkedExample(request, env, ctx, corsOrigin) {
         p += 'Choices the child sees:\n';
         choices.forEach((c, i) => { p += '  ' + i + '. ' + c + '\n'; });
       }
+      // Tell the model the correct answer and ban it explicitly. Far more
+      // reliable than hoping the model won't infer it (which it always does
+      // for math). The instruction "DO NOT MENTION THIS" is a much harder
+      // signal than any general rule about avoiding spoilers.
+      const correctText = (typeof correctAnswer === 'number' && choices && choices[correctAnswer] !== undefined)
+        ? String(choices[correctAnswer])
+        : (correctAnswer != null ? String(correctAnswer) : '');
+      if (correctText) {
+        p += '\nThe correct answer is: ' + correctText + '\n';
+        p += 'DO NOT WRITE THIS ANSWER ANYWHERE in your steps or finalNudge — not as a number, not as text, not inside a list or counting sequence. The kid must figure it out from your method.\n';
+      }
       p += '\nNow write the JSON walkthrough — strategy only, no answer reveal.';
       return p;
     },
-    postProcess: (text) => {
+    postProcess: (text, inputs) => {
       const parsed = parseJsonFromText(text);
       if (!parsed || typeof parsed !== 'object') {
         return { error: 'parse_failed', raw: (text || '').slice(0, 200) };
@@ -4749,6 +4790,37 @@ async function handleWorkedExample(request, env, ctx, corsOrigin) {
       if (!out.steps || out.steps.length === 0) {
         return { error: 'no_steps' };
       }
+      // Belt-and-suspenders leak check: scan steps + finalNudge for the
+      // correct answer text. If it shows up, treat the response as
+      // contaminated and return an error so the client falls back to a
+      // soft generic nudge instead of leaking. This catches both direct
+      // ("the answer is 12") and indirect leaks ("count: 8, 9, 10, 11, 12").
+      try {
+        const inp = inputs || {};
+        const choices = Array.isArray(inp.choices) ? inp.choices : null;
+        const correctText = (typeof inp.correctAnswer === 'number' && choices && choices[inp.correctAnswer] !== undefined)
+          ? String(choices[inp.correctAnswer])
+          : (inp.correctAnswer != null ? String(inp.correctAnswer) : '');
+        if (correctText && correctText.trim().length > 0) {
+          // Build the haystack from all output text the kid will see.
+          const haystack = (out.steps.join(' ') + ' ' + (out.finalNudge || '')).toLowerCase();
+          const needle = correctText.trim().toLowerCase();
+          // For very short answers (1-3 chars, e.g. "12", "B"), do a
+          // word-boundary check so "1234" doesn't trip on "12". For longer
+          // answers, substring match is fine — they're distinctive.
+          let leaked = false;
+          if (needle.length <= 3) {
+            // Match as a standalone token (digit run or word).
+            const re = new RegExp('(?:^|[^\\w])' + needle.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '(?:[^\\w]|$)');
+            leaked = re.test(haystack);
+          } else {
+            leaked = haystack.indexOf(needle) !== -1;
+          }
+          if (leaked) {
+            return { error: 'answer_leaked', leaked: needle };
+          }
+        }
+      } catch (_) {}
       return out;
     },
     auditSummary: (inputs) => `worked-example → Q="${(inputs.prompt||'').slice(0, 60)}"`,
@@ -5093,8 +5165,12 @@ async function runStandardHandler({
     console.error('claude call failed', endpoint, err && err.message);
     return json({ error: 'upstream_failed', detail: String(err && err.message || err).slice(0, 200) }, 502, corsOrigin);
   }
-  // Handler-specific post-processing.
-  const out = postProcess(modelText);
+  // Handler-specific post-processing. We pass `inputs` as a second arg
+  // so handlers that need to validate the response against the original
+  // request (e.g. /worked-example checking the steps don't leak the
+  // correct answer) can do so. Existing single-arg postProcess fns
+  // ignore the extra parameter cleanly.
+  const out = postProcess(modelText, inputs);
   if (out && out.error) {
     // Model returned unparseable output — treat as upstream failure
     // so the frontend falls back gracefully.
