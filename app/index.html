@@ -2651,6 +2651,24 @@ body.has-dev-banner{padding-top:26px}
 .wish-toast.out{animation:toastOut .25s ease forwards}
 @keyframes toastOut{to{opacity:0;transform:translateX(-50%) translateY(15px)}}
 
+/* Streak coin toast — fires on login when the kid earned coins for
+   keeping their streak alive. Two flavours: regular (gradient blue/teal,
+   matches Nova) and milestone (warm fire gradient, slightly bigger,
+   stays on screen longer). The `streak-toast-flame` span pulses to draw
+   the eye to the streak count without being annoying. */
+.streak-toast{position:fixed;bottom:96px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#74B9FF,#00CEC9);color:#fff;padding:14px 22px;border-radius:22px;font-weight:800;box-shadow:0 14px 40px rgba(0,206,201,.35),0 4px 14px rgba(0,0,0,.18);z-index:260;animation:streakToastIn .35s var(--spring);display:flex;align-items:center;gap:14px;max-width:min(92vw,440px);border:2px solid rgba(255,255,255,.55)}
+.streak-toast.milestone{background:linear-gradient(135deg,#FF7A45,#FFB347 55%,#FFE066);color:#3a1d00;text-shadow:0 1px 0 rgba(255,255,255,.35);box-shadow:0 16px 50px rgba(255,140,60,.45),0 4px 14px rgba(0,0,0,.2)}
+.streak-toast-flame{font-size:32px;line-height:1;animation:streakFlame 1.2s ease-in-out infinite alternate;flex-shrink:0;filter:drop-shadow(0 2px 6px rgba(0,0,0,.25))}
+.streak-toast-body{display:flex;flex-direction:column;gap:2px;min-width:0}
+.streak-toast-title{font-size:16px;font-weight:900;letter-spacing:-.2px}
+.streak-toast-milestone-line{font-size:13px;font-weight:800;opacity:.95}
+.streak-toast-coins{font-size:14px;font-weight:800;display:flex;align-items:center;gap:5px;opacity:.96}
+.streak-toast-coins .coin{font-size:16px}
+.streak-toast.out{animation:streakToastOut .32s ease forwards}
+@keyframes streakToastIn{from{opacity:0;transform:translateX(-50%) translateY(20px) scale(.92)}to{opacity:1;transform:translateX(-50%) translateY(0) scale(1)}}
+@keyframes streakToastOut{to{opacity:0;transform:translateX(-50%) translateY(18px) scale(.96)}}
+@keyframes streakFlame{from{transform:scale(1) rotate(-3deg)}to{transform:scale(1.12) rotate(3deg)}}
+
 /* Wishlist section */
 .wish-section{margin-top:20px;padding:20px;background:linear-gradient(135deg,rgba(255,107,157,.06),rgba(253,203,110,.06));border:1px solid rgba(255,107,157,.15);border-radius:20px}
 .wish-section h3{font-size:18px;font-weight:800;display:flex;align-items:center;gap:8px;margin-bottom:4px}
@@ -12113,6 +12131,46 @@ let state = currentUser ? allData.users[currentUser] : null;
 let impersonating = false;
 let _impersonationStash = null; // { sid, realUserData } — set on enter
 
+/* ---- STREAK COIN REWARDS ----
+   Kids earn coins for KEEPING a daily-practice streak going. Day 1 of a
+   new streak gets nothing (you haven't "kept" anything yet); every day
+   thereafter pays a base of 5 coins, with milestone bonuses on top at
+   3 / 7 / 14 / every 30 days. The reward is wired into loginUser's
+   streak block (the only place state.streak ticks up) so the kid is
+   credited the moment they log in on day N+1, before they even start
+   a lesson.
+
+   pendingStreakReward is a transient handoff from the streak update to
+   the dashboard render — set when coins are awarded, consumed after
+   `go('dashboard')` so the celebration toast appears on top of the
+   already-rendered stats strip with the new coin total visible. */
+let pendingStreakReward = null;
+
+/* Coins awarded when the kid logs in on a consecutive day (i.e. their
+   streak ticks up by 1). Day 1 of a fresh streak returns 0 — we reward
+   continuation, not "you logged in today". Tuned so the steady-state
+   yield is meaningful but doesn't dwarf earned-from-quiz coins
+   (a typical perfect 5-question level pays 10; baseline streak day = 5,
+   so practising > showing-up). Milestone bonuses make week / month
+   anniversaries feel special. */
+function computeStreakReward(streak){
+  const n = Number(streak) || 0;
+  if(n < 2) return { coins: 0, milestone: null, streak: n };
+  const base = 5;
+  let bonus = 0, milestone = null;
+  if(n === 3)        { bonus = 10;  milestone = "3-day streak — On Fire!"; }
+  else if(n === 7)   { bonus = 25;  milestone = "1-week streak — incredible!"; }
+  else if(n === 14)  { bonus = 50;  milestone = "2-week streak — unstoppable!"; }
+  else if(n > 0 && n % 30 === 0){
+    bonus = 100;
+    const months = n / 30;
+    milestone = months === 1
+      ? "1-month streak — legendary!"
+      : months + "-month streak — legendary!";
+  }
+  return { coins: base + bonus, milestone, streak: n };
+}
+
 /* ---- PARENT VIEW ----
    A parent can get a read-only snapshot of their kid's progress via a
    shareable URL like `?parent=isaiah`. No login, no PIN, no mutations —
@@ -12279,21 +12337,50 @@ function loginAs(uid){
   // is week 1, day 8 is week 2, etc., capped at MAX_AUTHORED_WEEK so an
   // active student never rolls into an empty week.
   currentWeek = computeWeekForUser(state);
-  // Streak logic
+  // Streak logic — bump on consecutive days, reset to 1 on a gap, set to 1
+  // on first-ever login. We capture whether the streak was MAINTAINED
+  // (diff===1 branch) so the coin reward only fires when the kid actually
+  // earned it by showing up two days in a row — not on the very first
+  // login of a brand-new streak.
   const today=new Date().toDateString();
+  let streakReward = null;
   if(state.lastActiveDate){
     const last=new Date(state.lastActiveDate);
     const diff=Math.round((new Date(today)-last)/(1000*60*60*24));
-    if(diff===1) state.streak++;
-    else if(diff>1) state.streak=1;
+    if(diff===1){
+      state.streak++;
+      streakReward = computeStreakReward(state.streak);
+    } else if(diff>1) state.streak=1;
   } else state.streak=1;
   state.lastActiveDate=today;
+  // Pay out the streak reward (if any) BEFORE saveState so the coin total
+  // is persisted in the same write as the streak bump — no chance of the
+  // streak ticking on disk while the reward gets lost in a refresh-during-
+  // login race. We also skip the same-day-second-login edge: if diff===0
+  // we never enter the if(diff===1) branch, so streakReward stays null.
+  if(streakReward && streakReward.coins > 0){
+    state.coins = (state.coins || 0) + streakReward.coins;
+    pendingStreakReward = streakReward;
+  }
   try{localStorage.setItem(LOCAL_USER_KEY,uid)}catch(e){}
   saveState();
   // Fire-and-forget: log this login to the activity feed so it shows up
   // on the picker for everyone in the household / classroom.
   try{ logActivityEvent(uid); }catch(e){}
   go('dashboard');
+  // Surface the streak reward AFTER the dashboard renders so the kid sees
+  // their stats strip update WITH the new coin count, then the toast
+  // celebrates on top. 600ms gives the dashboard transition + initial
+  // paint room to settle. Wrapped in try so a busted toast never blocks
+  // the login flow.
+  if(pendingStreakReward){
+    const r = pendingStreakReward;
+    pendingStreakReward = null;
+    setTimeout(() => {
+      try { showStreakToast(r); }
+      catch(e){ console.warn('[Solvix] streak toast failed:', e); }
+    }, 600);
+  }
 }
 
 /* Teacher session grace period — after the teacher enters TEACHER_CREDS at
@@ -22768,6 +22855,33 @@ function showWishToast(msg){
   const t = h('div',{class:'wish-toast'},[h('span',{},'⭐'),h('span',{},msg)]);
   document.body.appendChild(t);
   setTimeout(()=>{ t.classList.add('out'); setTimeout(()=>t.remove(), 260); }, 1600);
+}
+
+/* Streak-coin celebration toast. Fired by loginUser ~600ms after the
+   dashboard renders, so the kid sees their stats strip with the new
+   coin total AND a celebration on top. Milestone days (3 / 7 / 14 /
+   every 30) get a warmer palette and a longer dwell so the kid has
+   time to soak it in. Reward shape: { coins, milestone, streak }. */
+function showStreakToast(reward){
+  if(!reward || !(reward.coins > 0)) return;
+  document.querySelectorAll('.streak-toast').forEach(t=>t.remove());
+  const isMilestone = !!reward.milestone;
+  const titleLine = reward.streak + '-day streak!';
+  const t = h('div', { class: 'streak-toast' + (isMilestone ? ' milestone' : '') }, [
+    h('span', { class: 'streak-toast-flame' }, '🔥'),
+    h('div', { class: 'streak-toast-body' }, [
+      h('div', { class: 'streak-toast-title' }, titleLine),
+      isMilestone ? h('div', { class: 'streak-toast-milestone-line' }, '✨ ' + reward.milestone) : null,
+      h('div', { class: 'streak-toast-coins' }, [
+        h('span', { class: 'coin' }, '🪙'),
+        h('span', {}, '+' + reward.coins + ' coin' + (reward.coins === 1 ? '' : 's')),
+      ]),
+    ].filter(Boolean)),
+  ]);
+  document.body.appendChild(t);
+  // Milestones linger ~4.5s; everyday rewards ~3s. Same out-animation.
+  const dwell = isMilestone ? 4500 : 3000;
+  setTimeout(() => { t.classList.add('out'); setTimeout(() => t.remove(), 340); }, dwell);
 }
 
 function closeStoreModal(){
