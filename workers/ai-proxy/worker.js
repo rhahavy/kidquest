@@ -5543,6 +5543,16 @@ async function runStandardHandler({
   // header (set by the frontend), fall back to anonymous — which
   // means the cap applies globally for this call.
   const studentId = request.headers.get('X-Student-Id') || 'anon';
+  // Admin bulk-fill bypass: when the operator presents X-Admin-Token
+  // matching env.ADMIN_TOKEN, skip the per-student daily cap. This is
+  // for offline tooling like tools/bulk-fill-stretch.mjs that needs to
+  // generate stretch-question pools across hundreds of lessons in a
+  // single run — far past any kid's reasonable daily budget. The token
+  // check is server-side only; ADMIN_TOKEN never ships to the browser.
+  // Audit entries still attribute to the requested studentId (or
+  // '_admin_bulk' if anon) so we can audit who/what hit the API.
+  const adminTokenHeader = request.headers.get('X-Admin-Token') || '';
+  const isAdminBypass = !!(env.ADMIN_TOKEN && adminTokenHeader && adminTokenHeader === env.ADMIN_TOKEN);
   // Cache lookup FIRST — a hit is free so it shouldn't count against
   // the kid's daily budget. NOTE: hashKey() is async (uses crypto.subtle
   // .digest), so the cacheKey function returns a Promise<string>. We
@@ -5560,9 +5570,12 @@ async function runStandardHandler({
     }
   }
   // Daily cap. Now increment — cache missed, we're about to spend.
-  const gate = await checkDailyCap(env, studentId);
-  if (!gate.ok) {
-    return json({ error: 'rate_limited', reason: gate.reason, used: gate.used, cap: gate.cap }, 429, corsOrigin);
+  // Admin bypass skips the cap but still goes through audit below.
+  if (!isAdminBypass) {
+    const gate = await checkDailyCap(env, studentId);
+    if (!gate.ok) {
+      return json({ error: 'rate_limited', reason: gate.reason, used: gate.used, cap: gate.cap }, 429, corsOrigin);
+    }
   }
   // Claude call.
   if (!env.ANTHROPIC_API_KEY) {
