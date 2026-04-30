@@ -2728,7 +2728,14 @@ tbody tr:last-child td{border-bottom:none}
     // Anti-guess pattern: correct choice much longer than distractors.
     // Kids learn "the longest one is usually right" — we want every
     // option to be plausible-looking. Fires when the correct choice
-    // is ≥12 chars AND ≥2.5x the average distractor length.
+    // is ≥12 chars AND ≥3.5x the average distractor length.
+    //
+    // Threshold history:
+    //   2.5x (initial) → 129 hits — too noisy for manual review queue
+    //   3.5x (current) → 42  hits — focuses on serious offenders only
+    // Runtime choice shuffle already kills the POSITION pattern; this
+    // rule is now an authoring-quality nudge for the most egregious
+    // length disparities, not a runtime safety guarantee.
     activity.questions.forEach(function(q, i){
       if(!q || q.type !== 'mcq' || typeof q.answer !== 'number' || !Array.isArray(q.choices)) return;
       var correct = String(q.choices[q.answer] || '');
@@ -2736,7 +2743,7 @@ tbody tr:last-child td{border-bottom:none}
       var distractors = q.choices.filter(function(_, j){ return j !== q.answer; }).map(function(c){ return String(c || ''); });
       if(!distractors.length) return;
       var avgD = distractors.reduce(function(a, b){ return a + b.length; }, 0) / distractors.length;
-      if(avgD > 0 && correct.length >= 2.5 * avgD){
+      if(avgD > 0 && correct.length >= 3.5 * avgD){
         issues.push({severity:'warn', code:'correct-choice-much-longer',
           msg:'Q' + (i+1) + ': correct choice (' + correct.length + ' chars) is much longer than the others (avg ' + Math.round(avgD) + '). Kids learn "longest = right" — pad the distractors or trim the correct one.'});
       }
