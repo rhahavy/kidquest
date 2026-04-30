@@ -2702,6 +2702,45 @@ tbody tr:last-child td{border-bottom:none}
         }
       });
     }
+    // Anti-guess pattern: same-answer-position streak. If ≥4 of an
+    // activity's MCQs share the same answer index, kids can pattern-
+    // match "always pick B" and skip reading. Audit found 123 of 360
+    // authored activities have this — many because authors reflexively
+    // put the correct answer at index 1 (the second option). The kid
+    // app shuffles MCQ choices on every attempt as a runtime guard,
+    // but the AUTHORED bias is still worth surfacing so authors can
+    // mix it up at source. Only fires on activities with ≥4 MCQs.
+    var mcqAnswers = activity.questions
+      .filter(function(q){ return q && q.type === 'mcq' && typeof q.answer === 'number' && Array.isArray(q.choices); })
+      .map(function(q){ return q.answer; });
+    if(mcqAnswers.length >= 4){
+      var ansCounts = {};
+      mcqAnswers.forEach(function(a){ ansCounts[a] = (ansCounts[a]||0) + 1; });
+      var maxCount = 0, maxIdx = -1;
+      Object.keys(ansCounts).forEach(function(k){
+        if(ansCounts[k] > maxCount){ maxCount = ansCounts[k]; maxIdx = Number(k); }
+      });
+      if(maxCount >= 4 && (maxCount / mcqAnswers.length) >= 0.7){
+        issues.push({severity:'warn', code:'same-answer-streak',
+          msg:maxCount + ' of ' + mcqAnswers.length + ' MCQs have the correct answer at index ' + maxIdx + ' — kids can pattern-match. Mix the answer positions.'});
+      }
+    }
+    // Anti-guess pattern: correct choice much longer than distractors.
+    // Kids learn "the longest one is usually right" — we want every
+    // option to be plausible-looking. Fires when the correct choice
+    // is ≥12 chars AND ≥2.5x the average distractor length.
+    activity.questions.forEach(function(q, i){
+      if(!q || q.type !== 'mcq' || typeof q.answer !== 'number' || !Array.isArray(q.choices)) return;
+      var correct = String(q.choices[q.answer] || '');
+      if(correct.length < 12) return;
+      var distractors = q.choices.filter(function(_, j){ return j !== q.answer; }).map(function(c){ return String(c || ''); });
+      if(!distractors.length) return;
+      var avgD = distractors.reduce(function(a, b){ return a + b.length; }, 0) / distractors.length;
+      if(avgD > 0 && correct.length >= 2.5 * avgD){
+        issues.push({severity:'warn', code:'correct-choice-much-longer',
+          msg:'Q' + (i+1) + ': correct choice (' + correct.length + ' chars) is much longer than the others (avg ' + Math.round(avgD) + '). Kids learn "longest = right" — pad the distractors or trim the correct one.'});
+      }
+    });
     // Per-question checks
     activity.questions.forEach(function(q, i){
       var qNum = 'Q' + (i + 1);

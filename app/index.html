@@ -20099,24 +20099,31 @@ function renderActivity(root,actId,subId){
   let qs = (activity.lesson && !useStretch)
     ? [{type:'lesson',lesson:activity.lesson}, ...filtered]
     : [...filtered];
-  // RETRY VARIATION (Apr 2026). If the kid has already attempted this
-  // activity, shuffle MCQ choices + (when no passage) shuffle question
-  // order so they're not just memorizing positions. Triggered by the
-  // existing per-activity attempts counter — first try stays in the
-  // authored order, every subsequent try is reshuffled.
-  // Stretch mode also gets variation since stretchStats[a.id].attempts
-  // tracks its own retries — we apply variation when EITHER counter is
-  // > 0, so a kid who's already aced the base AND tried stretch once
-  // gets fresh choices on the next stretch run.
+  // ANTI-MEMORIZATION LAYER (Apr 2026 → expanded later). Two passes:
+  //   1. Choice shuffle (MCQ option order randomized, answer index
+  //      remapped) runs on EVERY attempt — even the first. An audit
+  //      found 123 of 360 authored activities had ≥4 of 5 questions
+  //      sharing the same answer index (typically idx 1 — author
+  //      reflex puts the correct answer second). Without this, kids
+  //      can pattern-match "always pick B" and get most of those
+  //      right without reading. Choice-shuffle on first attempt
+  //      destroys position memory cheaply.
+  //   2. Question-ORDER shuffle still gates on retry only — first
+  //      attempt preserves the easy-first ramp the author curated;
+  //      subsequent attempts scramble Q-order (when no passage)
+  //      so muscle memory of "Q3 was the comma question" doesn't
+  //      help.
+  // Stretch mode counts its own retries via stretchStats[a.id].attempts.
   try {
     const baseAttempts    = (state.progress[a.id]      || {}).attempts || 0;
     const stretchAttempts = (state.stretchStats && state.stretchStats[a.id] || {}).attempts || 0;
     const isRetry = useStretch ? (stretchAttempts > 0) : (baseAttempts > 0);
-    if(isRetry){
-      const hasPassage = qs.some(q => q && q.type === 'passage');
-      qs = applyRetryVariation(qs, hasPassage);
-    }
-  } catch(e){ console.warn('[Solvix] retry variation skipped:', e); }
+    const hasPassage = qs.some(q => q && q.type === 'passage');
+    // Always shuffle choices (preserve correctness via answer remap).
+    qs = qs.map(q => (q && q.type !== 'lesson') ? shuffleMCQChoices(q) : q);
+    // Only shuffle question ORDER on retries.
+    if(isRetry) qs = applyRetryVariation(qs, hasPassage);
+  } catch(e){ console.warn('[Solvix] anti-memorization shuffle skipped:', e); }
   // `timerEnabled` starts false and is set by askTimerChoice below.
   // Keeping the default off is important because the first renderQ() may
   // look at the flag before the kid answers — off means "no timer shown",
