@@ -2537,14 +2537,22 @@ tbody tr:last-child td{border-bottom:none}
       // `steps` array (multi-step explanation). Any of those satisfies
       // the pedagogical role of "show, don't tell" — only flag when
       // none are present.
+      //
+      // Demo-preview lessons are intentionally lightweight (intro +
+      // ~3 questions, ~30s of content). Forcing them to also carry an
+      // example AND a hint would mean authoring 100+ more strings just
+      // for demos when the intro + the questions themselves already
+      // teach the concept. Real Week-1 lessons still get held to the
+      // full bar.
+      var isDemoLight = !!activity.demoOnly;
       var hasExample = !!(
         activity.lesson.example ||
         (activity.lesson.stack && typeof activity.lesson.stack === 'object') ||
         (Array.isArray(activity.lesson.pictures) && activity.lesson.pictures.length) ||
         (Array.isArray(activity.lesson.steps)    && activity.lesson.steps.length)
       );
-      if(!hasExample) issues.push({severity:'warn', code:'no-example', msg:'Lesson example missing.'});
-      if(!activity.lesson.hint) issues.push({severity:'warn', code:'no-hint', msg:'Lesson hint missing.'});
+      if(!hasExample && !isDemoLight) issues.push({severity:'warn', code:'no-example', msg:'Lesson example missing.'});
+      if(!activity.lesson.hint && !isDemoLight) issues.push({severity:'warn', code:'no-hint', msg:'Lesson hint missing.'});
     }
     // Curriculum tag
     if(!activity.curriculum || typeof activity.curriculum !== 'object'){
