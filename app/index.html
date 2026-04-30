@@ -33040,12 +33040,101 @@ if(!__maintenanceActive){
       return;
     }
     window.addEventListener('load', ()=>{
-      navigator.serviceWorker.register('/sw.js').catch(err=>{
+      navigator.serviceWorker.register('/sw.js').then(reg => {
+        // ---- SW UPDATE DETECTION ----
+        // Cache-first SW means a kid mid-session keeps running the cached
+        // shell even after we deploy a new version. The new SW installs
+        // in the background and waits — but the kid never picks up the
+        // new HTML/JS without a reload. Pre-v138 this manifested as bug
+        // reports like "the quiz is freezing" when the actual issue was
+        // a fix shipped that the kid hadn't loaded yet.
+        //
+        // Two prompts now fire automatically:
+        //   • controllerchange — the moment skipWaiting + clients.claim
+        //     kicks in. Means the next reload will use the new SW. Soft
+        //     toast: "New version ready — tap to refresh."
+        //   • updatefound + waiting state — newer SW installed but
+        //     blocked. Same toast. (skipWaiting in our SW means this
+        //     usually transitions through immediately.)
+        const showRefreshPrompt = (() => {
+          let shown = false;
+          return () => {
+            if(shown) return;
+            shown = true;
+            try { renderRefreshPrompt(); } catch(e){
+              console.warn('[Solvix] refresh prompt failed:', e);
+            }
+          };
+        })();
+        if(reg.waiting) showRefreshPrompt();
+        reg.addEventListener('updatefound', () => {
+          const w = reg.installing;
+          if(!w) return;
+          w.addEventListener('statechange', () => {
+            // 'installed' + a current controller means a new SW is
+            // ready and the page IS controlled by the previous one.
+            // (First-ever install has no prior controller — no prompt.)
+            if(w.state === 'installed' && navigator.serviceWorker.controller){
+              showRefreshPrompt();
+            }
+          });
+        });
+        // controllerchange = the new SW just took over via clients.claim.
+        // The next navigation request will hit fresh code, but anything
+        // already on the page is stale. Prompt to reload.
+        navigator.serviceWorker.addEventListener('controllerchange', showRefreshPrompt);
+        // Periodically poke the registration to check for updates so a
+        // kid in a long session picks up new versions without leaving.
+        // 5-min cadence is conservative — Cloudflare caches the SW
+        // response anyway, so this is cheap.
+        setInterval(() => { try { reg.update(); } catch(_){} }, 5 * 60 * 1000);
+      }).catch(err=>{
         console.warn('[Solvix] SW registration failed:', err);
       });
     });
   }catch(e){ console.warn('[Solvix] SW setup failed:', e); }
 })();
+
+/* Refresh-prompt toast that surfaces when a new SW is ready. Single
+   button — tapping reloads the page so the kid lands on the new
+   shell. Non-dismissable on purpose: the cached shell has a known
+   bug they need the fix for, so we want them to refresh. */
+function renderRefreshPrompt(){
+  // Avoid stacking — if we've already rendered one, leave it alone.
+  if(document.getElementById('kq-refresh-prompt')) return;
+  const el = document.createElement('div');
+  el.id = 'kq-refresh-prompt';
+  el.setAttribute('role','status');
+  el.style.cssText = [
+    'position:fixed','left:50%','bottom:24px',
+    'transform:translateX(-50%)',
+    'z-index:99999',
+    'display:flex','align-items:center','gap:12px',
+    'padding:12px 18px',
+    'background:linear-gradient(135deg,#74B9FF,#00CEC9)',
+    'color:#fff','font-weight:800','font-size:14px',
+    'border-radius:999px',
+    'box-shadow:0 14px 40px rgba(0,206,201,.4),0 4px 14px rgba(0,0,0,.18)',
+    'border:2px solid rgba(255,255,255,.55)',
+    'max-width:min(92vw,480px)',
+    'animation:kqRefreshIn .35s cubic-bezier(.34,1.56,.64,1)',
+  ].join(';');
+  el.innerHTML = ''
+    + '<span style="font-size:18px">✨</span>'
+    + '<span>New version ready</span>'
+    + '<button id="kq-refresh-btn" style="margin-left:6px;padding:6px 14px;border:none;border-radius:999px;background:#fff;color:#0AB89E;font-weight:800;cursor:pointer;font-size:13px">Refresh</button>';
+  document.body.appendChild(el);
+  // Sprinkle the keyframe in once so the slide-up reads as motion, not pop.
+  if(!document.getElementById('kq-refresh-anim')){
+    const style = document.createElement('style');
+    style.id = 'kq-refresh-anim';
+    style.textContent = '@keyframes kqRefreshIn{from{opacity:0;transform:translateX(-50%) translateY(20px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}';
+    document.head.appendChild(style);
+  }
+  document.getElementById('kq-refresh-btn').addEventListener('click', () => {
+    try { location.reload(); } catch(_){ /* fallback: navigate */ window.location.href = location.href; }
+  });
+}
 
 /* Offline chip — a tiny fixed badge at top-right that shows when the
    device is offline. Hidden the rest of the time. Uses only
