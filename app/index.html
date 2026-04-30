@@ -3900,9 +3900,7 @@ function beginnerFrenchDemo(sid){
   const pre = 'w1-'+sid+'-';
   const P = (id, title, emoji, intro, qs) => ({
     id, title, emoji, demoOnly:true,
-    lesson:{ title:title, intro:intro,
-      example:'Preview lesson — real students unlock this after finishing Levels 1–5 in every subject!',
-      hint:'Parents: this is a sample of upcoming content.' },
+    lesson:{ title:title, intro:intro },
     questions: qs.map(r => ({type:'mcq', q:r[0], choices:r[1], answer:r[2]})),
   });
   return [
@@ -9265,12 +9263,17 @@ WEEKS[2] = {
     return PREVIEW_CURR_BY_SID[m[1]] || null;
   };
   // Compact activity builder: 5 lines per level instead of 15.
+  // Apr 2026: dropped the boilerplate `example` ("Preview lesson — real
+  // students unlock this…") and `hint` ("Parents: this is a sample…")
+  // fields — they were addressed to PARENTS but rendered inside the
+  // KID-facing lesson card, which read weird ("hint: Parents..."). The
+  // demo-vs-real signal already lives in the demoOnly flag + the
+  // parent-demo overlay banner; no need to repeat it inside every
+  // lesson teaching card.
   const P = (id, title, emoji, intro, qs) => ({
     id, title, emoji, demoOnly:true,
     curriculum: previewCurrFor(id),
-    lesson:{ title:title, intro:intro,
-      example:'Preview lesson — real students unlock this after finishing Levels 1–5 in every subject!',
-      hint:'Parents: this is a sample of upcoming content.' },
+    lesson:{ title:title, intro:intro },
     questions: qs.map(r => ({type:'mcq', q:r[0], choices:r[1], answer:r[2]})),
   });
   // PR — same as P but the FIRST question is a `type:'passage'` block
@@ -9283,9 +9286,7 @@ WEEKS[2] = {
   const PR = (id, title, emoji, passage, qs) => ({
     id, title, emoji, demoOnly:true,
     curriculum: previewCurrFor(id),
-    lesson:{ title:title, intro:'Read the story, then answer the questions.',
-      example:'Preview lesson — real students unlock this after finishing Levels 1–5 in every subject!',
-      hint:'Parents: this is a sample of upcoming content.' },
+    lesson:{ title:title, intro:'Read the story, then answer the questions.' },
     questions: qs.map((r, idx) => idx === 0
       ? {type:'passage', passage: passage, q:r[0], choices:r[1], answer:r[2]}
       : {type:'mcq', q:r[0], choices:r[1], answer:r[2]}),
