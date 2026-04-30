@@ -407,6 +407,18 @@ tbody tr:last-child td{border-bottom:none}
 .cv-vt-meta{font-size:11.5px;color:#64748b;line-height:1.4}
 .cv-vt-meta strong{color:var(--ink);font-size:13px;display:block}
 .cv-videos-empty{padding:40px 20px;text-align:center;color:#64748b;font-size:14px;background:#fff;border:1px solid var(--line);border-radius:10px}
+/* Filter chip strip in the Videos panel — Missing / Has video / All.
+   Matches the .filter pattern used elsewhere in admin so the visual
+   language carries. */
+.cv-videos-filter{display:inline-flex;background:#fff;border:1.5px solid var(--line);border-radius:999px;padding:3px;gap:0;margin-bottom:14px}
+.cv-vf-chip{padding:7px 14px;border-radius:999px;font-size:12.5px;font-weight:700;color:var(--ink2);background:transparent;border:none;cursor:pointer;display:inline-flex;align-items:center;gap:6px;font-family:inherit}
+.cv-vf-chip.active{background:var(--primary);color:#fff}
+.cv-vf-count{display:inline-flex;align-items:center;justify-content:center;min-width:22px;padding:1px 7px;border-radius:999px;background:rgba(0,0,0,.08);color:inherit;font-size:11px;font-weight:800}
+.cv-vf-chip.active .cv-vf-count{background:rgba(255,255,255,.25)}
+/* Pre-filled YouTube search button per row — opens YT in a new tab
+   with the cartoon-biased query + Short duration filter applied. */
+.cv-vt-search{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border-radius:8px;background:#fee2e2;color:#991b1b;font-weight:700;font-size:12.5px;text-decoration:none;border:1px solid #fca5a5;font-family:inherit;cursor:pointer;transition:all .15s ease;margin-right:6px}
+.cv-vt-search:hover{background:#fecaca;text-decoration:none}
 
 /* ===== Preview tab ===== Lightweight mirror of the kid-facing lesson
    layout. Read-only render of formDraft so the operator can sanity-
@@ -2334,6 +2346,12 @@ tbody tr:last-child td{border-bottom:none}
     viewMode: 'lessons',
     currentEdit: null             // {id, base, row}
   };
+  // Videos-mode UI state — kept separate so a re-render of the
+  // curriculum tree doesn't reset the operator's chosen filter.
+  // Default 'missing' so the work queue is what they see first.
+  var videosState = {
+    filter: 'missing'             // 'missing' | 'filled' | 'all'
+  };
 
   var $currMeta      = document.getElementById('curriculum-meta');
   var $currCount     = document.getElementById('curriculum-count');
@@ -2900,49 +2918,129 @@ tbody tr:last-child td{border-bottom:none}
     }
   }
 
-  // Centralised YouTube video manager. Lists every grade-master lesson
-  // that has at least one videoIds entry (effective merged) and lets the
-  // operator swap clips one-line-at-a-time. Each save sends a videoIds-
+  // Centralised YouTube video manager. Lists EVERY grade-master lesson
+  // (with or without an existing videoIds entry) and lets the operator
+  // swap or add clips one-line-at-a-time. Each save sends a videoIds-
   // only override through the same /admin/curriculum/global-override
   // endpoint — no need to open the full lesson editor for a routine
-  // YouTube refresh. Hidden lessons are skipped (not shown to kids).
+  // YouTube edit. Hidden lessons are skipped (not shown to kids).
+  //
+  // Videos-mode filter chip controls visibility:
+  //   • all       — every lesson, missing or filled
+  //   • missing   — lessons with NO video yet (the work queue)
+  //   • filled    — lessons that already have at least one video
+  // Default = "missing" so opening this mode shows the work that
+  // remains, not what's done.
+  //
+  // Per-row "🔍 Search YouTube" button opens a pre-filled YT search
+  // in a new tab. Search query is built heuristically from the
+  // lesson title + grade + subject (e.g. "Place Value Grade 3 math
+  // for kids") so the operator doesn't have to think about what to
+  // type. Click result → copy URL → paste in the input → Save.
+  // Three taps per video instead of three minutes.
   function renderVideosMode(allRows){
-    // Switch the list container to a stacking block layout — the lessons
-    // grid (display:grid, 300px min columns) would squash a wide table
-    // into narrow columns side-by-side with its help text. renderCurriculum
-    // restores the grid when we switch back to Lessons mode.
     $currList.style.display = 'block';
-    var videoRows = [];
-    allRows.forEach(function(r){
-      if(!r.effective) return; // hidden lesson
+    // Filter selector — re-rendered on chip click. Default to 'missing'
+    // so the operator sees the work queue first.
+    if(!videosState) videosState = { filter: 'missing' };
+    var allLessons = allRows.filter(function(r){ return r.effective; });
+    var withVideo = allLessons.filter(function(r){
       var ids = r.effective.videoIds;
-      if(!Array.isArray(ids) || !ids.length) return;
-      videoRows.push(r);
+      return Array.isArray(ids) && ids.length > 0 && ids.some(function(v){ return v && String(v).trim(); });
     });
-    if(!videoRows.length){
-      $currList.innerHTML = '<div class="cv-videos-empty">No lessons currently have YouTube videos attached. Open a lesson and add a videoIds entry to ship one.</div>';
+    var withoutVideo = allLessons.filter(function(r){
+      var ids = r.effective.videoIds;
+      return !Array.isArray(ids) || !ids.length || !ids.some(function(v){ return v && String(v).trim(); });
+    });
+    var filtered;
+    if(videosState.filter === 'all')      filtered = allLessons;
+    else if(videosState.filter === 'filled') filtered = withVideo;
+    else                                     filtered = withoutVideo;
+
+    if(!allLessons.length){
+      $currList.innerHTML = '<div class="cv-videos-empty">No lessons in the catalog yet.</div>';
       $currCount.textContent = '0';
       return;
     }
-    $currCount.textContent = String(videoRows.length);
+
+    // Header strip with chip-style filter + counts.
+    var filterBar = (
+      '<div class="cv-videos-filter">'+
+        '<button type="button" class="cv-vf-chip'+(videosState.filter==='missing'?' active':'')+'" data-f="missing">'+
+          '⚠️ Missing <span class="cv-vf-count">'+withoutVideo.length+'</span>'+
+        '</button>'+
+        '<button type="button" class="cv-vf-chip'+(videosState.filter==='filled'?' active':'')+'" data-f="filled">'+
+          '✅ Has video <span class="cv-vf-count">'+withVideo.length+'</span>'+
+        '</button>'+
+        '<button type="button" class="cv-vf-chip'+(videosState.filter==='all'?' active':'')+'" data-f="all">'+
+          '📺 All <span class="cv-vf-count">'+allLessons.length+'</span>'+
+        '</button>'+
+      '</div>'
+    );
+    $currCount.textContent = String(filtered.length);
+
+    if(!filtered.length){
+      $currList.innerHTML = filterBar +
+        (videosState.filter === 'missing'
+          ? '<div class="cv-videos-empty">🎉 No missing videos. Every lesson has at least one clip attached.</div>'
+          : '<div class="cv-videos-empty">No lessons match this filter.</div>');
+      // Wire the filter chips so the empty state still re-renders.
+      $currList.querySelectorAll('.cv-vf-chip').forEach(function(b){
+        b.addEventListener('click', function(){
+          videosState.filter = b.getAttribute('data-f');
+          renderVideosMode(allRows);
+        });
+      });
+      return;
+    }
+
     // Sort by week, grade, subject for predictable browsing.
-    videoRows.sort(function(a,b){
+    filtered.sort(function(a,b){
       var w = Number(a.week)-Number(b.week);
       if(w) return w;
       if(a.sid !== b.sid) return a.sid.localeCompare(b.sid);
       if(a.subject !== b.subject) return a.subject.localeCompare(b.subject);
       return (a.activity.id || '').localeCompare(b.activity.id || '');
     });
-    var rowsHtml = videoRows.map(function(r){
+
+    // Heuristic YouTube search query from the lesson context.
+    // Hard-bias toward the operator's preferences:
+    //   • short videos (under 6-7 min)
+    //   • very kid-friendly
+    //   • cartoony / animated
+    // Including these as keyword hints ALONG WITH the YouTube "Short"
+    // duration filter (sp=EgIYAQ%3D%3D, under 4 min) means the search
+    // results page opens already filtered to the right zone, instead
+    // of forcing the operator to scan thumbnails for runtime + style.
+    function buildSearchQuery(r){
+      var a = r.effective || {};
+      var title = String(a.title || '').replace(/\s+/g,' ').trim();
+      var grade = String(r.grade || '').trim();
+      var subject = String(r.subject || '').trim();
+      var parts = [title, grade, subject, 'kids', 'cartoon', 'animated'].filter(Boolean);
+      return encodeURIComponent(parts.join(' '));
+    }
+    // YouTube duration filter constant — "Short" (under 4 min) is the
+    // closest preset to the 6-7 minute cap the operator wants. Encoded
+    // protobuf value, single URL-encoded (the && becomes %3D%3D).
+    var YT_SHORT_FILTER = '&sp=EgIYAQ%3D%3D';
+
+    var rowsHtml = filtered.map(function(r){
       var a = r.effective;
-      var ids = a.videoIds || [];
-      // One sub-row per video ID on this lesson (a few lessons have 2+).
-      return ids.map(function(vid, idx){
+      var ids = (Array.isArray(a.videoIds) ? a.videoIds : []).filter(function(v){ return v && String(v).trim(); });
+      var searchUrl = 'https://www.youtube.com/results?search_query=' + buildSearchQuery(r) + YT_SHORT_FILTER;
+
+      // Render at least one row per lesson — empty-state for lessons
+      // with no video yet (so they appear in the table).
+      var slotCount = Math.max(1, ids.length);
+      var lessonRows = [];
+      for(var idx = 0; idx < slotCount; idx++){
+        var vid = ids[idx] || '';
         var safe = String(vid || '').trim();
         var hasId = /^[A-Za-z0-9_-]{11}$/.test(safe);
         var thumb = hasId
           ? '<a href="https://www.youtube.com/watch?v='+escapeHtml(safe)+'" target="_blank" rel="noopener"><img class="cv-vt-thumb" src="'+ytThumb(safe)+'" alt=""></a>'
-          : '<div class="cv-vt-thumb-empty">No ID</div>';
+          : '<div class="cv-vt-thumb-empty">'+(idx===0 ? '⚠️ none' : 'No ID')+'</div>';
         var meta = (
           '<div class="cv-vt-meta">'+
             '<strong>'+escapeHtml(a.title || a.id || '(untitled)')+'</strong>'+
@@ -2951,25 +3049,37 @@ tbody tr:last-child td{border-bottom:none}
             '<div style="margin-top:4px"><span class="cv-vt-id">'+escapeHtml(safe || '(empty)')+'</span></div>'+
           '</div>'
         );
-        return (
+        lessonRows.push(
           '<tr data-aid="'+escapeHtml(a.id)+'" data-idx="'+idx+'">'+
             '<td>'+thumb+'</td>'+
             '<td>'+meta+'</td>'+
             '<td><input class="cv-vt-input" type="text" value="'+escapeHtml(safe)+'" placeholder="YouTube URL or 11-char ID" spellcheck="false"></td>'+
             '<td><div class="cv-vt-actions">'+
+              '<a href="'+escapeHtml(searchUrl)+'" target="_blank" rel="noopener" class="cv-vt-search" title="Search YouTube for a relevant video for this lesson">🔍 Search</a>'+
               '<button type="button" class="cv-vt-save" data-aid="'+escapeHtml(a.id)+'" data-idx="'+idx+'">💾 Save</button>'+
             '</div></td>'+
           '</tr>'
         );
-      }).join('');
+      }
+      return lessonRows.join('');
     }).join('');
+
     $currList.innerHTML = (
+      filterBar +
       '<table class="cv-video-table">'+
-        '<thead><tr><th style="width:130px">Thumbnail</th><th>Lesson</th><th>YouTube ID / URL</th><th style="width:120px;text-align:right">Action</th></tr></thead>'+
+        '<thead><tr><th style="width:130px">Thumbnail</th><th>Lesson</th><th>YouTube ID / URL</th><th style="width:200px;text-align:right">Actions</th></tr></thead>'+
         '<tbody>'+rowsHtml+'</tbody>'+
       '</table>'+
-      '<div class="cf-help" style="margin-top:10px">Each save updates only the <code>videoIds</code> field for that lesson — none of the lesson body, questions, or other overrides are touched. Kids see the new clip on next /app/ load.</div>'
+      '<div class="cf-help" style="margin-top:10px">Tap <strong>🔍 Search</strong> to open a YouTube search for that lesson, pre-filtered to short cartoony kid-friendly videos (under 4 min). Pick one, copy the URL, paste it in the input, then <strong>💾 Save</strong>. To see longer videos, clear the duration filter on YouTube.</div>'
     );
+
+    // Wire the filter chips
+    $currList.querySelectorAll('.cv-vf-chip').forEach(function(b){
+      b.addEventListener('click', function(){
+        videosState.filter = b.getAttribute('data-f');
+        renderVideosMode(allRows);
+      });
+    });
     // Wire save buttons
     $currList.querySelectorAll('.cv-vt-save').forEach(function(btn){
       btn.addEventListener('click', async function(){
