@@ -78,16 +78,31 @@ a:hover{text-decoration:underline}
 .quota-chip.warn{background:rgba(253,203,110,.2);color:#8a6500}
 .quota-chip.exhausted{background:rgba(255,118,117,.18);color:#a32d2c}
 
-/* Preview pane */
-.preview{position:relative;min-height:480px;background:#fafafa;border-radius:16px;padding:18px;border:1.5px dashed rgba(108,92,231,.2);font-family:'Times New Roman',Georgia,serif;color:#222;overflow:hidden}
-.preview h3{font-size:18px;font-weight:800;margin:4px 0 6px}
-.preview .meta{font-size:11px;color:#666;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;font-family:var(--font-body)}
-.preview .lesson-intro{font-size:13px;line-height:1.5;margin-bottom:10px}
-.preview .lesson-example{background:#eef0fb;padding:8px 10px;border-radius:6px;font-size:12px;border-left:3px solid var(--primary);margin-bottom:10px}
-.preview ol.problems{padding-left:22px;margin:0;font-size:13px}
-.preview ol.problems li{margin-bottom:14px;line-height:1.5}
-.preview ol.problems .choices{display:grid;grid-template-columns:1fr 1fr;gap:4px 14px;margin-top:6px;font-family:var(--font-body);font-size:12px;color:#444}
-.preview .empty{text-align:center;color:var(--ink3);padding:80px 20px;font-family:var(--font-body)}
+/* Preview pane — styled to match the actual printed worksheet so
+   parents see what they'll get. Crisp white "paper" with a thin
+   border, generous spacing between problems, and clear section
+   labels. Serif body type matches the PDF layout below. */
+.preview{position:relative;min-height:480px;background:#fff;border-radius:14px;padding:0;border:1px solid var(--line);font-family:'Georgia','Times New Roman',serif;color:#1a1035;overflow:hidden;box-shadow:inset 0 0 0 1px rgba(108,92,231,.06)}
+.preview-paper{padding:22px 24px}
+.preview .meta{display:inline-block;font-size:10px;color:#7a7390;text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;font-family:var(--font-body);font-weight:700;background:rgba(108,92,231,.08);padding:4px 10px;border-radius:999px}
+.preview h3{font-size:22px;font-weight:800;margin:2px 0 8px;color:#1a1035;letter-spacing:-.005em}
+.preview .lesson-intro{font-size:13.5px;line-height:1.55;margin-bottom:12px;color:#3a3460}
+.preview .lesson-example{background:linear-gradient(180deg,rgba(108,92,231,.06),rgba(253,121,168,.03));padding:10px 14px;border-radius:8px;font-size:12.5px;border-left:3px solid var(--primary);margin-bottom:18px;color:#2a2255}
+.preview .lesson-example strong{color:var(--primary);font-family:var(--font-body);font-size:11px;letter-spacing:.05em;text-transform:uppercase;display:block;margin-bottom:2px}
+.preview .problems-divider{height:1px;background:linear-gradient(90deg,transparent,rgba(108,92,231,.18),transparent);margin:14px -24px 14px}
+.preview .problem{display:flex;gap:12px;padding:10px 0 14px;border-bottom:1px dashed rgba(108,92,231,.15)}
+.preview .problem:last-child{border-bottom:none}
+.preview .problem .num{flex:0 0 28px;width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--pink));color:#fff;font-family:var(--font-body);font-size:13px;font-weight:800;display:grid;place-items:center;line-height:1;flex-shrink:0}
+.preview .problem .body{flex:1;min-width:0}
+.preview .problem .passage-box{background:#faf8ff;border:1px solid rgba(108,92,231,.14);border-radius:8px;padding:10px 14px;margin-bottom:10px;font-size:13px;line-height:1.55;color:#2a2255}
+.preview .problem .passage-label{display:block;font-family:var(--font-body);font-size:10px;color:var(--primary);font-weight:800;letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px}
+.preview .problem .qtext{font-size:13.5px;line-height:1.5;color:#1a1035}
+.preview .problem .choices{display:grid;grid-template-columns:1fr 1fr;gap:6px 16px;margin-top:8px;font-family:var(--font-body);font-size:12.5px;color:#3a3460}
+.preview .problem .choices > span{display:flex;gap:6px;align-items:flex-start;line-height:1.4}
+.preview .problem .choices .ltr{font-weight:800;color:var(--primary);min-width:14px;flex-shrink:0}
+.preview .problem .answer-line{height:14px;border-bottom:1.5px solid #d8d3eb;margin:8px 0 4px}
+.preview .pack-note{margin-top:18px;padding:12px 14px;background:linear-gradient(135deg,rgba(0,206,201,.1),rgba(108,92,231,.05));border:1px solid rgba(0,206,201,.2);border-radius:10px;font-size:12px;color:#048a7e;font-family:var(--font-body)}
+.preview .empty{text-align:center;color:var(--ink3);padding:90px 20px;font-family:var(--font-body)}
 
 /* Loading state while iframe loads curriculum */
 .loading-state{position:fixed;inset:0;background:rgba(243,240,251,.94);z-index:100;display:grid;place-items:center;backdrop-filter:blur(4px)}
@@ -387,36 +402,63 @@ function renderPreview(){
   if(!lesson){ $preview.innerHTML = '<div class="empty">No lesson at this slot.</div>'; return; }
 
   const meta = `${GRADE_LABELS[pickedGrade]} · ${SUBJECT_LABELS[pickedSubject]} · Week ${pickedWeek}`;
-  let html = `<div class="meta">${escapeHtml(meta)}</div>`;
+  let html = '<div class="preview-paper">';
+  html += `<div class="meta">${escapeHtml(meta)}</div>`;
   html += `<h3>${escapeHtml(lesson.title || lesson.id)}</h3>`;
   if(lesson.lesson){
-    if(lesson.lesson.intro) html += `<div class="lesson-intro">${escapeHtml(lesson.lesson.intro)}</div>`;
-    if(lesson.lesson.example) html += `<div class="lesson-example"><strong>Example:</strong> ${escapeHtml(lesson.lesson.example)}</div>`;
+    if(lesson.lesson.intro) html += `<div class="lesson-intro">${escapeHtml(stripHtml(lesson.lesson.intro))}</div>`;
+    if(lesson.lesson.example) html += `<div class="lesson-example"><strong>Example</strong>${escapeHtml(stripHtml(lesson.lesson.example))}</div>`;
   }
 
-  // Pick which questions to show. Single = the 5 main questions only.
-  // Pack = first lesson's 5 main questions in the preview (the actual
-  // PDF will include all 5 lessons).
   const probs = (lesson.questions || []).slice(0, 5);
   if(probs.length){
-    html += '<ol class="problems">';
-    probs.forEach(q => {
-      const text = q.passage ? `<em>Read:</em> ${q.passage}<br><br>${q.q || ''}` : (q.q || '');
-      html += `<li>${escapeHtml(text)}`;
+    html += '<div class="problems-divider"></div>';
+    probs.forEach((q, idx) => {
+      html += '<div class="problem">';
+      html += `<div class="num">${idx+1}</div>`;
+      html += '<div class="body">';
+      // Passage callout — separate from the question text. We strip
+      // any HTML tags from the source (curriculum sometimes embeds
+      // light markup that shouldn't reach the printed page).
+      if(q.passage){
+        html += `<div class="passage-box"><span class="passage-label">📖 Read this</span>${escapeHtml(stripHtml(q.passage))}</div>`;
+      }
+      html += `<div class="qtext">${escapeHtml(stripHtml(q.q || ''))}</div>`;
       if(q.choices && q.choices.length){
         html += '<div class="choices">';
-        q.choices.forEach((c, i) => { html += `<span>${String.fromCharCode(65+i)}. ${escapeHtml(c)}</span>`; });
+        q.choices.forEach((c, i) => {
+          const letter = String.fromCharCode(65+i);
+          html += `<span><span class="ltr">${letter}.</span><span>${escapeHtml(stripHtml(c))}</span></span>`;
+        });
         html += '</div>';
+      } else {
+        // Free-write question — show two answer lines so the kid sees
+        // where to write.
+        html += '<div class="answer-line"></div><div class="answer-line"></div>';
       }
-      html += '</li>';
+      html += '</div></div>';
     });
-    html += '</ol>';
   }
   if(pickedFormat === 'pack'){
     const packLessons = (WEEKS[pickedWeek][pickedGrade][pickedSubject] || []).length;
-    html += `<div style="margin-top:14px;padding:10px 12px;background:rgba(108,92,231,.08);border-radius:8px;font-size:12px;color:var(--ink2);font-family:var(--font-body)"><strong>Pack mode:</strong> the printed PDF will include all ${packLessons} lessons from Week ${pickedWeek}, with the answer key at the back.</div>`;
+    html += `<div class="pack-note"><strong>📦 Pack mode:</strong> printed PDF includes all ${packLessons} lessons from Week ${pickedWeek}, with a full answer key at the back.</div>`;
   }
+  html += '</div>';
   $preview.innerHTML = html;
+}
+
+// Strip simple HTML tags from curriculum strings so they don't appear
+// as literal text on the printed worksheet. The kid-app renders these
+// strings via innerHTML so they're authored with light markup; the
+// worksheet wants plain text. <br> becomes a newline so paragraph
+// breaks survive.
+function stripHtml(s){
+  return String(s == null ? '' : s)
+    .replace(/<br\s*\/?\s*>/gi, '\n')
+    .replace(/<\/?(em|i|b|strong|u|span|p|div|sup|sub)[^>]*>/gi, '')
+    .replace(/<[^>]+>/g, '')
+    .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'")
+    .replace(/\n{3,}/g, '\n\n');
 }
 
 function escapeHtml(s){
@@ -548,31 +590,44 @@ function newDoc(){
 }
 
 function drawHeader(doc, title, subtitle){
-  // Solvix banner at the top of every page. Brand strip in primary color.
-  doc.setFillColor(108, 92, 231);
-  doc.rect(0, 0, PAGE_WIDTH, 14, 'F');
+  // Solvix brand strip — gradient via two stacked rects (jsPDF doesn't
+  // do real gradients on rect fills, but a 2-tone band looks lively).
+  doc.setFillColor(108, 92, 231); // primary purple
+  doc.rect(0, 0, PAGE_WIDTH, 16, 'F');
+  doc.setFillColor(253, 121, 168); // pink accent strip
+  doc.rect(PAGE_WIDTH * 0.62, 0, PAGE_WIDTH * 0.38, 16, 'F');
   doc.setTextColor(255, 255, 255);
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(11);
-  doc.text('SOLVIX · Worksheets', PAGE_MARGIN, 9);
+  doc.setFontSize(12);
+  doc.text('SOLVIX', PAGE_MARGIN, 10.5);
   doc.setFont('helvetica', 'normal');
+  doc.setFontSize(10);
+  doc.text('Worksheets', PAGE_MARGIN + 18, 10.5);
   doc.setFontSize(9);
-  doc.text('kidquest.fun/worksheets', PAGE_WIDTH - PAGE_MARGIN, 9, { align: 'right' });
+  doc.text('kidquest.fun/worksheets', PAGE_WIDTH - PAGE_MARGIN, 10.5, { align: 'right' });
   // Title block
   doc.setTextColor(26, 16, 53);
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(20);
-  doc.text(title, PAGE_MARGIN, 26);
+  doc.setFontSize(22);
+  doc.text(stripHtml(title), PAGE_MARGIN, 30);
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(10);
-  doc.setTextColor(90, 84, 140);
-  doc.text(subtitle, PAGE_MARGIN, 32);
-  // Name/Date line for the kid to fill in
-  doc.setDrawColor(220, 218, 235);
-  doc.line(PAGE_MARGIN, 40, PAGE_WIDTH - PAGE_MARGIN, 40);
+  doc.setTextColor(108, 92, 231);
+  doc.text(subtitle.toUpperCase(), PAGE_MARGIN, 36);
+  // Name / Date / Score row — three labelled write-on lines, evenly
+  // spaced. The previous version mashed Name and Date onto a single
+  // underscored line which read poorly when printed.
   doc.setFontSize(9);
   doc.setTextColor(120, 120, 150);
-  doc.text('Name: __________________________     Date: ____________________', PAGE_MARGIN, 38);
+  const baseY = 46;
+  const colW = (PAGE_WIDTH - PAGE_MARGIN * 2 - 12) / 3;
+  ['Name', 'Date', 'Score'].forEach((lbl, i) => {
+    const x = PAGE_MARGIN + i * (colW + 6);
+    doc.text(lbl, x, baseY - 1);
+    doc.setDrawColor(180, 175, 210);
+    doc.setLineWidth(0.4);
+    doc.line(x + (i===0 ? 12 : i===1 ? 10 : 12), baseY, x + colW, baseY);
+  });
   doc.setTextColor(26, 16, 53);
   doc.setFont('times', 'normal');
 }
@@ -586,135 +641,245 @@ function drawFooter(doc, pageNum, totalPages){
 
 // Render a single lesson's problems onto the doc starting at yStart.
 // Returns the new y position.
+//
+// Layout pass: a small ✦ divider between problems, "READ THIS" callout
+// box for passage-type questions, and choices in two columns when they
+// fit. Passages and questions are run through stripHtml so light
+// markup (<em>, <br>) from the curriculum data doesn't reach the page.
 function drawLesson(doc, lesson, opts){
   let y = opts.yStart;
   const numStart = opts.numberStart || 1;
-  // Lesson header (sub-header within the page)
+  const ensureRoom = (need) => {
+    if(y + need > PAGE_HEIGHT - 22){
+      doc.addPage();
+      drawHeader(doc, opts.headerTitle, opts.headerSubtitle);
+      y = 56;
+    }
+  };
+  // Lesson sub-header (only used in pack mode where multiple lessons
+  // share one document)
   if(opts.showLessonHeader && lesson.title){
-    if(y > PAGE_HEIGHT - 60){ doc.addPage(); drawHeader(doc, opts.headerTitle, opts.headerSubtitle); y = 50; }
+    ensureRoom(12);
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(13);
-    doc.text(String(lesson.title), PAGE_MARGIN, y);
-    y += 6;
+    doc.setFontSize(14);
+    doc.setTextColor(26, 16, 53);
+    doc.text(stripHtml(String(lesson.title)), PAGE_MARGIN, y);
+    y += 7;
     doc.setFont('helvetica', 'normal');
   }
-  // Intro + example boxed
+  // Intro + example
   if(lesson.lesson){
     if(lesson.lesson.intro){
-      doc.setFontSize(10);
-      doc.setTextColor(60, 60, 90);
-      const lines = doc.splitTextToSize(lesson.lesson.intro, CONTENT_WIDTH);
-      lines.forEach(line => {
-        if(y > PAGE_HEIGHT - 30){ doc.addPage(); drawHeader(doc, opts.headerTitle, opts.headerSubtitle); y = 50; }
-        doc.text(line, PAGE_MARGIN, y);
-        y += 4.4;
-      });
-      y += 1.5;
-    }
-    if(lesson.lesson.example){
-      doc.setFillColor(245, 243, 252);
-      const exLines = doc.splitTextToSize('Example: ' + lesson.lesson.example, CONTENT_WIDTH - 8);
-      const boxH = exLines.length * 4.4 + 4;
-      if(y + boxH > PAGE_HEIGHT - 25){ doc.addPage(); drawHeader(doc, opts.headerTitle, opts.headerSubtitle); y = 50; }
-      doc.rect(PAGE_MARGIN, y - 3, CONTENT_WIDTH, boxH, 'F');
-      doc.setFontSize(10);
-      doc.setTextColor(40, 40, 80);
-      exLines.forEach(line => { doc.text(line, PAGE_MARGIN + 4, y); y += 4.4; });
-      y += 4;
-    }
-    doc.setTextColor(26, 16, 53);
-  }
-  // Problems
-  const problems = (lesson.questions || []).concat([]).slice(0, 5);
-  problems.forEach((q, idx) => {
-    if(y > PAGE_HEIGHT - 50){ doc.addPage(); drawHeader(doc, opts.headerTitle, opts.headerSubtitle); y = 50; }
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(11);
-    doc.text(`${numStart + idx}.`, PAGE_MARGIN, y);
-    doc.setFont('times', 'normal');
-    doc.setFontSize(11);
-    let qText = q.q || '';
-    if(q.passage){
-      // Short passage shown indented above the question.
+      doc.setFontSize(10.5);
+      doc.setTextColor(58, 52, 96);
       doc.setFont('times', 'italic');
-      const passLines = doc.splitTextToSize(q.passage, CONTENT_WIDTH - 10);
-      passLines.forEach(line => {
-        if(y > PAGE_HEIGHT - 30){ doc.addPage(); drawHeader(doc, opts.headerTitle, opts.headerSubtitle); y = 50; }
-        doc.text(line, PAGE_MARGIN + 8, y);
+      const lines = doc.splitTextToSize(stripHtml(lesson.lesson.intro), CONTENT_WIDTH);
+      lines.forEach(line => {
+        ensureRoom(5);
+        doc.text(line, PAGE_MARGIN, y);
         y += 4.6;
       });
       doc.setFont('times', 'normal');
-      y += 1;
+      y += 2.5;
     }
-    const qLines = doc.splitTextToSize(qText, CONTENT_WIDTH - 10);
+    if(lesson.lesson.example){
+      // Boxed example — purple accent strip on the left, light fill.
+      const exText = stripHtml(lesson.lesson.example);
+      doc.setFontSize(10.5);
+      const exLines = doc.splitTextToSize(exText, CONTENT_WIDTH - 14);
+      const boxH = exLines.length * 4.6 + 8;
+      ensureRoom(boxH + 4);
+      doc.setFillColor(245, 243, 252);
+      doc.rect(PAGE_MARGIN, y - 2, CONTENT_WIDTH, boxH, 'F');
+      doc.setFillColor(108, 92, 231);
+      doc.rect(PAGE_MARGIN, y - 2, 2.5, boxH, 'F');
+      // EXAMPLE label
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(8);
+      doc.setTextColor(108, 92, 231);
+      doc.text('EXAMPLE', PAGE_MARGIN + 6, y + 2);
+      doc.setFont('times', 'normal');
+      doc.setFontSize(10.5);
+      doc.setTextColor(40, 32, 80);
+      let ey = y + 7;
+      exLines.forEach(line => { doc.text(line, PAGE_MARGIN + 6, ey); ey += 4.6; });
+      y += boxH + 4;
+      doc.setTextColor(26, 16, 53);
+    }
+  }
+  // Problems — divider + circle-numbered, indented body. Passages
+  // surface in a tinted callout above the question text.
+  const problems = (lesson.questions || []).slice(0, 5);
+  problems.forEach((q, idx) => {
+    ensureRoom(40);
+    // Soft divider between problems (skip before the first one)
+    if(idx > 0){
+      doc.setDrawColor(220, 218, 240);
+      doc.setLineWidth(0.3);
+      doc.line(PAGE_MARGIN + 10, y - 2, PAGE_WIDTH - PAGE_MARGIN - 10, y - 2);
+      y += 3;
+    }
+    // Circle-numbered problem badge
+    const numX = PAGE_MARGIN + 4;
+    const numY = y + 3;
+    doc.setFillColor(108, 92, 231);
+    doc.circle(numX, numY, 3.5, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9);
+    doc.text(String(numStart + idx), numX, numY + 1.2, { align: 'center' });
+    doc.setTextColor(26, 16, 53);
+    const bodyX = PAGE_MARGIN + 12;
+    const bodyW = CONTENT_WIDTH - 12;
+    let qHeadY = y + 4;
+    // Passage callout
+    if(q.passage){
+      const passText = stripHtml(q.passage);
+      doc.setFontSize(10);
+      const passLines = doc.splitTextToSize(passText, bodyW - 8);
+      const passH = passLines.length * 4.4 + 8;
+      ensureRoom(passH + 14);
+      doc.setFillColor(250, 248, 255);
+      doc.setDrawColor(220, 215, 240);
+      doc.setLineWidth(0.3);
+      doc.roundedRect(bodyX, qHeadY, bodyW, passH, 2, 2, 'FD');
+      // Label
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(7.5);
+      doc.setTextColor(108, 92, 231);
+      doc.text('READ THIS', bodyX + 4, qHeadY + 4);
+      // Body
+      doc.setFont('times', 'normal');
+      doc.setFontSize(10);
+      doc.setTextColor(40, 32, 80);
+      let py = qHeadY + 8;
+      passLines.forEach(line => { doc.text(line, bodyX + 4, py); py += 4.4; });
+      qHeadY = qHeadY + passH + 3;
+      doc.setTextColor(26, 16, 53);
+    }
+    // Question text
+    doc.setFont('times', 'normal');
+    doc.setFontSize(11);
+    const qLines = doc.splitTextToSize(stripHtml(q.q || ''), bodyW);
     qLines.forEach(line => {
-      if(y > PAGE_HEIGHT - 30){ doc.addPage(); drawHeader(doc, opts.headerTitle, opts.headerSubtitle); y = 50; }
-      doc.text(line, PAGE_MARGIN + 8, y);
-      y += 4.8;
+      ensureRoom(5);
+      doc.text(line, bodyX, qHeadY);
+      qHeadY += 4.8;
     });
-    // Choices A/B/C/D
+    y = qHeadY + 1;
+    // Choices A/B/C/D — try a 2-column grid, fall back to single
+    // column if any choice is too wide.
     if(q.choices && q.choices.length){
       y += 1.5;
       doc.setFontSize(10);
-      q.choices.forEach((c, i) => {
+      const colW = (bodyW - 8) / 2;
+      const choiceLineH = 4.6;
+      const allLines = q.choices.map((c, i) => {
         const letter = String.fromCharCode(65 + i);
-        const line = `(${letter})  ${c}`;
-        const cLines = doc.splitTextToSize(line, CONTENT_WIDTH - 20);
-        cLines.forEach(l => {
-          if(y > PAGE_HEIGHT - 22){ doc.addPage(); drawHeader(doc, opts.headerTitle, opts.headerSubtitle); y = 50; }
-          doc.text(l, PAGE_MARGIN + 14, y);
-          y += 4.4;
-        });
+        return doc.splitTextToSize(`${letter}.  ${stripHtml(c)}`, colW);
       });
-      doc.setFontSize(11);
+      const fitsTwoCol = allLines.every(arr => arr.length === 1);
+      if(fitsTwoCol && q.choices.length === 4){
+        ensureRoom(choiceLineH * 2 + 4);
+        for(let i = 0; i < 4; i++){
+          const col = i % 2;
+          const row = Math.floor(i / 2);
+          const cx = bodyX + col * (colW + 8);
+          const cy = y + row * choiceLineH;
+          doc.text(allLines[i][0], cx, cy);
+        }
+        y += choiceLineH * 2 + 1;
+      } else {
+        // Single column
+        allLines.forEach(arr => {
+          arr.forEach(line => {
+            ensureRoom(choiceLineH);
+            doc.text(line, bodyX, y);
+            y += choiceLineH;
+          });
+        });
+      }
     } else {
-      // Free-write space
+      // Free-write space — two write-on lines
       y += 4;
-      doc.setDrawColor(220, 220, 235);
-      doc.line(PAGE_MARGIN + 8, y, PAGE_WIDTH - PAGE_MARGIN, y); y += 6;
-      doc.line(PAGE_MARGIN + 8, y, PAGE_WIDTH - PAGE_MARGIN, y); y += 6;
+      doc.setDrawColor(180, 175, 210);
+      doc.setLineWidth(0.4);
+      doc.line(bodyX, y, PAGE_WIDTH - PAGE_MARGIN, y); y += 7;
+      doc.line(bodyX, y, PAGE_WIDTH - PAGE_MARGIN, y); y += 4;
     }
-    y += 4;
+    y += 5;
   });
   return y;
 }
 
+// HTML stripper for PDF context (same logic as the preview side).
+// Defined here too so drawLesson can be self-contained — both copies
+// wrap stripHtml() defined later in the script via hoisting.
+
 function drawAnswerKey(doc, lessons, headerTitle, headerSubtitle){
   doc.addPage();
   drawHeader(doc, 'Answer Key', headerSubtitle);
-  let y = 50;
+  let y = 56;
+  // "FOR THE GROWN-UP" tag — helps grown-ups know this page is the
+  // teacher view rather than another problem set. Tinted band stretches
+  // the full width below the header.
+  doc.setFillColor(253, 121, 168);
+  doc.rect(0, y - 6, PAGE_WIDTH, 8, 'F');
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(11);
-  doc.text(headerTitle, PAGE_MARGIN, y);
+  doc.setFontSize(8);
+  doc.setTextColor(255, 255, 255);
+  doc.text('FOR THE GROWN-UP · ANSWER KEY', PAGE_WIDTH/2, y - 0.5, { align: 'center' });
+  y += 8;
+  doc.setTextColor(26, 16, 53);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(12);
+  doc.text(stripHtml(headerTitle), PAGE_MARGIN, y);
   doc.setFont('helvetica', 'normal');
   y += 8;
   lessons.forEach((lesson, lIdx) => {
-    if(y > PAGE_HEIGHT - 30){ doc.addPage(); drawHeader(doc, 'Answer Key (continued)', headerSubtitle); y = 50; }
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(11);
-    doc.text(lessons.length > 1 ? `Lesson ${lIdx+1}: ${lesson.title || lesson.id}` : 'Answers', PAGE_MARGIN, y);
-    y += 6;
+    if(y > PAGE_HEIGHT - 35){ doc.addPage(); drawHeader(doc, 'Answer Key (continued)', headerSubtitle); y = 56; }
+    if(lessons.length > 1){
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(11);
+      doc.setTextColor(108, 92, 231);
+      doc.text(`Lesson ${lIdx+1}: ${stripHtml(lesson.title || lesson.id)}`, PAGE_MARGIN, y);
+      doc.setTextColor(26, 16, 53);
+      y += 5;
+      // Hairline under the lesson sub-header
+      doc.setDrawColor(220, 218, 240);
+      doc.setLineWidth(0.3);
+      doc.line(PAGE_MARGIN, y - 1, PAGE_WIDTH - PAGE_MARGIN, y - 1);
+      y += 3;
+    }
     doc.setFont('times', 'normal');
-    doc.setFontSize(10);
+    doc.setFontSize(10.5);
     const probs = (lesson.questions || []).slice(0, 5);
     probs.forEach((q, i) => {
       let answerLabel = '';
       if(q.choices && typeof q.answer === 'number'){
         const letter = String.fromCharCode(65 + q.answer);
-        answerLabel = `${letter}.  ${q.choices[q.answer] || ''}`;
+        answerLabel = `${letter}.  ${stripHtml(q.choices[q.answer] || '')}`;
       } else if(typeof q.answer !== 'undefined'){
-        answerLabel = String(q.answer);
+        answerLabel = stripHtml(String(q.answer));
       } else {
         answerLabel = '(open response — see lesson)';
       }
       const lines = doc.splitTextToSize(`${i+1}.  ${answerLabel}`, CONTENT_WIDTH - 8);
-      lines.forEach(line => {
-        if(y > PAGE_HEIGHT - 18){ doc.addPage(); drawHeader(doc, 'Answer Key (continued)', headerSubtitle); y = 50; }
-        doc.text(line, PAGE_MARGIN + 4, y);
-        y += 4.4;
+      lines.forEach((line, li) => {
+        if(y > PAGE_HEIGHT - 18){ doc.addPage(); drawHeader(doc, 'Answer Key (continued)', headerSubtitle); y = 56; }
+        // Bold the leading number so the eye can scan down the column
+        if(li === 0){
+          doc.setFont('times', 'bold');
+          doc.text(`${i+1}.`, PAGE_MARGIN + 4, y);
+          doc.setFont('times', 'normal');
+          doc.text(line.replace(/^\d+\.\s+/, ''), PAGE_MARGIN + 12, y);
+        } else {
+          doc.text(line, PAGE_MARGIN + 12, y);
+        }
+        y += 4.6;
       });
     });
-    y += 4;
+    y += 6;
   });
 }
 
@@ -725,7 +890,9 @@ function generateSinglePDF(){
   const subtitle = `${GRADE_LABELS[pickedGrade]} · ${SUBJECT_LABELS[pickedSubject]} · Week ${pickedWeek}`;
   const title = lesson.title || lesson.id;
   drawHeader(doc, title, subtitle);
-  drawLesson(doc, lesson, { yStart: 50, numberStart: 1, headerTitle: title, headerSubtitle: subtitle });
+  // y=56 sits just below the new taller header (was 50 before the
+  // Name/Date/Score row + brand strip widened the band).
+  drawLesson(doc, lesson, { yStart: 56, numberStart: 1, headerTitle: title, headerSubtitle: subtitle });
   drawAnswerKey(doc, [lesson], title, subtitle);
   // Footer page numbers
   const total = doc.getNumberOfPages();
@@ -744,14 +911,22 @@ function generatePackPDF(){
   const subtitle = `${GRADE_LABELS[pickedGrade]} · ${SUBJECT_LABELS[pickedSubject]} · Week ${pickedWeek}`;
   const title = `Week ${pickedWeek} ${SUBJECT_LABELS[pickedSubject]} Pack`;
   drawHeader(doc, title, subtitle);
-  let y = 50;
-  let nextNum = 1;
+  let y = 56;
   lessons.forEach((lesson, idx) => {
-    if(idx > 0){ doc.addPage(); drawHeader(doc, title, subtitle); y = 50; }
+    if(idx > 0){ doc.addPage(); drawHeader(doc, title, subtitle); y = 56; }
+    // Lesson chapter pill — colored background block so the eye snaps
+    // to where each lesson begins inside the pack.
+    doc.setFillColor(108, 92, 231);
+    doc.roundedRect(PAGE_MARGIN, y - 3, CONTENT_WIDTH, 8, 1.5, 1.5, 'F');
+    doc.setTextColor(255, 255, 255);
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(13);
-    doc.text(`Lesson ${idx+1}: ${lesson.title || lesson.id}`, PAGE_MARGIN, y);
-    y += 7;
+    doc.setFontSize(11);
+    doc.text(`LESSON ${idx+1}`, PAGE_MARGIN + 4, y + 2);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
+    doc.text(stripHtml(lesson.title || lesson.id), PAGE_MARGIN + 26, y + 2);
+    doc.setTextColor(26, 16, 53);
+    y += 11;
     y = drawLesson(doc, lesson, { yStart: y, numberStart: 1, headerTitle: title, headerSubtitle: subtitle });
   });
   drawAnswerKey(doc, lessons, title, subtitle);
