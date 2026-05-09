@@ -527,7 +527,34 @@ function stripHtml(s){
     .replace(/<\/?(em|i|b|strong|u|span|p|div|sup|sub)[^>]*>/gi, '')
     .replace(/<[^>]+>/g, '')
     .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'")
-    .replace(/\n{3,}/g, '\n\n');
+    .replace(/\n{3,}/g, '\n\n')
+    // PDF safety pass — jsPDF's default helvetica/times font is Windows-1252.
+    // Anything outside Latin-1 (emoji, em-dashes, smart quotes…) renders as
+    // mojibake like "Ø=Ýsþ A cave" instead of "🏞️ A cave". Curriculum
+    // strings are authored with light decoration (emojis on choices, em-
+    // dashes in passages) for the kid app — we have to scrub them for the
+    // worksheet because we can't easily switch fonts mid-document. The
+    // preview HTML uses this same function so what you see matches what
+    // prints.
+    //
+    // Step 1: normalize common typography to ASCII equivalents so meaning
+    // survives ("don't" stays "don't", "a—b" becomes "a-b", "…" → "...").
+    .replace(/[‘’ʼ]/g, "'")
+    .replace(/[“”]/g, '"')
+    .replace(/[–—]/g, '-')
+    .replace(/…/g, '...')
+    .replace(/ /g, ' ')
+    // Step 2: drop everything still above 0xFF. Catches all emoji blocks,
+    // dingbats, math symbols, CJK, etc. — anything the default font can't
+    // encode. Variation Selector-16 (U+FE0F) and ZWJ (U+200D) used in
+    // compound emoji are caught by this rule too.
+    .replace(/[^\x00-\xFF]/g, '')
+    // Step 3: tidy whitespace left behind by removed emoji. "🏞️ A cave"
+    // becomes " A cave" after step 2, which renders with a leading gap on
+    // the worksheet — collapse runs of spaces and trim each line so the
+    // letter pill sits flush against the choice text.
+    .replace(/[ \t]+/g, ' ')
+    .replace(/(^[ \t]+|[ \t]+$)/gm, '');
 }
 
 function escapeHtml(s){
