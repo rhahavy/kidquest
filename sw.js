@@ -16,7 +16,7 @@
    current version. skipWaiting + clients.claim means the new SW takes
    over on the very next page load after deploy. */
 
-const SW_VERSION = 'kidquest-v200-week8-content';
+const SW_VERSION = 'kidquest-v201-worksheets-launch';
 const SHELL_CACHE = SW_VERSION + '-shell';
 const RUNTIME_CACHE = SW_VERSION + '-runtime';
 
@@ -29,6 +29,8 @@ const SHELL_URLS = [
   '/index.html',
   '/app/',
   '/app/index.html',
+  '/worksheets/',
+  '/worksheets/index.html',
 ];
 
 self.addEventListener('install', (event) => {

@@ -1,0 +1,766 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Free printable worksheets across 9 subjects, JK to Grade 8 — math, reading, French, coding, and more. Pulled straight from the Solvix curriculum kids learn from in the app.">
+<title>Free Printable Worksheets · Solvix</title>
+<link rel="canonical" href="https://kidquest.fun/worksheets/">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<!-- jsPDF for client-side PDF generation. v2.5.1, ~140KB gzipped from
+     CDN, cached cross-origin so repeat visits don't re-download. We
+     load it lazy on first 'Generate' click so the page itself is fast
+     for the (most common) case where the visitor just browses. -->
+<style>
+:root{
+  --primary:#6c5ce7;--pink:#fd79a8;--mint:#00cec9;--sun:#fdcb6e;--coral:#ff7675;
+  --ink:#1a1035;--ink2:#5a548c;--ink3:#94a3b8;
+  --bg:#f3f0fb;--card:#ffffff;--line:#e9e6f5;
+  --shadow:0 4px 12px rgba(26,16,53,.05);
+  --shadow-lg:0 14px 30px rgba(26,16,53,.07);
+  --r:14px;--r-lg:24px;
+  --font-display:'Fraunces',Georgia,serif;
+  --font-body:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,sans-serif;
+  --spring:cubic-bezier(.34,1.56,.64,1);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{font-family:var(--font-body);color:var(--ink);background:var(--bg);line-height:1.55;-webkit-font-smoothing:antialiased}
+a{color:var(--primary);text-decoration:none}
+a:hover{text-decoration:underline}
+
+/* Topbar */
+.topbar{position:sticky;top:0;z-index:50;background:rgba(243,240,251,.92);backdrop-filter:saturate(180%) blur(10px);border-bottom:1px solid rgba(255,255,255,.6)}
+.topbar-inner{max-width:1100px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;padding:14px 22px;gap:16px}
+.brand{display:flex;align-items:center;gap:10px;font-family:var(--font-display);font-size:22px;font-weight:800;letter-spacing:-.01em}
+.brand-mark{width:32px;height:32px;border-radius:9px;background:linear-gradient(135deg,var(--primary),var(--pink));display:grid;place-items:center;color:#fff;font-size:15px;box-shadow:0 4px 10px rgba(108,92,231,.35)}
+.topbar-links{display:flex;gap:18px;align-items:center;font-size:14px;font-weight:600}
+.topbar-links a{color:var(--ink2)}
+.topbar-cta{padding:7px 16px;border-radius:999px;background:linear-gradient(135deg,var(--primary),var(--pink));color:#fff!important;font-weight:700;font-size:13px;box-shadow:0 4px 12px rgba(108,92,231,.3)}
+.topbar-cta:hover{text-decoration:none;transform:translateY(-1px)}
+
+/* Hero */
+.hero{padding:60px 22px 40px;text-align:center;max-width:780px;margin:0 auto}
+.hero .eyebrow{display:inline-block;background:#fff;padding:7px 14px;border-radius:999px;font-size:13px;font-weight:700;color:var(--primary);box-shadow:var(--shadow);margin-bottom:18px}
+.hero h1{font-family:var(--font-display);font-size:clamp(38px,6vw,58px);font-weight:800;letter-spacing:-.02em;line-height:1.05;margin:0 0 14px;background:linear-gradient(135deg,var(--primary) 0%,var(--pink) 60%,var(--sun) 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero p{font-size:clamp(15px,2vw,18px);color:var(--ink2);font-weight:500;max-width:620px;margin:0 auto}
+
+/* Builder card */
+.builder{max-width:1100px;margin:0 auto 40px;padding:0 22px}
+.builder-grid{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+@media(max-width:880px){.builder-grid{grid-template-columns:1fr}}
+.card{background:var(--card);border-radius:var(--r-lg);padding:26px;box-shadow:var(--shadow-lg);border:1px solid rgba(255,255,255,.95)}
+.card h2{font-family:var(--font-display);font-size:22px;font-weight:800;margin:0 0 4px;letter-spacing:-.005em}
+.card .sub{color:var(--ink3);font-size:13px;font-weight:500;margin-bottom:18px}
+
+.field{display:block;margin-bottom:14px}
+.field label{display:block;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--ink2);margin-bottom:6px}
+.field select, .field input{width:100%;padding:12px 14px;border-radius:12px;border:1.5px solid var(--line);background:#fff;color:var(--ink);font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;transition:border-color .15s ease,box-shadow .15s ease}
+.field select:hover, .field input:hover{border-color:rgba(108,92,231,.35)}
+.field select:focus, .field input:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(108,92,231,.15)}
+
+.toggle-row{display:flex;gap:8px;background:#f6f4ff;padding:5px;border-radius:14px;border:1.5px solid var(--line)}
+.toggle-row button{flex:1;padding:10px 14px;border-radius:10px;border:none;background:transparent;font-family:inherit;font-size:13px;font-weight:700;color:var(--ink2);cursor:pointer;transition:all .2s ease}
+.toggle-row button.on{background:#fff;color:var(--ink);box-shadow:var(--shadow)}
+
+.btn{padding:14px 22px;border-radius:14px;border:none;font-family:inherit;font-size:15px;font-weight:800;cursor:pointer;transition:all .2s ease;display:inline-flex;align-items:center;justify-content:center;gap:8px}
+.btn-primary{background:linear-gradient(135deg,var(--primary),var(--pink));color:#fff;box-shadow:0 8px 22px rgba(108,92,231,.3)}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 12px 28px rgba(108,92,231,.4)}
+.btn-primary:active{transform:translateY(0)}
+.btn-primary:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.btn-block{width:100%}
+.btn-ghost{background:#fff;color:var(--primary);border:1.5px solid rgba(108,92,231,.25)}
+
+.quota-chip{display:inline-flex;align-items:center;gap:6px;background:rgba(0,206,201,.13);color:#048a7e;padding:6px 12px;border-radius:999px;font-size:12px;font-weight:700;margin-top:14px}
+.quota-chip.warn{background:rgba(253,203,110,.2);color:#8a6500}
+.quota-chip.exhausted{background:rgba(255,118,117,.18);color:#a32d2c}
+
+/* Preview pane */
+.preview{position:relative;min-height:480px;background:#fafafa;border-radius:16px;padding:18px;border:1.5px dashed rgba(108,92,231,.2);font-family:'Times New Roman',Georgia,serif;color:#222;overflow:hidden}
+.preview h3{font-size:18px;font-weight:800;margin:4px 0 6px}
+.preview .meta{font-size:11px;color:#666;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;font-family:var(--font-body)}
+.preview .lesson-intro{font-size:13px;line-height:1.5;margin-bottom:10px}
+.preview .lesson-example{background:#eef0fb;padding:8px 10px;border-radius:6px;font-size:12px;border-left:3px solid var(--primary);margin-bottom:10px}
+.preview ol.problems{padding-left:22px;margin:0;font-size:13px}
+.preview ol.problems li{margin-bottom:14px;line-height:1.5}
+.preview ol.problems .choices{display:grid;grid-template-columns:1fr 1fr;gap:4px 14px;margin-top:6px;font-family:var(--font-body);font-size:12px;color:#444}
+.preview .empty{text-align:center;color:var(--ink3);padding:80px 20px;font-family:var(--font-body)}
+
+/* Loading state while iframe loads curriculum */
+.loading-state{position:fixed;inset:0;background:rgba(243,240,251,.94);z-index:100;display:grid;place-items:center;backdrop-filter:blur(4px)}
+.loading-state.hidden{display:none}
+.loading-card{background:#fff;border-radius:20px;padding:30px 36px;box-shadow:var(--shadow-lg);text-align:center;max-width:340px}
+.loading-card h3{font-family:var(--font-display);font-size:20px;margin:0 0 6px}
+.loading-card p{margin:0;color:var(--ink2);font-size:13px}
+.loading-spinner{width:36px;height:36px;border:3px solid var(--line);border-top-color:var(--primary);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 14px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Paywall card — rendered when free quota is exhausted */
+.paywall{background:linear-gradient(135deg,rgba(108,92,231,.08),rgba(253,121,168,.05));border:2px solid rgba(108,92,231,.2);text-align:center}
+.paywall h3{font-family:var(--font-display);font-size:24px;margin:0 0 8px;color:var(--primary)}
+.paywall p{margin:0 0 16px;color:var(--ink2);font-size:14px;line-height:1.55}
+.paywall ul{text-align:left;max-width:340px;margin:0 auto 20px;padding-left:0;list-style:none;font-size:13px;color:var(--ink2)}
+.paywall li{padding:6px 0 6px 26px;position:relative}
+.paywall li::before{content:'✓';position:absolute;left:0;top:6px;color:#00b894;font-weight:900}
+
+/* Footer */
+.foot{max-width:1100px;margin:60px auto 0;padding:30px 22px 40px;border-top:1px solid var(--line);font-size:13px;color:var(--ink3);text-align:center}
+.foot a{color:var(--ink2);font-weight:600}
+
+/* Hide debug iframe */
+#curriculum-iframe{position:fixed;inset:auto auto -1000px -1000px;width:1px;height:1px;border:0;visibility:hidden}
+
+/* Mobile tweaks */
+@media(max-width:540px){
+  .topbar-links{display:none}
+  .hero{padding:36px 16px 28px}
+  .builder{padding:0 14px}
+  .card{padding:20px}
+  .preview{min-height:340px}
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="/" style="color:var(--ink)">
+      <span class="brand-mark">S</span>
+      <span>Solvix</span>
+    </a>
+    <nav class="topbar-links">
+      <a href="/#features">Features</a>
+      <a href="/#subjects">Subjects</a>
+      <a href="/#pricing">Pricing</a>
+      <a href="/app/" class="topbar-cta">Open the app →</a>
+    </nav>
+  </div>
+</header>
+
+<section class="hero">
+  <span class="eyebrow">Free printable worksheets</span>
+  <h1>Practice on paper.<br>Anytime. Anywhere.</h1>
+  <p>Pick a grade, subject, and week. We'll build a printable worksheet pulled from the same curriculum kids learn in the Solvix app — with the answer key on the back.</p>
+</section>
+
+<section class="builder">
+  <div class="builder-grid">
+
+    <!-- LEFT: Picker -->
+    <div class="card" id="picker-card">
+      <h2>Build a worksheet</h2>
+      <p class="sub">5 free per month · No signup needed.</p>
+
+      <div class="field">
+        <label for="f-grade">Grade</label>
+        <select id="f-grade"></select>
+      </div>
+      <div class="field">
+        <label for="f-subject">Subject</label>
+        <select id="f-subject"></select>
+      </div>
+      <div class="field">
+        <label for="f-week">Week</label>
+        <select id="f-week"></select>
+      </div>
+      <div class="field">
+        <label for="f-lesson">Lesson</label>
+        <select id="f-lesson"></select>
+      </div>
+
+      <div class="field">
+        <label>Format</label>
+        <div class="toggle-row" id="f-format">
+          <button type="button" class="on" data-fmt="single">Single worksheet</button>
+          <button type="button" data-fmt="pack">Week pack (5 lessons)</button>
+        </div>
+        <div style="font-size:11px;color:var(--ink3);margin-top:6px;font-weight:500">Single = 5 problems + answer key. Pack = 5 lessons (25 problems) + full answer key.</div>
+      </div>
+
+      <button class="btn btn-primary btn-block" id="btn-generate">⬇ Generate PDF</button>
+      <div id="quota-chip-wrap"></div>
+    </div>
+
+    <!-- RIGHT: Preview -->
+    <div class="card" id="preview-card">
+      <h2>Preview</h2>
+      <p class="sub">This is roughly what the printed PDF will look like.</p>
+      <div class="preview" id="preview">
+        <div class="empty">Pick a grade, subject, and lesson to see a preview.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Paywall card (hidden until quota exhausted) -->
+  <div class="card paywall" id="paywall-card" style="display:none;margin-top:22px;max-width:520px;margin-left:auto;margin-right:auto">
+    <h3>You've used your 5 free worksheets this month</h3>
+    <p>Want unlimited worksheets, plus the AI tutor that adapts to your kid as they go?</p>
+    <ul>
+      <li>Unlimited printable worksheets, every grade, every subject</li>
+      <li>The full Solvix app: AI tutor, daily quests, parent dashboard</li>
+      <li>7-day free trial · Cancel anytime, one click</li>
+    </ul>
+    <a class="btn btn-primary" href="/#pricing">Start your free trial →</a>
+  </div>
+
+</section>
+
+<footer class="foot">
+  <p>Worksheets pulled from the Solvix curriculum · <a href="/">Back to home</a> · <a href="/app/">Open the app</a> · <a href="mailto:admin@kidquest.fun">Email support</a></p>
+</footer>
+
+<!-- Hidden iframe loads /app/?adminEditor=1 — the kid-app's existing
+     bail-out hook postMessages WEEKS to us. Same trick the admin
+     editor uses, no curriculum duplication. -->
+<iframe id="curriculum-iframe" title="curriculum data loader"></iframe>
+
+<!-- Loading overlay -->
+<div class="loading-state" id="loading">
+  <div class="loading-card">
+    <div class="loading-spinner"></div>
+    <h3>Loading curriculum…</h3>
+    <p>Fetching the latest lessons from the Solvix app.</p>
+  </div>
+</div>
+
+<script>
+/* =========================================================================
+   Solvix Worksheets — v1
+   -------------------------------------------------------------------------
+   Pulls WEEKS from /app/?adminEditor=1 via the existing iframe-postMessage
+   bridge, then exposes a picker → live preview → "Generate PDF" flow.
+   PDFs are built client-side with jsPDF (loaded on demand from a CDN
+   so the initial page view stays cheap).
+
+   Free quota: 5 generations per browser per calendar month, tracked in
+   localStorage. Paying tenants (those with a kidquest-v4 blob containing
+   a non-empty tenant code) bypass the quota entirely.
+   ========================================================================= */
+
+// --- Constants -----------------------------------------------------------
+const QUOTA_KEY = 'solvix_worksheets_quota_v1';
+const QUOTA_MAX = 5;
+const GRADE_LABELS = {
+  theo:'Junior Kindergarten', nishan:'Senior Kindergarten',
+  akaran:'Grade 1', rushan:'Grade 2', akshayan:'Grade 3',
+  lily:'Grade 4', isaiah:'Grade 5', jasper:'Grade 6',
+  evan:'Grade 7', nora:'Grade 8',
+};
+const GRADE_ORDER = ['theo','nishan','akaran','rushan','akshayan','lily','isaiah','jasper','evan','nora'];
+const SUBJECT_LABELS = {
+  reading:'Reading', writing:'Writing', spelling:'Spelling',
+  math:'Math', logic:'Logic', french:'French',
+  science:'Science', social:'Social Studies', coding:'Coding',
+};
+const SUBJECT_ORDER = ['reading','writing','spelling','math','logic','french','science','social','coding'];
+
+// --- State ---------------------------------------------------------------
+let WEEKS = null;          // populated via iframe postMessage
+let pickedGrade = 'akshayan';
+let pickedSubject = 'math';
+let pickedWeek = 1;
+let pickedLesson = 0;       // index into the subject's lessons array
+let pickedFormat = 'single';
+
+// --- DOM refs ------------------------------------------------------------
+const $grade   = document.getElementById('f-grade');
+const $subject = document.getElementById('f-subject');
+const $week    = document.getElementById('f-week');
+const $lesson  = document.getElementById('f-lesson');
+const $format  = document.getElementById('f-format');
+const $btn     = document.getElementById('btn-generate');
+const $preview = document.getElementById('preview');
+const $loading = document.getElementById('loading');
+const $quota   = document.getElementById('quota-chip-wrap');
+const $paywall = document.getElementById('paywall-card');
+const $iframe  = document.getElementById('curriculum-iframe');
+
+// --- Curriculum loader ---------------------------------------------------
+// Listen for the postMessage that /app/?adminEditor=1 sends back. The
+// kid-app halts boot in that mode and pushes its full WEEKS object up
+// to us. Validate origin so a stray cross-origin tab can't poison us.
+window.addEventListener('message', function(ev){
+  if(!ev || ev.origin !== window.location.origin) return;
+  if(!ev.data || ev.data.type !== 'kq-admin-editor-weeks') return;
+  if(!ev.data.weeks || typeof ev.data.weeks !== 'object') return;
+  WEEKS = ev.data.weeks;
+  $loading.classList.add('hidden');
+  populatePickers();
+  renderPreview();
+  updateQuotaChip();
+});
+
+// Kick off the iframe load with a cache-buster so we always get the
+// freshest curriculum (no SW shell-cache surprises).
+$iframe.src = '/app/?adminEditor=1&_=' + Date.now();
+
+// Safety: if the iframe never reports back within 10s (network issue,
+// SW evicted, etc.), surface a friendly error.
+setTimeout(function(){
+  if(!WEEKS){
+    $loading.querySelector('h3').textContent = 'Curriculum took too long to load';
+    $loading.querySelector('p').innerHTML = 'Try refreshing the page. If this keeps happening, <a href="mailto:admin@kidquest.fun">email us</a>.';
+    $loading.querySelector('.loading-spinner').style.display = 'none';
+  }
+}, 10000);
+
+// --- Picker population ---------------------------------------------------
+function populatePickers(){
+  // Only show grades that actually have curriculum loaded.
+  const availableGrades = GRADE_ORDER.filter(g =>
+    Object.values(WEEKS).some(week => week && week[g] && Object.keys(week[g]).length)
+  );
+  $grade.innerHTML = availableGrades.map(g =>
+    `<option value="${g}">${GRADE_LABELS[g]}</option>`
+  ).join('');
+  if(availableGrades.includes(pickedGrade)){
+    $grade.value = pickedGrade;
+  } else {
+    pickedGrade = $grade.value;
+  }
+  populateSubjects();
+}
+
+function populateSubjects(){
+  // Subjects vary by grade — show only what's actually authored.
+  const subjectsForGrade = SUBJECT_ORDER.filter(s =>
+    Object.values(WEEKS).some(week => week && week[pickedGrade] && week[pickedGrade][s] && week[pickedGrade][s].length)
+  );
+  $subject.innerHTML = subjectsForGrade.map(s =>
+    `<option value="${s}">${SUBJECT_LABELS[s]}</option>`
+  ).join('');
+  if(subjectsForGrade.includes(pickedSubject)){
+    $subject.value = pickedSubject;
+  } else {
+    pickedSubject = $subject.value;
+  }
+  populateWeeks();
+}
+
+function populateWeeks(){
+  // Weeks where this grade+subject has lessons.
+  const weeksWithContent = Object.keys(WEEKS)
+    .map(Number)
+    .filter(n => WEEKS[n] && WEEKS[n][pickedGrade] && WEEKS[n][pickedGrade][pickedSubject] && WEEKS[n][pickedGrade][pickedSubject].length)
+    .sort((a,b)=>a-b);
+  $week.innerHTML = weeksWithContent.map(w => `<option value="${w}">Week ${w}</option>`).join('');
+  if(weeksWithContent.includes(pickedWeek)){
+    $week.value = pickedWeek;
+  } else if(weeksWithContent.length){
+    pickedWeek = weeksWithContent[0];
+    $week.value = pickedWeek;
+  }
+  populateLessons();
+}
+
+function populateLessons(){
+  const lessons = (WEEKS[pickedWeek] && WEEKS[pickedWeek][pickedGrade] && WEEKS[pickedWeek][pickedGrade][pickedSubject]) || [];
+  $lesson.innerHTML = lessons.map((l, i) => `<option value="${i}">${i+1}. ${l.title || l.id}</option>`).join('');
+  if(pickedLesson >= lessons.length) pickedLesson = 0;
+  $lesson.value = pickedLesson;
+}
+
+// --- Picker events -------------------------------------------------------
+$grade.addEventListener('change', () => { pickedGrade = $grade.value; pickedLesson = 0; populateSubjects(); renderPreview(); });
+$subject.addEventListener('change', () => { pickedSubject = $subject.value; pickedLesson = 0; populateWeeks(); renderPreview(); });
+$week.addEventListener('change', () => { pickedWeek = Number($week.value); pickedLesson = 0; populateLessons(); renderPreview(); });
+$lesson.addEventListener('change', () => { pickedLesson = Number($lesson.value); renderPreview(); });
+$format.addEventListener('click', (e) => {
+  const t = e.target.closest('button[data-fmt]');
+  if(!t) return;
+  $format.querySelectorAll('button').forEach(b => b.classList.toggle('on', b === t));
+  pickedFormat = t.dataset.fmt;
+  renderPreview();
+});
+
+// --- Preview render ------------------------------------------------------
+function getCurrentLesson(){
+  return (WEEKS[pickedWeek] && WEEKS[pickedWeek][pickedGrade] && WEEKS[pickedWeek][pickedGrade][pickedSubject] || [])[pickedLesson];
+}
+
+function renderPreview(){
+  if(!WEEKS) return;
+  const lesson = getCurrentLesson();
+  if(!lesson){ $preview.innerHTML = '<div class="empty">No lesson at this slot.</div>'; return; }
+
+  const meta = `${GRADE_LABELS[pickedGrade]} · ${SUBJECT_LABELS[pickedSubject]} · Week ${pickedWeek}`;
+  let html = `<div class="meta">${escapeHtml(meta)}</div>`;
+  html += `<h3>${escapeHtml(lesson.title || lesson.id)}</h3>`;
+  if(lesson.lesson){
+    if(lesson.lesson.intro) html += `<div class="lesson-intro">${escapeHtml(lesson.lesson.intro)}</div>`;
+    if(lesson.lesson.example) html += `<div class="lesson-example"><strong>Example:</strong> ${escapeHtml(lesson.lesson.example)}</div>`;
+  }
+
+  // Pick which questions to show. Single = the 5 main questions only.
+  // Pack = first lesson's 5 main questions in the preview (the actual
+  // PDF will include all 5 lessons).
+  const probs = (lesson.questions || []).slice(0, 5);
+  if(probs.length){
+    html += '<ol class="problems">';
+    probs.forEach(q => {
+      const text = q.passage ? `<em>Read:</em> ${q.passage}<br><br>${q.q || ''}` : (q.q || '');
+      html += `<li>${escapeHtml(text)}`;
+      if(q.choices && q.choices.length){
+        html += '<div class="choices">';
+        q.choices.forEach((c, i) => { html += `<span>${String.fromCharCode(65+i)}. ${escapeHtml(c)}</span>`; });
+        html += '</div>';
+      }
+      html += '</li>';
+    });
+    html += '</ol>';
+  }
+  if(pickedFormat === 'pack'){
+    const packLessons = (WEEKS[pickedWeek][pickedGrade][pickedSubject] || []).length;
+    html += `<div style="margin-top:14px;padding:10px 12px;background:rgba(108,92,231,.08);border-radius:8px;font-size:12px;color:var(--ink2);font-family:var(--font-body)"><strong>Pack mode:</strong> the printed PDF will include all ${packLessons} lessons from Week ${pickedWeek}, with the answer key at the back.</div>`;
+  }
+  $preview.innerHTML = html;
+}
+
+function escapeHtml(s){
+  return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+  })[c]);
+}
+
+// --- Quota tracking ------------------------------------------------------
+// We store { month: 'YYYY-MM', count: N } in localStorage. New month →
+// counter resets. Paying tenants bypass entirely (we never increment
+// for them).
+function getQuotaState(){
+  const now = new Date();
+  const monthKey = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0');
+  let state = { month: monthKey, count: 0 };
+  try {
+    const raw = localStorage.getItem(QUOTA_KEY);
+    if(raw){
+      const parsed = JSON.parse(raw);
+      if(parsed && parsed.month === monthKey && typeof parsed.count === 'number'){
+        state = parsed;
+      }
+    }
+  } catch(_){}
+  return state;
+}
+
+function bumpQuota(){
+  const s = getQuotaState();
+  s.count = (s.count || 0) + 1;
+  try { localStorage.setItem(QUOTA_KEY, JSON.stringify(s)); } catch(_){}
+}
+
+function isPayingTenant(){
+  // Cheap check: did the kid-app store a tenant code locally? If yes,
+  // they've signed in to Solvix and presumably have a paid subscription.
+  // It's not a security boundary (anyone could fake the LS), but as a
+  // marketing tool the worst case is one extra free worksheet for a
+  // tech-savvy visitor — fine.
+  try {
+    const raw = localStorage.getItem('kidquest-v4');
+    if(!raw) return false;
+    const v = JSON.parse(raw);
+    // v.code is the tenant code stored on /app/ login.
+    return !!(v && v.code && String(v.code).length >= 3);
+  } catch(_){ return false; }
+}
+
+function updateQuotaChip(){
+  $quota.innerHTML = '';
+  if(isPayingTenant()){
+    $quota.innerHTML = '<span class="quota-chip">✓ Solvix subscriber — unlimited worksheets</span>';
+    $paywall.style.display = 'none';
+    $btn.disabled = false;
+    return;
+  }
+  const s = getQuotaState();
+  const remaining = Math.max(0, QUOTA_MAX - (s.count || 0));
+  let cls = 'quota-chip';
+  if(remaining <= 1) cls += ' warn';
+  if(remaining === 0) cls += ' exhausted';
+  const label = remaining === 0
+    ? `0 of ${QUOTA_MAX} free this month — paywall below`
+    : `${remaining} of ${QUOTA_MAX} free this month`;
+  $quota.innerHTML = `<span class="${cls}">📄 ${label}</span>`;
+  if(remaining === 0){
+    $paywall.style.display = 'block';
+    $btn.disabled = true;
+  } else {
+    $paywall.style.display = 'none';
+    $btn.disabled = false;
+  }
+}
+
+// --- PDF generation ------------------------------------------------------
+// jsPDF is loaded on demand from a CDN. We cache the promise so a
+// double-click doesn't fetch twice.
+let _jsPDFPromise = null;
+function loadJsPDF(){
+  if(_jsPDFPromise) return _jsPDFPromise;
+  _jsPDFPromise = new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src = 'https://unpkg.com/jspdf@2.5.1/dist/jspdf.umd.min.js';
+    s.onload = () => resolve(window.jspdf || window.jsPDF);
+    s.onerror = () => reject(new Error('jsPDF failed to load — check your connection'));
+    document.head.appendChild(s);
+  });
+  return _jsPDFPromise;
+}
+
+$btn.addEventListener('click', async () => {
+  if(!WEEKS) return;
+  if(!isPayingTenant()){
+    const s = getQuotaState();
+    if((s.count || 0) >= QUOTA_MAX){ updateQuotaChip(); return; }
+  }
+  $btn.disabled = true;
+  const originalLabel = $btn.textContent;
+  $btn.textContent = 'Building PDF…';
+  try {
+    await loadJsPDF();
+    if(pickedFormat === 'pack'){
+      generatePackPDF();
+    } else {
+      generateSinglePDF();
+    }
+    if(!isPayingTenant()) bumpQuota();
+    updateQuotaChip();
+  } catch(e){
+    alert('Couldn\'t build the PDF: ' + (e && e.message || 'unknown error'));
+  } finally {
+    $btn.textContent = originalLabel;
+    if(!$btn.disabled) $btn.disabled = false;
+  }
+});
+
+// --- PDF layout helpers --------------------------------------------------
+const PAGE_MARGIN = 18;       // mm — wide enough for 3-hole binders
+const PAGE_WIDTH  = 210;
+const PAGE_HEIGHT = 297;
+const CONTENT_WIDTH = PAGE_WIDTH - PAGE_MARGIN * 2;
+
+function newDoc(){
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+  doc.setFont('times', 'normal');
+  return doc;
+}
+
+function drawHeader(doc, title, subtitle){
+  // Solvix banner at the top of every page. Brand strip in primary color.
+  doc.setFillColor(108, 92, 231);
+  doc.rect(0, 0, PAGE_WIDTH, 14, 'F');
+  doc.setTextColor(255, 255, 255);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(11);
+  doc.text('SOLVIX · Worksheets', PAGE_MARGIN, 9);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(9);
+  doc.text('kidquest.fun/worksheets', PAGE_WIDTH - PAGE_MARGIN, 9, { align: 'right' });
+  // Title block
+  doc.setTextColor(26, 16, 53);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(20);
+  doc.text(title, PAGE_MARGIN, 26);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(10);
+  doc.setTextColor(90, 84, 140);
+  doc.text(subtitle, PAGE_MARGIN, 32);
+  // Name/Date line for the kid to fill in
+  doc.setDrawColor(220, 218, 235);
+  doc.line(PAGE_MARGIN, 40, PAGE_WIDTH - PAGE_MARGIN, 40);
+  doc.setFontSize(9);
+  doc.setTextColor(120, 120, 150);
+  doc.text('Name: __________________________     Date: ____________________', PAGE_MARGIN, 38);
+  doc.setTextColor(26, 16, 53);
+  doc.setFont('times', 'normal');
+}
+
+function drawFooter(doc, pageNum, totalPages){
+  doc.setFontSize(8);
+  doc.setTextColor(150, 150, 170);
+  doc.text(`Solvix Worksheets · Page ${pageNum} of ${totalPages}`, PAGE_WIDTH/2, PAGE_HEIGHT - 8, { align: 'center' });
+  doc.setTextColor(26, 16, 53);
+}
+
+// Render a single lesson's problems onto the doc starting at yStart.
+// Returns the new y position.
+function drawLesson(doc, lesson, opts){
+  let y = opts.yStart;
+  const numStart = opts.numberStart || 1;
+  // Lesson header (sub-header within the page)
+  if(opts.showLessonHeader && lesson.title){
+    if(y > PAGE_HEIGHT - 60){ doc.addPage(); drawHeader(doc, opts.headerTitle, opts.headerSubtitle); y = 50; }
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(13);
+    doc.text(String(lesson.title), PAGE_MARGIN, y);
+    y += 6;
+    doc.setFont('helvetica', 'normal');
+  }
+  // Intro + example boxed
+  if(lesson.lesson){
+    if(lesson.lesson.intro){
+      doc.setFontSize(10);
+      doc.setTextColor(60, 60, 90);
+      const lines = doc.splitTextToSize(lesson.lesson.intro, CONTENT_WIDTH);
+      lines.forEach(line => {
+        if(y > PAGE_HEIGHT - 30){ doc.addPage(); drawHeader(doc, opts.headerTitle, opts.headerSubtitle); y = 50; }
+        doc.text(line, PAGE_MARGIN, y);
+        y += 4.4;
+      });
+      y += 1.5;
+    }
+    if(lesson.lesson.example){
+      doc.setFillColor(245, 243, 252);
+      const exLines = doc.splitTextToSize('Example: ' + lesson.lesson.example, CONTENT_WIDTH - 8);
+      const boxH = exLines.length * 4.4 + 4;
+      if(y + boxH > PAGE_HEIGHT - 25){ doc.addPage(); drawHeader(doc, opts.headerTitle, opts.headerSubtitle); y = 50; }
+      doc.rect(PAGE_MARGIN, y - 3, CONTENT_WIDTH, boxH, 'F');
+      doc.setFontSize(10);
+      doc.setTextColor(40, 40, 80);
+      exLines.forEach(line => { doc.text(line, PAGE_MARGIN + 4, y); y += 4.4; });
+      y += 4;
+    }
+    doc.setTextColor(26, 16, 53);
+  }
+  // Problems
+  const problems = (lesson.questions || []).concat([]).slice(0, 5);
+  problems.forEach((q, idx) => {
+    if(y > PAGE_HEIGHT - 50){ doc.addPage(); drawHeader(doc, opts.headerTitle, opts.headerSubtitle); y = 50; }
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(11);
+    doc.text(`${numStart + idx}.`, PAGE_MARGIN, y);
+    doc.setFont('times', 'normal');
+    doc.setFontSize(11);
+    let qText = q.q || '';
+    if(q.passage){
+      // Short passage shown indented above the question.
+      doc.setFont('times', 'italic');
+      const passLines = doc.splitTextToSize(q.passage, CONTENT_WIDTH - 10);
+      passLines.forEach(line => {
+        if(y > PAGE_HEIGHT - 30){ doc.addPage(); drawHeader(doc, opts.headerTitle, opts.headerSubtitle); y = 50; }
+        doc.text(line, PAGE_MARGIN + 8, y);
+        y += 4.6;
+      });
+      doc.setFont('times', 'normal');
+      y += 1;
+    }
+    const qLines = doc.splitTextToSize(qText, CONTENT_WIDTH - 10);
+    qLines.forEach(line => {
+      if(y > PAGE_HEIGHT - 30){ doc.addPage(); drawHeader(doc, opts.headerTitle, opts.headerSubtitle); y = 50; }
+      doc.text(line, PAGE_MARGIN + 8, y);
+      y += 4.8;
+    });
+    // Choices A/B/C/D
+    if(q.choices && q.choices.length){
+      y += 1.5;
+      doc.setFontSize(10);
+      q.choices.forEach((c, i) => {
+        const letter = String.fromCharCode(65 + i);
+        const line = `(${letter})  ${c}`;
+        const cLines = doc.splitTextToSize(line, CONTENT_WIDTH - 20);
+        cLines.forEach(l => {
+          if(y > PAGE_HEIGHT - 22){ doc.addPage(); drawHeader(doc, opts.headerTitle, opts.headerSubtitle); y = 50; }
+          doc.text(l, PAGE_MARGIN + 14, y);
+          y += 4.4;
+        });
+      });
+      doc.setFontSize(11);
+    } else {
+      // Free-write space
+      y += 4;
+      doc.setDrawColor(220, 220, 235);
+      doc.line(PAGE_MARGIN + 8, y, PAGE_WIDTH - PAGE_MARGIN, y); y += 6;
+      doc.line(PAGE_MARGIN + 8, y, PAGE_WIDTH - PAGE_MARGIN, y); y += 6;
+    }
+    y += 4;
+  });
+  return y;
+}
+
+function drawAnswerKey(doc, lessons, headerTitle, headerSubtitle){
+  doc.addPage();
+  drawHeader(doc, 'Answer Key', headerSubtitle);
+  let y = 50;
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(11);
+  doc.text(headerTitle, PAGE_MARGIN, y);
+  doc.setFont('helvetica', 'normal');
+  y += 8;
+  lessons.forEach((lesson, lIdx) => {
+    if(y > PAGE_HEIGHT - 30){ doc.addPage(); drawHeader(doc, 'Answer Key (continued)', headerSubtitle); y = 50; }
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(11);
+    doc.text(lessons.length > 1 ? `Lesson ${lIdx+1}: ${lesson.title || lesson.id}` : 'Answers', PAGE_MARGIN, y);
+    y += 6;
+    doc.setFont('times', 'normal');
+    doc.setFontSize(10);
+    const probs = (lesson.questions || []).slice(0, 5);
+    probs.forEach((q, i) => {
+      let answerLabel = '';
+      if(q.choices && typeof q.answer === 'number'){
+        const letter = String.fromCharCode(65 + q.answer);
+        answerLabel = `${letter}.  ${q.choices[q.answer] || ''}`;
+      } else if(typeof q.answer !== 'undefined'){
+        answerLabel = String(q.answer);
+      } else {
+        answerLabel = '(open response — see lesson)';
+      }
+      const lines = doc.splitTextToSize(`${i+1}.  ${answerLabel}`, CONTENT_WIDTH - 8);
+      lines.forEach(line => {
+        if(y > PAGE_HEIGHT - 18){ doc.addPage(); drawHeader(doc, 'Answer Key (continued)', headerSubtitle); y = 50; }
+        doc.text(line, PAGE_MARGIN + 4, y);
+        y += 4.4;
+      });
+    });
+    y += 4;
+  });
+}
+
+function generateSinglePDF(){
+  const lesson = getCurrentLesson();
+  if(!lesson) return;
+  const doc = newDoc();
+  const subtitle = `${GRADE_LABELS[pickedGrade]} · ${SUBJECT_LABELS[pickedSubject]} · Week ${pickedWeek}`;
+  const title = lesson.title || lesson.id;
+  drawHeader(doc, title, subtitle);
+  drawLesson(doc, lesson, { yStart: 50, numberStart: 1, headerTitle: title, headerSubtitle: subtitle });
+  drawAnswerKey(doc, [lesson], title, subtitle);
+  // Footer page numbers
+  const total = doc.getNumberOfPages();
+  for(let p = 1; p <= total; p++){ doc.setPage(p); drawFooter(doc, p, total); }
+  const fname = `solvix-${pickedGrade}-${pickedSubject}-w${pickedWeek}-${slug(title)}.pdf`;
+  doc.save(fname);
+}
+
+function generatePackPDF(){
+  const lessons = (WEEKS[pickedWeek][pickedGrade][pickedSubject] || []).slice(0, 5);
+  if(!lessons.length) return;
+  const doc = newDoc();
+  const subtitle = `${GRADE_LABELS[pickedGrade]} · ${SUBJECT_LABELS[pickedSubject]} · Week ${pickedWeek}`;
+  const title = `Week ${pickedWeek} ${SUBJECT_LABELS[pickedSubject]} Pack`;
+  drawHeader(doc, title, subtitle);
+  let y = 50;
+  let nextNum = 1;
+  lessons.forEach((lesson, idx) => {
+    if(idx > 0){ doc.addPage(); drawHeader(doc, title, subtitle); y = 50; }
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(13);
+    doc.text(`Lesson ${idx+1}: ${lesson.title || lesson.id}`, PAGE_MARGIN, y);
+    y += 7;
+    y = drawLesson(doc, lesson, { yStart: y, numberStart: 1, headerTitle: title, headerSubtitle: subtitle });
+  });
+  drawAnswerKey(doc, lessons, title, subtitle);
+  const total = doc.getNumberOfPages();
+  for(let p = 1; p <= total; p++){ doc.setPage(p); drawFooter(doc, p, total); }
+  const fname = `solvix-${pickedGrade}-${pickedSubject}-w${pickedWeek}-pack.pdf`;
+  doc.save(fname);
+}
+
+function slug(s){
+  return String(s||'lesson').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,40);
+}
+</script>
+</body>
+</html>
