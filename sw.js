@@ -16,7 +16,7 @@
    current version. skipWaiting + clients.claim means the new SW takes
    over on the very next page load after deploy. */
 
-const SW_VERSION = 'kidquest-v210-pdf-emoji-fix';
+const SW_VERSION = 'kidquest-v211-worksheets-adult-gate';
 const SHELL_CACHE = SW_VERSION + '-shell';
 const RUNTIME_CACHE = SW_VERSION + '-runtime';
 

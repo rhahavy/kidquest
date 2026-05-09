@@ -171,9 +171,75 @@ footer{background:#fff;border-top:1px solid var(--line);padding:40px 0;margin-to
   .card{padding:24px}
   .preview{min-height:360px}
 }
+/* Rainbow Solvix wordmark — every on-page "Solvix" gets wrapped by the
+   IIFE at end of <body> (with a MutationObserver for dynamically inserted
+   text — kid gate, JS-injected pills, etc.). Same gradient + animation
+   as the marketing site so the brand reads consistently across pages. */
+.solvix-rainbow{
+  background:linear-gradient(90deg,#FF6B6B 0%,#FDCB6E 16%,#55EFC4 33%,#74B9FF 50%,#A29BFE 66%,#FD79A8 83%,#FF6B6B 100%);
+  background-size:200% auto;
+  -webkit-background-clip:text;
+  background-clip:text;
+  color:transparent;
+  -webkit-text-fill-color:transparent;
+  animation:solvix-rainbow-shift 8s linear infinite;
+}
+@keyframes solvix-rainbow-shift{
+  0%  {background-position:0% center}
+  100%{background-position:200% center}
+}
+
+/* Kid gate — shown when this page detects a kid is logged in to the
+   Solvix app on the same browser (LOCAL_USER_KEY in localStorage).
+   Worksheets are for grown-ups (parent/teacher) so they can print pages
+   for kids — we don't want kids to print themselves answer keys, and the
+   PDF generation flow assumes adult judgement (quota, file downloads).
+   Same visual tokens as the rest of the page so the gate doesn't feel
+   like a different site. */
+.kid-gate-overlay{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:24px;z-index:9999}
+.kid-gate-card{background:var(--card);border-radius:var(--r-lg);padding:44px 36px;max-width:440px;width:100%;text-align:center;box-shadow:var(--shadow-lg);border:1px solid var(--line)}
+.kid-gate-emoji{font-size:56px;margin-bottom:18px;line-height:1}
+.kid-gate-card h1{font-size:26px;font-weight:800;letter-spacing:-.01em;margin-bottom:12px;color:var(--ink)}
+.kid-gate-card p{color:var(--ink2);font-size:15px;line-height:1.55;margin-bottom:28px}
+.kid-gate-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:14px 28px;background:var(--primary);color:#fff;font-weight:700;border-radius:999px;text-decoration:none;box-shadow:0 6px 20px rgba(108,92,231,.35);transition:transform .15s ease,box-shadow .15s ease}
+.kid-gate-btn:hover{background:var(--primary-dark);transform:translateY(-1px);text-decoration:none;color:#fff}
 </style>
 </head>
 <body>
+<!-- Kid-gate guard. Runs synchronously at the top of <body> so the
+     worksheets builder NEVER renders if a kid is currently logged in to
+     the Solvix app on this browser. The kid app stores its current sid
+     under LOCAL_USER_KEY = 'kidquest-current-user' on login and removes
+     it on logout. Both /app/ and /worksheets/ live on kidquest.fun so
+     localStorage is shared. We don't try to detect "teacher logged in"
+     positively because teacher auth is in-memory only on the kid app
+     (page reload re-prompts) — instead we whitelist anyone who's NOT a
+     kid. Visitors who've never opened /app/ have empty localStorage =
+     allowed in. -->
+<script>
+(function(){
+  try {
+    var sid = localStorage.getItem('kidquest-current-user');
+    if(!sid || typeof sid !== 'string' || !sid.trim()) return;
+    // Kid is logged in. Hide the rest of the page (paint-blocking
+    // document.write would be heavier; we just append an overlay that
+    // covers the whole viewport and disable scrolling underneath).
+    document.documentElement.style.overflow = 'hidden';
+    document.addEventListener('DOMContentLoaded', function(){
+      var gate = document.createElement('div');
+      gate.className = 'kid-gate-overlay';
+      gate.innerHTML =
+        '<div class="kid-gate-card" role="dialog" aria-labelledby="kgT">' +
+          '<div class="kid-gate-emoji" aria-hidden="true">📄✨</div>' +
+          '<h1 id="kgT">Worksheets are for grown-ups</h1>' +
+          '<p>Ask a parent or teacher to print a worksheet for you! These pages are made for the grown-ups in your learning crew.</p>' +
+          '<a class="kid-gate-btn" href="/app/">← Back to <span class="solvix-rainbow">Solvix</span></a>' +
+        '</div>';
+      document.body.appendChild(gate);
+    });
+  } catch(e){ /* best effort — if localStorage is locked, fall through */ }
+})();
+</script>
 
 <nav class="nav">
   <div class="container nav-inner">
@@ -201,7 +267,7 @@ footer{background:#fff;border-top:1px solid var(--line);padding:40px 0;margin-to
           <path d="M48 100 Q60 112 72 100" stroke="#1A1035" stroke-width="3.5" fill="none" stroke-linecap="round"/>
         </svg>
       </span>
-      <span>Solvix</span>
+      <span class="solvix-rainbow">Solvix</span>
     </a>
     <div class="nav-links">
       <a href="/#features" class="hide-sm">Features</a>
@@ -1095,6 +1161,58 @@ function generatePackPDF(){
 function slug(s){
   return String(s||'lesson').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,40);
 }
+</script>
+
+<!-- Rainbow Solvix wordmark wrapper. Walks the DOM once on load and wraps
+     every "Solvix" text node in a <span class="solvix-rainbow"> so the
+     gradient animation paints it consistently. MutationObserver re-runs
+     on dynamically inserted DOM (the kid-gate overlay, the JS-injected
+     "Solvix subscriber" quota chip, future renders) so brand text added
+     after page-load gets the same treatment. Skips elements where text
+     transformation would break things (TITLE, SCRIPT, INPUT, etc.). -->
+<script>
+(function setupSolvixRainbow(){
+  var WORD='Solvix', CLASS='solvix-rainbow';
+  var SKIP=/^(STYLE|SCRIPT|TEXTAREA|TITLE|CODE|PRE|NOSCRIPT|INPUT)$/;
+  function processTextNode(node){
+    if(!node || node.nodeType!==3 || !node.nodeValue || node.nodeValue.indexOf(WORD)<0) return;
+    var p=node.parentElement;
+    if(!p || p.classList.contains(CLASS) || SKIP.test(p.tagName)) return;
+    var parts=node.nodeValue.split(WORD);
+    var frag=document.createDocumentFragment();
+    for(var i=0;i<parts.length;i++){
+      if(parts[i]) frag.appendChild(document.createTextNode(parts[i]));
+      if(i<parts.length-1){
+        var s=document.createElement('span');
+        s.className=CLASS; s.textContent=WORD;
+        frag.appendChild(s);
+      }
+    }
+    node.parentNode.replaceChild(frag,node);
+  }
+  function walk(root){
+    if(!root) return;
+    if(root.nodeType===3){ processTextNode(root); return; }
+    if(root.nodeType!==1) return;
+    var w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,null);
+    var list=[],n; while((n=w.nextNode())) list.push(n);
+    for(var i=0;i<list.length;i++) processTextNode(list[i]);
+  }
+  function start(){
+    try {
+      walk(document.body);
+      new MutationObserver(function(muts){
+        for(var i=0;i<muts.length;i++){
+          var m=muts[i];
+          for(var j=0;j<m.addedNodes.length;j++) walk(m.addedNodes[j]);
+          if(m.type==='characterData') processTextNode(m.target);
+        }
+      }).observe(document.documentElement,{childList:true,subtree:true,characterData:true});
+    } catch(e){ console.warn('[Solvix] rainbow setup failed:', e); }
+  }
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start);
+  else start();
+})();
 </script>
 </body>
 </html>
