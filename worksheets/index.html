@@ -730,7 +730,10 @@ function generateSinglePDF(){
   // Footer page numbers
   const total = doc.getNumberOfPages();
   for(let p = 1; p <= total; p++){ doc.setPage(p); drawFooter(doc, p, total); }
-  const fname = `solvix-${pickedGrade}-${pickedSubject}-w${pickedWeek}-${slug(title)}.pdf`;
+  // Filename uses the human-readable grade slug, not the internal sid
+  // (e.g. "grade-3" not "akshayan"). Parents shouldn't see our roster
+  // sids leak into their downloads.
+  const fname = `solvix-${slug(GRADE_LABELS[pickedGrade] || pickedGrade)}-${pickedSubject}-w${pickedWeek}-${slug(title)}.pdf`;
   doc.save(fname);
 }
 
@@ -754,7 +757,7 @@ function generatePackPDF(){
   drawAnswerKey(doc, lessons, title, subtitle);
   const total = doc.getNumberOfPages();
   for(let p = 1; p <= total; p++){ doc.setPage(p); drawFooter(doc, p, total); }
-  const fname = `solvix-${pickedGrade}-${pickedSubject}-w${pickedWeek}-pack.pdf`;
+  const fname = `solvix-${slug(GRADE_LABELS[pickedGrade] || pickedGrade)}-${pickedSubject}-w${pickedWeek}-pack.pdf`;
   doc.save(fname);
 }
 
