@@ -657,15 +657,25 @@ function bumpQuota(){
 
 function isPayingTenant(){
   // Cheap check: did the kid-app store a tenant code locally? If yes,
-  // they've signed in to Solvix and presumably have a paid subscription.
+  // they've signed in to Solvix and the 5/month free-tier limit doesn't
+  // apply (signed-in tenants get unlimited worksheets — they're already
+  // paying for the curriculum).
+  //
+  // The tenant blob lives at TENANT_STORAGE_KEY = 'kidquest-tenant'
+  // (NOT 'kidquest-v4' — that key holds the user-data allData blob,
+  // which doesn't carry a `.code`). Earlier versions of this function
+  // looked at the wrong key and never returned true, so signed-in
+  // adults were seeing "1 of 5 free this month" alongside the Generate
+  // PDF button. Read from the right key, peel for {code} like the
+  // kid-app's loadTenantFromStorage does.
+  //
   // It's not a security boundary (anyone could fake the LS), but as a
   // marketing tool the worst case is one extra free worksheet for a
   // tech-savvy visitor — fine.
   try {
-    const raw = localStorage.getItem('kidquest-v4');
+    const raw = localStorage.getItem('kidquest-tenant');
     if(!raw) return false;
     const v = JSON.parse(raw);
-    // v.code is the tenant code stored on /app/ login.
     return !!(v && v.code && String(v.code).length >= 3);
   } catch(_){ return false; }
 }
@@ -673,7 +683,12 @@ function isPayingTenant(){
 function updateQuotaChip(){
   $quota.innerHTML = '';
   if(isPayingTenant()){
-    $quota.innerHTML = '<span class="quota-chip">✓ Solvix subscriber — unlimited worksheets</span>';
+    // Signed-in adults: no chip, no quota copy. The Generate PDF button
+    // sits clean in the action area. Earlier we showed a "✓ Solvix
+    // subscriber — unlimited worksheets" pill here, but it added clutter
+    // for the only thing they care about (clicking Generate). The detection
+    // bug above was masking this; once it's fixed, the pill became visible
+    // for the first time and looked like noise next to the button.
     $paywall.style.display = 'none';
     $btn.disabled = false;
     return;
