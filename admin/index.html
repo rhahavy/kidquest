@@ -588,6 +588,13 @@ tbody tr:last-child td{border-bottom:none}
       <div><span class="solvix-rainbow">Solvix</span> <span class="brand-sub">Admin</span></div>
     </a>
     <div class="topbar-actions">
+      <!-- Cross-site navigation. The admin sits at /admin/, the marketing
+           page at /, and the worksheet builder at /worksheets/. Without
+           these links you have to mash the URL bar to bounce between them.
+           Plain anchor tags styled as ghost buttons so they slot in next to
+           the existing Refresh / Sign out controls. -->
+      <a class="btn btn-ghost btn-sm" href="/" title="Marketing site">🏠 Marketing</a>
+      <a class="btn btn-ghost btn-sm" href="/worksheets/" title="Printable worksheets">📄 Worksheets</a>
       <button class="btn btn-ghost btn-sm" id="refresh-btn" title="Refresh data">🔄 Refresh</button>
       <button class="btn btn-ghost btn-sm" id="logout-btn" title="Forget the admin password on this device">🚪 Sign out</button>
     </div>
